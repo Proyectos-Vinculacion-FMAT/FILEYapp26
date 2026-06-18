@@ -2,7 +2,7 @@
 estado: propuesta
 version: 0.01
 tags:
-  - requerimientos
+  - requisitos
   - funcional
 fecha: 2026-06-18
 casos_de_uso:
@@ -19,14 +19,14 @@ Redactar en presente lo que el sistema debe hacer, en qué etapa o condición de
 ## Prerrequisito
 
 > [!note] Opcional
-> Usar solo si el requerimiento depende de una condición previa explícita. Eliminar esta sección si no aplica.
+> Usar solo si el requisito depende de una condición previa explícita. Eliminar esta sección si no aplica.
 
-- Condición que debe cumplirse antes de que el requerimiento entre en vigor.
+- Condición que debe cumplirse antes de que el requisito entre en vigor.
 
 ## Definición de conceptos
 
 > [!note] Opcional
-> Usar solo si la Descripción emplea términos que deben quedar aclarados antes de los criterios de aceptación. Definir aquí cada concepto necesario para entender el requerimiento dentro del repositorio. Eliminar esta sección si no aplica.
+> Usar solo si la Descripción emplea términos que deben quedar aclarados antes de los criterios de aceptación. Definir aquí cada concepto necesario para entender el requisito dentro del repositorio. Eliminar esta sección si no aplica.
 
 - **Concepto 1:** definición breve.
 - **Concepto 2:** definición breve.

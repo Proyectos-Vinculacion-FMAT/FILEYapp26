@@ -2,14 +2,14 @@
 estado: propuesta
 version: 0.3
 tags:
-  - requerimientos
+  - requisitos
   - dominios
   - alcance
 fecha: 2026-06-18
 ---
 # README — Dominios y necesidades del cliente
 
-Resumen de cómo se divide el sistema **FILEY** en dominios y qué información guarda cada uno. Sirve como índice y referencia de alcance para los requerimientos funcionales (`RF-DOM-NN`).
+Resumen de cómo se divide el sistema **FILEY** en dominios y qué información guarda cada uno. Sirve como índice y referencia de alcance para los requisitos funcionales (`RF-DOM-NN`).
 
 ## Enfoque
 
@@ -44,6 +44,9 @@ Estas características aparecen en todos los registros, pero **se infieren** com
 > [!note]
 > `EVE` es el dominio con más variantes y funciona como **calendario maestro**: además de sus formatos propios, integra los talleres que Elvira organiza en `TAL`.
 
+> [!note]
+> El dominio `STD` abarca, además del registro del arrendatario, el **proceso de reserva, pago y confirmación** de stands. Sus artefactos viven en `STD/`: índice de casos de uso (`CU-STD Índice.md`), modelo de datos (`Modelo de datos - Stands.md`) y proceso de alto nivel (`Proceso de alto nivel - Stands.md`).
+
 ### Dominios futuros — no prioritarios
 
 Ordenados por la prioridad esperada después de la primera entrega:
@@ -55,21 +58,21 @@ Ordenados por la prioridad esperada después de la primera entrega:
 | 3 | `VIS` | Contabilidad de visitantes | Contar a los visitantes registrados. | Va al final. |
 | 4 | `REP` | Reportes | Generar reportes a partir de los datos. | Secundario. |
 
-## Organización de los requerimientos
+## Organización de los requisitos
 
-Los RFs **se dividen por dominio**: cada dominio tiene su propia carpeta y dentro viven sus requerimientos (`RF-DOM-NN.md`). Esto mantiene separadas las necesidades concretas de cada dueño y facilita ubicar y versionar cada conjunto.
+Los RFs **se dividen por dominio**: cada dominio tiene su propia carpeta y dentro viven sus requisitos (`RF-DOM-NN.md`). Esto mantiene separadas las necesidades concretas de cada dueño y facilita ubicar y versionar cada conjunto.
 
 ```text
-requerimientos/
+requisitos/
 ├── README.md
 ├── RF-DOMINIO Template.md
 ├── EVE/   → RF-EVE-NN  (eventos generales · calendario maestro)
-├── STD/   → RF-STD-NN  (stands)
+├── STD/   → RF-STD-NN  (stands; incluye índice de CU, modelo de datos y proceso de alto nivel)
 └── TAL/   → RF-TAL-NN  (talleres: talleristas y visitas escolares)
 ```
 
 > [!note]
-> Cada carpeta de dominio agrupa solo sus requerimientos. Crear una carpeta nueva al abrir un dominio adicional (p. ej. `PAG/`, `ACC/`) siguiendo la misma convención `RF-DOM-NN`.
+> Cada carpeta de dominio agrupa solo sus requisitos. Crear una carpeta nueva al abrir un dominio adicional (p. ej. `PAG/`, `ACC/`) siguiendo la misma convención `RF-DOM-NN`.
 
 ## Relación entre dominios
 
@@ -79,6 +82,7 @@ requerimientos/
 
 - Cómo se anexa un taller de `TAL` al calendario maestro de `EVE`.
 - Si los pagos entran en alcance y bajo qué condiciones (decisión del cliente).
+- Si el flujo de **reserva, pago y confirmación** de `STD` entra en la primera entrega (agosto) o se difiere: hoy excede el alcance de "registro de solicitantes" y se traslapa con el dominio futuro `PAG`.
 - Si la contabilidad de visitantes y los reportes entran en alcance posterior.
 
 > [!note]
