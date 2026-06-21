@@ -1,12 +1,12 @@
 ---
 estado: propuesta
-version: 0.01
+version: 0.02
 tags:
   - requisitos
   - caso-de-uso
 fecha: 2026-06-18
 id: CU-XXX-NNN
-dominio: DOM-01 | DOM-02 | RNF | OTRO
+dominio: STD | TAL | REG | EVT | PRG | SAL
 responsable: Nombre
 issue_relacionado: PSD-XX
 pr_relacionado: "#XX"
@@ -17,9 +17,6 @@ diagramas_relacionados:
   - BPMN-XXX-001
   - ../resources/cu-xxx-001.png
 trazabilidad:
-  rf:
-    - RF-XXX-001
-    - RF-YYY-002
   ddr:
     - DDR-XX
 ---
@@ -32,14 +29,6 @@ Describir el resultado de valor que obtiene el actor al ejecutar este caso de us
 ## Alcance
 
 Indicar el límite del sistema o subsistema al que aplica este caso de uso.
-
-## RF relacionados
-
-> [!note] Opcional
-> Usar solo si el caso de uso se apoya en requisitos funcionales ya identificados. Eliminar esta sección si no aplica.
-
-- RF-XXX-001
-- RF-YYY-002
 
 ## Actores
 
@@ -78,9 +67,12 @@ Evento que inicia el caso de uso.
 
 ## Flujo principal
 
+> [!note] Referencias a reglas de negocio
+> La cita `[RN-XXX-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
+
 1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente [RF-XXX-YYY].
-3. El sistema ejecuta la acción principal [RF-XXX-YYY].
+2. El sistema valida la condición correspondiente [RN-XXX-NNN].
+3. El sistema ejecuta la acción principal [RN-XXX-NNN].
 4. El sistema confirma el resultado al actor.
 
 ## Flujos alternos
@@ -91,7 +83,7 @@ Evento que inicia el caso de uso.
 ### A1. Nombre del flujo alterno
 
 1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa [RF-XXX-YYY].
+2. El sistema responde de forma alternativa [RN-XXX-NNN].
 3. El flujo termina o regresa al paso N del flujo principal.
 
 ### A2. Nombre del flujo alterno
@@ -107,7 +99,7 @@ Evento que inicia el caso de uso.
 ### E1. Nombre de la excepción
 
 1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación [RF-XXX-YYY].
+2. El sistema detiene, rechaza o compensa la operación [RN-XXX-NNN].
 3. Se informa el motivo al actor.
 
 ### E2. Nombre de la excepción
@@ -117,7 +109,7 @@ Evento que inicia el caso de uso.
 1. ...
 2. ...
 
-[RF-XXX-YYY]: #
+[RN-XXX-NNN]: #
 
 ## Datos relevantes
 
