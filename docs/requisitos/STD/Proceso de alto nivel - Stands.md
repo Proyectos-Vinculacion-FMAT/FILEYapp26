@@ -10,7 +10,7 @@ fecha: 2026-06-18
 
 Diagrama del flujo de punta a punta para poner en contexto al equipo: desde que el
 usuario **aplica a expositor** hasta que su reserva queda **pagada al 100%**, incluyendo
-las ramas de vencimiento (liberación automática / decisión del administrador).
+la rama de vencimiento (notificación y decisión del administrador).
 
 El color de cada nodo indica quién interviene: Usuario, Administrador, Sistema y estados
 finales. El detalle por paso vive en los casos de uso (`CU-STD Índice.md`).
@@ -42,10 +42,7 @@ flowchart TD
     O --> P[/Notifica: reserva pagada/]
     P --> Q([Fin])
 
-    J -->|No, venció el plazo| R{¿Hubo algún abono?}
-    R -->|No| S[Reserva LIBERADA<br/>automáticamente]
-    S --> T([Stands vuelven a Disponible])
-    R -->|Sí, abono parcial| U[/Notifica al admin y al usuario:<br/>posible cancelación/]
+    J -->|No, venció el plazo<br/>con o sin abono| U[/Notifica al admin y al usuario:<br/>posible cancelación/]
     U --> V{Admin decide}
     V -->|Prorroga: nueva fecha| M
     V -->|Cancela| W([Reserva CANCELADA])
@@ -57,6 +54,6 @@ flowchart TD
 
     class A,A2,E,F,H,M usuario;
     class B,I,V admin;
-    class C,D,G,J,K,L,N,O,P,R,S,U sistema;
-    class Q,T,W,fin fin;
+    class C,D,G,J,K,L,N,O,P,U sistema;
+    class Q,W,fin fin;
 ```

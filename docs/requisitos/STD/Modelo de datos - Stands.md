@@ -28,7 +28,7 @@ fecha: 2026-06-18
 | Reserva | Conjunto de stands reservados por una editorial y su estado de pago. |
 | ReservaStand | Detalle (línea) de cada stand dentro de una reserva. |
 | Movimiento | Pago/abono registrado contra una reserva. |
-| DescuentoAplicado | Descuento aplicado a una reserva (pronto pago, local o especial). |
+| DescuentoAplicado | Descuento aplicado a una reserva (pronto pago o especial). |
 | Notificacion | Correos enviados al usuario/administrador. |
 | ParametrosSistema | Configuración global (costo m², porcentajes, datos bancarios). |
 | Bitacora *(opcional)* | Registro de auditoría de acciones del administrador. |
@@ -75,8 +75,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | cantidad_titulos_aprox | Cantidad aproximada de títulos. |
 | materiales | Multivalor: Libro, Audiolibro, Revista, Material didáctico, Libros electrónicos, Otro. |
 | tematicas | Multivalor: lista de temáticas (Administración, Arte, Infantil, …). |
-| es_local | Booleano — elegibilidad al descuento del 15% (lo fija el admin al aceptar). |
-| constancia_fiscal_id | FK → Documento — Constancia de Situación Fiscal. Permite validar la ubicación (sustenta `es_local`) y emitir facturas por fuera del sistema. |
+| constancia_fiscal_id | FK → Documento — Constancia de Situación Fiscal. Permite emitir facturas por fuera del sistema. |
 
 ### 2.3 SelloEditorial
 | Atributo | Descripción |
@@ -91,12 +90,12 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | id | Identificador único. |
 | editorial_id | FK → Editorial. |
 | evento_id | FK → Evento. |
-| estado | `pendiente` / `aceptada` / `rechazada`. |
+| estado | `pendiente` / `aceptada` / `rechazada` / `cambios_solicitados`. |
 | fecha_envio | Fecha de envío. |
 | fecha_revision | Fecha de revisión. |
 | revisado_por | FK → Cuenta (administrador). |
-| motivo_rechazo | Texto (si fue rechazada). |
-| aplica_descuento_local | Booleano fijado al aceptar (alimenta `Editorial.es_local`). |
+| motivo_peticion | Texto (si se solicitaron cambios o hay nota de rechazo). |
+
 
 > *Nota de diseño:* la información del formulario se solapa con **Editorial**. Decidir con
 > el equipo si la aplicación guarda una copia (snapshot) de los datos enviados o si
@@ -139,7 +138,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | id | Identificador único. |
 | editorial_id | FK → Editorial. |
 | evento_id | FK → Evento. |
-| estado | `Por confirmar` / `Confirmada` / `Pagada` / `Liberada` / `Cancelada`. |
+| estado | `Por confirmar` / `Confirmada` / `Pagada` / `Cancelada`. |
 | fecha_creacion | Inicio del plazo de 30 días. |
 | fecha_vencimiento_anticipo | `fecha_creacion` + 30 días. |
 | fecha_corte_pago_total | Fecha de bloqueo/límite de pago del 100% (modificable por admin). |
@@ -176,7 +175,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 |----------|-------------|
 | id | Identificador único. |
 | reserva_id | FK → Reserva. |
-| tipo | `pronto_pago` (10%) / `local` (15%) / `especial`. |
+| tipo | `pronto_pago` (10%) / `especial`. |
 | porcentaje | Porcentaje aplicado. |
 | motivo | Obligatorio para `especial`. |
 | aplicado_por | FK → Cuenta (sistema o administrador). |
@@ -187,7 +186,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 |----------|-------------|
 | id | Identificador único. |
 | destinatario_id | FK → Cuenta. |
-| tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_liberada`. |
+| tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `aplicacion_cambios`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_cancelada`. |
 | fecha_envio | Fecha de envío. |
 | estado | `enviada` / `fallida`. |
 | referencia_tipo, referencia_id | Entidad relacionada (aplicación / reserva). |
@@ -200,7 +199,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | plazo_reserva_dias | Días de vigencia de la reserva (30). |
 | descuento_pronto_pago | Porcentaje (10%). |
 | fecha_limite_pronto_pago | Fecha límite del pronto pago. |
-| descuento_local | Porcentaje (15%). |
+
 | instrucciones_pago | Texto/datos bancarios (banco, cuenta, CLABE, sucursal, referencia). |
 
 ### 2.14 Bitacora
@@ -219,14 +218,14 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 
 - **Cuenta** 1—1 **Editorial** (una editorial por cuenta de usuario).
 - **Editorial** 1—N **SelloEditorial**.
-- **Editorial** 1—N **Aplicacion** (una por evento; permite reenvío tras rechazo).
+- **Editorial** 1—N **Aplicacion** (una activa por evento; permite reenvío tras solicitud de cambios, o creación de nueva tras rechazo).
 - **Editorial** 1—1 **Documento** (Constancia de Situación Fiscal).
 - **Aplicacion** 1—N **Documento**; **Movimiento** 1—1 **Documento** (comprobante).
 - **Evento** 1—N **Stand**.
 - **Editorial** 1—N **Reserva**; **Reserva** 1—N **ReservaStand** N—1 **Stand**
   (un stand pertenece a lo sumo a una reserva activa).
 - **Reserva** 1—N **Movimiento**.
-- **Reserva** 1—N **DescuentoAplicado** (sujeto a las reglas RN-06 y RN-07).
+- **Reserva** 1—N **DescuentoAplicado** (máximo dos: uno por pronto pago y uno especial del administrador).
 - **Cuenta** 1—N **Notificacion**.
 
 ---
@@ -235,23 +234,23 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 
 | Entidad | Casos de uso relacionados |
 |---------|---------------------------|
-| Cuenta / Editorial / SelloEditorial | CU-STD-001, CU-STD-002, CU-STD-032, CU-STD-033 |
-| Aplicacion / Documento | CU-STD-001–CU-STD-007, CU-STD-033 |
-| Stand / Evento | CU-STD-008, CU-STD-009, CU-STD-034, CU-STD-035 |
-| Reserva / ReservaStand | CU-STD-010–CU-STD-013, CU-STD-020, CU-STD-021, CU-STD-023, CU-STD-026–CU-STD-031 |
-| Movimiento | CU-STD-014–CU-STD-018, CU-STD-031 |
-| DescuentoAplicado | CU-STD-005, CU-STD-019, CU-STD-022 |
-| Notificacion | CU-STD-007, CU-STD-013, CU-STD-024, CU-STD-025, CU-STD-028, CU-STD-029 |
-| ParametrosSistema | CU-STD-009, CU-STD-022 (cálculos y descuentos) |
+| Cuenta / Editorial / SelloEditorial | CU-STD-001, CU-STD-002, CU-STD-033, CU-STD-034 |
+| Aplicacion / Documento | CU-STD-001–CU-STD-008, CU-STD-034 |
+| Stand / Evento | CU-STD-009, CU-STD-010, CU-STD-035, CU-STD-036 |
+| Reserva / ReservaStand | CU-STD-011–CU-STD-014, CU-STD-021, CU-STD-022, CU-STD-027–CU-STD-032 |
+| Movimiento | CU-STD-015–CU-STD-019, CU-STD-032 |
+| DescuentoAplicado | CU-STD-006, CU-STD-020, CU-STD-023 |
+| Notificacion | CU-STD-008, CU-STD-014, CU-STD-025, CU-STD-026, CU-STD-029, CU-STD-030 |
+| ParametrosSistema | CU-STD-010, CU-STD-023 (cálculos y descuentos), CU-STD-037 (configuración) |
 
 ---
 
 ## 5. Temas abiertos del modelo
 
 - Confirmar si **Aplicacion** guarda snapshot de datos o referencia a **Editorial**.
-- Confirmar si **es_local** vive en Editorial (perfil) o por aplicación/evento.
-- Definir estados de cierre adicionales si se requiere distinguir "Liberada" (auto) de
-  "Cancelada" (admin) — actualmente ambos contemplados.
+
+- El único estado de cierre es `Cancelada` (decisión del administrador). El sistema no
+  libera reservas automáticamente.
 - Necesidad real de **Bitacora** (auditoría) — sugerida por las acciones sensibles del
   administrador (validar abono, descuento especial, prórroga).
 
