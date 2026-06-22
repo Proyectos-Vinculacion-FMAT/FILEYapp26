@@ -189,4 +189,4 @@ Procesos a documentar:
 
 ## Documentos relacionados
 
-- [Preguntas para la siguiente sesion](<Notas/Preguntas para la siguiente sesion.md>)
+- [Preguntas para la siguiente sesion](<../meeting notes/Preguntas para la siguiente sesion.md>)
