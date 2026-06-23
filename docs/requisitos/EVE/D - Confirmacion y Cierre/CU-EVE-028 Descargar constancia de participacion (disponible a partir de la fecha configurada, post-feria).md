@@ -4,23 +4,19 @@ version: 0.02
 tags:
   - requisitos
   - caso-de-uso
-fecha: 2026-06-18
-id: CU-XXX-NNN
-dominio: STD | TAL | REG | EVT | PRG | SAL
-responsable: Nombre
+  - eventos
+fecha: 2026-06-20
+id: CU-EVE-028
+dominio: EVT
+responsable: Juan Manuel Hernandez Miranda
 issue_relacionado: PSD-XX
 pr_relacionado: "#XX"
-reglas_de_negocio:
-  - RN-XXX-001
-  - RN-YYY-002
-diagramas_relacionados:
-  - BPMN-XXX-001
-  - ../resources/cu-xxx-001.png
+reglas_de_negocio: []
+diagramas_relacionados: []
 trazabilidad:
-  ddr:
-    - DDR-XX
+  ddr: []
 ---
-# CU-XXX-NNN Nombre breve del caso de uso
+# CU-EVE-028 Descargar constancia de participación (disponible a partir de la fecha configurada, post-feria)
 
 ## Objetivo
 
@@ -34,17 +30,12 @@ Indicar el límite del sistema o subsistema al que aplica este caso de uso.
 
 ### Actor principal
 
-- Usuario / Bot / Operador / Sistema externo
+- Proponente
 
 ### Actores secundarios
 
 > [!note] Opcional
 > Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
-
-- Sistema de autenticación
-- Servicio de notificaciones
-- Módulo de auditoría
-- Sistema externo integrado
 
 ## Disparador
 
@@ -53,7 +44,6 @@ Evento que inicia el caso de uso.
 ## Precondiciones
 
 - Condición 1
-- Condición 2
 
 ## Postcondiciones
 
@@ -68,11 +58,11 @@ Evento que inicia el caso de uso.
 ## Flujo principal
 
 > [!note] Referencias a reglas de negocio
-> La cita `[RN-XXX-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
+> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
 
 1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente [RN-XXX-NNN].
-3. El sistema ejecuta la acción principal [RN-XXX-NNN].
+2. El sistema valida la condición correspondiente.
+3. El sistema ejecuta la acción principal.
 4. El sistema confirma el resultado al actor.
 
 ## Flujos alternos
@@ -83,13 +73,8 @@ Evento que inicia el caso de uso.
 ### A1. Nombre del flujo alterno
 
 1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa [RN-XXX-NNN].
+2. El sistema responde de forma alternativa.
 3. El flujo termina o regresa al paso N del flujo principal.
-
-### A2. Nombre del flujo alterno
-
-1. ...
-2. ...
 
 ## Flujos de excepción
 
@@ -99,17 +84,8 @@ Evento que inicia el caso de uso.
 ### E1. Nombre de la excepción
 
 1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación [RN-XXX-NNN].
+2. El sistema detiene, rechaza o compensa la operación.
 3. Se informa el motivo al actor.
-
-### E2. Nombre de la excepción
-
-> [!note] Opcional
-
-1. ...
-2. ...
-
-[RN-XXX-NNN]: #
 
 ## Datos relevantes
 
@@ -120,9 +96,7 @@ Evento que inicia el caso de uso.
 
 - Solicitud de operación
 - Parámetros de entrada requeridos
-- Criterios de filtrado (opcional)
 
 ### Salidas
 
 - Resultado de la operación
-- Detalle de respuesta (opcional)
