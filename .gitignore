@@ -8,3 +8,4 @@ docs/soporte/meetings/grabaciones/
 *.aac
 *.flac
 *.ogg
+.claude/
