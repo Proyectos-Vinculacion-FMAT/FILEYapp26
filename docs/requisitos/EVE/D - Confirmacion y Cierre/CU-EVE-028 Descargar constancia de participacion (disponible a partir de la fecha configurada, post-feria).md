@@ -1,102 +1,84 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-028
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-028 Descargar constancia de participación (disponible a partir de la fecha configurada, post-feria)
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El proponente descarga la constancia de participación de su actividad una vez concluida la feria, a partir de la fecha configurada, para acreditar su participación en FILEY.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — entrega de constancias al proponente. Solo aplica a actividades que solicitaron constancia (`requiere_constancia = true`) y a partir de `fecha_constancias`. No cubre la configuración de esa fecha (CU-EVE-001).
 
 ## Actores
 
 ### Actor principal
 
-- Proponente
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Aplicante (proponente)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El proponente entra a la app, después de la feria, para obtener su constancia.
 
 ## Precondiciones
 
-- Condición 1
+- El proponente tiene sesión iniciada.
+- La fecha actual es igual o posterior a `fecha_constancias`.
+- El proponente tiene al menos una actividad confirmada que solicitó constancia (`requiere_constancia = true`).
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- El proponente obtiene el archivo de constancia de su actividad.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se genera ni entrega la constancia; el sistema informa el motivo.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El proponente accede a la sección "Mis constancias".
+2. El sistema lista las actividades del proponente elegibles para constancia (confirmadas y con `requiere_constancia = true`).
+3. El proponente selecciona la actividad de la que desea su constancia.
+4. El sistema genera la constancia con los datos de la actividad y del participante.
+5. El sistema entrega el archivo para su descarga.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Varias actividades elegibles
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 2, el proponente tiene más de una actividad elegible.
+2. El sistema muestra todas y permite descargar la constancia de cada una por separado.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Constancias aún no disponibles
 
-### E1. Nombre de la excepción
+1. En el paso 1, la fecha actual es anterior a `fecha_constancias`.
+2. El sistema informa la fecha a partir de la cual las constancias estarán disponibles y no permite la descarga.
 
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+### E2. Sin actividades elegibles
+
+1. En el paso 2, el proponente no tiene actividades confirmadas que hayan solicitado constancia.
+2. El sistema informa que no hay constancias disponibles para su cuenta.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Selección de la actividad de la que se desea la constancia.
 
 ### Salidas
 
-- Resultado de la operación
+- Archivo de constancia de participación de la actividad seleccionada.

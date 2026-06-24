@@ -1,10 +1,10 @@
 ---
 estado: propuesta
-version: 0.1
+version: 0.2
 tags:
   - modelo-de-datos
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-23
 ---
 # Modelo de datos — Eventos generales (EVE)
 
@@ -81,14 +81,18 @@ fecha: 2026-06-20
 | nombre_actividad         | Título de la actividad propuesta.                                                                     |
 | organiza                 | Nombre del/los organizador(es).                                                                        |
 | descripcion              | Descripción o resumen de la actividad.                                                                |
-| categoria                | `literaria_uady` / `literaria_externa` / `academica_uady` / `academica_externa`.               |
+| categoria                | `literaria_uady` / `literaria_externa` / `academica_uady` / `academica_externa`. El sufijo `_uady` / `_externo` lo deriva el sistema del `tipo_participante` del proponente al enviar; el prefijo `literaria` / `academica` lo asigna el administrador durante el dictamen (CU-EVE-009). |
 | fecha_registro           | Fecha de envío de la propuesta.                                                                       |
-| estado                   | `pendiente` / `aceptada` / `rechazada` / `en_negociacion`.                                     |
+| estado                   | `pendiente` / `cambios_solicitados` / `aceptada` / `rechazada`. (`en_negociacion` reservado para v2.) |
 | fecha_revision           | Fecha en que Hipólito tomó la decisión.                                                             |
 | revisado_por             | FK → Persona (admin).                                                                                 |
 | motivo_rechazo           | Texto (si fue rechazada).                                                                              |
+| mensaje_cambios_solicitados | Texto — el administrador indica qué debe corregir el proponente; obligatorio cuando `estado = cambios_solicitados`, nulo en los demás casos. |
 | es_interno               | Booleano — si es una actividad interna sin convocatoria pública (ej. arte visual).                   |
 | ejemplar_fisico_recibido | Booleano — Hipólito marca si ya recibió el ejemplar físico (para presentaciones de libro/revista). |
+| requiere_constancia      | Booleano — si el proponente solicitó constancia de participación (declarado en el formulario de envío). |
+| resultado_notificado     | Booleano — si el resultado vigente (`aceptada` / `rechazada`) ya fue comunicado al proponente en un lote (CU-EVE-013). Se restablece a `false` cuando el administrador cambia el dictamen (re-dictamen). |
+| fecha_resultado_notificado | Fecha del último envío de resultado al proponente (nulo si nunca se ha notificado). Permite distinguir una **notificación nueva** de una **actualización** del resultado previo. |
 
 #### Sub-campos para Presentación de libro
 
@@ -97,14 +101,15 @@ Cuando `tipo_actividad` = Presentación de libro, se capturan campos adicionales
 | Atributo                  | Descripción                                                   |
 | ------------------------- | -------------------------------------------------------------- |
 | libro_titulo              | Título del libro.                                             |
-| libro_autor               | Nombre(s) del autor o autores.                                 |
+| rol_en_publicacion        | Rol del proponente respecto a la publicación: `autor` / `editor` / `antologador` / `compilador` / `coordinador`. |
+| libro_autores             | Nombres tal como aparecen en la portada (hasta 5 entradas).   |
 | libro_sinopsis            | Sinopsis del libro.                                            |
 | libro_portada_url         | URL de la imagen de portada (adjunto).                         |
 | autor_presente            | Booleano — si el autor participará presencialmente.          |
 | autores_presentes_detalle | Texto libre si hay varios autores, indicando cuáles estarán. |
 
 > [!note]
-> Estos campos sostienen el estado `en_negociacion` (RFH-08): una propuesta de autor puede estar aceptada conceptualmente pero el autor aún no confirma su presencia.
+> Estos campos se usan en la vista de detalle de la actividad pública (CU-EVE-033). El estado `en_negociacion` que los acompañaba pertenece a v2 (CU-EVE-011 pospuesto).
 
 ### 2.4 PropuestaAdjunto
 
@@ -207,6 +212,10 @@ Cuando `tipo_actividad` = Presentación de libro, se capturan campos adicionales
 | cupo_literario_externo          | Número máximo de actividades Literarias-Externas.                        |
 | cupo_academico_uady             | Número máximo de actividades Académicas-UADY.                           |
 | cupo_academico_externo          | Número máximo de actividades Académicas-Externas.                       |
+| programa_archivado              | Booleano — si el programa fue cerrado definitivamente (CU-EVE-027).      |
+| fecha_archivado                 | Fecha y hora en que se ejecutó el cierre definitivo.                      |
+| archivado_por                   | FK → Persona (admin que ejecutó el cierre).                              |
+| motivo_archivado                | Texto — motivo registrado al archivar (obligatorio según CU-EVE-027).    |
 
 ### 2.11 BitacoraEVE
 
@@ -243,24 +252,23 @@ Cuando `tipo_actividad` = Presentación de libro, se capturan campos adicionales
 
 ## 4. Mapa entidad → caso de uso (trazabilidad)
 
-| Entidad                                 | Casos de uso relacionados                                  |
-| --------------------------------------- | ---------------------------------------------------------- |
-| Proponente                              | CU-EVE-002, CU-EVE-003                                     |
-| TipoActividad                           | CU-EVE-031                                                 |
-| Propuesta / PropuestaAdjunto            | CU-EVE-002 a CU-EVE-009, CU-EVE-013                        |
-| Actividad                               | CU-EVE-008, CU-EVE-010, CU-EVE-011, CU-EVE-025, CU-EVE-026 |
-| ProgramacionActividad / SesionActividad | CU-EVE-014 a CU-EVE-018, CU-EVE-025                        |
-| ConfirmacionProponente                  | CU-EVE-019, CU-EVE-020, CU-EVE-021                         |
-| NotificacionLote                        | CU-EVE-012, CU-EVE-019                                     |
-| ParametrosConvocatoria                  | CU-EVE-001, CU-EVE-005, CU-EVE-023                         |
-| BitacoraEVE                             | CU-EVE-022, CU-EVE-032                                     |
+| Entidad                                 | Casos de uso relacionados                                                              |
+| --------------------------------------- | -------------------------------------------------------------------------------------- |
+| Proponente                              | CU-EVE-002, CU-EVE-003                                                                 |
+| TipoActividad                           | CU-EVE-034 (administra el catálogo), CU-EVE-031 (usa el nombre en la ficha PDF)       |
+| Propuesta / PropuestaAdjunto            | CU-EVE-002, CU-EVE-003, CU-EVE-004, CU-EVE-007, CU-EVE-008, CU-EVE-009, CU-EVE-013, CU-EVE-036 |
+| Actividad                               | CU-EVE-009, CU-EVE-014, CU-EVE-017, CU-EVE-022, CU-EVE-026, CU-EVE-029, CU-EVE-032, CU-EVE-033 |
+| ProgramacionActividad / SesionActividad | CU-EVE-015, CU-EVE-016, CU-EVE-017, CU-EVE-018, CU-EVE-020, CU-EVE-021, CU-EVE-023  |
+| ConfirmacionProponente                  | CU-EVE-023, CU-EVE-024                                                                 |
+| NotificacionLote                        | CU-EVE-013, CU-EVE-023                                                                 |
+| ParametrosConvocatoria                  | CU-EVE-001, CU-EVE-027                                                                 |
+| BitacoraEVE                             | CU-EVE-026, CU-EVE-027, CU-EVE-035                                                     |
 
 ---
 
 ## 5. Temas abiertos del modelo
 
 - Confirmar si `Propuesta` guarda snapshot de los datos del proponente o solo referencia a `Proponente`.
-- Confirmar si el campo `categoria` (literaria/académica × uady/externa) vive en la Propuesta o en TipoActividad.
 - Definir si la ventana de ajustes del proponente (RFH-18) aplica a **todos** los tipos de actividad o solo a algunos.
 - Confirmar si `ParametrosConvocatoria.cupo_X` son por tipo de actividad o por categoría cruzada.
 - Pendiente: qué datos mínimos se capturan de los eventos artísticos que Hipólito registra internamente (sin convocatoria pública).

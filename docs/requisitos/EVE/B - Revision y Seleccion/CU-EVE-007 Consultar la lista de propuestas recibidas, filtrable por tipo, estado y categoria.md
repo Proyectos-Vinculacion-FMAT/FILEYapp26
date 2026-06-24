@@ -1,102 +1,77 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-007
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-007 Consultar la lista de propuestas recibidas, filtrable por tipo, estado y categoría
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El administrador obtiene un panorama de las propuestas recibidas en la edición, filtrable por tipo de actividad, estado y categoría, para priorizar y dar seguimiento a su revisión continua semana a semana.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — vista de consulta del administrador. El detalle y el dictamen de cada propuesta se cubren en CU-EVE-008 y CU-EVE-009. No cubre la notificación de resultados (CU-EVE-013).
 
 ## Actores
 
 ### Actor principal
 
-- Administrador
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Administrador (Hipólito)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El administrador abre la sección de Propuestas del panel del módulo EVE.
 
 ## Precondiciones
 
-- Condición 1
+- El administrador tiene sesión iniciada con permisos del módulo EVE.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se muestra la lista de propuestas de la edición activa según los filtros aplicados.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se muestra la lista; se informa la condición (sin resultados o error de consulta).
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El administrador abre la sección de Propuestas.
+2. El sistema muestra las propuestas de la edición activa con: folio, nombre de la actividad, proponente, tipo de actividad, categoría, estado (`pendiente` / `cambios_solicitados` / `aceptada` / `rechazada`) y fecha de registro.
+3. El administrador aplica filtros por tipo de actividad, estado y/o categoría, o busca por texto (folio, proponente o título).
+4. El sistema actualiza la lista conforme a los filtros.
+5. El administrador selecciona una propuesta para ver su detalle (CU-EVE-008).
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Lista sin filtros
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 3, el administrador no aplica ningún filtro.
+2. El sistema muestra todas las propuestas de la edición activa y el flujo continúa en el paso 5.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Sin propuestas que cumplan el filtro
 
-### E1. Nombre de la excepción
-
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+1. En el paso 4, ninguna propuesta cumple los criterios seleccionados.
+2. El sistema muestra la lista vacía con un aviso y mantiene los filtros para ajustarlos.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Criterios de filtrado: tipo de actividad, estado, categoría y/o texto de búsqueda.
 
 ### Salidas
 
-- Resultado de la operación
+- Lista de propuestas con folio, actividad, proponente, tipo, categoría, estado y fecha de registro.

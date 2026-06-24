@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: pospuesto-v2
 version: 0.02
 tags:
   - requisitos
@@ -17,6 +17,11 @@ trazabilidad:
   ddr: []
 ---
 # CU-EVE-011 Marcar una propuesta como "en negociación" (autores/editoriales con confirmación gradual)
+
+> [!warning] Pospuesto para v2
+> El estado "en negociación" no fue definido en la reunión del 23-Jun-2026. Los estados acordados
+> para el MVP son: en revisión → aceptada / solicitud de cambios / rechazada.
+> Este CU se reserva para una versión posterior cuando se defina el flujo editorial.
 
 ## Objetivo
 

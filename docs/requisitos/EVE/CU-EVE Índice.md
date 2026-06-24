@@ -8,9 +8,9 @@ fecha: 2026-06-20
 ---
 # CU-EVE — Índice de casos de uso (Eventos generales)
 
-Inventario de casos de uso del dominio **Eventos Generales** (`EVE`): desde la apertura de la convocatoria hasta la publicación y cierre definitivo del programa de Hipólito.
+Inventario de casos de uso del dominio **Eventos Generales** (`EVE`): desde la apertura de la convocatoria hasta la publicación y cierre definitivo del programa. Cubre los módulos de contenidos (Hipólito) y talleres/VIDA (Elvira).
 
-**Actores:** Proponente (persona/institución que propone una actividad) · Administrador (Hipólito y su equipo) · Sistema (procesos automáticos y temporizados).
+**Actores:** Aplicante (persona/institución que propone una actividad) · Administrador (Hipólito, Elvira y sus equipos) · Sistema (procesos automáticos y temporizados).
 
 > [!note]
 > Cada caso de uso tiene su propio archivo dentro de su módulo. Este índice es la vista general.
@@ -18,7 +18,7 @@ Inventario de casos de uso del dominio **Eventos Generales** (`EVE`): desde la a
 
 > [!note]
 > Los casos de uso de **salas** (asignación, disponibilidad) dependen del Core Salas.
-> Los de **identidad** (registro de Proponente, acceso OTP) dependen del Core Registros:
+> Los de **identidad** (registro de Aplicante, acceso OTP) dependen del Core Registros:
 > ver `CORES/REG/CU-REG Índice.md` — CU-REG-001, CU-REG-002 (usuarios externos) y CU-REG-003 (admin).
 
 ## Flujo de alto nivel
@@ -34,27 +34,28 @@ EVE:  Convocatoria → Revisión → Programación  → Confirmación y Cierre  
 
 ## A. Convocatoria
 
-Cubre la apertura del periodo de recepción de propuestas y todo lo que hace el proponente mientras la convocatoria está abierta.
+Cubre la apertura del periodo de recepción de propuestas y todo lo que hace el aplicante mientras la convocatoria está abierta.
 
 - CU-EVE-001 Configurar la convocatoria: abrir periodo, fechas clave y cupos por categoría — *Administrador*
-- CU-EVE-002 Enviar propuesta de actividad con datos y adjuntos — *Proponente*
-- CU-EVE-003 Enviar múltiples propuestas desde una misma cuenta sin recapturar datos de contacto — *Proponente*
-- CU-EVE-004 Editar una propuesta antes del cierre de la convocatoria — *Proponente*
-- CU-EVE-005 Cerrar automáticamente la convocatoria al vencer la fecha configurada — *Sistema*
-- CU-EVE-006 Registrar una actividad interna sin pasar por convocatoria pública (ej. arte visual) — *Administrador*
+- CU-EVE-002 Enviar propuesta de actividad con datos y adjuntos — *Aplicante*
+- CU-EVE-003 Enviar múltiples propuestas desde una misma cuenta sin recapturar datos de contacto — *Aplicante*
+- CU-EVE-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador — *Aplicante*
+- ~~CU-EVE-005 Cerrar automáticamente la convocatoria al vencer la fecha configurada~~ — absorbido en CU-EVE-001
+- ~~CU-EVE-006 Registrar una actividad interna sin pasar por convocatoria pública~~ — pospuesto para v2
+- CU-EVE-036 Consultar mis propuestas y revisar su estado actual — *Aplicante*
 
 ## B. Revisión y Selección
 
 Hipólito revisa de forma continua (semana a semana, no solo al cierre). Las decisiones se notifican en un solo lote cuando termina su revisión.
 
 - CU-EVE-007 Consultar la lista de propuestas recibidas, filtrable por tipo, estado y categoría — *Administrador*
-- CU-EVE-008 Ver el detalle de una propuesta (datos del proponente, descripción y adjuntos) — *Administrador*
-- CU-EVE-009 Aceptar una propuesta (sin asignar horario aún) — *Administrador*
-- CU-EVE-010 Rechazar una propuesta con motivo registrado — *Administrador*
-- CU-EVE-011 Marcar una propuesta como "en negociación" (autores/editoriales con confirmación gradual) — *Administrador*
+- CU-EVE-008 Ver el detalle de una propuesta (datos del aplicante, descripción y adjuntos) — *Administrador*
+- CU-EVE-009 Dictaminar una propuesta: aceptar, solicitar cambios o rechazar — *Administrador*
+- ~~CU-EVE-010 Rechazar una propuesta con motivo registrado~~ — absorbido en CU-EVE-009 (flujo alterno A2)
+- ~~CU-EVE-011 Marcar una propuesta como "en negociación"~~ — pospuesto para v2 (estado no definido para MVP)
 - CU-EVE-012 Ver el contador en tiempo real: aceptadas, rechazadas y espacios disponibles por categoría — *Administrador*
 - CU-EVE-013 Enviar en un solo lote las notificaciones de resultado (aceptadas y rechazadas) — *Administrador*
-- CU-EVE-014 Marcar la recepción del ejemplar físico enviado por el proponente (Presentación de libro/revista) — *Administrador*
+- CU-EVE-014 Marcar la recepción del ejemplar físico enviado por el aplicante (Presentación de libro/revista) — *Administrador*
 
 ## C. Programación
 
@@ -68,17 +69,17 @@ El coordinador arma el programa de forma iterativa — puede hacer múltiples ve
 - CU-EVE-020 Asignar un stand del módulo STD como lugar de una actividad (en lugar de sala del catálogo) — *Administrador*
 - CU-EVE-021 Programar una actividad en múltiples sesiones o fechas sin duplicar su registro — *Administrador*
 - CU-EVE-022 Marcar una actividad aceptada como apta para nivel juvenil/escolar — *Administrador*
-- CU-EVE-023 Notificar al proponente la sala y horario asignados — *Sistema*
+- CU-EVE-023 Notificar al aplicante la sala y horario asignados — *Sistema*
 
 ## D. Confirmación y Cierre
 
-El proponente recibe su horario y lo confirma. Existe una ventana de tiempo para solicitar cambios; fuera de ella, el sistema bloquea modificaciones.
+El aplicante recibe su horario y lo confirma. Existe una ventana de tiempo para solicitar cambios; fuera de ella, el sistema bloquea modificaciones.
 
-- CU-EVE-024 Confirmar disponibilidad en el horario asignado — *Proponente*
-- CU-EVE-025 Solicitar cambio de horario dentro de la ventana de modificaciones permitida — *Proponente*
+- CU-EVE-024 Responder a la notificación de horario asignado (confirmar o indicar incomparecencia) — *Aplicante*
+- ~~CU-EVE-025 Solicitar cambio de horario dentro de la ventana de modificaciones permitida~~ — absorbido en CU-EVE-024 (flujo alterno A1); el cambio de horario se gestiona fuera del sistema vía correo con el admin → CU-EVE-026
 - CU-EVE-026 Hacer un cambio de horario excepcional fuera de la ventana (con registro en bitácora y motivo) — *Administrador*
 - CU-EVE-027 Cerrar definitivamente el programa: bloquear cualquier modificación posterior — *Administrador*
-- CU-EVE-028 Descargar constancia de participación (disponible a partir de la fecha configurada, post-feria) — *Proponente*
+- CU-EVE-028 Descargar constancia de participación (disponible a partir de la fecha configurada, post-feria) — *Aplicante*
 
 ## E. Publicación y Administración
 
@@ -104,8 +105,8 @@ Exportación, publicación para visitantes, catálogos y auditoría.
 
 | Módulo | CUs | Requisitos origen |
 |--------|-----|-------------------|
-| A. Convocatoria | CU-EVE-001 a 006 | RFH-01, RFH-02, RFH-03, RFH-31 |
-| B. Revisión y Selección | CU-EVE-007 a 014 | RFH-05, RFH-06, RFH-07, RFH-08, RFH-09, RFH-35, RFH-04.1 |
+| A. Convocatoria | CU-EVE-001 a 004, CU-EVE-036 | RFH-01, RFH-02, RFH-03, RFH-31 |
+| B. Revisión y Selección | CU-EVE-007 a 009, CU-EVE-012 a 014 | RFH-05, RFH-06, RFH-07, RFH-08, RFH-09, RFH-35, RFH-04.1 |
 | C. Programación | CU-EVE-015 a 023 | RFH-09, RFH-10, RFH-11, RFH-12, RFH-13, RFH-14, RFH-15, RFH-33, RFH-37 |
 | D. Confirmación y Cierre | CU-EVE-024 a 028 | RFH-17, RFH-18, RFH-19, RFH-20, RFH-22.1 |
 | E. Publicación y Admin | CU-EVE-029 a 035 | RFH-21, RFH-22, RFH-23, RFH-24, RFH-25, RFH-32, RNFH-03 |

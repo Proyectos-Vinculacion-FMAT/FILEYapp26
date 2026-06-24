@@ -1,102 +1,78 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-012
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-012 Ver el contador en tiempo real: aceptadas, rechazadas y espacios disponibles por categoría
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El administrador visualiza en todo momento cuántas propuestas lleva aceptadas y rechazadas y cuántos espacios quedan disponibles por categoría, para tomar decisiones de selección informadas frente a los cupos configurados.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — panel de seguimiento de la selección. Es una vista de solo lectura que se actualiza con cada dictamen (CU-EVE-009). No modifica propuestas ni cupos.
 
 ## Actores
 
 ### Actor principal
 
-- Administrador
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Administrador (Hipólito)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El administrador consulta el panel de seguimiento mientras revisa propuestas.
 
 ## Precondiciones
 
-- Condición 1
+- El administrador tiene sesión iniciada con permisos del módulo EVE.
+- La edición activa tiene `ParametrosConvocatoria` configurada con cupos por categoría.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se muestran los contadores actualizados de propuestas por estado y los espacios disponibles por categoría.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se muestran los contadores; se informa el error de consulta.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El administrador abre el panel de seguimiento (o consulta el contador embebido en la lista de propuestas).
+2. El sistema calcula, para la edición activa: total de propuestas recibidas, número de `pendiente`, `cambios_solicitados`, `aceptada` y `rechazada`.
+3. El sistema calcula, por cada categoría (`literaria_uady`, `literaria_externa`, `academica_uady`, `academica_externa`), las aceptadas frente al cupo configurado y los espacios disponibles restantes.
+4. El sistema presenta los contadores; los valores reflejan el estado vigente al momento de la consulta.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Cupo de una categoría alcanzado o superado
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 3, el sistema detecta que las aceptadas de una categoría igualan o superan el cupo.
+2. El sistema resalta visualmente esa categoría como "cupo alcanzado", sin impedir aceptar más propuestas (la decisión sigue siendo del administrador).
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Cupos no configurados
 
-### E1. Nombre de la excepción
-
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+1. En el paso 3, el sistema detecta que la edición no tiene cupos configurados.
+2. El sistema muestra los contadores por estado y omite el cálculo de espacios disponibles, indicando que faltan cupos por configurar (CU-EVE-001).
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Ninguna; el sistema deriva los contadores de las propuestas y los cupos de la edición activa.
 
 ### Salidas
 
-- Resultado de la operación
+- Contadores por estado (pendiente, cambios solicitados, aceptada, rechazada).
+- Espacios disponibles por categoría (aceptadas vs. cupo).

@@ -6,9 +6,9 @@ tags:
   - caso-de-uso
   - eventos
 fecha: 2026-06-20
-id: CU-EVE-014
+id: CU-EVE-023
 dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
+responsable: issac
 issue_relacionado: PSD-XX
 pr_relacionado: "#XX"
 reglas_de_negocio: []
@@ -16,7 +16,7 @@ diagramas_relacionados: []
 trazabilidad:
   ddr: []
 ---
-# CU-EVE-014 Marcar la recepción del ejemplar físico enviado por el proponente (Presentación de libro/revista)
+# CU-EVE-023 Notificar al aplicante la sala y horario asignados
 
 ## Objetivo
 
@@ -30,7 +30,7 @@ Indicar el límite del sistema o subsistema al que aplica este caso de uso.
 
 ### Actor principal
 
-- Administrador
+- Sistema
 
 ### Actores secundarios
 

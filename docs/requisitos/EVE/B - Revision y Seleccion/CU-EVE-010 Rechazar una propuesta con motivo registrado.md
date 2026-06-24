@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: absorbido
 version: 0.02
 tags:
   - requisitos
@@ -17,6 +17,10 @@ trazabilidad:
   ddr: []
 ---
 # CU-EVE-010 Rechazar una propuesta con motivo registrado
+
+> [!warning] Absorbido
+> Este CU fue fusionado en **CU-EVE-009 Dictaminar una propuesta** como flujo alterno A2 (Rechazar).
+> Este archivo se conserva solo como referencia histórica.
 
 ## Objetivo
 

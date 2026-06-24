@@ -1,102 +1,77 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-035
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-035 Consultar la bitácora de cambios excepcionales de una actividad
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El administrador consulta el historial de cambios excepcionales registrados sobre una actividad —quién los hizo, qué cambió, el motivo y cuándo— para auditar las decisiones tomadas fuera del flujo normal.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — consulta de la `BitacoraEVE`. Es una vista de solo lectura. Registra los eventos generados por CU-EVE-026 (cambio de horario excepcional), CU-EVE-027 (reapertura del programa) y demás acciones excepcionales del módulo.
 
 ## Actores
 
 ### Actor principal
 
-- Administrador
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Administrador (Hipólito)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El administrador necesita revisar el historial de cambios excepcionales de una actividad.
 
 ## Precondiciones
 
-- Condición 1
+- El administrador tiene sesión iniciada con permisos del módulo EVE.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se muestran los registros de bitácora asociados a la actividad consultada.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se muestra la bitácora; se informa el error de consulta.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El administrador abre la bitácora de una actividad (desde su detalle o desde la sección de auditoría).
+2. El sistema lista los registros de `BitacoraEVE` asociados, mostrando por cada uno: acción, detalle del cambio (de → a), motivo, persona que lo ejecutó y marca de tiempo.
+3. El administrador puede ordenar o filtrar los registros por fecha o tipo de acción.
+4. El sistema actualiza la lista conforme al criterio aplicado.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Vista global de la bitácora
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 1, el administrador abre la bitácora general en lugar de la de una actividad específica.
+2. El sistema lista los registros de toda la edición y permite filtrar por entidad, acción o persona.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Sin registros de bitácora
 
-### E1. Nombre de la excepción
-
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+1. En el paso 2, la actividad no tiene cambios excepcionales registrados.
+2. El sistema informa que no hay registros de bitácora para la actividad.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Identificador de la actividad (o criterio de la vista global).
+- Criterios de filtrado: fecha, tipo de acción, entidad o persona.
 
 ### Salidas
 
-- Resultado de la operación
+- Lista de registros de `BitacoraEVE`: acción, detalle, motivo, persona y marca de tiempo.

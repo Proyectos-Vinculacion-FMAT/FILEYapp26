@@ -8,7 +8,7 @@ tags:
 fecha: 2026-06-20
 id: CU-EVE-018
 dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
+responsable: issa
 issue_relacionado: PSD-XX
 pr_relacionado: "#XX"
 reglas_de_negocio: []

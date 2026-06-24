@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: 
 version: 0.02
 tags:
   - requisitos
@@ -8,7 +8,7 @@ tags:
 fecha: 2026-06-20
 id: CU-EVE-015
 dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
+responsable: issac
 issue_relacionado: PSD-XX
 pr_relacionado: "#XX"
 reglas_de_negocio: []

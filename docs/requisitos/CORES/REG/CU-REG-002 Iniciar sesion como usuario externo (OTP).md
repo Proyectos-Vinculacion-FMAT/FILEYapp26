@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: aceptado
 version: 0.1
 tags:
   - caso-de-uso

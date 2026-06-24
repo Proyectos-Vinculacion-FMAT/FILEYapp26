@@ -1,102 +1,92 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-026
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-026 Hacer un cambio de horario excepcional fuera de la ventana (con registro en bitácora y motivo)
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El administrador ejecuta un cambio de sala u horario de una actividad fuera de la ventana normal de ajustes —e incluso después de cerrado el programa— dejando registro del motivo y de quién lo autorizó en la bitácora, para mantener trazabilidad de las excepciones.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — gobierno de cambios excepcionales. Aplica cuando ya venció `fecha_cierre_ajustes_proponente` o cuando el programa fue cerrado definitivamente (CU-EVE-027). La negociación con el proponente ocurre fuera del sistema (correo u otro medio); este caso de uso registra y aplica el cambio acordado.
 
 ## Actores
 
 ### Actor principal
 
-- Administrador
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Administrador (Hipólito)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+Tras acordar un cambio con el proponente fuera del sistema, el administrador necesita aplicarlo de manera excepcional.
 
 ## Precondiciones
 
-- Condición 1
+- El administrador tiene sesión iniciada con permisos del módulo EVE.
+- La actividad tiene una programación existente y la fecha actual es posterior a `fecha_cierre_ajustes_proponente`, o el programa ya está cerrado.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- La programación de la actividad queda actualizada (sala, fecha y/o bloque) según lo acordado.
+- Se crea un registro en `BitacoraEVE` con la acción, el detalle del cambio (de → a), el motivo y el administrador que lo ejecutó.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- La programación permanece sin cambios y no se registra nada en la bitácora.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El administrador abre la actividad cuyo horario debe cambiar de forma excepcional.
+2. El sistema advierte que el cambio está fuera de la ventana de ajustes (o que el programa está cerrado) y que quedará registrado en la bitácora.
+3. El administrador indica la nueva sala, fecha y/o bloque, y captura el motivo (campo obligatorio).
+4. El sistema solicita doble verificación de la acción excepcional.
+5. El administrador confirma.
+6. El sistema aplica el cambio en la programación de la actividad.
+7. El sistema crea el registro en `BitacoraEVE` (acción `cambio_horario_excepcional`, detalle de → a, motivo, administrador y marca de tiempo).
+8. El sistema confirma al administrador que el cambio quedó aplicado y registrado.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. La actividad no estaba programada
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 1, la actividad está en `sin_horario` (p. ej. tras una incomparecencia).
+2. El administrador asigna por primera vez una programación de forma excepcional, capturando igualmente el motivo.
+3. El flujo continúa en el paso 4.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Motivo faltante
 
-### E1. Nombre de la excepción
+1. En el paso 3, el administrador deja el motivo en blanco.
+2. El sistema impide aplicar el cambio y resalta el motivo como obligatorio.
+3. El administrador escribe el motivo y reintenta.
 
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+### E2. Conflicto con la nueva sala y bloque
+
+1. En el paso 6, el sistema detecta que la nueva sala y bloque ya están ocupados por otra actividad.
+2. El sistema advierte el conflicto; el administrador decide ajustar la nueva asignación o continuar bajo su criterio.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Identificador de la actividad o de su programación.
+- Nueva sala, fecha y/o bloque.
+- Motivo del cambio excepcional (obligatorio).
 
 ### Salidas
 
-- Resultado de la operación
+- Programación actualizada.
+- Registro en `BitacoraEVE` con el detalle del cambio, el motivo y el autor.

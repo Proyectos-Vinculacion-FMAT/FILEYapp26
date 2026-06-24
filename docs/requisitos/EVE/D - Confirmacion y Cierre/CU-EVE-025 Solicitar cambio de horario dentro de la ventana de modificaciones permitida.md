@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: absorbido
 version: 0.02
 tags:
   - requisitos
@@ -18,6 +18,13 @@ trazabilidad:
 ---
 # CU-EVE-025 Solicitar cambio de horario dentro de la ventana de modificaciones permitida
 
+> [!warning] Absorbido
+> La solicitud de cambio de horario no ocurre dentro del sistema. El aplicante indica
+> "incomparecencia por horario" en CU-EVE-024 (flujo alterno A1) y gestiona el cambio
+> directamente con el administrador por correo externo. Si el admin decide cambiar el
+> horario, lo hace en el sistema mediante CU-EVE-026.
+> Este archivo se conserva solo como referencia histórica.
+
 ## Objetivo
 
 Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
@@ -30,7 +37,7 @@ Indicar el límite del sistema o subsistema al que aplica este caso de uso.
 
 ### Actor principal
 
-- Proponente
+- Aplicante
 
 ### Actores secundarios
 

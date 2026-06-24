@@ -1,102 +1,81 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-031
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-031 Generar la ficha PDF de una actividad individual (título, tipo, organiza, fecha, sala, horario)
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+Obtener una ficha PDF de una actividad individual con sus datos esenciales, para compartirla o difundirla de forma puntual sin exportar todo el programa.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — generación de ficha individual. Produce un PDF de una sola actividad. No cubre la exportación del programa completo (CU-EVE-030) ni el detalle interactivo en la cartelera (CU-EVE-033).
 
 ## Actores
 
 ### Actor principal
 
-- Sistema
+- Visitante o Administrador (quien solicita la ficha)
 
 ### Actores secundarios
 
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Sistema (genera el documento).
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El actor solicita la ficha PDF desde el detalle de una actividad.
 
 ## Precondiciones
 
-- Condición 1
+- La actividad existe y, si la solicita un visitante, pertenece a una versión publicada del programa.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se genera y entrega un PDF con los datos de la actividad.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se genera el PDF; el sistema informa el motivo.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El actor solicita "Generar ficha PDF" desde el detalle de una actividad.
+2. El sistema recopila los datos de la actividad: título, tipo, organiza, fecha, sala (o stand) y horario.
+3. El sistema genera el documento PDF con esos datos.
+4. El sistema entrega el archivo para su descarga.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Actividad de presentación de libro/revista
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 2, la actividad es una presentación de libro o revista.
+2. El sistema incluye en la ficha los datos adicionales de la publicación (título de la publicación, autores/editores y portada) cuando están disponibles.
+3. El flujo continúa en el paso 3.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Actividad sin horario asignado
 
-### E1. Nombre de la excepción
-
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+1. En el paso 2, la actividad aún no tiene sala u horario asignado.
+2. El sistema genera la ficha indicando "horario por confirmar" en los campos faltantes, o informa que la ficha no está disponible hasta su programación, según la política de publicación vigente.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Identificador de la actividad.
 
 ### Salidas
 
-- Resultado de la operación
+- Ficha PDF de la actividad (título, tipo, organiza, fecha, sala y horario).

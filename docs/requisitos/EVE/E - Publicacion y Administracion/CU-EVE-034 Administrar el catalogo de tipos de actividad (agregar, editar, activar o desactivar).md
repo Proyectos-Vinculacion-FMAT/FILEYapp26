@@ -1,102 +1,91 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-034
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
-# CU-EVE-034 Administrar el catálogo de tipos de actividad (agregar, editar, activar/desactivar)
+# CU-EVE-034 Administrar el catálogo de tipos de actividad (agregar, editar, activar o desactivar)
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El administrador mantiene el catálogo de tipos de actividad —agregando, editando, activando o desactivando entradas— para que el formulario de propuestas y la clasificación interna reflejen los tipos vigentes de cada edición.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — administración del catálogo `TipoActividad`. Cubre los tipos del formulario público y los de uso interno. La desactivación no elimina datos históricos: los tipos en uso se conservan para no romper las propuestas y actividades existentes.
 
 ## Actores
 
 ### Actor principal
 
-- Administrador
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Administrador (Hipólito)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El administrador necesita agregar un nuevo tipo de actividad o modificar/retirar uno existente.
 
 ## Precondiciones
 
-- Condición 1
+- El administrador tiene sesión iniciada con permisos del módulo EVE.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- El catálogo `TipoActividad` queda actualizado (alta, edición o cambio de estado `activo`).
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- El catálogo permanece sin cambios.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El administrador abre la administración del catálogo de tipos de actividad.
+2. El sistema lista los tipos existentes con: nombre, origen (`convocatoria_publica` / `interno`), duración por defecto en bloques, si requiere adjunto, si requiere ejemplar físico y estado `activo`.
+3. El administrador elige una acción: agregar, editar o activar/desactivar un tipo.
+4. El sistema solicita o muestra los datos del tipo según la acción.
+5. El administrador captura los cambios y confirma.
+6. El sistema valida los datos y guarda el cambio en el catálogo.
+7. El sistema confirma la operación.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Agregar un nuevo tipo de actividad
 
-### A1. Nombre del flujo alterno
+1. En el paso 3, el administrador elige "Agregar".
+2. El administrador captura nombre, origen, duración por defecto, si requiere adjunto y si requiere ejemplar físico, dejándolo `activo`.
+3. El flujo continúa en el paso 6.
 
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+### A2. Desactivar un tipo en uso
+
+1. En el paso 3, el administrador desactiva un tipo que ya tiene propuestas o actividades asociadas.
+2. El sistema cambia el tipo a `activo = false`, de modo que deja de ofrecerse en nuevos formularios pero conserva los registros históricos asociados.
+3. El flujo continúa en el paso 7.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Nombre de tipo duplicado
 
-### E1. Nombre de la excepción
+1. En el paso 6, el sistema detecta que el nombre del tipo ya existe en el catálogo.
+2. El sistema impide guardar y solicita un nombre distinto.
 
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+### E2. Intento de eliminar un tipo en uso
+
+1. El administrador intenta eliminar (no desactivar) un tipo con propuestas o actividades asociadas.
+2. El sistema impide la eliminación para preservar la integridad histórica y ofrece, en su lugar, desactivarlo (A2).
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Datos del tipo de actividad: nombre, origen, duración por defecto en bloques, requiere adjunto, requiere ejemplar físico, estado `activo`.
 
 ### Salidas
 
-- Resultado de la operación
+- Catálogo `TipoActividad` actualizado.

@@ -1,102 +1,79 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-033
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-033 Mostrar el detalle de una actividad pública (con sinopsis y datos de autor para presentaciones de libro)
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El visitante consulta el detalle de una actividad publicada, incluyendo su sinopsis y —en presentaciones de libro o revista— los datos del autor y la publicación, para conocerla a fondo antes de asistir.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — vista pública de detalle de actividad. Solo muestra actividades de la versión publicada (CU-EVE-029). Es de acceso público y de solo lectura.
 
 ## Actores
 
 ### Actor principal
 
-- Sistema
+- Visitante (público general)
 
 ### Actores secundarios
 
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Sistema (compone y presenta el detalle).
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El visitante selecciona una actividad desde la cartelera pública (CU-EVE-032).
 
 ## Precondiciones
 
-- Condición 1
+- La actividad pertenece a una versión del programa publicada.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se muestra el detalle público de la actividad.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se muestra el detalle; se informa que la actividad no está disponible.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El visitante selecciona una actividad de la cartelera.
+2. El sistema muestra el detalle público: título, tipo, organiza, público al que va dirigido, sinopsis, fecha, sala (o stand) y horario.
+3. El sistema muestra los participantes y, si aplica, el moderador.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Presentación de libro o revista
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 2, la actividad es una presentación de libro o revista.
+2. El sistema muestra adicionalmente los datos de la publicación: título de la publicación, autores/editores, editorial, portada y sinopsis del libro/revista, además de quiénes participarán presencialmente.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Actividad no publicada o retirada
 
-### E1. Nombre de la excepción
-
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+1. En el paso 1, la actividad ya no pertenece a la versión publicada (fue despublicada o modificada).
+2. El sistema informa que la actividad no está disponible y sugiere volver a la cartelera.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Identificador de la actividad.
 
 ### Salidas
 
-- Resultado de la operación
+- Detalle público de la actividad, con datos de publicación y autor cuando corresponda.

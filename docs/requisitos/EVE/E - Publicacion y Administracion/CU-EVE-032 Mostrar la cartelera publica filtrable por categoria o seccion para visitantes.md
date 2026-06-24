@@ -1,102 +1,91 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-032
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
-# CU-EVE-032 Mostrar la cartelera pública filtrable por categoría/sección para visitantes
+# CU-EVE-032 Mostrar la cartelera pública filtrable por categoría o sección para visitantes
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El visitante consulta la cartelera pública de actividades de la feria, pudiendo filtrarla por categoría o sección, para planear a cuáles asistir.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — cartelera pública. Muestra únicamente actividades de la versión publicada del programa (CU-EVE-029). Es de acceso público y de solo lectura. El detalle de cada actividad se cubre en CU-EVE-033.
 
 ## Actores
 
 ### Actor principal
 
-- Sistema
+- Visitante (público general)
 
 ### Actores secundarios
 
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Sistema (compone y presenta la cartelera).
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El visitante abre la cartelera pública de la feria.
 
 ## Precondiciones
 
-- Condición 1
+- Existe una versión del programa publicada para la edición vigente.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se muestra la cartelera con las actividades publicadas según los filtros aplicados.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se muestra la cartelera; se informa que el programa aún no está disponible.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El visitante abre la cartelera pública.
+2. El sistema muestra las actividades de la versión publicada con: título, tipo, fecha, sala y horario.
+3. El visitante aplica filtros por categoría o sección (y, opcionalmente, por día), o busca por texto.
+4. El sistema actualiza la cartelera conforme a los filtros.
+5. El visitante selecciona una actividad para ver su detalle (CU-EVE-033).
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Cartelera sin filtros
 
-### A1. Nombre del flujo alterno
+1. En el paso 3, el visitante no aplica filtros.
+2. El sistema muestra todas las actividades publicadas y el flujo continúa en el paso 5.
 
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+### A2. Actividades informativas sin horario
+
+1. En el paso 2, existen actividades publicadas como informativas (`en_cartelera_informal`).
+2. El sistema las muestra en una sección informativa, indicando que su horario está por confirmar.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Programa aún no publicado
 
-### E1. Nombre de la excepción
+1. En el paso 1, no existe ninguna versión publicada para la edición vigente.
+2. El sistema informa que el programa aún no está disponible y no muestra cartelera.
 
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+### E2. Sin resultados para el filtro
+
+1. En el paso 4, ninguna actividad cumple los filtros aplicados.
+2. El sistema muestra la cartelera vacía con un aviso y mantiene los filtros para ajustarlos.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Criterios de filtrado: categoría, sección, día y/o texto de búsqueda.
 
 ### Salidas
 
-- Resultado de la operación
+- Cartelera pública con título, tipo, fecha, sala y horario de cada actividad publicada.

@@ -1,102 +1,80 @@
 ---
 estado: propuesta
-version: 0.02
+version: 0.1
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-20
+fecha: 2026-06-24
 id: CU-EVE-030
-dominio: EVT
-responsable: Juan Manuel Hernandez Miranda
-issue_relacionado: PSD-XX
-pr_relacionado: "#XX"
+dominio: EVE
 reglas_de_negocio: []
-diagramas_relacionados: []
-trazabilidad:
-  ddr: []
 ---
 # CU-EVE-030 Exportar el programa completo o un subconjunto a Excel, Word o PDF
 
 ## Objetivo
 
-Describir el resultado de valor que obtiene el actor al ejecutar este caso de uso.
+El administrador exporta el programa —completo o un subconjunto filtrado— a Excel, Word o PDF, para trabajarlo fuera del sistema, compartirlo con su editor o entregarlo para diseño y difusión.
 
 ## Alcance
 
-Indicar el límite del sistema o subsistema al que aplica este caso de uso.
+Módulo EVE — exportación del programa. Genera un archivo descargable a partir de los datos del programa. No publica la cartelera pública (CU-EVE-029) ni genera la ficha individual de una actividad (CU-EVE-031).
 
 ## Actores
 
 ### Actor principal
 
-- Administrador
-
-### Actores secundarios
-
-> [!note] Opcional
-> Usar solo si participan actores de apoyo además del principal. Eliminar esta sección si no aplica.
+- Administrador (Hipólito)
 
 ## Disparador
 
-Evento que inicia el caso de uso.
+El administrador necesita una versión del programa en un formato de archivo para trabajo externo.
 
 ## Precondiciones
 
-- Condición 1
+- El administrador tiene sesión iniciada con permisos del módulo EVE.
+- Existe al menos una actividad en el programa de la edición activa.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Resultado esperado si el flujo termina correctamente
+- Se genera y descarga un archivo en el formato elegido (Excel, Word o PDF) con el contenido seleccionado.
 
 ### En fallo
 
-- Estado resultante si el flujo no puede completarse
+- No se genera el archivo; el sistema informa el motivo.
 
 ## Flujo principal
 
-> [!note] Referencias a reglas de negocio
-> La cita `[RN-EVE-NNN]` en un paso es opcional: úsala solo cuando el paso se apoye en una regla de negocio declarada en `reglas_de_negocio` (frontmatter). Elimínala si el paso no depende de ninguna.
-
-1. El actor realiza la acción inicial.
-2. El sistema valida la condición correspondiente.
-3. El sistema ejecuta la acción principal.
-4. El sistema confirma el resultado al actor.
+1. El administrador abre la opción de exportar programa.
+2. El sistema permite definir el alcance: programa completo o un subconjunto por filtros (categoría, sección, tipo de actividad, día o sala).
+3. El administrador elige el formato de salida: Excel, Word o PDF.
+4. El administrador confirma la exportación.
+5. El sistema genera el archivo con las actividades que cumplen el alcance, incluyendo sus datos de programación (actividad, tipo, organiza, fecha, sala y horario).
+6. El sistema entrega el archivo para su descarga.
 
 ## Flujos alternos
 
-> [!note] Opcional
-> Usar solo si existen variaciones válidas que se desvían del flujo principal. Eliminar esta sección si no aplica.
+### A1. Exportar un subconjunto filtrado
 
-### A1. Nombre del flujo alterno
-
-1. Condición que desvía del flujo principal.
-2. El sistema responde de forma alternativa.
-3. El flujo termina o regresa al paso N del flujo principal.
+1. En el paso 2, el administrador aplica filtros para acotar el contenido.
+2. El sistema exporta únicamente las actividades que cumplen los filtros y el flujo continúa en el paso 3.
 
 ## Flujos de excepción
 
-> [!tip]
-> Debe existir al menos una excepción (E1). Las excepciones adicionales (E2, E3, ...) son opcionales.
+### E1. Sin actividades en el alcance seleccionado
 
-### E1. Nombre de la excepción
-
-1. Ocurre una condición inválida o error.
-2. El sistema detiene, rechaza o compensa la operación.
-3. Se informa el motivo al actor.
+1. En el paso 5, ninguna actividad cumple el alcance o los filtros definidos.
+2. El sistema informa que no hay contenido que exportar y no genera el archivo.
 
 ## Datos relevantes
 
-> [!note] Opcional
-> Usar solo si conviene detallar entradas y salidas del caso de uso. Eliminar esta sección si no aplica.
-
 ### Entradas
 
-- Solicitud de operación
-- Parámetros de entrada requeridos
+- Alcance de exportación (completo o filtros).
+- Formato de salida (Excel / Word / PDF).
 
 ### Salidas
 
-- Resultado de la operación
+- Archivo del programa en el formato elegido, listo para descarga.
