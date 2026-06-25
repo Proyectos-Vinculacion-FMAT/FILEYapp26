@@ -39,7 +39,7 @@ Inventario de casos de uso del **Core Registros**: creación de cuenta, inicio d
 
 | Dominio | Cuándo llega aquí |
 |---------|-------------------|
-| EVE | Antes de CU-EVE-002 (enviar propuesta): el proponente debe estar autenticado. |
+| EVE | Antes de CU-EVT-002 (enviar propuesta): el proponente debe estar autenticado. |
 | STD | Antes de CU-STD-001 (aplicar como expositor): el representante editorial debe estar autenticado. |
 | TAL | Antes del registro de tallerista o de visita escolar: el tallerista/representante escolar debe estar autenticado. |
 | Panel admin (EVE/TAL/STD) | Todo acceso administrativo requiere CU-REG-003 previo. |
