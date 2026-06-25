@@ -2,9 +2,8 @@
 estado: propuesta
 version: 0.1
 tags:
-  - requisitos
-  - caso-de-uso
-  - stands
+  - tipo/caso-de-uso
+  - dom/std
 fecha: 2026-06-22
 id: CU-STD-003
 dominio: STD

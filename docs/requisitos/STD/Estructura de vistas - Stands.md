@@ -2,8 +2,8 @@
 estado: propuesta
 version: 1.0
 tags:
-  - estructura-de-vistas
-  - stands
+  - tipo/proceso
+  - dom/std
 fecha: 2026-06-19
 ---
 # Estructura de vistas — Stands (reserva, pago y confirmación)

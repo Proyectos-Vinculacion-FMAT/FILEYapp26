@@ -2,8 +2,8 @@
 estado: propuesta
 version: 0.1
 tags:
-  - casos-de-uso
-  - stands
+  - tipo/indice
+  - dom/std
 fecha: 2026-06-18
 ---
 # CU-STD — Índice de casos de uso (Stands)

@@ -2,8 +2,8 @@
 estado: propuesta
 version: 1.0
 tags:
-  - modelo-de-datos
-  - stands
+  - tipo/modelo-de-datos
+  - dom/std
 fecha: 2026-06-18
 ---
 # Modelo de datos — Stands (reserva, pago y confirmación)
