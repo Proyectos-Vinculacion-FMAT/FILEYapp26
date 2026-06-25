@@ -1,11 +1,12 @@
 ---
 tags:
-  - juntas
-  - stands
-  - eventos
-  - sistema
-  - usuarios
-  - registros
+  - tipo/junta-resumen
+  - tema/equipo-desarrollo
+  - dom/std
+  - dom/evt
+  - dom/reg
+  - tema/usuarios
+  - tema/arquitectura
 estado: propuesta
 fecha: 2026-06-08
 ---

@@ -1,19 +1,19 @@
 ---
 tags:
-  - juntas
-  - cliente
-  - descubrimiento
-  - eventos
-  - talleres
-  - salones
-  - salas
-  - formularios
-  - permisos
-  - trazabilidad
+  - tipo/junta-resumen
+  - tema/cliente
+  - tema/descubrimiento
+  - dom/evt
+  - dom/tal
+  - dom/sal
+  - tema/formularios
+  - tema/permisos
+  - tema/trazabilidad
 estado: final
 version: "1.2"
 fecha: 2026-06-17
 fecha_actualizacion: 2026-06-21
+Fuente: "../transcripciones/Junta 2 con organizadores FILEY/TRS - Junta 2 con organizadores FILEY.md"
 Asistentes:
   - "Organizador general: Hipólito"
   - "Asistente: Laura"

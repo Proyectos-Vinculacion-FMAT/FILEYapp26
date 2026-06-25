@@ -1,3 +1,14 @@
+---
+tags:
+  - tipo/junta-transcripcion
+  - tema/equipo-desarrollo
+  - tema/feedback
+  - tema/arquitectura
+  - dom/std
+  - dom/evt
+  - dom/tal
+---
+
 # Transcripcion WhisperX
 
 ## Oradores detectados

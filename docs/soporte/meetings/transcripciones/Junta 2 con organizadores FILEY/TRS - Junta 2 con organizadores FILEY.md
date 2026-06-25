@@ -1,3 +1,16 @@
+---
+tags:
+  - tipo/junta-transcripcion
+  - tema/cliente
+  - tema/descubrimiento
+  - dom/evt
+  - dom/tal
+  - dom/sal
+  - tema/formularios
+  - tema/permisos
+  - tema/trazabilidad
+---
+
 # Transcripcion WhisperX
 
 ## Oradores detectados

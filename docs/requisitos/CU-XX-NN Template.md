@@ -2,8 +2,7 @@
 estado: propuesta
 version: 0.02
 tags:
-  - requisitos
-  - caso-de-uso
+  - tipo/plantilla
 fecha: 2026-06-18
 id: CU-XXX-NNN
 dominio: STD | TAL | REG | EVT | PRG | SAL
