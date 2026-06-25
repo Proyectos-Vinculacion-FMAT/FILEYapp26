@@ -1,5 +1,7 @@
 # Grabaciones / audio de juntas — no se versionan (archivos muy grandes).
 # Se conservan en disco; en el repo viven sus transcripciones y resúmenes.
+.obsidian/*.json
+.obsidian/
 docs/soporte/meetings/grabaciones/
 *.wav
 *.mp3
@@ -7,3 +9,4 @@ docs/soporte/meetings/grabaciones/
 *.aac
 *.flac
 *.ogg
+
