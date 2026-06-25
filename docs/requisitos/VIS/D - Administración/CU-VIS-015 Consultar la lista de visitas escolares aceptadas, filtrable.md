@@ -22,7 +22,10 @@ trazabilidad:
 
 ## Objetivo
 
-Permitir al Administrador consultar la lista de visitas escolares ya Aceptadas (Participantes), filtrándola según lo necesite.
+Permitir al Administrador consultar la lista de visitas escolares ya Aceptadas (Participantes), filtrándola según lo necesite, incluyendo el **total agregado de alumnos/visitantes** que asistirán.
+
+> [!note] Numeralia de asistentes
+> La vista incluye una **numeralia** simple: la **suma total** de alumnos/visitantes de las visitas aceptadas (y, según el filtro aplicado, por día o por actividad), para saber de manera automática cuántas personas visitarán la FILEY. Es una agregación sencilla sobre la cantidad de visitantes declarada en cada propuesta ([CU-VIS-001](<../A - Aplicación/CU-VIS-001 Registrar la propuesta de visita escolar (datos de la escuela y del contacto).md>)). Fuente: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>) ("saber también de manera automática la cantidad de alumnos que visitarán la FILEY").
 
 ## Alcance
 

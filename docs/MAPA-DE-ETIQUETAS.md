@@ -24,7 +24,7 @@ Cada etiqueta pertenece a **una faceta**, identificada por su prefijo `faceta/va
 | Faceta | Responde a… | Cardinalidad | Ejemplo |
 | ------ | ----------- | ------------ | ------- |
 | `tipo/` | ¿Qué **es** el documento? | **exactamente 1** por archivo | `tipo/caso-de-uso` |
-| `dom/`  | ¿A qué **dominio** pertenece? | 0 o más | `dom/std` |
+| `dom/` | ¿A qué **dominio** pertenece? | 0 o más | `dom/std` |
 | `tema/` | ¿De qué **trata** (transversal)? | 0 o más | `tema/pagos` |
 
 Los prefijos hacen el espacio de etiquetas **autodescriptivo**: con ver `dom/` ya sabes que lo
@@ -99,12 +99,14 @@ Temas que cruzan varios dominios. **Lista cerrada**: para añadir uno nuevo, ed�
   solas en el panel de Etiquetas y en el grafo por faceta.
 - **Dataview** (si se usa): `LIST FROM #tipo/caso-de-uso AND #dom/vis`.
 - **ripgrep / línea de comandos:**
+
   ```bash
   # Todos los casos de uso del dominio de visitas escolares
   rg -l "dom/vis" --glob "*.md" | rg -l "tipo/caso-de-uso"
   # Toda la evidencia (juntas + material) que tocó pagos
   rg -l "tema/pagos" --glob "*.md"
   ```
+
 - **Para una IA:** los prefijos son estables. Para acotar contexto, filtra por `dom/<codigo>`
   (dominio) + `tipo/<clase>` (qué tipo de documento) antes de leer cuerpos.
 

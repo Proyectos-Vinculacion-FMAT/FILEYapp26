@@ -1,0 +1,355 @@
+{
+  "_nota": "Modelo conceptual (NO funcional). Solo abstrae qué pertenece a qué, a modo de diagrama. Convenciones: 'heredaDe' = reutiliza los campos de una plantilla; 'ref' = apunta a un catálogo o componente compartido; 'camposAdicionales'/'camposModificados' = lo que cambia respecto de lo heredado.",
+
+  "sistemaFILEY2027": {
+    "cores": {
+      "registros": {
+        "_descripcion": "Solicitudes/altas por actividad y su administración. Primer core en liberarse. Comparte un registro común (nucleoComun) y se ramifica en formularios especializados hermanos: eventos, visita escolar y stands.",
+        "verDetalle": "registros"
+      },
+      "programacion": {
+        "_descripcion": "Gestión del programa (general de Hipólito + de talleres de Elvira). Detallado abajo como andamiaje para empezar.",
+        "verDetalle": "programacion"
+      },
+      "crudSalasSalones": {
+        "_descripcion": "CRUD único de salas y salones, compartido y visible para Hipólito y Elvira (coordinación interna). Ambos pueden crear salones. No aplica a stands.",
+        "verDetalle": "crudSalasSalones"
+      }
+    }
+  },
+
+  "registros": {
+    "_descripcion": "Un formulario por actividad. Primero datos básicos (núcleo común) y luego la sección específica según el tipo. Componentes: 'eventos' (con variantes) y 'visitaEscolar' (aparte).",
+
+    "reglas": {
+      "_notas": [
+        "No se puede enviar el formulario si no está completamente lleno (validar obligatorios).",
+        "Se llena un formulario por actividad.",
+        "Lógica condicional: el tipo de actividad define qué sección específica se muestra; las demás se saltan.",
+        "Campos con opciones predeterminadas para homogeneizar; algunos permiten multi-selección.",
+        "Cada pregunta lleva una breve descripción para reducir dudas.",
+        "Al enviar: se guarda la respuesta (Excel/BD) y se manda correo automático de respaldo al participante.",
+        "La coordinación recibe una ficha concentrada por actividad (PDF por actividad)."
+      ]
+    },
+
+    "nucleoComun": {
+      "_descripcion": "Datos básicos de TODA persona, sin importar el tipo de actividad. Se mantiene lo más desacoplado posible: por ahora se piden inline en cada registro de actividad, como un componente reutilizable independiente del resto del formulario.",
+      "campos": {
+        "nombreCompleto": { "tipo": "string", "obligatorio": true },
+        "correoElectronico": { "tipo": "email", "obligatorio": true },
+        "numeroTelefonico": { "tipo": "string", "obligatorio": true },
+        "dependenciaInstitucion": { "tipo": "string", "obligatorio": true },
+        "cargo": { "tipo": "string", "obligatorio": false },
+        "ciudadEstado": { "tipo": "string", "obligatorio": true, "descripcion": "Si no está en México, escribir 'Internacional'." }
+      }
+    },
+
+    "selectorTipoActividad": {
+      "_descripcion": "Define a qué componente/variante se dirige el formulario (lógica condicional). Un taller es un tipo de evento; la visita escolar es un registro aparte.",
+      "tipo": "enum",
+      "obligatorio": true,
+      "eventos": {
+        "contenidos": ["Conversatorio", "Conferencia", "Charla", "Mesa redonda", "Presentación de libro", "Presentación de revista", "Lectura de obra", "Encuentro"],
+        "talleres": ["Taller", "Cuentacuentos", "Plática para jóvenes", "Presentación de libros para niños/jóvenes", "Obra / Presentación teatral", "Proyección en cines"]
+      },
+      "visitaEscolar": ["Visita escolar"],
+      "stands": ["Solicitud de stand / expositor"]
+    },
+
+    "catalogos": {
+      "_descripcion": "Listas reutilizables para no repetir enums.",
+      "publicoObjetivoContenidos": {
+        "_descripcion": "Público al que va dirigida la actividad de Contenidos. Hoy es texto libre en el formulario; opciones por definir si se quiere estandarizar (pendiente con el cliente).",
+        "multiSelect": false,
+        "opciones": []
+      },
+      "publicoObjetivoTalleres": {
+        "_descripcion": "Niveles educativos. Lo usan las variantes de Talleres y la Visita escolar (eligen según el público que llevan).",
+        "multiSelect": true,
+        "opciones": ["Preescolar", "Primaria baja", "Primaria alta", "Secundaria", "Preparatoria", "Adultos mayores"]
+      },
+      "turno": { "multiSelect": true, "opciones": ["Matutino", "Vespertino"] },
+      "diasFeria": {
+        "_descripcion": "Días del evento (pueden variar cada año). Se pueden elegir uno o varios; 'Disponibilidad completa' = todos los días.",
+        "multiSelect": true,
+        "opciones": ["Sábado 13", "Domingo 14", "Lunes 15", "Martes 16", "Miércoles 17", "Jueves 18", "Viernes 19", "Sábado 20", "Domingo 21", "Disponibilidad completa"]
+      }
+    },
+
+    "plantillas": {
+      "actividadEstandar": {
+        "_descripcion": "Patrón compartido por 6 variantes de Contenidos casi idénticas. Solo cambian la etiqueta y el máximo de participantes.",
+        "campos": {
+          "tituloActividad": { "tipo": "string", "obligatorio": true },
+          "participantes": {
+            "tipo": "lista<objeto>",
+            "obligatorio": true,
+            "descripcion": "Etiqueta y máximo definidos en cada variante (ver 'etiquetaParticipante' y 'maxParticipantes').",
+            "itemCampos": {
+              "nombre": { "tipo": "string", "obligatorio": true },
+              "semblanza": { "tipo": "string", "obligatorio": true, "descripcion": "Semblanza ligada a cada participante (texto, máx 500 palabras)." }
+            }
+          },
+          "moderador": { "tipo": "lista<string>", "max": 1, "obligatorio": false },
+          "organiza": { "tipo": "string", "obligatorio": true },
+          "publicoObjetivo": { "ref": "catalogos.publicoObjetivoContenidos", "obligatorio": true },
+          "requiereConstancia": { "tipo": "boolean", "obligatorio": true },
+          "sinopsis": { "tipo": "string", "obligatorio": true, "descripcion": "Texto. Máx 500 palabras." },
+          "comentarios": { "tipo": "string", "obligatorio": false }
+        }
+      },
+      "publicacion": {
+        "_descripcion": "Extiende 'actividadEstandar' para presentaciones de libro/revista.",
+        "heredaDe": "actividadEstandar",
+        "camposModificados": {
+          "tituloActividad": { "descripcion": "Se muestra como 'Título de la publicación'." },
+          "sinopsis": { "descripcion": "Texto. Máx 800 palabras." }
+        },
+        "camposAdicionales": {
+          "presentadores": { "tipo": "lista<string>", "max": 2, "obligatorio": false },
+          "portada": { "tipo": "archivo", "formato": "JPG o PDF", "obligatorio": true, "descripcion": "Alta resolución." },
+          "ejemplarFisico": { "tipo": "boolean", "obligatorio": true, "descripcion": "Enviar ejemplar a oficinas FILEY (Salones 42 y 43, UADY, Mérida)." }
+        }
+      },
+      "tallerBase": {
+        "_descripcion": "Patrón compartido por las variantes de Talleres (actividades infantiles/juveniles y escolares de Elvira). El subtipo concreto se elige en 'tipoEvento'.",
+        "campos": {
+          "tituloActividad": { "tipo": "string", "obligatorio": true, "descripcion": "En el formulario actual aparece como 'Nombre oficial del evento'." },
+          "participantes": { "tipo": "lista<string>", "obligatorio": true, "min": 1, "descripcion": "Sin semblanza por ahora (pendiente confirmar con el cliente)." },
+          "tema": { "tipo": "string", "obligatorio": true },
+          "resena": { "tipo": "string", "obligatorio": true, "max": 300, "descripcion": "Máx 300 caracteres." },
+          "tipoEvento": { "tipo": "enum", "obligatorio": true, "opciones": ["Taller", "Cuentacuentos", "Plática para jóvenes", "Presentación de libros para niños/jóvenes", "Obra / Presentación teatral", "Proyección en cines"] },
+          "publicoObjetivo": { "ref": "catalogos.publicoObjetivoTalleres", "obligatorio": true },
+          "disponibilidad": { "ref": "catalogos.diasFeria", "obligatorio": true },
+          "turno": { "ref": "catalogos.turno", "obligatorio": true },
+          "observaciones": { "tipo": "string", "obligatorio": false }
+        },
+        "seccionCondicional": {
+          "_descripcion": "Categoría especial: solo si tipoEvento = 'Presentación de libros para niños/jóvenes' se piden datos extra. Las demás opciones se saltan esta parte.",
+          "condicion": "tipoEvento == 'Presentación de libros para niños/jóvenes'",
+          "campos": {
+            "moderadores": { "tipo": "lista<string>", "obligatorio": false },
+            "autor": { "tipo": "string", "obligatorio": true },
+            "editorial": { "tipo": "string", "obligatorio": true }
+          }
+        }
+      }
+    },
+
+    "dominios": {
+      "eventos": {
+        "_descripcion": "Core unificado de registro de eventos, compartido entre Contenidos (Hipólito) y Talleres (Elvira). Un taller es un tipo de evento: todas las variantes comparten el núcleo común y el flujo de propuesta -> aprobación -> ventana de edición -> cierre.",
+        "enrutamientoRevision": {
+          "_descripcion": "Cada propuesta llega a un solo panel de revisión según su tipo. Cada administrador solo ve su propio panel.",
+          "regla": "Si es una variante de Talleres, O es una Presentación de libro de Contenidos con dirigidoPublicoInfantilJuvenil = true -> panel de Elvira; en cualquier otro caso -> panel de Hipólito.",
+          "panelHipolito": "Variantes de Contenidos: conversatorio, conferencia, charla, mesa redonda, lectura de obra, encuentro, presentación de revista, y presentación de libro NO infantil/juvenil.",
+          "panelElvira": "Variantes de Talleres (taller, cuentacuentos, plática para jóvenes, presentación de libros para niños/jóvenes, obra/presentación teatral, proyección en cines) MÁS la presentación de libro de Contenidos con dirigidoPublicoInfantilJuvenil = true."
+        },
+        "marcadoCatalogoEscolar": {
+          "_descripcion": "Al revisar/aprobar, Hipólito puede marcar un evento de su panel como apto para nivel infantil/juvenil. Es un campo que fija el administrador, NO el proponente.",
+          "campo": { "aptoNivelJuvenil": { "tipo": "boolean", "obligatorio": false, "fijadoPor": "Administrador (Hipólito) durante la aprobación" } },
+          "efecto": "El evento NO cambia de dueño ni de panel: Hipólito lo sigue administrando y programando en sus salones. Lo único que cambia es que aparece en el catálogo de talleres infantiles/juveniles que eligen las visitas escolares. (No confundir con dirigidoPublicoInfantilJuvenil de la presentación de libro, que SÍ reenruta la propuesta a Elvira en el registro.)",
+          "_nota": "FUERA DEL SCOPE ACTUAL: el catálogo de visitas escolares es especulativo (ver registros.dominios.visitaEscolar). Cuando se retome, ese catálogo combinaría las variantes de Talleres de Elvira + los eventos de Hipólito con aptoNivelJuvenil = true."
+        },
+        "variantes": {
+          "contenidos": {
+            "_descripcion": "Variantes del programa general (Coordinación de Contenidos). Duración máx 50 min.",
+            "actividades": {
+              "conversatorio": { "heredaDe": "actividadEstandar", "etiquetaParticipante": "Nombre de los participantes", "maxParticipantes": 3 },
+              "conferencia": { "heredaDe": "actividadEstandar", "etiquetaParticipante": "Nombre de quien imparte", "maxParticipantes": 2 },
+              "charla": { "heredaDe": "actividadEstandar", "etiquetaParticipante": "Nombre de quien imparte", "maxParticipantes": 2 },
+              "mesaRedonda": { "heredaDe": "actividadEstandar", "etiquetaParticipante": "Nombre de los participantes", "maxParticipantes": 3 },
+              "lecturaDeObra": { "heredaDe": "actividadEstandar", "etiquetaParticipante": "Nombre de los participantes", "maxParticipantes": 3 },
+              "encuentro": { "heredaDe": "actividadEstandar", "etiquetaParticipante": "Nombre de los participantes", "maxParticipantes": 3 },
+              "presentacionDeLibro": {
+                "heredaDe": "publicacion",
+                "etiquetaParticipante": "Nombre de los participantes",
+                "maxParticipantes": 3,
+                "camposAdicionales": {
+                  "dirigidoPublicoInfantilJuvenil": { "tipo": "boolean", "obligatorio": true, "descripcion": "ÚNICO caso con este comportamiento: si es true, 'publicoObjetivo' usa el catálogo de Talleres en vez del de Contenidos." },
+                  "tipoParticipante": { "tipo": "enum", "obligatorio": true, "opciones": ["Autor/a", "Editor/a", "Antologador/a", "Compilador/a", "Coordinador/a"] },
+                  "autorParticipa": { "tipo": "boolean", "obligatorio": true, "descripcion": "Si son varios autores y no todos participan, indicar solo los presentes." },
+                  "nombreIgualPortada": { "tipo": "lista<string>", "max": 5, "obligatorio": true, "descripcion": "Nombres tal como aparecen en la portada." },
+                  "editorial": { "tipo": "string", "obligatorio": true, "descripcion": "Si es independiente, anexar el dato." },
+                  "fotoAutor": { "tipo": "archivo", "formato": "JPG o PNG", "obligatorio": true, "descripcion": "Alta resolución." }
+                },
+                "camposModificados": {
+                  "sinopsis": { "descripcion": "Del libro. Texto, máx 800 palabras." },
+                  "publicoObjetivo": { "refCondicional": "Si dirigidoPublicoInfantilJuvenil = true usa catalogos.publicoObjetivoTalleres; si no, catalogos.publicoObjetivoContenidos.", "obligatorio": true }
+                }
+              },
+              "presentacionDeRevista": {
+                "heredaDe": "publicacion",
+                "etiquetaParticipante": "Nombre del editor/a",
+                "maxParticipantes": 2,
+                "camposAdicionales": {
+                  "editorParticipa": { "tipo": "boolean", "obligatorio": true, "descripcion": "Si son varios editores y no todos participan, indicar solo los presentes." }
+                },
+                "camposModificados": {
+                  "sinopsis": { "descripcion": "De la revista. Texto, máx 800 palabras." }
+                }
+              }
+            }
+          },
+          "talleres": {
+            "_descripcion": "Variante de actividades infantiles/juveniles y escolares (Elvira). El subtipo concreto se elige en 'tipoEvento' (ver plantilla 'tallerBase').",
+            "heredaDe": "tallerBase"
+          }
+        }
+      },
+
+      "visitaEscolar": {
+        "_descripcion": "Registro APARTE (no es un evento ni una solicitud a una actividad): cada escuela planea su visita y elige talleres de un catálogo filtrado por día y cupo disponible.",
+        "_nota": "FUERA DEL SCOPE ACTUAL y ESPECULATIVO: aún no hay evidencia de un formulario real de visitas escolares; no se detalla por ahora. Los campos de abajo son solo un bosquejo de lo mínimo que haría funcionar la selección de talleres por catálogo de disponibilidad. Cuando se retome: el catálogo combinaría las variantes de Talleres de Elvira + los eventos de Hipólito marcados con aptoNivelJuvenil = true (ver dominios.eventos.marcadoCatalogoEscolar). Confirmar todo con el cliente.",
+        "campos": {
+          "escuela": { "tipo": "string", "obligatorio": true, "descripcion": "Nombre de la institución." },
+          "contacto": {
+            "tipo": "objeto",
+            "obligatorio": true,
+            "descripcion": "Responsable que hace la solicitud.",
+            "itemCampos": {
+              "nombre": { "tipo": "string", "obligatorio": true },
+              "correoElectronico": { "tipo": "email", "obligatorio": true },
+              "numeroTelefonico": { "tipo": "string", "obligatorio": true }
+            }
+          },
+          "nivelEducativo": { "ref": "catalogos.publicoObjetivoTalleres", "obligatorio": true, "descripcion": "No aplica 'Adultos mayores'. Sirve para filtrar el catálogo de talleres compatibles." },
+          "cantidadVisitantes": { "tipo": "int", "obligatorio": true, "descripcion": "Aforo del grupo; debe caber en el cupo restante del taller elegido." },
+          "diaVisita": { "ref": "catalogos.diasFeria", "obligatorio": true, "descripcion": "Filtra el catálogo a los talleres ofrecidos ese día." },
+          "turno": { "ref": "catalogos.turno", "obligatorio": true },
+          "talleresSeleccionados": {
+            "tipo": "lista<ref>",
+            "ref": "dominios.eventos.variantes.talleres",
+            "obligatorio": true,
+            "descripcion": "Talleres elegidos de un catálogo filtrado por nivelEducativo, diaVisita y turno, donde el cupo restante >= cantidadVisitantes. El catálogo combinaría talleres de Elvira + eventos de Hipólito con aptoNivelJuvenil = true (ver dominios.eventos.marcadoCatalogoEscolar)."
+          }
+        }
+      },
+
+      "stands": {
+        "_descripcion": "Formulario especializado de expositor/stand, hermano de 'eventos'. El registro común (datos básicos del solicitante) lo absorbe 'nucleoComun'; los campos y casos de uso especializados (aplicación, reserva, pago, confirmación, administración) viven en el dominio STD y NO se duplican aquí.",
+        "verDominio": "docs/requisitos/STD/",
+        "notaAlcance": "Los stands ocupan un solo espacio y NO usan el CRUD de salas/salones."
+      }
+    }
+  },
+
+  "programacion": {
+    "_descripcion": "ANDAMIAJE PARA EMPEZAR. Gestión del programa. Hay dos programas independientes, uno por panel de revisión: el programa maestro de Hipólito (Contenidos) y el de talleres de Elvira. Cada uno consume las actividades APROBADAS de su propio panel (ver registros.dominios.eventos.enrutamientoRevision). Los eventos artísticos se integran después si da tiempo.",
+    "_pendiente": true,
+    "_paraComenzar": [
+      "Granular cada operación en una sola responsabilidad (CRUD separados).",
+      "Definir estados del evento entre registros y programación (aprobado -> programado -> confirmado por el registrante).",
+      "Confirmar la regla de bloque horario, horario muerto y excepciones (cine 2h, eventos masivos)."
+    ],
+
+    "programas": {
+      "hipolito": {
+        "_descripcion": "Programa maestro (Contenidos). Hipólito arma un preliminar coordinándose por correo y asigna fecha, sala y horario.",
+        "consume": { "ref": "registros.dominios.eventos", "filtro": "panel = Hipólito AND estado = aprobado" },
+        "repeticion": false
+      },
+      "elvira": {
+        "_descripcion": "Programa de talleres. Elvira se apoya en la disponibilidad declarada por cada tallerista para acomodar; puede programar el mismo taller en más de una ocasión para llenar huecos.",
+        "consume": { "ref": "registros.dominios.eventos", "filtro": "panel = Elvira AND estado = aprobado" },
+        "repeticion": true,
+        "insumo": "Disponibilidad del tallerista = campos 'disponibilidad' (días) y 'turno' del registro de taller (tallerBase)."
+      }
+    },
+
+    "visibilidadCruzada": {
+      "_descripcion": "Ambos programas se exponen en la web app. No hace falta que Elvira envíe su programa final a Hipólito: cada uno ve el del otro en SOLO LECTURA (permisos lectura/edición tipo Drive).",
+      "hipolitoVeProgramaElvira": "solo lectura",
+      "elviraVeProgramaHipolito": "solo lectura"
+    },
+
+    "entradas": {
+      "salas": { "ref": "crudSalasSalones", "descripcion": "Se asigna a una sala (subdivisión) con su aforo y disponibilidad." }
+    },
+
+    "conceptos": {
+      "bloqueHorario": {
+        "_descripcion": "Unidad del calendario. Bloque de 1 hora (o 1h15) dentro del cual la actividad real ocupa 45-50 min.",
+        "excepciones": "Eventos masivos y salas de cine ocupan ~2 horas.",
+        "horarioMuerto": "Receso de referencia del sistema: Hipólito 2pm-4pm (Elvira maneja el suyo, 1pm-3pm).",
+        "campos": {
+          "dia": { "ref": "catalogos.diasFeria", "obligatorio": true },
+          "turno": { "ref": "catalogos.turno", "obligatorio": true },
+          "horaInicio": { "tipo": "time", "obligatorio": true },
+          "duracionMin": { "tipo": "int", "obligatorio": true, "descripcion": "Por defecto bloque de 60 min; excepciones 120 min." }
+        }
+      },
+      "asignacion": {
+        "_descripcion": "Ubica un evento aprobado en una sala y un bloque. La fecha/horario la asigna FILEY, no el proponente. Una misma actividad puede tener varias asignaciones (repetición, solo en el programa de Elvira).",
+        "campos": {
+          "evento": { "ref": "registros.dominios.eventos", "obligatorio": true },
+          "sala": { "ref": "crudSalasSalones.modelo.sala", "obligatorio": true },
+          "bloque": { "ref": "programacion.conceptos.bloqueHorario", "obligatorio": true }
+        },
+        "validaciones": [
+          "Aforo del grupo/escuela <= aforoMaximo de la sala (sobrecupo solo excepcional, a discreción del administrador).",
+          "La sala debe estar disponible en ese día/turno (ver crudSalasSalones.modelo.sala.disponibilidad)."
+        ]
+      }
+    },
+
+    "salidas": {
+      "_descripcion": "Hipólito hace la 'pulida final' manual del programa antes de pasarlo a su editor (diseño/maquetación).",
+      "exportacion": { "tipo": "enum", "opciones": ["Excel", "Word", "PDF"], "descripcion": "El sistema debe poder exportar el programa para apoyar ese paso manual." },
+      "notificacionAsignacion": { "_descripcion": "Segunda notificación (posterior a la de aceptado/rechazado): una vez armado el programa se avisa al registrante su fecha/sala/horario asignado y este debe confirmar su disponibilidad." },
+      "publicacion": { "_nota": "Ambos programas quedan visibles en la web app; la publicación impresa sigue siendo manual vía editor." }
+    }
+  },
+
+  "crudSalasSalones": {
+    "_descripcion": "CRUD único de espacios, compartido y visible para Hipólito y Elvira; ambos pueden crear salones. No aplica a stands.",
+    "_pendiente": true,
+    "_paraComenzar": [
+      "Granular CRUD (crear salón / agregar sala / editar / eliminar / consultar).",
+      "Confirmar catálogo real y aforos (espacios y subdivisiones de Ek Balam).",
+      "Definir si reservar una sala bloquea a sus salas hermanas del mismo salón (subdivisión física)."
+    ],
+
+    "modelo": {
+      "salon": {
+        "_descripcion": "Contenedor físico que cualquiera de los dos administradores puede crear. Al crearse nace con UNA sala por defecto (la unidad donde van las actividades). Agregar subdivisiones crea más salas.",
+        "campos": {
+          "nombre": { "tipo": "string", "obligatorio": true },
+          "area": { "tipo": "enum", "obligatorio": true, "opciones": ["Contenidos (Hipólito)", "Talleres (Elvira)", "Compartido"] },
+          "tipo": { "tipo": "enum", "obligatorio": true, "opciones": ["Salón", "Sala de exposición", "Zona con mamparas (Ek Balam)", "Sala de cine", "Biblioteca"] },
+          "salas": { "tipo": "lista<sala>", "obligatorio": true, "min": 1, "descripcion": "Siempre >= 1; al crear el salón se genera la primera automáticamente." }
+        }
+      },
+      "sala": {
+        "_descripcion": "Subdivisión reservable de un salón. Es la unidad a la que se asignan actividades y contra la que se validan visitas/aforo.",
+        "campos": {
+          "nombre": { "tipo": "string", "obligatorio": true },
+          "aforoMaximo": { "tipo": "int", "obligatorio": true, "descripcion": "Capacidad; valida actividades y visitas escolares. Sobrecupo solo excepcional y a discreción del administrador." },
+          "disponibilidad": {
+            "tipo": "objeto",
+            "obligatorio": true,
+            "descripcion": "Cuándo puede usarse la sala; permite casos especiales (cine solo mañanas L-V, biblioteca a veces prestada).",
+            "itemCampos": {
+              "dias": { "ref": "catalogos.diasFeria" },
+              "turnos": { "ref": "catalogos.turno" },
+              "franjaHoraria": { "tipo": "string", "descripcion": "Horario de préstamo si aplica (p. ej. cine solo mañana, actividades de 2h)." },
+              "notas": { "tipo": "string", "descripcion": "Restricciones o préstamos especiales." }
+            }
+          }
+        }
+      }
+    },
+
+    "catalogoConocido": {
+      "_nota": "De la Junta 2 con FILEY; confirmar nombres y aforos exactos con el cliente.",
+      "hipolito": { "salones": 3, "salaDeExposicion": ["Uxmal", "Dzibilchaltún", "Chichén Itzá"] },
+      "elvira": { "ekBalam": "subdividido con mamparas, capacidad 35-40 c/u", "salasDeCine": { "cantidad": 2, "aforo": 130, "disponibilidad": "L-V por la mañana, actividades de 2h" }, "biblioteca": "a veces prestada" }
+    },
+
+    "usadoPor": {
+      "programacion": "asignación de evento -> sala + bloque horario.",
+      "visitaEscolar": "validación de aforo/nivel contra la sala del taller."
+    }
+  }
+}

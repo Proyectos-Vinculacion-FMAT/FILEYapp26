@@ -6,10 +6,11 @@ tags:
   - dom/std
   - dom/evt
   - dom/tal
+  - dom/vis
   - tema/permisos
 estado: borrador
 fecha: 2026-06-17
-fecha_actualizacion: 2026-06-24
+fecha_actualizacion: 2026-06-25
 ---
 
 # Preguntas para la siguiente sesion
@@ -85,11 +86,17 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
 - [x] ¿Las visitas escolares deben registrarse como un tipo de visitante grupal, distinto al visitante individual?
   - *Respuesta (Junta 3): ni una cosa ni la otra — se modeló como un **tipo de propuesta** propio (`VIS`), no como una variante de "visitante". El representante de la escuela es el **Aplicante**; al aceptarse su propuesta pasa a **Participante** y arma su **Itinerario** reservando **Cupo** en actividades infantiles/juveniles.*
 - [ ] ¿Qué datos debe capturar el registro de una escuela (aforo del grupo, nivel educativo, fecha y horario de visita)?
-  - *Avance (Junta 3): el registro en sí captura los datos de la escuela y su contacto (CU-VIS-001); la fecha/horario de visita no se captura como un dato suelto, sino que resulta de qué actividades elige el Aplicante al armar su Itinerario (CU-VIS-012/013). El "aforo del grupo" se valida como cantidad de visitantes contra el **Cupo** restante de cada actividad (CU-VIS-011), no como un campo único del registro. Sigue pendiente confirmar con el cliente el detalle exacto del formulario — ver
+  - *Avance (Junta 3, precisado 2026-06-25): el registro captura los datos de la escuela, su contacto y la **cantidad total de alumnos/visitantes** que asistirán (CU-VIS-001, dato obligatorio según el documento de FILEY). La fecha/horario de visita no se captura como un dato suelto, sino que resulta de qué actividades elige el Aplicante al armar su Itinerario (CU-VIS-012/013). El "aforo del grupo" se valida repartiendo esa cantidad de visitantes contra el **Cupo** restante de **cada** actividad (CU-VIS-011) —el grupo puede dividirse entre varios talleres—, no contra un solo taller. Sigue pendiente confirmar con el cliente el detalle exacto del formulario — ver
     [requisitos/VIS/CU-VIS Índice.md](<../../../requisitos/VIS/CU-VIS Índice.md>).*
 - [x] ¿Quién registra a la escuela: un representante de la escuela, o el personal de FILEY?
   - *Respuesta (Junta 3): un representante de la institución (el **Aplicante**), no el personal de FILEY — ver
     [Junta 3 §2.8](<../resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>).*
+- [ ] *(Análisis VIS, 2026-06-25)* ¿Qué **validación o aprobación previa** existe antes de que una visita escolar pueda **reservar** talleres?
+  - *Contexto: se entiende que habrá *alguna* validación antes de habilitar la reserva, pero **no se sabe cuál exactamente**. El "al momento" del documento de FILEY se refiere a que la escuela elige en cuanto tiene la capacidad de hacerlo —eliminando el ida y vuelta de correos con la coordinación (catálogo → respuesta de confirmación)—, no a que no exista validación. Importante definirlo: determina si la reserva es inmediata tras el registro o si pasa por una aceptación. Ver [Análisis VIS vs Software para agendar escuelas — C2](<../../notas/Análisis VIS vs Software para agendar escuelas.md>).*
+- [ ] *(Análisis VIS, 2026-06-25)* ¿La vista del **itinerario** armado se **envía por correo automáticamente**, o basta con poder **verla/descargarla desde la app**?
+  - *Contexto: el itinerario ya se arma al seleccionar y reservar (CU-VIS-012/013); lo que falta confirmar es el **canal de entrega** del comprobante que pide la fuente. El horario de cada actividad, por su parte, es consultable por cualquiera vía la URL estática del programa (CU-PRG-010). Ver [Análisis VIS — C3](<../../notas/Análisis VIS vs Software para agendar escuelas.md>).*
+- [ ] *(Análisis VIS, 2026-06-25)* ¿Cuál es la **política definitiva de cuántos talleres** puede reservar una escuela?
+  - *Contexto: el pendiente de la [Junta 2](<../resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>) hablaba de "un solo tipo de actividad por escuela", pero el documento de FILEY contempla **varios talleres** (una sala de cine **o** 3 talleres de 35 = 105). La fuente entregada por FILEY es autoritativa; falta confirmar la regla final. Ver [Análisis VIS — R2](<../../notas/Análisis VIS vs Software para agendar escuelas.md>) y [CU-VIS-012](<../../../requisitos/VIS/C - Catálogo y reserva de talleres/CU-VIS-012 Reservar uno o varios talleres del catálogo para armar el itinerario de la visita.md>).*
 
 ## Arrendatarios de stand
 
@@ -164,7 +171,7 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
     [requisitos/PRG/CU-PRG Índice.md](<../../../requisitos/PRG/CU-PRG Índice.md>). Las excepciones (eventos masivos, salas de cine de 2h) y el margen de 45-50 min dentro del bloque siguen sin tratamiento explícito en los CU.*
 - [x] ¿Cómo debe apoyar el sistema la elección de talleres por parte de las escuelas (validando aforo y nivel educativo), sin depender de la revisión manual de la organizadora de talleres?
   - *Respuesta (Junta 3): se modeló como el dominio `VIS` (Visitas escolares) — la escuela consulta el catálogo de talleres filtrado, el sistema valida que el cupo restante cubra a sus visitantes, y la escuela reserva para armar su itinerario. Ver
-    [requisitos/VIS/CU-VIS Índice.md](<../../../requisitos/VIS/CU-VIS Índice.md>) (CU-VIS-010 a CU-VIS-012). Sigue pendiente confirmar con el cliente el formulario exacto y la política de un taller por escuela.*
+    [requisitos/VIS/CU-VIS Índice.md](<../../../requisitos/VIS/CU-VIS Índice.md>) (CU-VIS-010 a CU-VIS-012). Sigue pendiente confirmar con el cliente el formulario exacto y la política de cuántos talleres por escuela (el documento de FILEY contempla varios; ver la pregunta dedicada más abajo y [Análisis VIS — R2](<../../notas/Análisis VIS vs Software para agendar escuelas.md>)).*
 - [x] ¿Los eventos artísticos deben excluirse por completo del sistema, o solo de la programación de horarios?
   - *Respuesta (Junta 2): no se excluyen del sistema. El área artística organiza su propia cartelera de forma independiente y le entrega a Hipólito una lista preliminar ya organizada; Hipólito solo la captura en el sistema para fines de contabilidad interna, sin gestionar su aprobación ni programación de horario.*
 - [ ] ¿Los participantes de Talleres deben llevar **semblanza** (como en Contenidos), o no aplica?

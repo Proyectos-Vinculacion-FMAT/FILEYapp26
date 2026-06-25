@@ -24,6 +24,9 @@ trazabilidad:
 
 Permitir al Participante consultar el catálogo de talleres y actividades infantiles/juveniles disponibles, filtrando por nivel educativo, día y turno, para armar el itinerario de su visita escolar.
 
+> [!note] Filtro vs. visualización
+> El catálogo se **filtra** por nivel educativo, día y turno (matutino/vespertino), pero la **lista** muestra explícitamente, por cada taller/actividad, su **hora de inicio y fin**, su descripción y su lugar, para que la escuela detecte solapes y planee su itinerario. El turno es un criterio de filtrado, no la única información horaria mostrada. El catálogo solo incluye actividades **aptas para público infantil/juvenil** provenientes de propuestas **Aceptadas**, sin importar la sala donde se realicen (la sala determina su aforo, no su elegibilidad). Fuente: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>) ("los días y horarios en los que se llevarán a cabo, así como la descripción del evento").
+
 ## Alcance
 
 Indicar el límite del sistema o subsistema al que aplica este caso de uso.

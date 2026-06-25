@@ -49,7 +49,7 @@ evidencia que lo sustenta.
 ## A. Aplicación
 
 - [CU-VIS-001 Registrar la propuesta de visita escolar (datos de la escuela y del contacto)](<A - Aplicación/CU-VIS-001 Registrar la propuesta de visita escolar (datos de la escuela y del contacto).md>) — *Aplicante*
-  - Evidencia: [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) (hoy la coordinación captura estos datos vía *forms*/*autocrat*, que alimenta una ficha técnica y un Excel-base de datos); confirmado en alcance en [Junta 3 §5.3](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#53-vis>) y glosario [§2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>).
+  - Evidencia: [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) (hoy la coordinación captura estos datos vía *forms*/*autocrat*, que alimenta una ficha técnica y un Excel-base de datos); confirmado en alcance en [Junta 3 §5.3](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#53-vis>) y glosario [§2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>). Captura además la **cantidad de alumnos/visitantes**, dato obligatorio que la fuente lista explícitamente ("la cantidad de alumnos que reservarán su asistencia").
 
 - [CU-VIS-002 Editar la propuesta dentro de la ventana de modificación](<A - Aplicación/CU-VIS-002 Editar la propuesta dentro de la ventana de modificación.md>) — *Aplicante*
   - Evidencia: ciclo genérico de propuesta (*Solicitud de cambios* → el Aplicante edita y reenvía) del [Junta 3 §2.2 Registros](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#22-registros-reg>); la visita escolar sigue ese mismo ciclo según la nota de alcance de este índice.
@@ -92,15 +92,18 @@ evidencia que lo sustenta.
   - Evidencia: glosario de *Itinerario* en [Junta 3 §2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>); [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) ("al momento sepan ya su itinerario... esto les ayuda a gestionar con antelación su transporte y su calendario de actividades").
 
 - [CU-VIS-014 Quitar un taller reservado del itinerario (liberar el cupo)](<C - Catálogo y reserva de talleres/CU-VIS-014 Quitar un taller reservado del itinerario (liberar el cupo).md>) — *Participante*
-  - Evidencia: simétrico a CU-VIS-012, sobre el mismo glosario de *Cupo*/*Itinerario* en [Junta 3 §2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>). Ninguna fuente revisada (ni el documento de FILEY ni las juntas) menciona explícitamente que la escuela pueda quitar un taller ya reservado — **pendiente confirmar con el cliente** si esto es una capacidad real o si solo aplica la edición dentro de ventana (CU-VIS-002).
+  - Evidencia: simétrico a CU-VIS-012, sobre el mismo glosario de *Cupo*/*Itinerario* en [Junta 3 §2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>). Se acota como **autocorrección del Participante** (quitar un taller elegido por error) **antes de generar el itinerario final**. La baja por cancelación imprevista la realiza la coordinación en CU-VIS-017.
 
 ## D. Administración
 
 - [CU-VIS-015 Consultar la lista de visitas escolares aceptadas, filtrable](<D - Administración/CU-VIS-015 Consultar la lista de visitas escolares aceptadas, filtrable.md>) — *Administrador*
-  - Evidencia: necesidad de la coordinación de ubicar qué escuela va a qué taller, en [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) ("es primordial ubicar qué escuela va a qué taller/actividad"); patrón homólogo a la administración de propuestas en [Junta 3 §4.1 — Revisar y resolver propuestas](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>).
+  - Evidencia: necesidad de la coordinación de ubicar qué escuela va a qué taller, en [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) ("es primordial ubicar qué escuela va a qué taller/actividad"); patrón homólogo a la administración de propuestas en [Junta 3 §4.1 — Revisar y resolver propuestas](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>). Incluye la **numeralia** (suma total de alumnos/visitantes) que la fuente pide para saber automáticamente cuántas personas visitarán la FILEY.
 
 - [CU-VIS-016 Ver el detalle de una visita escolar (escuela, itinerario, cupos)](<D - Administración/CU-VIS-016 Ver el detalle de una visita escolar (escuela, itinerario, cupos).md>) — *Administrador*
   - Evidencia: mismo origen que CU-VIS-015; capacidades por espacio (Ek Balam, salas de cine, Gran Foro) detalladas en [Junta 2 con organizadores FILEY — Espacios disponibles](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#espacios-disponibles>) y en [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>).
+
+- [CU-VIS-017 Quitar manualmente una visita de un taller (cancelación imprevista)](<D - Administración/CU-VIS-017 Quitar manualmente una visita de un taller (cancelación imprevista).md>) — *Administrador*
+  - Evidencia: [Junta 2 con organizadores FILEY — Pendientes por definir](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>) (manejo de cupos a discreción de la coordinación). Complementa a CU-VIS-014: aquella es la autocorrección del Participante; esta es la baja administrativa por cancelación imprevista.
 
 ---
 
@@ -111,9 +114,19 @@ evidencia que lo sustenta.
 >   documentado en [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>)
 >   es, según el [Análisis de archivos proporcionados](<../../soporte/extraido/Analisis de archivos proporcionados.md>)
 >   (sección 2.1), una propuesta de la propia Elvira, no confirmada todavía como la oficial.
+> - **Validación previa a reservar (VIS):** se entiende que habrá *alguna* validación o aprobación
+>   antes de que una visita escolar pueda reservar talleres, pero **no se sabe cuál exactamente**.
+>   El "al momento" de la fuente describe que la escuela elige en el momento en que tiene la
+>   capacidad de hacerlo (eliminando el ida y vuelta de correos con la coordinación), no que no
+>   exista validación. **Pendiente confirmar en la próxima junta.**
+> - **Entrega del itinerario:** ¿la vista del itinerario (CU-VIS-013) se **envía por correo
+>   automáticamente**, o basta con poder **verla/descargarla desde la app**? La fuente pide un
+>   comprobante; falta confirmar el canal.
 > - La política de **un taller por escuela** (o por institución), mencionada en
->   [Junta 2 con organizadores FILEY — Pendientes por definir](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>).
-> - Si la escuela puede **quitar un taller ya reservado** (CU-VIS-014): ninguna fuente revisada lo confirma explícitamente.
+>   [Junta 2 con organizadores FILEY — Pendientes por definir](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>),
+>   **contradice** el documento de FILEY, que contempla **varios talleres** por escuela (una sala
+>   de cine **o** 3 talleres de 35 = 105). La fuente entregada por FILEY es autoritativa; falta la
+>   política definitiva del cliente (ver CU-VIS-012).
 > - Si CU-VIS-004 a CU-VIS-009 (revisión) terminan siendo CUs propias de `VIS` o se absorben
 >   en la revisión genérica de propuestas de `REG` (ver sección 4.1 de la Junta 3), dado que
 >   la visita escolar ya es un tipo de propuesta más del sistema de Convocatorias.
