@@ -1,7 +1,7 @@
 # Grabaciones / audio de juntas — no se versionan (archivos muy grandes).
 # Se conservan en disco; en el repo viven sus transcripciones y resúmenes.
 docs/soporte/meetings/grabaciones/
-/sona_pruebas_FILEY
+
 *.wav
 *.mp3
 *.m4a

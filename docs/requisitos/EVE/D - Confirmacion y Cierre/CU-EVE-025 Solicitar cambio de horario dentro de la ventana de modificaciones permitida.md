@@ -1,5 +1,5 @@
 ---
-estado: absorbido
+estado: SE VA
 version: 0.02
 tags:
   - requisitos

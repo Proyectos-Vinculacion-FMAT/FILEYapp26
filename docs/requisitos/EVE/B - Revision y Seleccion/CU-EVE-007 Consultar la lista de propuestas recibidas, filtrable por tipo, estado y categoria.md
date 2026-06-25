@@ -12,6 +12,8 @@ reglas_de_negocio: []
 ---
 # CU-EVE-007 Consultar la lista de propuestas recibidas, filtrable por tipo, estado y categoría
 
+> ekl nombre se podria cambiar a agrupable, para que haya una agruapcion que es diferente a la filtracion, y que se pueda agrupar por tipo, estado y categoria
+
 ## Objetivo
 
 El administrador obtiene un panorama de las propuestas recibidas en la edición, filtrable por tipo de actividad, estado y categoría, para priorizar y dar seguimiento a su revisión continua semana a semana.

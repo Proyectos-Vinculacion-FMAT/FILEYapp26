@@ -12,6 +12,8 @@ reglas_de_negocio: []
 ---
 # CU-EVE-036 Consultar mis propuestas y revisar su estado actual
 
+> chechar si habria que separarlo , en talleres y eventos, porque si puredes condualtar propuestas de
+
 ## Objetivo
 
 El aplicante revisa el estado actualizado de todas sus propuestas enviadas en la edición activa, incluyendo los mensajes del administrador cuando los haya, para saber si debe actuar o simplemente esperar.

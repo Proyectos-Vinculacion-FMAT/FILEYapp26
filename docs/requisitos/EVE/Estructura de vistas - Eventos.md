@@ -97,6 +97,7 @@ flowchart LR
 > estado: `P4` solo si hay un horario notificado; `P5` solo a partir de `fecha_constancias`.
 
 ### P1 · Enviar propuesta
+
 - **Objetivo:** capturar y enviar una propuesta de actividad; y, tras enviarla, poder
   iniciar otra sin recapturar los datos de contacto.
 - **Contenido:** formulario con datos de contacto **precargados** (nombre, correo,
@@ -109,6 +110,7 @@ flowchart LR
 - **Entidades:** Proponente, Propuesta, PropuestaAdjunto, TipoActividad.
 
 ### P2 · Mis propuestas
+
 - **Objetivo:** dar seguimiento al estado de todas las propuestas enviadas en la edición.
 - **Contenido:** lista con folio, tipo, título y estado (`pendiente` /
   `cambios_solicitados` / `aceptada` / `rechazada`). Punto de entrada al detalle y a las
@@ -117,6 +119,7 @@ flowchart LR
 - **Entidades:** Propuesta.
 
 ### P3 · Detalle / Editar propuesta
+
 - **Objetivo:** ver el detalle de una propuesta y, si se solicitaron cambios, corregirla y
   reenviarla.
 - **Contenido:** datos enviados y adjuntos; según el estado: el **mensaje de cambios** del
@@ -127,6 +130,7 @@ flowchart LR
 - **Entidades:** Propuesta, PropuestaAdjunto.
 
 ### P4 · Mi horario asignado *(condicionada)*
+
 - **Objetivo:** responder a la notificación de sala y horario.
 - **Contenido:** datos de la programación (actividad, sala/stand, fecha y bloque) y
   acciones **Confirmar asistencia**, **Indicar incomparecencia** y **Solicitar cambio**
@@ -137,6 +141,7 @@ flowchart LR
 - **Entidades:** ProgramacionActividad, ConfirmacionProponente, Actividad.
 
 ### P5 · Mis constancias *(condicionada)*
+
 - **Objetivo:** descargar la constancia de participación tras la feria.
 - **Contenido:** lista de actividades elegibles (confirmadas y con constancia solicitada);
   acción de descarga por actividad. Habilitada solo a partir de `fecha_constancias`.
@@ -151,6 +156,7 @@ flowchart LR
 Secciones de navegación lateral, con patrón **lista → detalle** donde aplica.
 
 ### A1 · Configuración de convocatoria
+
 - **Objetivo:** abrir/reabrir la convocatoria y definir fechas clave y cupos.
 - **Contenido:** formulario con 6 fechas clave (apertura, cierre, notificación, ajustes,
   asignación, constancias) y 4 cupos por categoría; doble verificación al editar con
@@ -159,6 +165,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** ParametrosConvocatoria, EdicionFeria.
 
 ### A2 · Propuestas (lista + contador)
+
 - **Objetivo:** revisar las propuestas recibidas y vigilar los cupos.
 - **Contenido:** lista filtrable por tipo, estado y categoría; **contador en tiempo real**
   embebido (recibidas por estado y espacios disponibles por categoría, con aviso de *cupo
@@ -167,6 +174,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** Propuesta, ParametrosConvocatoria (cupos).
 
 ### A3 · Detalle de propuesta *(vista-contenedor)*
+
 - **Objetivo:** revisar una propuesta y emitir su dictamen.
 - **Contenido:** datos del proponente, datos de la actividad y adjuntos; concentra las
   acciones sin salir de la vista:
@@ -181,21 +189,23 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** Propuesta, PropuestaAdjunto, Proponente, Actividad, BitacoraEVE.
 
 ### A4 · Notificación de resultados (lote)
+
 - **Objetivo:** comunicar en un solo lote las aceptadas y rechazadas.
-- **Contenido:** lista de propuestas pendientes de notificar (`resultado_notificado =
-  false`) con selección individual o **"Incluir todas"**; marca de **actualización** para
+- **Contenido:** lista de propuestas pendientes de notificar (`resultado_notificado = false`) con selección individual o **"Incluir todas"**; marca de **actualización** para
   dictámenes que cambiaron tras una notificación previa; envío múltiple por edición.
 - **CU involucrados:** CU-EVE-013.
 - **Efectos de Sistema asociados:** envío de correos y registro de `NotificacionLote`.
 - **Entidades:** Propuesta, NotificacionLote.
 
 ### PR · Programación *(zona del compañero — fuera de alcance)*
+
 - **Objetivo:** armar el programa, asignar salas/horarios y notificar al proponente.
 - **CU involucrados:** CU-EVE-015 a 023 (responsabilidad de otro integrante del equipo).
 - **Nota:** se incluye solo para enlazar la selección (A4) con la publicación (A5). Sus
   vistas se definen en su propio documento.
 
 ### A5 · Publicación del programa
+
 - **Objetivo:** publicar una versión del programa de forma incremental.
 - **Contenido:** selección de versión a publicar; resumen de actividades programadas vs.
   sin horario; opción de mostrar actividades informativas; confirmación.
@@ -203,6 +213,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** ProgramaMaestro, Actividad, ProgramacionActividad.
 
 ### A6 · Exportación
+
 - **Objetivo:** exportar el programa a un archivo de trabajo.
 - **Contenido:** alcance (completo o filtrado por categoría/sección/tipo/día/sala) y
   formato (Excel / Word / PDF). Desde aquí —o desde el detalle de una actividad— se genera
@@ -211,6 +222,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** Actividad, ProgramacionActividad.
 
 ### A7 · Cierre del programa
+
 - **Objetivo:** cerrar definitivamente el programa y gestionar cambios excepcionales.
 - **Contenido:** acción **Cerrar definitivamente** (motivo obligatorio + doble
   verificación) y **Reabrir** (doble verificación); acceso a **cambio de horario
@@ -221,6 +233,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
   BitacoraEVE.
 
 ### A8 · Catálogo de tipos de actividad
+
 - **Objetivo:** administrar el catálogo de tipos.
 - **Contenido:** lista de tipos con su origen, duración por defecto, requisitos y estado;
   acciones agregar / editar / activar-desactivar (la desactivación conserva el histórico).
@@ -228,6 +241,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** TipoActividad.
 
 ### A9 · Bitácora
+
 - **Objetivo:** auditar los cambios excepcionales.
 - **Contenido:** vista global y por actividad de los registros de `BitacoraEVE` (acción,
   detalle de → a, motivo, persona, fecha); filtros por fecha, acción, entidad o persona.
@@ -239,6 +253,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 ## 6. Cartelera Pública (visitante, sin sesión)
 
 ### V1 · Cartelera pública
+
 - **Objetivo:** consultar las actividades publicadas y filtrarlas.
 - **Contenido:** listado de actividades de la versión publicada (título, tipo, fecha, sala,
   horario), filtrable por categoría/sección/día y búsqueda; sección informativa para
@@ -247,6 +262,7 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 - **Entidades:** ProgramaMaestro (publicado), Actividad, ProgramacionActividad.
 
 ### V2 · Detalle de actividad pública
+
 - **Objetivo:** ver el detalle de una actividad de la cartelera.
 - **Contenido:** título, tipo, organiza, público, sinopsis, fecha, sala y horario;
   participantes y moderador; en presentaciones de libro/revista, datos de la publicación,
@@ -261,12 +277,12 @@ Secciones de navegación lateral, con patrón **lista → detalle** donde aplica
 Procesos automáticos/temporizados o disparados desde una vista; se reflejan como correos o
 cambios de estado.
 
-| CU | Proceso | Dónde se refleja |
-|----|---------|------------------|
+| CU                 | Proceso                                                  | Dónde se refleja         |
+| ------------------ | -------------------------------------------------------- | ------------------------- |
 | CU-EVE-009 (parte) | Notificar solicitud de cambios al proponente (inmediata) | Correo · estado en P2/P3 |
-| CU-EVE-013 | Enviar el lote de resultados (aceptadas/rechazadas) | Correo · estado en P2/P3 |
-| CU-EVE-023 | Notificar sala y horario *(zona del compañero)* | Correo · vista P4 |
-| CU-EVE-031 | Generar la ficha PDF | Descarga desde A6 / V1 |
+| CU-EVE-013         | Enviar el lote de resultados (aceptadas/rechazadas)      | Correo · estado en P2/P3 |
+| CU-EVE-023         | Notificar sala y horario*(zona del compañero)*        | Correo · vista P4        |
+| CU-EVE-031         | Generar la ficha PDF                                     | Descarga desde A6 / V1    |
 
 > El **servicio de correo** aún no está definido (tema abierto); en el mockup se representa
 > como "notificación enviada".
@@ -275,26 +291,26 @@ cambios de estado.
 
 ## 8. Trazabilidad vista ↔ caso de uso
 
-| Vista | CU |
-|-------|----|
-| P1 · Enviar propuesta | CU-EVE-002, CU-EVE-003 |
-| P2 · Mis propuestas | CU-EVE-036 |
-| P3 · Detalle / Editar propuesta | CU-EVE-036, CU-EVE-004 |
-| P4 · Mi horario asignado | CU-EVE-024 |
-| P5 · Mis constancias | CU-EVE-028 |
-| A1 · Configuración de convocatoria | CU-EVE-001 |
-| A2 · Propuestas + contador | CU-EVE-007, CU-EVE-012 |
-| A3 · Detalle de propuesta | CU-EVE-008, CU-EVE-009, CU-EVE-014 |
-| A4 · Notificación de resultados | CU-EVE-013 |
-| A5 · Publicación del programa | CU-EVE-029 |
-| A6 · Exportación | CU-EVE-030, CU-EVE-031 |
-| A7 · Cierre del programa | CU-EVE-027, CU-EVE-026 |
-| A8 · Catálogo de tipos | CU-EVE-034 |
-| A9 · Bitácora | CU-EVE-035 |
-| V1 · Cartelera pública | CU-EVE-032, CU-EVE-031 |
-| V2 · Detalle de actividad pública | CU-EVE-033 |
-| *(sin vista — Sistema)* | CU-EVE-013, CU-EVE-023, parte de CU-EVE-009 |
-| *(zona del compañero — Programación)* | CU-EVE-015 a 023 |
+| Vista                                      | CU                                          |
+| ------------------------------------------ | ------------------------------------------- |
+| P1 · Enviar propuesta                     | CU-EVE-002, CU-EVE-003                      |
+| P2 · Mis propuestas                       | CU-EVE-036                                  |
+| P3 · Detalle / Editar propuesta           | CU-EVE-036, CU-EVE-004                      |
+| P4 · Mi horario asignado                  | CU-EVE-024                                  |
+| P5 · Mis constancias                      | CU-EVE-028                                  |
+| A1 · Configuración de convocatoria       | CU-EVE-001                                  |
+| A2 · Propuestas + contador                | CU-EVE-007, CU-EVE-012                      |
+| A3 · Detalle de propuesta                 | CU-EVE-008, CU-EVE-009, CU-EVE-014          |
+| A4 · Notificación de resultados          | CU-EVE-013                                  |
+| A5 · Publicación del programa            | CU-EVE-029                                  |
+| A6 · Exportación                         | CU-EVE-030, CU-EVE-031                      |
+| A7 · Cierre del programa                  | CU-EVE-027, CU-EVE-026                      |
+| A8 · Catálogo de tipos                   | CU-EVE-034                                  |
+| A9 · Bitácora                            | CU-EVE-035                                  |
+| V1 · Cartelera pública                   | CU-EVE-032, CU-EVE-031                      |
+| V2 · Detalle de actividad pública        | CU-EVE-033                                  |
+| *(sin vista — Sistema)*                 | CU-EVE-013, CU-EVE-023, parte de CU-EVE-009 |
+| *(zona del compañero — Programación)* | CU-EVE-015 a 023                            |
 
 Cobertura de **mi alcance (A, B, D, E = 22 CU vigentes)**: todos quedan mapeados a una
 vista. La zona **C · Programación (9 CU)** se referencia como bloque externo.
@@ -319,3 +335,6 @@ vista. La zona **C · Programación (9 CU)** se referencia como bloque externo.
 - `CU-EVE Índice.md` — inventario de casos de uso.
 - `Modelo de datos - Eventos.md` — entidades y atributos.
 - `Proceso de alto nivel - Eventos.md` — flujo de punta a punta.
+
+
+## flujo que tengo pensado que sea la parte de eventos

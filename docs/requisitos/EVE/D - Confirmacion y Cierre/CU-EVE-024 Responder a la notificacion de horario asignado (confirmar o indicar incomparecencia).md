@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: SE VA ES DE ISSAC
 version: 0.1
 tags:
   - requisitos

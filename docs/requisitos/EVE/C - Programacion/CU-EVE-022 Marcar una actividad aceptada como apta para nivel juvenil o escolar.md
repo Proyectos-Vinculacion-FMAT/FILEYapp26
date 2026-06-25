@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: DE ISSAC RECHAZAD
 version: 0.02
 tags:
   - requisitos
