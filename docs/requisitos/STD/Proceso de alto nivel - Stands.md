@@ -19,9 +19,10 @@ finales. El detalle por paso vive en los casos de uso (`CU-STD Índice.md`).
 %% Proceso de alto nivel: Reserva, Pago y Confirmación de Stands — FILEY
 flowchart TD
     A([Usuario aplica a expositor]) --> B{Admin revisa<br/>la aplicación}
-    B -->|Rechazada con motivo| C[/Notifica al usuario/]
+    B -->|Solicita cambios| C[/Notifica al usuario/]
     C --> A2([Usuario edita y reenvía])
     A2 --> B
+    B -->|Rechaza| R([Aplicación invalidada])
     B -->|Aceptada| D[Usuario habilitado<br/>para reservar]
 
     D --> E[Visualiza el mapa<br/>y agrega stands al carrito]
@@ -55,5 +56,5 @@ flowchart TD
     class A,A2,E,F,H,M usuario;
     class B,I,V admin;
     class C,D,G,J,K,L,N,O,P,U sistema;
-    class Q,W,fin fin;
+    class Q,R,W,fin fin;
 ```

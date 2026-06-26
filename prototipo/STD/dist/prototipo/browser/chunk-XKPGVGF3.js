@@ -1,0 +1,1 @@
+import{nb as t}from"./chunk-RGBEC4WX.js";var e=class r{transform(i,n="$"){return i==null||isNaN(i)?`${n}0.00`:`${n}${i.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})}`}static \u0275fac=function(n){return new(n||r)};static \u0275pipe=t({name:"currencyMx",type:r,pure:!0})};export{e as a};
