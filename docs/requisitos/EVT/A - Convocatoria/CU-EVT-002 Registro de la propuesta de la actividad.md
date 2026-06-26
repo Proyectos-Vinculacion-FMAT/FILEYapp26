@@ -1,24 +1,27 @@
 ---
-estado: propuesta
-version: 0.1
+estado: aceptado
+version: 0.2
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-24
+fecha: 2026-06-25
 id: CU-EVT-002
 dominio: EVT
 reglas_de_negocio: []
 ---
-# CU-EVT-002 Enviar propuesta de actividad con datos y adjuntos
+# CU-EVT-002 Registro de la propuesta de la actividad
+
+> Este caso de uso cubre el **llenado** del formulario (captura y validación de los datos).
+> El **envío** —la acción de mandar la propuesta a revisión— se describe en CU-EVT-002.1.
 
 ## Objetivo
 
-El aplicante registra una propuesta de actividad para el programa de FILEY con sus datos de contacto, información de la actividad y archivos adjuntos requeridos, quedando en cola de revisión del administrador.
+El aplicante captura en el formulario de registro todos los datos de su propuesta de actividad para el programa de FILEY —datos de contacto y perfil, información de la actividad según su tipo y los archivos adjuntos requeridos—, dejándolos completos y validados, listos para ser enviados a la cola de revisión (CU-EVT-002.1).
 
 ## Alcance
 
-Módulo EVE — formulario de registro de propuesta. El aplicante debe estar autenticado (CU-REG-002). No cubre el alta de cuenta ni la autenticación. No cubre la edición de una propuesta ya enviada.
+Módulo EVE — formulario de registro (llenado) de propuesta. El aplicante debe estar autenticado (CU-REG-002). Cubre la captura y la validación local de los datos del formulario. No cubre el envío y el alta del registro `Propuesta` (CU-EVT-002.1), ni la edición de una propuesta ya enviada (CU-EVT-004).
 
 ## Actores
 
@@ -39,14 +42,12 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 
 ### En éxito
 
-- Se crea un registro `Propuesta` en estado `pendiente`, con folio asignado, vinculado al proponente y a la edición activa.
-- El campo `categoria` queda con el sufijo `_uady` o `_externo` derivado automáticamente por el sistema; el prefijo (`literaria` / `academica`) permanece pendiente hasta el dictamen del administrador (CU-EVT-008).
-- Los archivos adjuntos quedan almacenados como registros `PropuestaAdjunto`.
-- El aplicante recibe por correo la confirmación de envío con su número de folio.
+- El formulario queda con todos los campos obligatorios completos y los adjuntos requeridos cargados, validados y listos para enviar.
+- Aún **no** se crea el registro `Propuesta`; la creación ocurre al enviar (CU-EVT-002.1).
 
 ### En fallo
 
-- No se crea ningún registro. El sistema conserva los datos capturados en el formulario para que el aplicante corrija y reintente.
+- El sistema conserva los datos capturados en el formulario para que el aplicante corrija y continúe.
 
 ## Flujo principal
 
@@ -56,11 +57,7 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 4. El aplicante selecciona el tipo de actividad del catálogo.
 5. El sistema presenta los campos específicos del tipo seleccionado (ver sección Datos relevantes).
 6. El aplicante completa los campos obligatorios, declara si requiere constancia de participación y adjunta los archivos requeridos.
-7. El aplicante envía la propuesta.
-8. El sistema valida que todos los campos obligatorios y adjuntos requeridos estén completos.
-9. El sistema deriva el sufijo de `categoria`: `_uady` si `tipo_participante = uady`, `_externo` en cualquier otro caso.
-10. El sistema registra la `Propuesta` en estado `pendiente` con su folio y fecha de envío.
-11. El sistema envía al aplicante un correo con el número de folio y la confirmación de recepción.
+7. El sistema valida en línea que los campos obligatorios y los adjuntos requeridos del tipo seleccionado estén completos, dejando el formulario listo para el envío (CU-EVT-002.1).
 
 ## Flujos alternos
 
@@ -74,15 +71,9 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 
 ### E1. Campos obligatorios o adjuntos faltantes
 
-1. En el paso 8, el sistema detecta campos obligatorios sin completar o adjuntos ausentes.
+1. En el paso 7, el sistema detecta campos obligatorios sin completar o adjuntos ausentes.
 2. El sistema resalta cada campo en error con un mensaje descriptivo.
-3. El envío no procede hasta que el aplicante corrija.
-
-### E2. Convocatoria cerrada al momento del envío
-
-1. En el paso 8, el sistema verifica que la fecha actual es posterior a `fecha_cierre_convocatoria`.
-2. El sistema informa al aplicante que la convocatoria ya cerró y no acepta el envío.
-3. No se crea ningún registro.
+3. El formulario no queda listo para enviar hasta que el aplicante corrija.
 
 ## Datos relevantes
 
@@ -109,6 +100,4 @@ Campos adicionales por tipo de actividad:
 
 ### Salidas
 
-- `Propuesta` en estado `pendiente` con folio asignado y fecha de envío.
-- Registros `PropuestaAdjunto` por cada archivo adjuntado.
-- Correo de confirmación al aplicante con número de folio.
+- Formulario completo y validado (sin persistir aún), listo para el envío en CU-EVT-002.1.

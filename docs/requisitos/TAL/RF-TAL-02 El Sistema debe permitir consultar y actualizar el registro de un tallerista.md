@@ -6,7 +6,8 @@ tags:
   - funcional
 fecha: 2026-06-18
 casos_de_uso:
-  - CU-TAL-NNN
+  - CU-TAL-005
+  - CU-TAL-006
 dependencias:
   - RF-TAL-01
 ---

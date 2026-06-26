@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: aceptado
 version: 0.1
 tags:
   - requisitos
@@ -49,7 +49,7 @@ Tras enviar una propuesta exitosamente, el aplicante elige registrar otra activi
 
 ## Flujo principal
 
-1. Tras completar el envío de una propuesta (CU-EVT-002, paso 11), el sistema presenta las opciones: "Crear una nueva solicitud" y "Cerrar".
+1. Tras completar el envío de una propuesta (CU-EVT-002.1, paso 7), el sistema presenta las opciones: "Crear una nueva solicitud" y "Cerrar".
 2. El aplicante selecciona "Crear una nueva solicitud".
 3. El sistema presenta el formulario de propuesta con los datos de contacto y perfil ya precargados. Estos campos no son editables en este flujo; si el aplicante necesita modificarlos debe hacerlo desde su perfil.
 4. El flujo continúa desde el paso 4 de CU-EVT-002 (selección de tipo de actividad).

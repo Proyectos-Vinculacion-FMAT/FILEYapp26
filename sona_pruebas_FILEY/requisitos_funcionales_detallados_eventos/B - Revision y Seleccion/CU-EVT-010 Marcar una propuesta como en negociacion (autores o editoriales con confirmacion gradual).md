@@ -1,12 +1,12 @@
 ---
-estado: absorbido
+estado: rechazado
 version: 0.02
 tags:
   - requisitos
   - caso-de-uso
   - eventos
 fecha: 2026-06-20
-id: CU-EVT-009
+id: CU-EVT-010
 dominio: EVT
 responsable: Juan Manuel Hernandez Miranda
 issue_relacionado: PSD-XX
@@ -16,11 +16,12 @@ diagramas_relacionados: []
 trazabilidad:
   ddr: []
 ---
-# CU-EVT-009 Rechazar una propuesta con motivo registrado
+# CU-EVT-010 Marcar una propuesta como "en negociación" (autores/editoriales con confirmación gradual)
 
-> [!warning] Absorbido
-> Este CU fue fusionado en **CU-EVT-008 Dictaminar una propuesta** como flujo alterno A2 (Rechazar).
-> Este archivo se conserva solo como referencia histórica.
+> [!warning] Pospuesto para v2
+> El estado "en negociación" no fue definido en la reunión del 23-Jun-2026. Los estados acordados
+> para el MVP son: en revisión → aceptada / solicitud de cambios / rechazada.
+> Este CU se reserva para una versión posterior cuando se defina el flujo editorial.
 
 ## Objetivo
 

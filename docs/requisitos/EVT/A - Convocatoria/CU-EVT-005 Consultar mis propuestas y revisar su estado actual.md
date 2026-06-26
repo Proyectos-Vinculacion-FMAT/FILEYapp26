@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: acpetado
 version: 0.1
 tags:
   - requisitos
