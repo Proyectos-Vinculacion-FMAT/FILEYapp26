@@ -2,8 +2,8 @@
 estado: propuesta
 version: 0.1
 tags:
-  - caso-de-uso
-  - stands
+  - tipo/caso-de-uso
+  - dom/std
 fecha: 2026-06-22
 id: CU-STD-021
 modulo: D. Confirmación y estados

@@ -1,16 +1,15 @@
 ---
 tags:
-  - juntas
-  - equipo-desarrollo
-  - feedback
-  - requisitos
-  - casos-de-uso
-  - arquitectura
-  - stands
-  - eventos
-  - talleres
+  - tipo/junta-resumen
+  - tema/equipo-desarrollo
+  - tema/feedback
+  - tema/arquitectura
+  - dom/std
+  - dom/evt
+  - dom/tal
 estado: final
 fecha: 2026-06-18
+Fuente: "../transcripciones/Junta 2 con Equipo de desarrollo/TRS - Junta 2 con Equipo de desarrollo.md"
 Asistentes:
   - "Equipo de desarrollo: Profesor Edgar Cambranes"
   - "Desarrollador: Hugo Janssen (Stands / Expositores)"
@@ -66,7 +65,7 @@ Junta **interna del equipo de desarrollo** (sin cliente), de tipo **revisión y 
 ## Nuevas directrices y para cuándo
 
 > [!todo] Acuerdos de trabajo
-> Objetivo de entrega de referencia: **agosto** (no entra todo; se debe priorizar). Horizonte de desarrollo estimado: ~5-6 meses.
+> Objetivo de entrega de referencia: **agosto** (no entra todo; se debe priorizar). Horizonte de desarrollo estimado: ~5-6 meses. `[02:09:28–02:11:06]`
 
 - **Reorganizar los tres módulos en 3 cores compartidos** — para la reunión del lunes: `[02:04:45–02:09:00]`
   1. **Registros** — solicitudes/altas y su administración (expositor/stand, eventos, taller, visita escolar). Es lo primero que debe liberarse. `[01:54:41–01:55:13]`

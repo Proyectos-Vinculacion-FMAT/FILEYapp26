@@ -2,8 +2,8 @@
 estado: propuesta
 version: 1.0
 tags:
-  - proceso
-  - stands
+  - tipo/proceso
+  - dom/std
 fecha: 2026-06-18
 ---
 # Proceso de alto nivel — Stands (reserva, pago y confirmación)
