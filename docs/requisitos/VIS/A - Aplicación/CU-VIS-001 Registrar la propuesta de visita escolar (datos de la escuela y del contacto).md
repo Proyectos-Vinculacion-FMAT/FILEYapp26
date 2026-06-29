@@ -124,3 +124,5 @@ Evento que inicia el caso de uso.
 1. El Aplicante declara una cantidad de alumnos/visitantes mayor a **105** para esta propuesta.
 2. El sistema rechaza el registro y no permite guardarlo.
 3. El sistema informa al Aplicante que el máximo por propuesta es de 105 alumnos, y que si la escuela tiene varios niveles educativos debe dividir su registro en una propuesta por nivel (ver nota de campos del formulario).
+
+[RN-VIS-001]: <>
