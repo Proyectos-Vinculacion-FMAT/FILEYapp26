@@ -18,21 +18,21 @@ La editorial, advertida de que su reserva vencida puede cancelarse, conoce lo pe
 
 ## Alcance
 
-Componente de Stands — módulo de Reserva. La decisión final de cancelar o prorrogar la reserva vencida es del administrador (CU-STD-027); este caso de uso cubre la reacción del usuario, que se limita a regularizar su pago.
+Componente de Stands — módulo de Reserva. La decisión final de cancelar o prorrogar la reserva vencida es del administrador (CU-STD-035); este caso de uso cubre la reacción del aplicante, que se limita a regularizar su pago.
 
 ## Actores
 
 ### Actor principal
 
-- Usuario (editorial / entidad expositora)
+- Aplicante (editorial / entidad expositora)
 
 ## Disparador
 
-El usuario recibe el aviso (por correo y/o en "Mi reserva") de que su reserva vencida puede cancelarse.
+El aplicante recibe el aviso (por correo y/o en "Mi reserva") de que su reserva vencida puede cancelarse.
 
 ## Precondiciones
 
-- El usuario tiene sesión iniciada.
+- El aplicante tiene sesión iniciada.
 - La reserva está vencida sin haberse cubierto el anticipo del 50% (con abono parcial o sin abono, RN-12).
 - El administrador aún no ha resuelto la reserva (cancelar o prorrogar).
 
@@ -40,7 +40,7 @@ El usuario recibe el aviso (por correo y/o en "Mi reserva") de que su reserva ve
 
 ### En éxito
 
-- El usuario queda informado del monto pendiente y la situación, y puede proceder a registrar un pago (CU-STD-016).
+- El aplicante queda informado del monto pendiente y la situación, y puede proceder a registrar un pago (CU-STD-016).
 
 ### En fallo
 
@@ -48,16 +48,16 @@ El usuario recibe el aviso (por correo y/o en "Mi reserva") de que su reserva ve
 
 ## Flujo principal
 
-1. El usuario abre el aviso de posible cancelación desde "Mi reserva" o desde el correo.
+1. El aplicante abre el aviso de posible cancelación desde "Mi reserva" o desde el correo.
 2. El sistema muestra el estado de la reserva, el monto pendiente para alcanzar el anticipo y la advertencia de posible cancelación (RN-12).
-3. El usuario procede a registrar un pago para regularizar su reserva (CU-STD-016).
+3. El aplicante procede a registrar un pago para regularizar su reserva (CU-STD-016).
 
 ## Flujos alternos
 
-### A1. El usuario no actúa
+### A1. El aplicante no actúa
 
-1. En el paso 3 el usuario no registra ningún pago.
-2. La reserva permanece vencida a la espera de la resolución del administrador (cancelar o prorrogar, CU-STD-027).
+1. En el paso 3 el aplicante no registra ningún pago.
+2. La reserva permanece vencida a la espera de la resolución del administrador (cancelar o prorrogar, CU-STD-035).
 
 ## Flujos de excepción
 
@@ -77,4 +77,4 @@ El usuario recibe el aviso (por correo y/o en "Mi reserva") de que su reserva ve
 - Información del aviso: monto pendiente y situación de la reserva.
 
 > [!note] Supuesto de diseño
-> Se asume que la reacción del usuario se limita a pagar (CU-STD-016); no se contempla que el usuario solicite la prórroga desde el sistema. Confirmar con el equipo si debe existir una solicitud de prórroga iniciada por el usuario.
+> Se asume que la reacción del aplicante se limita a pagar (CU-STD-016); no se contempla que el aplicante solicite la prórroga desde el sistema. Confirmar con el equipo si debe existir una solicitud de prórroga iniciada por el aplicante.

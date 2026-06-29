@@ -82,8 +82,9 @@ export class StandMapComponent implements OnInit, OnDestroy {
 
   readonly iframeUrl = computed<SafeResourceUrl>(() => {
     const origin = encodeURIComponent(window.location.origin);
+    const base = document.baseURI.replace(/\/$/, '');
     return this.sanitizer.bypassSecurityTrustResourceUrl(
-      `/assets/godot/index.html?mode=${this.mode()}&hostOrigin=${origin}`
+      `${base}/assets/godot/index.html?mode=${this.mode()}&hostOrigin=${origin}`
     );
   });
 

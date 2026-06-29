@@ -37,7 +37,7 @@ Validación de un abono (CU-STD-018 o CU-STD-019) o ejecución de la revisión d
 2. El sistema compara la fecha actual con la `fecha_limite_pronto_pago` global configurada en `ParametrosSistema`.
 3. Si la fecha vigente aún es válida para el pronto pago, el sistema verifica si el `monto_abonado` es igual o mayor al monto total menos el 10%.
 4. Al cumplirse la condición, el sistema registra definitivamente el descuento en la entidad `DescuentoAplicado` con tipo `pronto_pago` y el porcentaje (10%).
-5. El sistema recalcula el total, establece que la reserva está cubierta al 100% y dispara el cambio de estado a Pagada (CU-STD-030).
+5. El sistema recalcula el total, establece que la reserva está cubierta al 100% y dispara el cambio de estado a Pagada (CU-STD-027).
 6. El caso de uso termina.
 
 ## Flujos alternativos
@@ -45,7 +45,7 @@ Validación de un abono (CU-STD-018 o CU-STD-019) o ejecución de la revisión d
 ### A1. Vencimiento del plazo de pronto pago sin liquidar
 
 1. En el paso 3, el sistema (mediante rutina diaria) detecta que la `fecha_limite_pronto_pago` ha expirado y la reserva no alcanzó el 100% del pago reducido.
-2. El sistema retira de la vista del usuario el aviso del beneficio de pronto pago.
+2. El sistema retira de la vista del aplicante el aviso del beneficio de pronto pago.
 3. El sistema recalcula el `monto_pendiente` considerando el 100% del costo original de los stands (sin descuento).
 4. El caso de uso termina.
 

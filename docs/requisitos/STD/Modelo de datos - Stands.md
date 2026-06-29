@@ -18,10 +18,10 @@ fecha: 2026-06-18
 
 | Entidad | Propósito |
 |---------|-----------|
-| Cuenta | Acceso/autenticación y rol del usuario. |
+| Cuenta | Acceso/autenticación y rol del aplicante. |
 | Editorial | Perfil de la entidad expositora (datos de la Ficha de Registro). |
 | SelloEditorial | Sellos/fondos editoriales que representa una editorial. |
-| Aplicacion | Solicitud para ser expositor y su revisión. |
+| Solicitud | Solicitud para ser expositor y su revisión. |
 | Documento | Archivos adjuntos (comprobantes, cartas, listas, etc.). |
 | Evento | Edición de la feria (p. ej. FILEY 2026). |
 | Stand | Espacio físico en el mapa del showfloor. |
@@ -29,7 +29,7 @@ fecha: 2026-06-18
 | ReservaStand | Detalle (línea) de cada stand dentro de una reserva. |
 | Movimiento | Pago/abono registrado contra una reserva. |
 | DescuentoAplicado | Descuento aplicado a una reserva (pronto pago o especial). |
-| Notificacion | Correos enviados al usuario/administrador. |
+| Notificacion | Correos enviados al aplicante/administrador. |
 | ParametrosSistema | Configuración global (costo m², porcentajes, datos bancarios). |
 | Bitacora *(opcional)* | Registro de auditoría de acciones del administrador. |
 
@@ -43,7 +43,7 @@ fecha: 2026-06-18
 | id | Identificador único. |
 | correo | Correo de acceso (único). |
 | contrasena_hash | Credencial. |
-| rol | `usuario` / `administrador`. |
+| rol | `aplicante` / `administrador`. |
 | estado | `activa` / `inactiva`. |
 | es_recurrente | Marca de expositor recurrente *(fuera de alcance actual; previsto)*. |
 | fecha_registro | Alta de la cuenta. |
@@ -84,7 +84,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | editorial_id | FK → Editorial. |
 | nombre | Nombre del sello/fondo editorial representado. |
 
-### 2.4 Aplicacion
+### 2.4 Solicitud
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
@@ -98,8 +98,8 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 
 
 > *Nota de diseño:* la información del formulario se solapa con **Editorial**. Decidir con
-> el equipo si la aplicación guarda una copia (snapshot) de los datos enviados o si
-> referencia directamente a la editorial. Los **documentos** de la aplicación se modelan en `Documento`.
+> el equipo si la solicitud guarda una copia (snapshot) de los datos enviados o si
+> referencia directamente a la editorial. Los **documentos** de la solicitud se modelan en `Documento`.
 
 ### 2.5 Documento
 | Atributo | Descripción |
@@ -162,7 +162,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | reserva_id | FK → Reserva. |
 | monto | Monto del abono. |
 | metodo | `transferencia` / `deposito` / `cheque`. |
-| origen | `usuario` / `admin_manual`. |
+| origen | `aplicante` / `admin_manual`. |
 | estado | `pendiente_validacion` / `validado` / `rechazado`. |
 | comprobante_id | FK → Documento (obligatorio en abono manual del admin). |
 | registrado_por | FK → Cuenta. |
@@ -179,7 +179,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | porcentaje | Porcentaje aplicado. |
 | motivo | Obligatorio para `especial`. |
 | aplicado_por | FK → Cuenta (sistema o administrador). |
-| fecha | Fecha de aplicación. |
+| fecha | Fecha de solicitud. |
 
 ### 2.12 Notificacion
 | Atributo | Descripción |
@@ -189,7 +189,7 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 | tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `aplicacion_cambios`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_cancelada`. |
 | fecha_envio | Fecha de envío. |
 | estado | `enviada` / `fallida`. |
-| referencia_tipo, referencia_id | Entidad relacionada (aplicación / reserva). |
+| referencia_tipo, referencia_id | Entidad relacionada (solicitud / reserva). |
 
 ### 2.13 ParametrosSistema
 | Atributo | Descripción |
@@ -216,11 +216,11 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 
 ## 3. Relaciones principales
 
-- **Cuenta** 1—1 **Editorial** (una editorial por cuenta de usuario).
+- **Cuenta** 1—1 **Editorial** (una editorial por cuenta de aplicante).
 - **Editorial** 1—N **SelloEditorial**.
-- **Editorial** 1—N **Aplicacion** (una activa por evento; permite reenvío tras solicitud de cambios, o creación de nueva tras rechazo).
+- **Editorial** 1—N **Solicitud** (una activa por evento; permite reenvío tras solicitud de cambios, o creación de nueva tras rechazo).
 - **Editorial** 1—1 **Documento** (Constancia de Situación Fiscal).
-- **Aplicacion** 1—N **Documento**; **Movimiento** 1—1 **Documento** (comprobante).
+- **Solicitud** 1—N **Documento**; **Movimiento** 1—1 **Documento** (comprobante).
 - **Evento** 1—N **Stand**.
 - **Editorial** 1—N **Reserva**; **Reserva** 1—N **ReservaStand** N—1 **Stand**
   (un stand pertenece a lo sumo a una reserva activa).
@@ -234,20 +234,20 @@ NOTA: Cuenta es ilustrativo, está fuera del scope de este componente.
 
 | Entidad | Casos de uso relacionados |
 |---------|---------------------------|
-| Cuenta / Editorial / SelloEditorial | CU-STD-001, CU-STD-002, CU-STD-033, CU-STD-034 |
-| Aplicacion / Documento | CU-STD-001–CU-STD-008, CU-STD-034 |
-| Stand / Evento | CU-STD-009, CU-STD-010, CU-STD-035, CU-STD-036 |
-| Reserva / ReservaStand | CU-STD-011–CU-STD-014, CU-STD-021, CU-STD-022, CU-STD-027–CU-STD-032 |
-| Movimiento | CU-STD-015–CU-STD-019, CU-STD-032 |
+| Cuenta / Editorial / SelloEditorial | CU-STD-001, CU-STD-002, CU-STD-030, CU-STD-031 |
+| Solicitud / Documento | CU-STD-001–CU-STD-008, CU-STD-031 |
+| Stand / Evento | CU-STD-009, CU-STD-010, CU-STD-032, CU-STD-033 |
+| Reserva / ReservaStand | CU-STD-011–CU-STD-014, CU-STD-021, CU-STD-022, CU-STD-035, CU-STD-036, CU-STD-028, CU-STD-029 |
+| Movimiento | CU-STD-015–CU-STD-019, CU-STD-029 |
 | DescuentoAplicado | CU-STD-006, CU-STD-020, CU-STD-023 |
-| Notificacion | CU-STD-008, CU-STD-014, CU-STD-025, CU-STD-026, CU-STD-029, CU-STD-030 |
-| ParametrosSistema | CU-STD-010, CU-STD-023 (cálculos y descuentos), CU-STD-037 (configuración) |
+| Notificacion | CU-STD-008, CU-STD-014, CU-STD-024, CU-STD-025, CU-STD-026, CU-STD-027 |
+| ParametrosSistema | CU-STD-010, CU-STD-023 (cálculos y descuentos), CU-STD-034 (configuración) |
 
 ---
 
 ## 5. Temas abiertos del modelo
 
-- Confirmar si **Aplicacion** guarda snapshot de datos o referencia a **Editorial**.
+- Confirmar si **Solicitud** guarda snapshot de datos o referencia a **Editorial**.
 
 - El único estado de cierre es `Cancelada` (decisión del administrador). El sistema no
   libera reservas automáticamente.
