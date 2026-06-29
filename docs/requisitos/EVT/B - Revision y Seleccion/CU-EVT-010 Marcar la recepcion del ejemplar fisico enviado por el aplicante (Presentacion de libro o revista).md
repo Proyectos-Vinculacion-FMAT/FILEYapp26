@@ -1,24 +1,26 @@
 ---
-estado: pendiente por revizar
-version: 0.1
+estado: aceptado
+version: 0.2
 tags:
   - requisitos
   - caso-de-uso
   - eventos
-fecha: 2026-06-24
-id: CU-EVT-013
+fecha: 2026-06-27
+id: CU-EVT-010
 dominio: EVT
-reglas_de_negocio: []
+reglas_de_negocio:
+  - La no recepción del ejemplar NO bloquea el dictamen ni ningún otro paso del flujo.
+  - El solicitante no debe saber que el envío del ejemplar no tiene consecuencias prácticas en el sistema — el aviso en el formulario se redacta como una instrucción obligatoria para generar presión y obtener el material de apoyo que le sirve a Hipólito para revisar mejor la propuesta.
 ---
-# CU-EVT-013 Marcar la recepción del ejemplar físico enviado por el aplicante (Presentación de libro/revista)
+# CU-EVT-010 Marcar la recepción del ejemplar físico enviado por el aplicante (Presentación de libro/revista)
 
 ## Objetivo
 
-El administrador registra que recibió el ejemplar físico que el proponente debía enviar a las oficinas de FILEY para una presentación de libro o revista, dejando constancia de cumplimiento de ese requisito.
+El administrador registra que recibió el ejemplar físico que el proponente envió a las oficinas de FILEY para una presentación de libro o revista. Es un registro de control interno que le ayuda a Hipólito a dar seguimiento al material de apoyo para revisar la propuesta; **no bloquea el dictamen** si el ejemplar no llega.
 
 ## Alcance
 
-Módulo EVE — seguimiento de requisitos de la propuesta. Solo aplica a tipos de actividad cuyo `TipoActividad.requiere_ejemplar_fisico = true` (Presentación de libro y Presentación de revista). Es un registro de control independiente del dictamen.
+Módulo EVT — seguimiento de requisitos de la propuesta. Solo aplica a tipos de actividad cuyo `TipoActividad.requiere_ejemplar_fisico = true` (Presentación de libro y Presentación de revista). Es un registro de control **independiente e opcional** del dictamen: la ausencia del ejemplar no impide aceptar, rechazar ni solicitar cambios en la propuesta.
 
 ## Actores
 

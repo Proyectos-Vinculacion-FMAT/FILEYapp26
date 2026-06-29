@@ -48,9 +48,12 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
 > [!note]
 > Sección nueva, a partir de lo discutido en la Junta 2. Las visitas escolares son un volumen importante (~3,000-3,500 niños por día) y tienen necesidades distintas a las de un visitante individual.
 
-- [ ] ¿Las visitas escolares deben registrarse como un tipo de visitante grupal, distinto al visitante individual?
-- [ ] ¿Qué datos debe capturar el registro de una escuela (aforo del grupo, nivel educativo, fecha y horario de visita)?
-- [ ] ¿Quién registra a la escuela: un representante de la escuela, o el personal de FILEY?
+- [x] ¿Las visitas escolares deben registrarse como un tipo de visitante grupal, distinto al visitante individual?
+  - *Respuesta (documentos reales — 28-Jun-2026): Sí. Tienen su propio formulario dedicado ("Registro para visitas escolares") con datos de institución y grupos de alumnos, completamente separado del registro de talleristas y del registro de visitantes individuales.*
+- [x] ¿Qué datos debe capturar el registro de una escuela (aforo del grupo, nivel educativo, fecha y horario de visita)?
+  - *Respuesta (ficha física + Google Forms — 28-Jun-2026): Ver CU-TAL-007 y Modelo de datos - Talleres (Visitas Escolares).md. Secciones: (1) Datos del responsable: nombre, teléfono, correo. (2) Datos de la institución: nombre, director(a), clave de trabajo SEP, nivel académico, sector, turno, dirección, estado, municipio, teléfono y correo de la institución. (3) Por cada grupo: nombre del responsable, grado y cantidad de alumnos. (4) Observaciones (libre). La fecha/horario NO la elige la escuela; la asigna Elvira en la fase de programación.*
+- [x] ¿Quién registra a la escuela: un representante de la escuela, o el personal de FILEY?
+  - *Respuesta (ficha física — 28-Jun-2026): El representante de la escuela (identificado como "Responsable del proceso de inscripción"). El formulario en línea lo llenan directamente desde la institución educativa.*
 
 ## Arrendatarios de stand
 

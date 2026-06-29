@@ -17,11 +17,11 @@ Inventario de casos de uso del dominio **Eventos Generales** (`EVT`): la convoca
 > dominio aparte: ver `TAL/CU-TAL Índice.md`. A diferencia de EVT, TAL **no tiene revisión/dictamen
 > por propuesta dentro del sistema** (la selección es manual y la confirmación llega por correo).
 
-> [!note]
+> [!note] note
 > Cada caso de uso tiene su propio archivo dentro de su módulo. Este índice es la vista general.
 > La redacción detallada (actores, flujo principal y alternos) se hará después de revisar con el equipo.
 
-> [!note]
+> [!note] note
 > Los casos de uso de **salas** (asignación, disponibilidad) dependen del Core Salas.
 > Los de **identidad** (registro de Aplicante, acceso OTP) dependen del Core Registros:
 > ver `REG/CU-REG Índice.md` — CU-REG-001, CU-REG-002 (usuarios externos) y CU-REG-003 (admin).
@@ -37,7 +37,9 @@ EVT:  Convocatoria → Revisión → Programación  → Confirmación y Cierre  
 
 ---
 
-## A. Convocatoria
+## primera version
+
+### A. Convocatoria
 
 Cubre la apertura del periodo de recepción de propuestas y todo lo que hace el aplicante mientras la convocatoria está abierta.
 
@@ -48,7 +50,7 @@ Cubre la apertura del periodo de recepción de propuestas y todo lo que hace el 
 - CU-EVT-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador — *Aplicante * [este pasaria al B]
 - CU-EVT-005 Consultar mis propuestas y revisar su estado actual — *Aplicante*
 
-## B. Revisión y Selección
+### B. Revisión y Selección
 
 Hipólito revisa de forma continua (semana a semana, no solo al cierre). Las decisiones se notifican en un solo lote cuando termina su revisión.
 
@@ -61,19 +63,53 @@ Hipólito revisa de forma continua (semana a semana, no solo al cierre). Las dec
 - CU-EVT-012 Enviar notificaciones de resultado (aceptadas y rechazadas) — *Administrador*
 - CU-EVT-013 Marcar la recepción del ejemplar físico enviado por el aplicante (Presentación de libro/revista) — *Administrador [pendiente (preguntar a hipolito)]*
 
-## D. Confirmación y Cierre
+### D. Confirmación y Cierre
 
 El aplicante recibe su horario y lo confirma. Existe una ventana de tiempo para solicitar cambios; fuera de ella, el sistema bloquea modificaciones.
 
 - CU-EVT-027 Descargar constancia de participación (disponible a partir de la fecha configurada, post-feria) — *Aplicante*
 
-## E. Publicación y Administración
+### E. Publicación y Administración
 
 Exportación, publicación para visitantes, catálogos y auditoría.
 
 - CU-EVT-030 Generar la ficha PDF de una actividad individual (título, tipo, organiza, fecha, sala, horario) — *Sistema*
 
+## Segunda version
 
+### A. Convocatoria
+
+Cubre la apertura del periodo de recepción de propuestas y todo lo que hace el aplicante mientras la convocatoria está abierta.
+
+- CU-EVT-001 Configurar la convocatoria: abrir periodo, fechas clave y cupos por categoría — *Administrador*
+- CU-EVT-002 Registro de la propuesta de la actividad — *Aplicante*
+- CU-EVT-003 Consultar mis propuestas y revisar su estado actual — *Aplicante* 
+
+### B. Revisión y Selección
+
+Hipólito revisa de forma continua (semana a semana, no solo al cierre). Las decisiones se notifican en un solo lote cuando termina su revisión.
+
+- CU-EVT-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador — *Aplicante * [este pasaria al B]
+- CU-EVT-005 Consultar la lista de propuestas recibidas, filtrable por tipo, estado y categoría — *Administrador*
+- CU-EVT-006 Ver el detalle de una propuesta (datos del aplicante, descripción y adjuntos) — *Administrador*
+- CU-EVT-007 Dictaminar una propuesta: aceptar, solicitar cambios o rechazar — *Administrador*
+- ~~CU-EVT-009 Rechazar una propuesta con motivo registrado~~ — absorbido en CU-EVT-008 (flujo alterno A2)
+- ~~CU-EVT-010 Marcar una propuesta como "en negociación"~~ — pospuesto para v2 (estado no definido para MVP)
+- CU-EVT-08 visualizar el numero de actividades: aceptadas, rechazadas y espacios disponibles por categoría — *Administrador*
+- CU-EVT-09 Enviar notificaciones de resultado (aceptadas y rechazadas) — *Administrador*
+- CU-EVT-010 Marcar la recepción del ejemplar físico enviado por el aplicante (Presentación de libro/revista) — *Administrador [pendiente (preguntar a hipolito)]*
+
+### D. Confirmación y Cierre
+
+El aplicante recibe su horario y lo confirma. Existe una ventana de tiempo para solicitar cambios; fuera de ella, el sistema bloquea modificaciones.
+
+- CU-EVT-011 Descargar constancia de participación (disponible a partir de la fecha configurada, post-feria) — *Aplicante*
+
+### E. Publicación y Administración
+
+Exportación, publicación para visitantes, catálogos y auditoría.
+
+- CU-EVT-012 Generar la ficha PDF de una actividad individual (título, tipo, organiza, fecha, sala, horario) — *Sistema*
 
 ---
 

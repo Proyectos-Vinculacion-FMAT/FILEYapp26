@@ -133,8 +133,8 @@ flowchart LR
 
 - **Objetivo:** responder a la notificación de sala y horario.
 - **Contenido:** datos de la programación (actividad, sala/stand, fecha y bloque) y
-  acciones **Confirmar asistencia**, **Indicar incomparecencia** y **Solicitar cambio**
-  (dentro de la ventana; la negociación del cambio continúa por correo con el admin).
+  acciones **Confirmar asistencia** e **Indicar incomparecencia**. El proponente no tiene
+  opción de solicitar cambios de horario — cualquier ajuste lo gestiona el coordinador.
 - **CU involucrados:** CU-EVT-023 (responder notificación de horario).
 - **Reflejo de Sistema:** CU-EVT-022 (notificación de horario) llega como correo y aparece
   aquí.

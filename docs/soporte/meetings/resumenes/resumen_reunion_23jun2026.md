@@ -123,18 +123,18 @@ Enviada → En revisión  →  Aceptada
 
 ### Urgentes (antes del fin de semana 27-Jun)
 
-- [ ] **Hacer push** del trabajo de Juan al repositorio (tenía zip sin subir)
-- [ ] **Ajustar CU-EVE-001** (configurar convocatoria) para que absorba el cierre automático
-- [ ] **Marcar CU-EVE-005** como redundante o eliminar (el cierre automático ya está en CU-EVE-001)
-- [ ] **Actualizar terminología** en todos los CUs ya redactados: usar "aplicante" en lugar de otras variantes
+- [X] **Hacer push** del trabajo de Juan al repositorio (tenía zip sin subir)
+- [X] **Ajustar CU-EVE-001** (configurar convocatoria) para que absorba el cierre automático
+- [X] **Marcar CU-EVE-005** como redundante o eliminar (el cierre automático ya está en CU-EVE-001)
+- [X] **Actualizar terminología** en todos los CUs ya redactados: usar "aplicante" en lugar de otras variantes
 
 ### Esta semana (antes del 30-Jun)
 
-- [ ] Revisar los **5 formularios existentes** (Hipólito + Elvira + visitas escolares + stands) para identificar y alinear los **campos comunes** de registro de propuesta
-- [ ] Redactar los **CU-EVE de registro de propuesta** de actividad (flujo del aplicante: registrar → ver lista → ver detalle con estado)
-- [ ] Redactar los **CU-EVE de revisión/selección** (flujo del admin: ver lista → revisar → aceptar/solicitar cambios/rechazar + notificación)
-- [ ] Clarificar con Hipólito cómo hace actualmente la programación (¿Excel propio?) para no romper su flujo actual
-- [ ] Preguntar a Hipólito si quiere manejar notificación del **preliminar de programación** (antes de asignar definitivamente)
+- [X] Revisar los **5 formularios existentes** (Hipólito + Elvira + visitas escolares + stands) para identificar y alinear los **campos comunes** de registro de propuesta
+- [X] Redactar los **CU-EVE de registro de propuesta** de actividad (flujo del aplicante: registrar → ver lista → ver detalle con estado)
+- [X] Redactar los **CU-EVE de revisión/selección** (flujo del admin: ver lista → revisar → aceptar/solicitar cambios/rechazar + notificación)
+- [X] Clarificar con Hipólito cómo hace actualmente la programación (¿Excel propio?) para no romper su flujo actual
+- [X] Preguntar a Hipólito si quiere manejar notificación del **preliminar de programación** (antes de asignar definitivamente)
 
 ### Para agosto (módulo REG listo para producción)
 
@@ -164,3 +164,57 @@ Enviada → En revisión  →  Aceptada
 ---
 
 *Documento generado a partir de la transcripción de la reunión del 23 de junio de 2026.*
+
+---
+
+## 7. Aclaraciones de Hipólito — respuestas recibidas el 27-Jun-2026
+
+Preguntas surgidas del análisis de los CUs de EVT; respondidas por escrito.
+
+### 7.1 "Público al que va dirigido" — tipo de campo
+
+**Pregunta:** ¿El campo "público al que va dirigido" es texto libre o tiene opciones predefinidas?
+
+**Respuesta:** Selección múltiple. Las opciones son:
+- Público en general
+- Académico
+- Estudiantil
+- Infantil
+- Familias
+
+**Impacto:** Campo actualizado en CU-EVT-002 (Datos relevantes → Entradas).
+
+---
+
+### 7.2 Distribución del catálogo/programa al público
+
+**Pregunta:** ¿Hipólito envía catálogos al público general una vez que tiene la programación lista?
+
+**Respuesta:** No se envía al público general. El programa es para trabajo interno. La información detallada se usa para elaborar el programa impreso/digital (trabajo de diseño editorial, no de distribución directa desde el sistema).
+
+**Impacto:** Confirma que las funciones de exportación (A6) y publicación (A5) son herramientas de uso interno/editorial, no de distribución masiva. La cartelera pública (V1, V2) es un canal separado y complementario.
+
+---
+
+### 7.3 RFH-18 — Ventana de ajustes: ¿el proponente puede pedir cambios?
+
+**Pregunta:** ¿El periodo de ajustes del RFH-18 aplica a todos los tipos de actividad? ¿El proponente puede solicitar cambios de horario?
+
+**Respuesta:** Los proponentes **no tienen opción de pedir cambios de horario**. Solo el coordinador (Hipólito) puede hacer cambios de horario, salón y, excepcionalmente, de fecha (en ese caso coordinando con el involucrado). La "ventana de ajustes" es del coordinador, no del proponente.
+
+**Impacto:**
+- RFH-18 reescrito para reflejar que la ventana es del coordinador, no del proponente.
+- Vista P4 ("Mi horario asignado") actualizada: se eliminó la acción "Solicitar cambio"; el proponente solo puede confirmar asistencia o indicar incomparecencia.
+- Tema abierto del Modelo de datos sobre RFH-18 cerrado.
+
+---
+
+### 7.4 Ejemplar físico — ¿qué pasa si el proponente no lo envía?
+
+**Pregunta:** ¿Qué ocurre si el proponente que presentará un libro/revista no envía el ejemplar físico?
+
+**Respuesta:** No hay consecuencia en el sistema. El aviso de envío sirve para presionar al solicitante — el ejemplar físico le ayuda a Hipólito a revisar mejor la propuesta. El solicitante no debe saber que la omisión no tiene consecuencias.
+
+**Impacto:**
+- CU-EVT-010 actualizado: el objetivo y el alcance ahora especifican que la marcación es un registro de control interno **no bloqueante**, y se añadieron las reglas de negocio correspondientes.
+- El texto del formulario (CU-EVT-002, flujo alterno A1) permanece sin cambios: debe seguir mostrando la instrucción de envío de ejemplar para mantener la presión.

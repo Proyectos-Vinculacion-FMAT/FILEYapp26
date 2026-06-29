@@ -45,12 +45,12 @@ Cubre la apertura del periodo y todo lo que hace el tallerista (y la escuela) mi
 
 - CU-TAL-001 Configurar la convocatoria de actividades infantiles y juveniles (periodo, modalidades y cupos) — *Administrador (Elvira)*
 - CU-TAL-002 Capturar y registrar los datos de la propuesta de actividad infantil/juvenil (llenado del formulario) — *Tallerista*
-- CU-TAL-003 Enviar la propuesta de actividad infantil/juvenil (acción de envío) — *Tallerista*
-- CU-TAL-004 Registrar múltiples propuestas desde una misma cuenta sin recapturar datos del responsable — *Tallerista*
+- CU-TAL-003 Enviar la propuesta de actividad infantil/juvenil (acción de envío) — *Tallerista* (este es adsorvido por el requisito 002) 
+- CU-TAL-004 Registrar múltiples propuestas desde una misma cuenta sin recapturar datos del responsable — *Tallerista* (este esta rechazado porque esto hace referencia a mecanismo mas complejo)
 - CU-TAL-005 Editar o actualizar mi propuesta de actividad mientras la convocatoria esté abierta (autogestionada) — *Tallerista*
 - CU-TAL-006 Consultar mis propuestas de actividad y revisar su estado actual — *Tallerista*
 - CU-TAL-007 Registrar la solicitud de visita de una escuela o grupo de excursionistas — *Representante escolar*
-- CU-TAL-008 Consultar y actualizar el registro de una visita escolar — *Representante escolar*
+- ~~CU-TAL-008 Consultar y actualizar el registro de una visita escolar~~ — *Descartado: el representante no actualiza su registro en el sistema; los cambios los gestiona Elvira internamente por correo/teléfono.*
 
 ---
 
@@ -58,17 +58,17 @@ Cubre la apertura del periodo y todo lo que hace el tallerista (y la escuela) mi
 
 El registro de propuestas de Elvira **no es igual** al de Hipólito. Principales diferencias capturadas en los CU:
 
-| Aspecto | EVT (Hipólito) | TAL (Elvira) |
-|--------|----------------|--------------|
-| Público objetivo | General (literario / académico) | Infancias y juventudes, por nivel escolar |
-| Tipos de actividad | Conversatorio, Conferencia, Presentación de libro/revista, etc. | Taller, Cuentacuento, Plática para jóvenes, Presentación para niños/jóvenes, Obra teatral, Proyección en cines |
-| Categorización | `literaria` / `academica` × `uady` / `externo` | Por nivel escolar y turno |
-| Duración | Variable (bloques estándar) | Fija, 45–50 min |
-| Modalidad | Presencial | Presencial o virtual |
-| Adjuntos | PDF/imágenes obligatorios | Sin adjuntos (texto/selección) |
-| Revisión de propuestas | Dictamen por propuesta: aceptar / solicitar cambios / rechazar (fase B) | **Sin dictamen en sistema**; confirmación por correo (diciembre) |
-| Edición de propuesta | En respuesta a solicitud de cambios del admin (CU-EVT-004) | Autogestionada por el tallerista (CU-TAL-005) |
-| Registro de visitas escolares | No aplica | Sí (CU-TAL-007 / CU-TAL-008) |
+| Aspecto                       | EVT (Hipólito)                                                         | TAL (Elvira)                                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Público objetivo             | General (literario / académico)                                        | Infancias y juventudes, por nivel escolar                                                                            |
+| Tipos de actividad            | Conversatorio, Conferencia, Presentación de libro/revista, etc.        | Taller, Cuentacuento, Plática para jóvenes, Presentación para niños/jóvenes, Obra teatral, Proyección en cines |
+| Categorización               | `literaria` / `academica` × `uady` / `externo`                 | Por nivel escolar y turno                                                                                            |
+| Duración                     | Variable (bloques estándar)                                            | Fija, 45–50 min                                                                                                     |
+| Modalidad                     | Presencial                                                              | Presencial o virtual                                                                                                 |
+| Adjuntos                      | PDF/imágenes obligatorios                                              | Sin adjuntos (texto/selección)                                                                                      |
+| Revisión de propuestas       | Dictamen por propuesta: aceptar / solicitar cambios / rechazar (fase B) | **Sin dictamen en sistema**; confirmación por correo (diciembre)                                              |
+| Edición de propuesta         | En respuesta a solicitud de cambios del admin (CU-EVT-004)              | Autogestionada por el tallerista (CU-TAL-005)                                                                        |
+| Registro de visitas escolares | No aplica                                                               | Sí (CU-TAL-007 / CU-TAL-008)                                                                                        |
 
 ---
 
@@ -80,8 +80,8 @@ El registro de propuestas de Elvira **no es igual** al de Hipólito. Principales
 
 ## Mapa CU → RF (trazabilidad inicial)
 
-| CU | RF origen |
-|----|-----------|
+| CU                                                         | RF origen            |
+| ---------------------------------------------------------- | -------------------- |
 | CU-TAL-002, CU-TAL-003, CU-TAL-004, CU-TAL-005, CU-TAL-006 | RF-TAL-01, RF-TAL-02 |
-| CU-TAL-007 | RF-TAL-03 |
-| CU-TAL-008 | RF-TAL-04 |
+| CU-TAL-007                                                 | RF-TAL-03            |
+| ~~CU-TAL-008~~ (descartado)                                | RF-TAL-04 (sin CU)   |

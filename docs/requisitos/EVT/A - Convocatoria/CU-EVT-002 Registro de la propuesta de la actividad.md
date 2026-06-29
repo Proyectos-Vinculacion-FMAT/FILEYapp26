@@ -44,10 +44,15 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 
 - El formulario queda con todos los campos obligatorios completos y los adjuntos requeridos cargados, validados y listos para enviar.
 - Aún **no** se crea el registro `Propuesta`; la creación ocurre al enviar (CU-EVT-002.1).
+- al hacer envio se crea un registro `Propuesta` en estado `pendiente`, con folio asignado, vinculado al proponente y a la edición activa.
+- El campo `categoria` queda con el sufijo `_uady` o `_externo` derivado automáticamente por el sistema; el prefijo (`literaria` / `academica`) permanece pendiente hasta el dictamen del administrador (CU-EVT-008).
+- Los archivos adjuntos quedan almacenados como registros `PropuestaAdjunto`.
+- El aplicante recibe por correo la confirmación de envío con su número de folio.
 
 ### En fallo
 
 - El sistema conserva los datos capturados en el formulario para que el aplicante corrija y continúe.
+- al hacer envio no se crea ningún registro. El sistema devuelve al aplicante al formulario (CU-EVT-002) conservando los datos para corregir y reintentar.
 
 ## Flujo principal
 
@@ -57,7 +62,14 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 4. El aplicante selecciona el tipo de actividad del catálogo.
 5. El sistema presenta los campos específicos del tipo seleccionado (ver sección Datos relevantes).
 6. El aplicante completa los campos obligatorios, declara si requiere constancia de participación y adjunta los archivos requeridos.
-7. El sistema valida en línea que los campos obligatorios y los adjuntos requeridos del tipo seleccionado estén completos, dejando el formulario listo para el envío (CU-EVT-002.1).
+7. El sistema valida en línea que los campos obligatorios y los adjuntos requeridos del tipo seleccionado estén completos, dejando el formulario listo para el envío.
+8. El aplicante envía la propuesta. (precondiccion: Los datos de la propuesta están capturados y validados )
+9. El sistema realiza la validación final de que todos los campos obligatorios y adjuntos requeridos estén completos.
+10. El sistema deriva el sufijo de `categoria`: `_uady` si `tipo_participante = uady`, `_externo` en cualquier otro caso.
+11. El sistema registra la `Propuesta` en estado `pendiente` con su folio y fecha de envío.
+12. El sistema almacena cada archivo adjunto como un registro `PropuestaAdjunto`.
+13. El sistema envía al aplicante un correo con el número de folio y la confirmación de recepción.
+14. El sistema presenta las opciones "Crear una nueva solicitud" (CU-EVT-003) y "Cerrar".
 
 ## Flujos alternos
 
@@ -75,6 +87,18 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 2. El sistema resalta cada campo en error con un mensaje descriptivo.
 3. El formulario no queda listo para enviar hasta que el aplicante corrija.
 
+### E1. Convocatoria cerrada al momento del envío
+
+1. En el paso 9, el sistema verifica que la fecha actual es posterior a `fecha_cierre_convocatoria`.
+2. El sistema informa al aplicante que la convocatoria ya cerró y no acepta el envío.
+3. No se crea ningún registro.
+
+### E2. Campos obligatorios o adjuntos faltantes en la validación final
+
+1. En el paso 9, el sistema detecta campos obligatorios sin completar o adjuntos ausentes.
+2. El sistema devuelve al aplicante al formulario resaltando lo que falta.
+3. El envío no procede hasta que el aplicante corrija y reintente.
+
 ## Datos relevantes
 
 ### Entradas
@@ -84,7 +108,7 @@ Campos comunes a todos los tipos de actividad:
 - Tipo de actividad (selección del catálogo) — obligatorio.
 - Título de la actividad — obligatorio.
 - Organiza — obligatorio.
-- Público al que va dirigido — obligatorio.
+- Público al que va dirigido (selección múltiple: Público en general · Académico · Estudiantil · Infantil · Familias; mínimo una opción) — obligatorio.
 - ¿Requiere constancia de participación? (sí / no) — obligatorio.
 - Semblanzas de los participantes en PDF (máx. 500 palabras c/u) — obligatorio.
 - Sinopsis de la actividad en PDF (máx. 500 palabras) — obligatorio.

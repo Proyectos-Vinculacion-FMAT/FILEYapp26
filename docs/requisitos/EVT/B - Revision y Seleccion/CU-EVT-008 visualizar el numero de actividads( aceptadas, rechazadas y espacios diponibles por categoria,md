@@ -10,7 +10,7 @@ id: CU-EVT-011
 dominio: EVT
 reglas_de_negocio: []
 ---
-# CU-EVT-011 Ver el contador en tiempo real: aceptadas, rechazadas y espacios disponibles por categoría
+# CU-EVT-011 visualizar el numero de actividades: aceptadas, rechazadas y espacios disponibles por categoría
 
 ## Objetivo
 

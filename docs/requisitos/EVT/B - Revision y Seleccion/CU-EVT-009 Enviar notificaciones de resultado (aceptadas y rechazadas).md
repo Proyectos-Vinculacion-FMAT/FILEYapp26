@@ -10,7 +10,7 @@ id: CU-EVT-012
 dominio: EVT
 reglas_de_negocio: []
 ---
-# CU-EVT-012 Enviar en un solo lote las notificaciones de resultado (aceptadas y rechazadas)
+# CU-EVT-012 Enviar notificaciones de resultado (aceptadas y rechazadas)
 
 ## Objetivo
 

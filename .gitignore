@@ -3,7 +3,6 @@
 .obisidian/
 .obsidian/*.json
 docs/soporte/meetings/grabaciones/
-/sona_pruebas_FILEY
 *.wav
 *.mp3
 *.m4a
@@ -11,3 +10,4 @@ docs/soporte/meetings/grabaciones/
 *.flac
 *.ogg
 .claude/
+/sona_pruebas_FILEY

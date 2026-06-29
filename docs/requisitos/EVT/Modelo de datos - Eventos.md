@@ -269,6 +269,6 @@ Cuando `tipo_actividad` = Presentación de libro, se capturan campos adicionales
 ## 5. Temas abiertos del modelo
 
 - Confirmar si `Propuesta` guarda snapshot de los datos del proponente o solo referencia a `Proponente`.
-- Definir si la ventana de ajustes del proponente (RFH-18) aplica a **todos** los tipos de actividad o solo a algunos.
+- ~~Definir si la ventana de ajustes del proponente (RFH-18) aplica a todos los tipos de actividad o solo a algunos.~~ **Cerrado (27-Jun-2026):** no existe ventana de solicitud de cambios para el proponente; la ventana de ajustes es solo del coordinador (ver RFH-18 actualizado).
 - Confirmar si `ParametrosConvocatoria.cupo_X` son por tipo de actividad o por categoría cruzada.
 - Pendiente: qué datos mínimos se capturan de los eventos artísticos que Hipólito registra internamente (sin convocatoria pública).

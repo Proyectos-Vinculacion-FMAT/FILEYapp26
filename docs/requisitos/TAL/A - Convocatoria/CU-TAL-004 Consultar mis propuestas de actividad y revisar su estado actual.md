@@ -1,5 +1,5 @@
 ---
-estado: propuesta
+estado: aceptado
 version: 0.1
 tags:
   - requisitos
@@ -58,10 +58,10 @@ No se realizan cambios en el sistema; la consulta es de solo lectura.
 
 ## Estados visibles para el tallerista
 
-| Estado | Cuándo aparece | Descripción |
-|--------|---------------|-------------|
-| `registrada` | Desde el envío (CU-TAL-003) hasta que la coordinación asigne fechas | La propuesta fue recibida correctamente. La coordinación la tiene en revisión. |
-| `programada` | Cuando la coordinación (Elvira) asigna sala y horario en el sistema | La propuesta fue seleccionada e incluida en el programa; el tallerista ve sus fechas y lugares asignados. |
+| Estado         | Cuándo aparece                                                       | Descripción                                                                                              |
+| -------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `registrada` | Desde el envío (CU-TAL-003) hasta que la coordinación asigne fechas | La propuesta fue recibida correctamente. La coordinación la tiene en revisión.                          |
+| `programada` | Cuando la coordinación (Elvira) asigna sala y horario en el sistema  | La propuesta fue seleccionada e incluida en el programa; el tallerista ve sus fechas y lugares asignados. |
 
 > [!important] Sin dictamen explícito en el sistema
 > En la convocatoria de Elvira no existe un estado `aceptada` / `rechazada` / `cambios_solicitados`
