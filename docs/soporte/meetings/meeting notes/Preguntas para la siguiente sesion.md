@@ -10,7 +10,7 @@ tags:
   - tema/permisos
 estado: borrador
 fecha: 2026-06-17
-fecha_actualizacion: 2026-06-25
+fecha_actualizacion: 2026-06-29
 ---
 
 # Preguntas para la siguiente sesion
@@ -93,10 +93,10 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
     [Junta 3 §2.8](<../resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>).*
 - [ ] *(Análisis VIS, 2026-06-25)* ¿Qué **validación o aprobación previa** existe antes de que una visita escolar pueda **reservar** talleres?
   - *Contexto: se entiende que habrá *alguna* validación antes de habilitar la reserva, pero **no se sabe cuál exactamente**. El "al momento" del documento de FILEY se refiere a que la escuela elige en cuanto tiene la capacidad de hacerlo —eliminando el ida y vuelta de correos con la coordinación (catálogo → respuesta de confirmación)—, no a que no exista validación. Importante definirlo: determina si la reserva es inmediata tras el registro o si pasa por una aceptación. Ver [Análisis VIS vs Software para agendar escuelas — C2](<../../notas/Análisis VIS vs Software para agendar escuelas.md>).*
-- [ ] *(Análisis VIS, 2026-06-25)* ¿La vista del **itinerario** armado se **envía por correo automáticamente**, o basta con poder **verla/descargarla desde la app**?
-  - *Contexto: el itinerario ya se arma al seleccionar y reservar (CU-VIS-012/013); lo que falta confirmar es el **canal de entrega** del comprobante que pide la fuente. El horario de cada actividad, por su parte, es consultable por cualquiera vía la URL estática del programa (CU-PRG-010). Ver [Análisis VIS — C3](<../../notas/Análisis VIS vs Software para agendar escuelas.md>).*
-- [ ] *(Análisis VIS, 2026-06-25)* ¿Cuál es la **política definitiva de cuántos talleres** puede reservar una escuela?
-  - *Contexto: el pendiente de la [Junta 2](<../resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>) hablaba de "un solo tipo de actividad por escuela", pero el documento de FILEY contempla **varios talleres** (una sala de cine **o** 3 talleres de 35 = 105). La fuente entregada por FILEY es autoritativa; falta confirmar la regla final. Ver [Análisis VIS — R2](<../../notas/Análisis VIS vs Software para agendar escuelas.md>) y [CU-VIS-012](<../../../requisitos/VIS/C - Catálogo y reserva de talleres/CU-VIS-012 Reservar uno o varios talleres del catálogo para armar el itinerario de la visita.md>).*
+- [x] *(Análisis VIS, 2026-06-25)* ¿La vista del **itinerario** armado se **envía por correo automáticamente**, o basta con poder **verla/descargarla desde la app**?
+  - *Respuesta (Junta 3 con organizadores FILEY): se envía por correo de forma automática, a **ambos contactos** (el de la institución y el del representante que registró). El paquete incluye reglamento, carta de confirmación/bienvenida e itinerario con membrete y formato oficial. **Sigue pendiente la plantilla** del documento oficial — bloqueante para implementarlo. Ver [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>) y [Análisis VIS — C3](<../../notas/Análisis VIS vs Software para agendar escuelas.md>).*
+- [x] *(Análisis VIS, 2026-06-25)* ¿Cuál es la **política definitiva de cuántos talleres** puede reservar una escuela?
+  - *Respuesta (Junta 3 con organizadores FILEY): Elvira indicó que la selección ahora es **libre por asiento** — la escuela decide cómo dividir sus grupos y a qué actividades entrar, con cuántos alumnos. Ya no hay candados ni combinaciones de cupo prefijadas (se descarta el "una sala de cine o 3 talleres de 35"). La única regla vigente es que cada visita escolar tiene un **máximo de 105 alumnos**, y que cada **nivel educativo es un registro (propuesta) distinto**. Ver [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>) y [CU-VIS-012](<../../../requisitos/VIS/C - Catálogo y reserva de talleres/CU-VIS-012 Reservar uno o varios talleres del catálogo para armar el itinerario de la visita.md>).*
 
 ## Arrendatarios de stand
 
@@ -128,10 +128,14 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
   - *Contexto (Junta dev): al revisar el PDF de registro de propuestas se notó que parecían faltar opciones (se mencionó la de "Encuentro"). Conviene que Hipólito confirme la lista definitiva de tipos de actividad y, por cada uno, qué campos son texto libre y cuáles deben ser de opciones predeterminadas.*
 - [ ] *(Junta dev)* ¿La **cartelera** de eventos alrededor de FILEY debe formar parte del sistema y, de ser así, qué datos captura?
   - *Contexto (Junta dev): hoy a Hipólito solo le envían la información de la cartelera y él la incluye en el documento a imprimir; no hay un formato/formulario definido. Si entra al sistema, alguien tendría que capturarla y habría que distinguir "programa formal" vs "cartelera". Por ahora la publicación del programa se contempla solo interna.*
+  - *Avance (Hipólito, 2026-06-29): confirma que el catálogo/programa con el detalle de actividades **no se hace llegar al público general**; es para trabajo interno. La información del programa ya específico se usa para el programa impreso/digital. No resuelve la pregunta de la cartelera en sí, pero reafirma que la publicación detallada es interna. Ver
+    [Preguntas Para Hipolito Respondidas](<../../extraido/Material para Registro de Actividades FILEY 2027/Preguntas Para Hipolito Respondidas.md>).*
 - [ ] *(Junta dev)* ¿Se entregan **constancias de participación**? ¿A quién (participantes, expositores, público) y cómo se manejan en actividades **grupales** (paneles, mesas con varios participantes)?
   - *Contexto (Junta dev): se requiere una plantilla para generarlas. El caso difícil es el grupal (una constancia con muchos nombres no es manejable); falta definir el formato. También se confundió con los gafetes, que son otra cosa.*
-- [ ] ¿El "público al que va dirigido" de las actividades de Contenidos debe ser de **opciones predeterminadas** o texto libre?
-  - *Nota: planeamos opciones predeterminadas para evitar normalizar los datos después, pero falta confirmar con el cliente qué prefiere. En el formulario actual (PDF) es texto libre. Es un catálogo distinto al de Talleres (Contenidos y Talleres no comparten la misma lista de público objetivo); queda pendiente documentarlo oficialmente cuando se abran los dominios `EVT`/`TAL`.*
+  - *Avance (Junta 3 con organizadores FILEY): se confirma que la generación **siempre será automática**, independientemente de si los nombres capturados por los registrantes son correctos. El diseño (texto, imagen de fondo y campos a rellenar) será **hardcodeado**, no configurable. Lo único que falta es la **plantilla** — sigue siendo el bloqueante. El caso grupal sigue sin resolver. Ver [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>).*
+- [x] ¿El "público al que va dirigido" de las actividades de Contenidos debe ser de **opciones predeterminadas** o texto libre?
+  - *Respuesta (Hipólito, 2026-06-29): opción múltiple, confirmada. Opciones: Público en general, Académico, Estudiantil, Infantil, Familias. Ver
+    [Preguntas Para Hipolito Respondidas](<../../extraido/Material para Registro de Actividades FILEY 2027/Preguntas Para Hipolito Respondidas.md>). Sigue pendiente documentarlo oficialmente como catálogo de `EVT` cuando se abra ese dominio (catálogo distinto al de Talleres).*
 - [ ] *(Material FILEY)* ¿Conviene que el registro de propuestas de Contenidos ofrezca, para aplicantes de la UADY, una lista predeterminada de facultad/dependencia en vez de texto libre?
   - *Contexto: mismo dilema que la pregunta anterior (predeterminado vs. texto libre), aplicado a un campo distinto. El libro `Base Registro de Propuestas FILEY 2027.xlsx` ya desglosa, en su hoja de Conteo, un listado fijo de facultades/dependencias (Ciencias Antropológicas, Arquitectura, Medicina, Enfermería, Derecho, Educación, Secretaría General, entre otras) para fines de conteo — lo que sugiere que esa lista ya existe operativamente y podría reutilizarse en el formulario. Ver
     [extraído](<../../extraido/Material para Registro de Actividades FILEY 2027/Base Registro de Propuestas FILEY 2027/Base Registro de Propuestas FILEY 2027.Conteo.csv>).*
@@ -147,11 +151,18 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
   - *Avance (Junta 2): para eventos de Contenidos, Hipólito revisa de forma continua conforme llegan (ver "¿Cómo y cuándo se notifica...?" abajo). Falta confirmar si Talleres (Elvira) seguirá el mismo criterio o revisará al cierre. Esto determina qué puede hacer quien propone mientras tanto.*
 - [ ] ¿Qué puede **editar** quien propone un taller o una actividad de Contenidos, y en qué momento?
   - *Detalle a definir campo por campo: ¿puede modificar quién participa, a quién va dirigido, corregir la semblanza, el título o la sinopsis? ¿Qué campos NO conviene que corrija (p. ej. tipo de actividad, o la fecha/horario que asigna FILEY)? Relacionado con la ventana de modificación post-aceptación de la pregunta "¿El registro de evento requiere aprobación manual?" arriba; falta el equivalente para Talleres.*
+  - *Avance (Hipólito, 2026-06-29): confirmado que el proponente **no puede pedir cambios de horario, sala ni fecha** bajo ningún caso — esa opción no se ofrece. Solo el coordinador (Hipólito) hace esos cambios; si el cambio es de **fecha**, debe revisarlo primero con el involucrado. Consistente con `PRG` (la fecha/sala/horario las asigna el Administrador, no el Aplicante/Participante; ver
+    [CU-PRG-002](<../../../requisitos/PRG/A - Armado del programa/CU-PRG-002 Asignar una programación a una actividad.md>)) y con la nota de que la reprogramación se negocia fuera del sistema (ver
+    [CU-PRG-009](<../../../requisitos/PRG/B - Notificación y confirmación/CU-PRG-009 El Participante confirma su asistencia o incomparecencia al horario asignado.md>)). Ver
+    [Preguntas Para Hipolito Respondidas](<../../extraido/Material para Registro de Actividades FILEY 2027/Preguntas Para Hipolito Respondidas.md>). Sigue pendiente el resto del detalle (semblanza, título, sinopsis, etc.).*
 - [ ] ¿Los horarios propuestos por el usuario siempre son tentativos?
 - [x] ¿Quién confirma el horario final?
   - *Respuesta (Junta 2): el equipo organizador revisa las propuestas de eventos y las acomoda dentro del horario general de actividades de la feria.*
 - [x] ¿Cómo y cuándo se notifica al registrante si su evento fue aceptado o rechazado?
   - *Respuesta (Junta 2): Hipólito revisa las propuestas de forma continua conforme llegan (no solo al cierre de la convocatoria). Cuando termina su revisión, un solo envío notifica en lote a todos los aceptados y rechazados. El sistema debe registrar que la notificación fue enviada, para que Hipólito pueda deslindarse si alguien dice no haberla recibido.*
+- [x] *(Material FILEY)* En presentación de libro/revista, el formulario pide "enviar un ejemplar" como obligatorio — ¿qué pasa si el solicitante no lo envía?
+  - *Respuesta (Hipólito, 2026-06-29): no pasa nada en términos de la propuesta; es una presión para incentivar el envío, ya que el ejemplar ayuda a revisar mejor la propuesta. El solicitante no debe saber que en realidad no es bloqueante. No requiere validación del sistema más allá de marcar el campo como "obligatorio" en el formulario (lógica de UI, no de negocio). Ver
+    [Preguntas Para Hipolito Respondidas](<../../extraido/Material para Registro de Actividades FILEY 2027/Preguntas Para Hipolito Respondidas.md>).*
 
 ## Espacios, horarios y talleres
 
@@ -166,9 +177,9 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
   - *Contexto (Junta dev): se entendió que es algo puntual/esporádico, pero define si basta con un catálogo compartido y disponibilidad visible, o si se necesita una gestión de conflictos más elaborada.*
 - [ ] *(Junta dev)* ¿Por dónde se canalizan las **salas de cine** (solo mañanas, para actividades escolares) y quién las registra en el sistema?
   - *Contexto (Junta dev): por la grabación se entendió que funcionan parecido a los eventos artísticos (alguien le avisa a Hipólito que la sala está disponible y él la captura). Como están dirigidas a actividades escolares, en términos del sistema tendría más sentido canalizarlas por Elvira. Falta confirmarlo.*
-- [ ] ¿Cómo debe representar el sistema los bloques de 1 hora (o 1h15) del programa maestro de Hipólito, dentro de los cuales la actividad real ocupa 45-50 minutos, y sus excepciones (eventos masivos y salas de cine de 2 horas)?
-  - *Avance (Junta 3): se definió un **bloque de horario** de duración fija y configurable por evento (1:15 hrs para esta edición), con CRUD propio y colocación consecutiva en el horario de cada sala; una actividad ocupa uno o varios bloques completos — ver
-    [requisitos/PRG/CU-PRG Índice.md](<../../../requisitos/PRG/CU-PRG Índice.md>). Las excepciones (eventos masivos, salas de cine de 2h) y el margen de 45-50 min dentro del bloque siguen sin tratamiento explícito en los CU.*
+- [x] ¿Cómo debe representar el sistema los bloques de 1 hora (o 1h15) del programa maestro de Hipólito, dentro de los cuales la actividad real ocupa 45-50 minutos, y sus excepciones (eventos masivos y salas de cine de 2 horas)?
+  - *Respuesta (Junta 3 con organizadores FILEY): los bloques quedan **hardcodeados por panel**, sin CRUD en ningún dominio — **1:15** en el panel de Eventos, **1:00** (50 min de actividad + 10 min de descanso entre sesión) en el panel de Talleres. Una sala no tiene ningún horario relacionado al crearse; es el panel de programación el que define la división en bloques. Ver
+    [requisitos/PRG/CU-PRG Índice.md](<../../../requisitos/PRG/CU-PRG Índice.md>) y [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>). Las excepciones (eventos masivos, salas de cine de 2h) siguen sin tratamiento explícito en los CU.*
 - [x] ¿Cómo debe apoyar el sistema la elección de talleres por parte de las escuelas (validando aforo y nivel educativo), sin depender de la revisión manual de la organizadora de talleres?
   - *Respuesta (Junta 3): se modeló como el dominio `VIS` (Visitas escolares) — la escuela consulta el catálogo de talleres filtrado, el sistema valida que el cupo restante cubra a sus visitantes, y la escuela reserva para armar su itinerario. Ver
     [requisitos/VIS/CU-VIS Índice.md](<../../../requisitos/VIS/CU-VIS Índice.md>) (CU-VIS-010 a CU-VIS-012). Sigue pendiente confirmar con el cliente el formulario exacto y la política de cuántos talleres por escuela (el documento de FILEY contempla varios; ver la pregunta dedicada más abajo y [Análisis VIS — R2](<../../notas/Análisis VIS vs Software para agendar escuelas.md>)).*
@@ -262,11 +273,14 @@ Preguntas para validar la propuesta conceptual de tratamiento de usuarios y acla
 > [Junta 3 con Equipo de desarrollo](<../resumenes/RSM - Junta 3 con Equipo de desarrollo.md#6-decisiones-pendientes>)
 > y conviene resolver (o, si dependen del cliente, convertir en pregunta) antes de la siguiente sesión.
 
-- [ ] *(Junta 3 — D1)* ¿El armador de convocatorias/formularios de `REG` entra en el alcance del proyecto? De entrar, ¿es una herramienta **dev-side** (el equipo de desarrollo arma/configura) o **embebida en el programa** (el administrador la usa directamente)?
-- [ ] *(Junta 3 — D2)* ¿En qué dominio vive el CRUD de **bloques de horario**: dentro de `SAL` (al crear/editar una sala) o dentro de `PRG` (como paso previo a la asignación)? Afecta si las acciones de bloques se mueven de "Programar actividades" a "Salas y salones" (ver
+- [x] *(Junta 3 — D1)* ¿El armador de convocatorias/formularios de `REG` entra en el alcance del proyecto? De entrar, ¿es una herramienta **dev-side** (el equipo de desarrollo arma/configura) o **embebida en el programa** (el administrador la usa directamente)?
+  - *Respuesta (Junta 3 con organizadores FILEY): queda **fuera de alcance** por ahora; la herramienta es hardcodeada (ninguna de las dos variantes). Ver [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>).*
+- [x] *(Junta 3 — D2)* ¿En qué dominio vive el CRUD de **bloques de horario**: dentro de `SAL` (al crear/editar una sala) o dentro de `PRG` (como paso previo a la asignación)? Afecta si las acciones de bloques se mueven de "Programar actividades" a "Salas y salones" (ver
   [requisitos/PRG/CU-PRG Índice.md](<../../../requisitos/PRG/CU-PRG Índice.md>) y
   [requisitos/SAL/CU-SAL Índice.md](<../../../requisitos/SAL/CU-SAL Índice.md>)).
-- [ ] *(Junta 3 — D3)* ¿El modelo de **notificaciones** debe ser una bandeja transversal a todos los dominios, o una función granular por módulo (con un panel del Participante que las agregue después)? Afecta a CU-PRG-009.
+  - *Respuesta (Junta 3 con organizadores FILEY): en ninguno de los dos — no hay CRUD. Quedan hardcodeados por panel: 1:15 en Eventos, 1:00 (50 min de actividad + 10 min de descanso) en Talleres. Una sala se crea sin ningún horario relacionado. Ver [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>).*
+- [x] *(Junta 3 — D3)* ¿El modelo de **notificaciones** debe ser una bandeja transversal a todos los dominios, o una función granular por módulo (con un panel del Participante que las agregue después)? Afecta a CU-PRG-009.
+  - *Respuesta (Junta 3 con organizadores FILEY): por módulo; se descarta la bandeja transversal. Cada panel (incluyendo los de revisión de propuestas, que viven por dominio — `EVT`, `TAL`, `STD`, `VIS` — y no en `REG`) tiene su propio apartado de notificaciones. Ver [RSM - Junta 3 con organizadores FILEY](<../resumenes/RSM - Junta 3 con organizadores FILEY.md>).*
 - [ ] *(Junta 3 — D4)* ¿Es viable la **condicionalidad fuera del formulario** (reglas que dependan de información que no está en el propio formulario de la convocatoria)? Las reglas internas al formulario ya están contempladas.
 
 ## Documentos relacionados

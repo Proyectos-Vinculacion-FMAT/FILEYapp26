@@ -49,7 +49,7 @@ evidencia que lo sustenta.
 ## A. Aplicación
 
 - [CU-VIS-001 Registrar la propuesta de visita escolar (datos de la escuela y del contacto)](<A - Aplicación/CU-VIS-001 Registrar la propuesta de visita escolar (datos de la escuela y del contacto).md>) — *Aplicante*
-  - Evidencia: [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) (hoy la coordinación captura estos datos vía *forms*/*autocrat*, que alimenta una ficha técnica y un Excel-base de datos); confirmado en alcance en [Junta 3 §5.3](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#53-vis>) y glosario [§2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>). Captura además la **cantidad de alumnos/visitantes**, dato obligatorio que la fuente lista explícitamente ("la cantidad de alumnos que reservarán su asistencia").
+  - Evidencia: [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>) (hoy la coordinación captura estos datos vía *forms*/*autocrat*, que alimenta una ficha técnica y un Excel-base de datos); confirmado en alcance en [Junta 3 §5.3](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#53-vis>) y glosario [§2.8](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#28-visitas-escolares-vis>). Captura además la **cantidad de alumnos/visitantes**, dato obligatorio que la fuente lista explícitamente ("la cantidad de alumnos que reservarán su asistencia"). **Regla dura [RN-VIS-001]:** máximo **105** alumnos por propuesta (no por escuela en general); resuelta en la [RSM - Junta 3 con organizadores FILEY](<../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>). Precisión (Elvira, 2026-06-29): listas cerradas reales de Estado/Municipio, "cargo del responsable", "Multigrado" como nivel educativo y Folio/fecha de recepción asignados por FILEY — ver el [Google Form real](<../../soporte/extraido/Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Ficha%20escolar.%20Secundaria%20_EDMUNDO%20VILLALVA%20RODRIGUEZ_.md>) y la nota dentro del CU.
 
 - [CU-VIS-002 Editar la propuesta dentro de la ventana de modificación](<A - Aplicación/CU-VIS-002 Editar la propuesta dentro de la ventana de modificación.md>) — *Aplicante*
   - Evidencia: ciclo genérico de propuesta (*Solicitud de cambios* → el Aplicante edita y reenvía) del [Junta 3 §2.2 Registros](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#22-registros-reg>); la visita escolar sigue ese mismo ciclo según la nota de alcance de este índice.
@@ -105,28 +105,51 @@ evidencia que lo sustenta.
 - [CU-VIS-017 Quitar manualmente una visita de un taller (cancelación imprevista)](<D - Administración/CU-VIS-017 Quitar manualmente una visita de un taller (cancelación imprevista).md>) — *Administrador*
   - Evidencia: [Junta 2 con organizadores FILEY — Pendientes por definir](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>) (manejo de cupos a discreción de la coordinación). Complementa a CU-VIS-014: aquella es la autocorrección del Participante; esta es la baja administrativa por cancelación imprevista.
 
+## Artefactos relacionados
+
+- [`Modelo de datos - Visitas escolares.md`](<Modelo de datos - Visitas escolares.md>) — entidades y datos que el sistema almacena, antes (PropuestaVisita) y después (Visita/ReservaTaller) de la aceptación.
+
 ---
 
-> [!warning] Pendientes por confirmar con el cliente
+> [!success] Resuelto en la Junta 3 con organizadores FILEY
 >
-> - El detalle real del **formulario para aplicantes** de la convocatoria de visita escolar
->   (campos de verificación de la escuela más allá del bosquejo mínimo); el formulario hoy
->   documentado en [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>)
->   es, según el [Análisis de archivos proporcionados](<../../soporte/extraido/Analisis de archivos proporcionados.md>)
->   (sección 2.1), una propuesta de la propia Elvira, no confirmada todavía como la oficial.
+> - **Detalle del formulario para aplicantes:** confirmado. Además de los datos generales y la
+>   cantidad de visitantes (CU-VIS-001), la escuela/institución declara: clave de centro de
+>   trabajo (CCT), si es pública o privada (para que FILEY evalúe apoyo de transporte interno),
+>   ubicación (Mérida / municipio cercano / otro estado), turno (matutino/vespertino), nivel
+>   educativo (primaria/secundaria/preparatoria; universidad cuenta como público general) —
+>   **un registro/propuesta distinto por nivel educativo** si la escuela comparte niveles—,
+>   un representante obligatorio por cada grupo en que se divida la visita, y un campo libre
+>   para detalles (alumnos de más, niños con capacidades especiales). Contacto: puede ser
+>   maestro directo o padre de familia, con su teléfono y el de la institución. Ver
+>   [CU-VIS-001](<A - Aplicación/CU-VIS-001 Registrar la propuesta de visita escolar (datos de la escuela y del contacto).md>)
+>   y [RSM - Junta 3 con organizadores FILEY](<../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>).
+> - **Entrega del itinerario:** se envía por correo de forma automática a ambos contactos
+>   (institución y representante registrante), junto con reglamento y carta de
+>   confirmación/bienvenida. **Ya hay un ejemplo real** de la carta de confirmación (precisión
+>   2026-06-29, ver
+>   [extraído](<../../soporte/extraido/Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Carta%20de%20confirmaci%C3%B3n.%20SECUNDARIA%20EDMUNDO%20VILLALVA%20RODR%C3%8DGUEZ.md>)):
+>   encabezado con fecha/lugar, destinatario (responsable de inscripción de la institución),
+>   y por cada actividad asignada su tipo, título, fecha y hora, salón/sala y el **cupo total**
+>   del espacio asignado (no la cantidad de visitantes de esa escuela). Cierra con instrucción
+>   de llegar 10 min antes y firma "Equipo de vinculación FILEY". También hay un ejemplo íntegro
+>   del [reglamento de 16 reglas](<../../soporte/extraido/Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Reglamento%20visitas%20escolares%20FILEY%202026.md>)
+>   que se anexa al mismo correo. **Sigue pendiente solo el membrete/diseño oficial** final —
+>   ya no es bloqueante de contenido, solo de plantilla visual.
+> - **Política de cupo de talleres:** resuelta — selección **libre por asiento**, sin candados
+>   ni combinaciones prefijadas (se descarta "un taller por escuela" y también "sala de cine o
+>   3 talleres de 35"). Única regla vigente: máximo 105 alumnos por visita. Ver
+>   [CU-VIS-012](<C - Catálogo y reserva de talleres/CU-VIS-012 Reservar uno o varios talleres del catálogo para armar el itinerario de la visita.md>).
+> - **CU-VIS-004 a CU-VIS-009 (revisión):** se mantienen como CUs propios de `VIS`, con su
+>   propio panel de revisión visible solo para administradores. La revisión **no** se absorbe
+>   en `REG`: cada dominio (`STD`, `VIS`, y `EVT`/`TAL` cuando se abran) tiene su propio panel
+>   de revisión y de notificaciones — `REG` solo aporta la captura (el formulario). Ver
+>   [README.md](<../README.md#relación-entre-dominios>).
+>
+> Sigue pendiente:
+>
 > - **Validación previa a reservar (VIS):** se entiende que habrá *alguna* validación o aprobación
 >   antes de que una visita escolar pueda reservar talleres, pero **no se sabe cuál exactamente**.
 >   El "al momento" de la fuente describe que la escuela elige en el momento en que tiene la
 >   capacidad de hacerlo (eliminando el ida y vuelta de correos con la coordinación), no que no
 >   exista validación. **Pendiente confirmar en la próxima junta.**
-> - **Entrega del itinerario:** ¿la vista del itinerario (CU-VIS-013) se **envía por correo
->   automáticamente**, o basta con poder **verla/descargarla desde la app**? La fuente pide un
->   comprobante; falta confirmar el canal.
-> - La política de **un taller por escuela** (o por institución), mencionada en
->   [Junta 2 con organizadores FILEY — Pendientes por definir](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>),
->   **contradice** el documento de FILEY, que contempla **varios talleres** por escuela (una sala
->   de cine **o** 3 talleres de 35 = 105). La fuente entregada por FILEY es autoritativa; falta la
->   política definitiva del cliente (ver CU-VIS-012).
-> - Si CU-VIS-004 a CU-VIS-009 (revisión) terminan siendo CUs propias de `VIS` o se absorben
->   en la revisión genérica de propuestas de `REG` (ver sección 4.1 de la Junta 3), dado que
->   la visita escolar ya es un tipo de propuesta más del sistema de Convocatorias.

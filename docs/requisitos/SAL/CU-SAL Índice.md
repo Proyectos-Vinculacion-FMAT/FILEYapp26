@@ -18,9 +18,10 @@ sustenta.
 **Actores:** Administrador.
 
 > [!note]
-> CRUD único de espacios, **compartido y visible** para todos los Administradores, sin
-> distinción de panel (eventos o talleres). Un salón nace con una sala por defecto; agregar
-> subdivisiones crea más salas. **No aplica a stands.**
+> CRUD de un **catálogo único y global** de espacios, visible para todos los Administradores,
+> sin distinción de panel (eventos o talleres): no son dos catálogos que se comparten, es uno
+> solo, consumido por igual desde `EVT` y `TAL` al programar (`PRG`). Un salón nace con una
+> sala por defecto; agregar subdivisiones crea más salas. **No aplica a stands.**
 
 ## A. Salones
 
@@ -46,34 +47,37 @@ sustenta.
 
 ## C. Consulta
 
-- [CU-SAL-007 Consultar el catálogo compartido de salas y salones](<C - Consulta/CU-SAL-007 Consultar el catálogo compartido de salas y salones.md>) — *Administrador*
-  - Evidencia: une a la antigua CU-SAL-008 según [Junta 3 §5.2](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#52-sal>) ("todo el CRUD vive en una sola pantalla"); la pregunta sobre catálogo compartido vs. separado venía abierta desde [Junta 2 con Equipo de desarrollo — Dudas que salieron](<../../soporte/meetings/resumenes/RSM - Junta 2 con Equipo de desarrollo.md#dudas-que-salieron-a-confirmar-con-el-cliente>) y se zanjó como compartido en Junta 3; depende además de la decisión pendiente [D2](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#d2--dominio-del-crud-de-bloques-de-horario-prg--sal>) sobre dónde vive el CRUD de bloques de horario.
+- [CU-SAL-007 Consultar el catálogo único global de salas y salones](<C - Consulta/CU-SAL-007 Consultar el catálogo único global de salas y salones.md>) — *Administrador*
+  - Evidencia: une a la antigua CU-SAL-008 según [Junta 3 §5.2](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#52-sal>) ("todo el CRUD vive en una sola pantalla"); la pregunta sobre catálogo único vs. separado venía abierta desde [Junta 2 con Equipo de desarrollo — Dudas que salieron](<../../soporte/meetings/resumenes/RSM - Junta 2 con Equipo de desarrollo.md#dudas-que-salieron-a-confirmar-con-el-cliente>) y se zanjó como único en Junta 3; depende además de la decisión pendiente [D2](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#d2--dominio-del-crud-de-bloques-de-horario-prg--sal>) sobre dónde vive el CRUD de bloques de horario. Precisión interna (2026-06-29): es un **catálogo único global**, no "compartido" entre catálogos distintos — lo consumen por igual los paneles de `EVT` y `TAL` al asignar sala desde `PRG`.
 
 ---
 
 > [!note] Pendientes por confirmar con el cliente
 >
-> - **Catálogo compartido vs. separado:** se mantiene como **único catálogo compartido**
->   entre Administradores, confirmado conceptualmente en Junta 3; la confirmación final con
->   el cliente sigue abierta.
+> - **Catálogo único global vs. separado:** se mantiene como **un solo catálogo, global**,
+>   visible para todos los Administradores (no dos catálogos compartidos entre sí), confirmado
+>   conceptualmente en Junta 3; la confirmación final con el cliente sigue abierta.
 > - **Aforos y nombres reales:** los espacios concretos y sus aforos aún deben confirmarse.
 > - **Salas de cine:** queda por definir por dónde se canalizan y quién las registra (ver
 >   [Junta 2 con Equipo de desarrollo — Dudas que salieron](<../../soporte/meetings/resumenes/RSM - Junta 2 con Equipo de desarrollo.md#dudas-que-salieron-a-confirmar-con-el-cliente>)).
 
 <!-- -->
 
-> [!question] Decisión pendiente — dominio del CRUD de bloques de horario
-> Aún no se decide si el CRUD de **bloques de horario** vive en `SAL` (al crear/editar una
-> sala) o en `PRG` (ver D2 en la
-> [Junta 3 con Equipo de desarrollo](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#d2--dominio-del-crud-de-bloques-de-horario-prg--sal>)).
-> Mientras no se resuelva, ningún CU de este dominio modela esa CRUD.
+> [!success] D2 resuelta — no hay CRUD de bloques de horario, en ningún dominio
+> La Junta 3 con organizadores FILEY resolvió que los bloques de horario **no tienen CRUD** ni
+> en `SAL` ni en `PRG` (ver D2 en la
+> [Junta 3 con Equipo de desarrollo](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#d2--dominio-del-crud-de-bloques-de-horario-prg--sal>)
+> y la aclaración en [RSM - Junta 3 con organizadores FILEY](<../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>)). Una sala **nunca** tiene
+> bloques propios: al crearse no tiene ningún horario relacionado. Quedan hardcodeados por
+> panel de programación (1:15 en Eventos, 1:00 en Talleres). Por eso ningún CU de este dominio
+> modela esa CRUD, ahora de forma definitiva.
 
 ## Ajustes de la Junta 3 (homologación)
 
 - **CU-SAL-008** (Consultar el detalle de una sala) se **une a CU-SAL-007**: todo el CRUD y
   la consulta de salas y salones viven en una sola pantalla, sin redirigir a pantallas
   distintas.
-- Se deja de distinguir Administradores por nombre propio; el catálogo es compartido entre
-  todos por igual.
+- Se deja de distinguir Administradores por nombre propio; el catálogo es único y global,
+  igual para todos.
 
 La numeración de CUs es solo de conteo y no se reutiliza ni se recorre tras esta fusión.

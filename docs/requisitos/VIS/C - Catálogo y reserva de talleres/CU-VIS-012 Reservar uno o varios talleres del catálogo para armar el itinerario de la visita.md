@@ -24,15 +24,13 @@ trazabilidad:
 
 Permitir al Participante reservar uno o varios talleres del catálogo, simultáneos o consecutivos, para armar el itinerario de su visita escolar.
 
-> [!note] Restricciones de la reserva (reglas de negocio)
-> Son **propiedades/restricciones** de la reserva, no flujos:
-> - **Equivalencia de cupo:** una escuela ocupa sus lugares con una sala de cine (hasta su cupo) **o** repartiéndose en varios talleres pequeños (p. ej. 3 × 35 = 105). La validación de cada asignación vive en [CU-VIS-011](<CU-VIS-011 Validar que el cupo restante del taller cubra la cantidad de visitantes.md>).
-> - **Mismo día (preferente):** se recomienda que las actividades del itinerario sean el mismo día.
-
-<!-- -->
-
-> [!warning] Contradicción a reconciliar — "un taller por escuela"
-> El documento de FILEY contempla **varios talleres** por escuela (3 × 35), lo que **contradice** el pendiente de "un taller / un solo tipo de actividad por escuela" de la [Junta 2](<../../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>). La fuente entregada por FILEY es la versión autoritativa; queda como pregunta abierta para el cliente la política definitiva (ver [Preguntas para la siguiente sesión](<../../../soporte/meetings/meeting notes/Preguntas para la siguiente sesion.md#visitas-escolares>)). Fuente: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>).
+> [!success] Política resuelta (Junta 3 con organizadores FILEY) — selección libre por asiento
+> Elvira confirmó que la selección es **libre por asiento**: la escuela decide cómo dividir sus grupos y a qué actividades entrar, con cuántos alumnos en cada una. **Ya no hay candados ni combinaciones de cupo prefijadas** (se descarta el esquema anterior de "una sala de cine **o** 3 talleres de 35"). Las únicas reglas vigentes son:
+>
+> - **Máximo 105 alumnos por visita escolar.**
+> - **Un registro (propuesta) distinto por nivel educativo.**
+>
+> Esto **reconcilia** la antigua contradicción "un taller por escuela" (pendiente de la [Junta 2](<../../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>)) frente al documento de FILEY: ninguna de las dos reglas previas aplica ya. La validación por taller (no por el total del grupo) sigue vigente en [CU-VIS-011](<CU-VIS-011 Validar que el cupo restante del taller cubra la cantidad de visitantes.md>). Ver [RSM - Junta 3 con organizadores FILEY](<../../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>).
 
 ## Alcance
 

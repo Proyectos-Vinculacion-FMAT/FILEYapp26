@@ -4,6 +4,7 @@ tags:
 tipo: indice
 descripcion: Mapa de navegación entre los documentos extraídos a texto plano y sus archivos fuente originales.
 generado_el: 2026-06-24
+actualizado_el: 2026-06-29
 fuente_originales: "docs/soporte/documentos proporcionados por FILEY/"
 ---
 # Índice de documentos extraídos
@@ -39,6 +40,11 @@ de forma nativa pero no abre `.xlsx`/`.docx`.
 | [Material…/Detalles para el Registro en Linea 2027.md](Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Detalles%20para%20el%20Registro%20en%20Linea%202027.md) | `FILEY/Material…/Detalles para el Registro en Linea 2027.pdf`  | PDF texto                                              |
 | [Material…/Programa General FILEY 2026.md](Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Programa%20General%20FILEY%202026.md)                               | `FILEY/Material…/Programa General FILEY 2026.pdf`              | PDF texto (programa impreso, extenso)                  |
 | [Material…/Registro de propuestas FILEY 2027.md](Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Registro%20de%20propuestas%20FILEY%202027.md)                 | `FILEY/Material…/Registro de propuestas FILEY 2027.pdf`        | PDF texto (formulario modelo, **versión actualizada**) |
+| [Material…/Preguntas Para Hipolito Respondidas.md](Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Preguntas%20Para%20Hipolito%20Respondidas.md)               | `FILEY/Material…/Preguntas Para Hipolito Respondidas.docx`     | DOCX (cuestionario respondido por Hipólito, llegó 2026-06-29) |
+| [Material…/Agenda escuelas. Programa para revisión.md](Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Agenda%20escuelas.%20Programa%20para%20revisi%C3%B3n.md) | `FILEY/Material…/Agenda escuelas. Programa para revisión.docx` | DOCX (borrador de programa de talleres por día/bloque/sala, no es el archivo final; llegó 2026-06-29) |
+| [Material…/Carta de confirmación. SECUNDARIA EDMUNDO VILLALVA RODRÍGUEZ.md](<Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Carta%20de%20confirmaci%C3%B3n.%20SECUNDARIA%20EDMUNDO%20VILLALVA%20RODR%C3%8DGUEZ.md>) | `FILEY/Material…/Carta de confirmación. SECUNDARIA EDMUNDO VILLALVA RODRÍGUEZ.pdf` | PDF texto (ejemplo real de la carta/itinerario que CU-VIS-009 envía al Aplicante/Participante; llegó 2026-06-29) |
+| [Material…/Reglamento visitas escolares FILEY 2026.md](Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Reglamento%20visitas%20escolares%20FILEY%202026.md)     | `FILEY/Material…/Reglamento visitas escolares FILEY 2026.pdf`  | PDF texto (16 reglas de conducta para la visita; va anexo al correo de confirmación, llegó 2026-06-29) |
+| [Material…/Ficha escolar. Secundaria \_EDMUNDO VILLALVA RODRIGUEZ\_.md](<Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Ficha%20escolar.%20Secundaria%20_EDMUNDO%20VILLALVA%20RODRIGUEZ_.md>) | `FILEY/Material…/Ficha escolar. Secundaria _EDMUNDO VILLALVA RODRIGUEZ_.pdf` | PDF texto (ficha interna de coordinación, ejemplo real de los datos de CU-VIS-001; llegó 2026-06-29) |
 
 ## Hojas de cálculo (`.xlsx` → CSV por hoja)
 
