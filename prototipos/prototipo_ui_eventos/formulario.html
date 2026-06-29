@@ -8,6 +8,25 @@
 <style>
   /* Selector de tipo (específico de esta vista) */
   .tipo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* Checkboxes estilo chip para selección múltiple */
+  .check-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .check-chip { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check-chip input[type="checkbox"] { display: none; }
+  .check-chip .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--gris-300); border-radius: 999px;
+    padding: 6px 14px; font-size: 14px; font-weight: 500;
+    color: var(--gris-700); background: var(--blanco);
+    transition: all .15s ease; cursor: pointer; user-select: none;
+  }
+  .check-chip input:checked + .chip {
+    border-color: var(--azul-600); background: var(--azul-050);
+    color: var(--azul-900); font-weight: 600;
+  }
+  .check-chip input:checked + .chip::before { content: "✓ "; font-size: 12px; }
+  .check-chip .chip:hover { border-color: var(--azul-400); background: var(--azul-050); }
+
   .tipo-opt {
     border: 1.5px solid var(--gris-300); background: var(--blanco);
     border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;

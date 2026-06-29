@@ -51,6 +51,23 @@ function tag(req) {
 function hintHtml(h) { return h ? `<span class="hint">— ${h}</span>` : ""; }
 let _rid = 0; function rid() { return ++_rid; }
 
+// Selección múltiple: público al que va dirigido
+function publicoCheckboxes() {
+  const opciones = ["Público en general", "Académico", "Estudiantil", "Infantil", "Familias"];
+  const chips = opciones.map(op =>
+    `<label class="check-chip">
+      <input type="checkbox" name="publico" value="${op.toLowerCase().replace(/ /g,'-')}">
+      <span class="chip">${op}</span>
+    </label>`
+  ).join("");
+  return `<div class="field">
+    <label>Público al que va dirigido <span class="req">*</span>
+      <span class="opt" style="font-weight:400">&nbsp;(puedes elegir más de uno)</span>
+    </label>
+    <div class="check-chips">${chips}</div>
+  </div>`;
+}
+
 // Campos comunes al final de casi todos los tipos
 function comunesActividad({ participantesLabel, participantesN, participantesReq, sinopsisPalabras = 500 }) {
   return [
@@ -58,7 +75,7 @@ function comunesActividad({ participantesLabel, participantesN, participantesReq
     F.multi(participantesLabel, participantesN, participantesReq),
     F.multi("Moderador/a", 1, false, "máx. 1, opcional"),
     F.text("Organiza", true),
-    F.text("Público al que va dirigido", true),
+    publicoCheckboxes(),
     F.radioSiNo("¿Requiere constancia de participación?", true),
     F.file("Semblanzas de los participantes (PDF)", true, "máx. 500 palabras por participante"),
     F.file("Sinopsis de la actividad (PDF)", true, `máx. ${sinopsisPalabras} palabras`),
@@ -68,14 +85,16 @@ function comunesActividad({ participantesLabel, participantesN, participantesReq
 
 // ---- Definición por tipo ---------------------------------------------------
 const TIPOS = {
-  "Conversatorio": () => comunesActividad({ participantesLabel: "Nombre de los participantes", participantesN: 3, participantesReq: false }),
-  "Mesa redonda": () => comunesActividad({ participantesLabel: "Nombre de los participantes", participantesN: 3, participantesReq: true }),
-  "Lectura de obra": () => comunesActividad({ participantesLabel: "Nombre de los participantes", participantesN: 3, participantesReq: false }),
-  "Encuentro": () => comunesActividad({ participantesLabel: "Nombre de los participantes", participantesN: 3, participantesReq: false }),
-  "Conferencia": () => comunesActividad({ participantesLabel: "Nombre de quien imparte", participantesN: 2, participantesReq: true }),
-  "Charla": () => comunesActividad({ participantesLabel: "Nombre de quien imparte", participantesN: 2, participantesReq: true }),
+  "Conversatorio": () => comunesActividad({ participantesLabel: "Nombre de los participantes", participantesN: 3, participantesReq: true }),
+  "Mesa redonda":  () => comunesActividad({ participantesLabel: "Nombre de los participantes", participantesN: 3, participantesReq: true }),
+  "Lectura de obra": () => comunesActividad({ participantesLabel: "Nombre de quien imparte", participantesN: 2, participantesReq: true }),
+  "Encuentro":     () => comunesActividad({ participantesLabel: "Nombre de quien imparte",    participantesN: 2, participantesReq: true }),
+  "Conferencia":   () => comunesActividad({ participantesLabel: "Nombre de quien imparte",    participantesN: 2, participantesReq: true }),
+  "Charla":        () => comunesActividad({ participantesLabel: "Nombre de quien imparte",    participantesN: 2, participantesReq: true }),
 
   "Presentación de libro": () => [
+    F.text("Título de la actividad", true),
+    F.text("Organiza", true),
     F.text("Título de la publicación", true),
     F.select("El proponente es", true, ["Autor/a", "Editor/a", "Antologador/a", "Compilador/a", "Coordinador/a"]),
     F.multi("Nombre(s) igual a la portada del libro", 5, true),
@@ -84,7 +103,7 @@ const TIPOS = {
     F.multi("Nombre de los presentadores", 2, false, "máx. 2, opcional"),
     F.multi("Moderador/a", 1, false, "máx. 1, opcional"),
     F.text("Editorial", true, "si es publicación independiente, anótelo"),
-    F.text("Público al que va dirigido", true),
+    publicoCheckboxes(),
     F.radioSiNo("¿Requiere constancia de participación?", true),
     F.file("Semblanza del autor/a (PDF)", true, "máx. 500 palabras c/u"),
     F.file("Sinopsis del libro (PDF)", true, "máx. 800 palabras"),
@@ -95,6 +114,7 @@ const TIPOS = {
   ].join(""),
 
   "Presentación de revista": () => [
+    F.text("Título de la actividad", true),
     F.text("Título de la publicación", true),
     F.multi("Nombre del editor/a", 2, true),
     F.radioSiNo("¿El editor/a participará en la actividad?", true),
@@ -102,7 +122,7 @@ const TIPOS = {
     F.multi("Nombre de los presentadores", 2, false, "máx. 2, opcional"),
     F.multi("Moderador/a", 1, false, "máx. 1, opcional"),
     F.text("Organiza", true),
-    F.text("Público al que va dirigido", true),
+    publicoCheckboxes(),
     F.radioSiNo("¿Requiere constancia de participación?", true),
     F.file("Semblanza del editor/a (PDF)", true, "máx. 500 palabras c/u"),
     F.file("Sinopsis de la revista (PDF)", true, "máx. 800 palabras"),
