@@ -12,6 +12,8 @@ fecha: 2026-06-29
 > almacenar para el dominio de Talleres (convocatoria de Elvira), sin comprometer aún tipos
 > de base de datos, índices ni claves físicas. Las relaciones se describen en la sección 3.
 
+<!-- -->
+
 > [!warning] Sustituye al modelo anterior, que en realidad era de Visitas escolares
 > El archivo anterior (`Modelo de datos - Talleres (Visitas Escolares).md`, eliminado
 > 2026-06-29) cubría únicamente entidades de **visitas escolares**, hoy dominio `VIS` (ver
@@ -32,14 +34,14 @@ fecha: 2026-06-29
 
 ## 1. Resumen de entidades
 
-| Entidad | Propósito |
-|---------|-----------|
-| Tallerista | Perfil de la persona/institución que propone una actividad infantil/juvenil. |
-| TipoActividadTAL | Catálogo de los tipos de actividad (Taller, Cuentacuentos, Plática para jóvenes, etc.). |
-| PropuestaTaller | Solicitud enviada por un tallerista durante la convocatoria. |
-| Actividad | Propuesta de taller aceptada por Elvira, lista para programación en `PRG`. |
-| ParametrosConvocatoriaTAL | Fechas clave y modalidades admitidas de la convocatoria, por edición. |
-| NotificacionLoteTAL | Envío masivo de notificaciones de resultado (aceptadas/rechazadas en un solo lote). |
+| Entidad                   | Propósito                                                                               |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| Tallerista                | Perfil de la persona/institución que propone una actividad infantil/juvenil.            |
+| TipoActividadTAL          | Catálogo de los tipos de actividad (Taller, Cuentacuentos, Plática para jóvenes, etc.). |
+| PropuestaTaller           | Solicitud enviada por un tallerista durante la convocatoria.                            |
+| Actividad                 | Propuesta de taller aceptada por Elvira, lista para programación en `PRG`.              |
+| ParametrosConvocatoriaTAL | Fechas clave y modalidades admitidas de la convocatoria, por edición.                   |
+| NotificacionLoteTAL       | Envío masivo de notificaciones de resultado (aceptadas/rechazadas en un solo lote).     |
 
 ---
 
@@ -49,10 +51,10 @@ fecha: 2026-06-29
 
 > Extiende la entidad `Persona` del Core Registros con los datos específicos de `TAL`.
 
-| Atributo | Descripción |
-|----------|-------------|
-| id | Identificador único. |
-| persona_id | FK → Persona (Core Registros). |
+| Atributo        | Descripción                                                     |
+| --------------- | --------------------------------------------------------------- |
+| id              | Identificador único.                                            |
+| persona_id      | FK → Persona (Core Registros).                                  |
 | numero_contacto | Teléfono de contacto (puede diferir del registrado en Persona). |
 
 ### 2.2 TipoActividadTAL
@@ -61,46 +63,46 @@ fecha: 2026-06-29
 > Cuentacuentos, Plática para jóvenes, Presentación de libros para niños/jóvenes, Obra/
 > Presentación teatral, Proyección en cines.
 
-| Atributo | Descripción |
-|----------|-------------|
-| id | Identificador único. |
-| nombre | Ej. "Taller", "Cuentacuentos". |
-| activo | Booleano. |
+| Atributo | Descripción                    |
+| -------- | ------------------------------ |
+| id       | Identificador único.           |
+| nombre   | Ej. "Taller", "Cuentacuentos". |
+| activo   | Booleano.                      |
 
 ### 2.3 PropuestaTaller
 
 > La solicitud enviada durante la convocatoria. Equivalente a `Propuesta` en `EVT`, sin
 > categorización cruzada ni adjuntos.
 
-| Atributo | Descripción |
-|----------|-------------|
-| id | Identificador único. |
-| folio | Número de folio visible para el tallerista. |
-| edicion_id | FK → EdicionFeria (Core Programas). |
-| tallerista_id | FK → Tallerista. |
-| tipo_actividad_id | FK → TipoActividadTAL. |
-| nombre_evento | Nombre oficial del evento/taller. |
-| organiza | Quién organiza. |
-| participantes_constancia | Texto — nombre completo de quienes recibirán constancia. **Obligatorio** (a diferencia de `EVT`, donde la constancia es opcional). |
-| procedencia | `local` / `nacional` / `internacional`. |
-| tema | Texto. |
-| resena | Reseña breve. |
-| modalidad | `presencial` / `virtual`. |
-| enlace_videoconferencia | Obligatorio solo si `modalidad = virtual`. |
-| autores | Texto libre, opcional. |
-| presentador | Nombre de quien presenta/participa. |
-| editorial | Texto, opcional. |
-| publico_meta | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` (mínimo uno). |
-| sugerencia_dia_turno | `matutino` / `vespertino`, opcional. |
-| observaciones | Texto libre, opcional. |
-| fecha_registro | Fecha de envío. |
-| estado | `pendiente` / `cambios_solicitados` / `aceptada` / `rechazada`. |
-| fecha_revision | Fecha en que Elvira dictaminó. |
-| revisado_por | FK → Persona (Elvira o su equipo). |
-| motivo_rechazo | Texto (si fue rechazada). |
-| mensaje_cambios_solicitados | Texto — obligatorio cuando `estado = cambios_solicitados`. |
-| resultado_notificado | Booleano — si el resultado vigente ya fue comunicado en un lote (CU-TAL-010). |
-| fecha_resultado_notificado | Fecha del último envío de resultado al tallerista. |
+| Atributo                    | Descripción                                                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| id                          | Identificador único.                                                                                                               |
+| folio                       | Número de folio visible para el tallerista.                                                                                        |
+| edicion_id                  | FK → EdicionFeria (Core Programas).                                                                                                |
+| tallerista_id               | FK → Tallerista.                                                                                                                   |
+| tipo_actividad_id           | FK → TipoActividadTAL.                                                                                                             |
+| nombre_evento               | Nombre oficial del evento/taller.                                                                                                  |
+| organiza                    | Quién organiza.                                                                                                                    |
+| participantes_constancia    | Texto — nombre completo de quienes recibirán constancia. **Obligatorio** (a diferencia de `EVT`, donde la constancia es opcional). |
+| procedencia                 | `local` / `nacional` / `internacional`.                                                                                            |
+| tema                        | Texto.                                                                                                                             |
+| resena                      | Reseña breve.                                                                                                                      |
+| modalidad                   | `presencial` / `virtual`.                                                                                                          |
+| enlace_videoconferencia     | Obligatorio solo si `modalidad = virtual`.                                                                                         |
+| autores                     | Texto libre, opcional.                                                                                                             |
+| presentador                 | Nombre de quien presenta/participa.                                                                                                |
+| editorial                   | Texto, opcional.                                                                                                                   |
+| publico_meta                | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` (mínimo uno).                         |
+| sugerencia_dia_turno        | `matutino` / `vespertino`, opcional.                                                                                               |
+| observaciones               | Texto libre, opcional.                                                                                                             |
+| fecha_registro              | Fecha de envío.                                                                                                                    |
+| estado                      | `pendiente` / `cambios_solicitados` / `aceptada` / `rechazada`.                                                                    |
+| fecha_revision              | Fecha en que Elvira dictaminó.                                                                                                     |
+| revisado_por                | FK → Persona (Elvira o su equipo).                                                                                                 |
+| motivo_rechazo              | Texto (si fue rechazada).                                                                                                          |
+| mensaje_cambios_solicitados | Texto — obligatorio cuando `estado = cambios_solicitados`.                                                                         |
+| resultado_notificado        | Booleano — si el resultado vigente ya fue comunicado en un lote (CU-TAL-010).                                                      |
+| fecha_resultado_notificado  | Fecha del último envío de resultado al tallerista.                                                                                 |
 
 ### 2.4 Actividad
 
@@ -108,15 +110,15 @@ fecha: 2026-06-29
 > horario. Equivalente a `Actividad` en `EVT` y a la entidad genérica del mismo nombre en
 > `PRG/Modelo de datos - Programación.md`.
 
-| Atributo | Descripción |
-|----------|-------------|
-| id | Identificador único. |
-| propuesta_id | FK → PropuestaTaller. |
-| edicion_id | FK → EdicionFeria. |
-| tipo_actividad_id | FK → TipoActividadTAL. |
-| nombre | Nombre final del taller. |
-| organiza | Organizador final. |
-| estado | `sin_horario` / `programada` / `cancelada` (los estados de horario en sí —preliminar/final— viven en `Programación`, `PRG`). |
+| Atributo          | Descripción                                                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| id                | Identificador único.                                                                                                         |
+| propuesta_id      | FK → PropuestaTaller.                                                                                                        |
+| edicion_id        | FK → EdicionFeria.                                                                                                           |
+| tipo_actividad_id | FK → TipoActividadTAL.                                                                                                       |
+| nombre            | Nombre final del taller.                                                                                                     |
+| organiza          | Organizador final.                                                                                                           |
+| estado            | `sin_horario` / `programada` / `cancelada` (los estados de horario en sí —preliminar/final— viven en `Programación`, `PRG`). |
 
 ### 2.5 ParametrosConvocatoriaTAL
 
@@ -124,12 +126,12 @@ fecha: 2026-06-29
 > (precisión 2026-06-29): los espacios son responsabilidad exclusiva del catálogo único global
 > de `SAL` (ver `SAL/CU-SAL Índice.md`); este CU dejó de duplicarlo.
 
-| Atributo | Descripción |
-|----------|-------------|
-| edicion_id | FK → EdicionFeria (clave primaria compuesta). |
-| fecha_apertura_convocatoria | Fecha de apertura de la convocatoria. |
-| fecha_cierre_convocatoria | Fecha y hora de cierre de recepción de propuestas. |
-| modalidades_admitidas | Multivalor: `presencial` / `virtual` (mínimo una). |
+| Atributo                    | Descripción                                        |
+| --------------------------- | -------------------------------------------------- |
+| edicion_id                  | FK → EdicionFeria (clave primaria compuesta).      |
+| fecha_apertura_convocatoria | Fecha de apertura de la convocatoria.              |
+| fecha_cierre_convocatoria   | Fecha y hora de cierre de recepción de propuestas. |
+| modalidades_admitidas       | Multivalor: `presencial` / `virtual` (mínimo una). |
 
 ### 2.6 NotificacionLoteTAL
 
@@ -137,14 +139,14 @@ fecha: 2026-06-29
 > evidencia directa de que Elvira notifique en lote en vez de caso por caso; se extrapola por
 > simetría con `EVT`.
 
-| Atributo | Descripción |
-|----------|-------------|
-| id | Identificador único. |
-| edicion_id | FK → EdicionFeria. |
-| fecha_envio | Fecha del envío masivo. |
-| enviado_por | FK → Persona (Elvira o su equipo). |
+| Atributo       | Descripción                        |
+| -------------- | ---------------------------------- |
+| id             | Identificador único.               |
+| edicion_id     | FK → EdicionFeria.                 |
+| fecha_envio    | Fecha del envío masivo.            |
+| enviado_por    | FK → Persona (Elvira o su equipo). |
 | total_enviadas | Número de notificaciones del lote. |
-| estado | `enviada` / `fallida_parcial`. |
+| estado         | `enviada` / `fallida_parcial`.     |
 
 ---
 
@@ -160,14 +162,14 @@ fecha: 2026-06-29
 
 ## 4. Mapa entidad → caso de uso (trazabilidad)
 
-| Entidad | Casos de uso relacionados |
-|---------|---------------------------|
-| Tallerista | CU-TAL-002, CU-TAL-003 |
-| TipoActividadTAL | CU-TAL-002, CU-TAL-006 |
-| PropuestaTaller | CU-TAL-002 a CU-TAL-004, CU-TAL-007 a CU-TAL-010 |
-| Actividad | CU-TAL-005, CU-TAL-006, CU-TAL-009; y CU-PRG-002 a CU-PRG-004 en `PRG` |
-| ParametrosConvocatoriaTAL | CU-TAL-001 |
-| NotificacionLoteTAL | CU-TAL-010 |
+| Entidad                   | Casos de uso relacionados                                              |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Tallerista                | CU-TAL-002, CU-TAL-003                                                 |
+| TipoActividadTAL          | CU-TAL-002, CU-TAL-006                                                 |
+| PropuestaTaller           | CU-TAL-002 a CU-TAL-004, CU-TAL-007 a CU-TAL-010                       |
+| Actividad                 | CU-TAL-005, CU-TAL-006, CU-TAL-009; y CU-PRG-002 a CU-PRG-004 en `PRG` |
+| ParametrosConvocatoriaTAL | CU-TAL-001                                                             |
+| NotificacionLoteTAL       | CU-TAL-010                                                             |
 
 ---
 

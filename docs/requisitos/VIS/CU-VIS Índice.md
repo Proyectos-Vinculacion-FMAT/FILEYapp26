@@ -165,3 +165,5 @@ concentran al final de este índice.
 - CU-VIS-016: mismo origen que CU-VIS-015; capacidades por espacio (Ek Balam, salas de cine, Gran Foro) detalladas en [Junta 2 con organizadores FILEY — Espacios disponibles](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#espacios-disponibles>) y en [Software para agendar escuelas](<../../soporte/extraido/Software para agendar escuelas.md>).
 
 - CU-VIS-017: [Junta 2 con organizadores FILEY — Pendientes por definir](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>) (manejo de cupos a discreción de la coordinación). Complementa a CU-VIS-014: aquella es la autocorrección del Participante; esta es la baja administrativa por cancelación imprevista.
+
+[RN-VIS-001]:

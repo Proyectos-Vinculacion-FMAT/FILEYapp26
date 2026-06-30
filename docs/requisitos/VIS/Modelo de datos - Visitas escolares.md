@@ -119,13 +119,13 @@ fecha: 2026-06-29
 > juvenil, ver CU-VIS-010), **no tiene límite de cupo** — el cálculo de cupo restante no aplica
 > y la reserva no se rechaza por cantidad. Esto solo rige para Actividades de `TAL`.
 
-| Atributo         | Descripción                                                                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| id               | Identificador único.                                                                                                                           |
-| visita_id        | FK → Visita.                                                                                                                                   |
+| Atributo         | Descripción                                                                                                                                                                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id               | Identificador único.                                                                                                                                                                                                                                                                                          |
+| visita_id        | FK → Visita.                                                                                                                                                                                                                                                                                                  |
 | programacion_id  | FK → Programación (`PRG`) — la reserva es contra una **ocasión concreta** del taller (fecha/sala/bloque), no contra la Actividad en abstracto. Solo puede referenciar una Programación cuyo horario ya es **final** (ver nota abajo); mientras sea preliminar, esa Programación no es elegible para reservar. |
-| cantidad_alumnos | Alumnos de **esta** Visita asignados a **esta** Programación (selección libre por asiento: el grupo puede repartirse entre varias).            |
-| fecha_reserva    | Cuándo se reservó.                                                                                                                             |
+| cantidad_alumnos | Alumnos de **esta** Visita asignados a **esta** Programación (selección libre por asiento: el grupo puede repartirse entre varias).                                                                                                                                                                           |
+| fecha_reserva    | Cuándo se reservó.                                                                                                                                                                                                                                                                                            |
 
 > *Nota:* la suma de `cantidad_alumnos` de todas las ReservaTaller de una Visita no debe
 > exceder su `cantidad_alumnos_visitantes` (PropuestaVisita); cada reserva individual valida
