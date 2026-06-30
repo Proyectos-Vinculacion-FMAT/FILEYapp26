@@ -10,3 +10,9 @@ docs/soporte/meetings/grabaciones/
 *.flac
 *.ogg
 
+# Dependencias y builds de prototipos Node/Angular — se regeneran con
+# `npm install` / `npm run build` (ver README de onboarding de cada prototipo).
+node_modules/
+dist/
+.angular/
+
