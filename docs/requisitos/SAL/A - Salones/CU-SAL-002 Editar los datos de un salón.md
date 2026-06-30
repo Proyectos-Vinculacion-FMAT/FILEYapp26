@@ -22,7 +22,7 @@ trazabilidad:
 
 ## Objetivo
 
-Permitir al Administrador actualizar los datos de un salón existente en el catálogo compartido.
+Permitir al Administrador actualizar los datos de un salón existente en el catálogo único global.
 
 ## Alcance
 
@@ -40,13 +40,13 @@ El Administrador elige editar un salón desde la pantalla de salas y salones (CU
 
 ## Precondiciones
 
-- El salón existe en el catálogo compartido.
+- El salón existe en el catálogo único global.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Los datos del salón quedan actualizados en el catálogo compartido.
+- Los datos del salón quedan actualizados en el catálogo único global.
 
 ### En fallo
 
@@ -57,7 +57,7 @@ El Administrador elige editar un salón desde la pantalla de salas y salones (CU
 1. El Administrador elige un salón del catálogo y abre su edición.
 2. El Administrador modifica los datos del salón.
 3. El sistema valida los datos modificados.
-4. El sistema guarda los cambios y los refleja en el catálogo compartido.
+4. El sistema guarda los cambios y los refleja en el catálogo único global.
 
 ## Flujos de excepción
 

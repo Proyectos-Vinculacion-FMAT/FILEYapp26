@@ -32,8 +32,9 @@ Por eso son la **fuente primaria** del problema, y este análisis los contrasta 
    una *abstracción* de lo que el equipo entendió de esas necesidades. Aquí salen los
    **roces**: lo que el cliente pidió y aún no está modelado, o que el equipo acotó/descartó.
 
-> Convención: en este documento, **"roce"** = tensión, contradicción o hueco entre lo que
-> el documento pide y lo documentado. No implica error; marca algo a confirmar o decidir.
+> [!note] Convención
+> En este documento, **"roce"** = tensión, contradicción o hueco entre lo que el documento
+> pide y lo documentado. No implica error; marca algo a confirmar o decidir.
 > Los marcadores `[hh:mm:ss]` y `Lxxx` remiten a la transcripción de la Junta 1, vía su resumen.
 
 ## Inventario por intención

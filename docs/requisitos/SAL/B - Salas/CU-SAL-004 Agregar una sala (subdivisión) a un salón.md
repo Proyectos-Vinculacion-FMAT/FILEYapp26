@@ -26,7 +26,7 @@ Permitir al Administrador subdividir un salón agregándole una nueva sala, para
 
 ## Alcance
 
-Aplica a salones ya existentes en el catálogo compartido. Un salón puede tener tantas salas como el Administrador considere necesario.
+Aplica a salones ya existentes en el catálogo único global. Un salón puede tener tantas salas como el Administrador considere necesario.
 
 ## Actores
 
@@ -40,7 +40,7 @@ El Administrador elige agregar una sala a un salón desde la pantalla de salas y
 
 ## Precondiciones
 
-- El salón existe en el catálogo compartido.
+- El salón existe en el catálogo único global.
 
 ## Postcondiciones
 

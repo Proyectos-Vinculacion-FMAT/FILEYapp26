@@ -245,7 +245,11 @@ Una **convocatoria** se compone de:
 
 1. Crear salones y salas (ver ajustes de CU en la sección 5).
 
-**Revisar y resolver propuestas `[REG]`**
+**Revisar y resolver propuestas `[EVT, TAL]`**
+
+> [!success] Aclaración (Junta 3 con organizadores FILEY) — paneles separados por dominio
+> `EVT` y `TAL` tienen cada uno su **propio panel de revisión**, visible solo para administradores — no es un panel único combinado. Esto es consistente con que sus notificaciones (ver D3) y su programación (`PRG`, "dos programas independientes") también son por panel separado. Ver
+> [RSM - Junta 3 con organizadores FILEY](<RSM - Junta 3 con organizadores FILEY.md>).
 
 1. Consultar la lista de propuestas, filtrando por *Pendiente a revisión*, *Aceptada*, *Solicitud de cambios* o *Rechazada*.
 2. Revisar el detalle de una propuesta.
@@ -256,20 +260,19 @@ Una **convocatoria** se compone de:
 
 **Programar actividades `[PRG]`**
 
-> [!question] Decisión pendiente — ubicación de las acciones de bloques
-> Las operaciones sobre bloques de horario (puntos 1–2) podrían ubicarse en "Salas y salones `[SAL]`" si se resuelve que los bloques se definen al crear la sala. Depende de la [decisión de dominio del sistema de programación](#6-decisiones-pendientes).
+> [!success] Resuelta — ya no hay acciones de CRUD de bloques (D2)
+> Las antiguas acciones 1–2 (configurar/crear/editar/eliminar bloques de horario) **ya no existen**: los bloques quedan hardcodeados por panel de programación —1:15 en el panel de Eventos, 1:00 (50 min de actividad + 10 min de descanso) en el de Talleres— y no se ubican en "Salas y salones `[SAL]`" ni en ningún otro CRUD. Ver
+> [RSM - Junta 3 con organizadores FILEY](<RSM - Junta 3 con organizadores FILEY.md>).
 
-1. Configurar la duración fija de los bloques de horario (1:15 hrs en este evento).
-2. Crear, editar, eliminar y buscar por nombre los bloques de horario, y colocarlos en el horario de una sala.
-3. Consultar la lista de actividades y filtrarla por tipo (evento | taller).
-4. Asignar una actividad a una sala y a uno o varios bloques de horario disponibles.
-5. Programar una misma actividad en más de una ocasión (repetición, programa de talleres) y consultar cuántas veces, cuándo y dónde fue programada cada una.
-6. Reprogramar las actividades afectadas (moviéndolas a otros bloques o salas) cuando una asignación genera un choque de horario.
-7. Mover una actividad entre bloques.
-8. Quitar una actividad del programa para reprogramarla más tarde (la actividad regresa a estado pendiente).
-9. Modificar la programación de una actividad a la vez (sin edición masiva).
-10. Guardar el programa preliminar y disparar la notificación a los participantes.
-11. Exportar la programación guardada a Word o Excel (docx/xlsx), para control interno.
+1. Consultar la lista de actividades y filtrarla por tipo (evento | taller).
+2. Asignar una actividad a una sala y a uno o varios bloques de horario disponibles.
+3. Programar una misma actividad en más de una ocasión (repetición, programa de talleres) y consultar cuántas veces, cuándo y dónde fue programada cada una.
+4. Reprogramar las actividades afectadas (moviéndolas a otros bloques o salas) cuando una asignación genera un choque de horario.
+5. Mover una actividad entre bloques.
+6. Quitar una actividad del programa para reprogramarla más tarde (la actividad regresa a estado pendiente).
+7. Modificar la programación de una actividad a la vez (sin edición masiva).
+8. Guardar el programa preliminar y disparar la notificación a los participantes.
+9. Exportar la programación guardada a Word o Excel (docx/xlsx), para control interno.
 
 ### 4.2 Aplicante `[STD, EVT, TAL, VIS]`
 
@@ -319,8 +322,8 @@ El actor es Participante únicamente cuando su propuesta fue **Aceptada**. Las a
 | <span style="white-space:nowrap">CU-PRG-012</span> | Consultar el programa publicado en la web app | Se unifica con CU-PRG-010 (la consulta del programa publicado es la Visualización de programa estática, no una exportación). Los roles con permisos quedan fuera del primer pool de features (out of scope). |
 <!-- markdownlint-enable MD033 -->
 
-> [!question] Decisión pendiente — modelo de notificaciones (relacionado con CU-PRG-009)
-> Queda abierto si el apartado de notificaciones es un **concentrado único** (una bandeja transversal a todos los dominios) o es **por módulo** (ver [Decisiones pendientes](#6-decisiones-pendientes)).
+> [!success] Resuelta — modelo de notificaciones (relacionado con CU-PRG-009)
+> El apartado de notificaciones es **por módulo**, no un concentrado único transversal (resuelta en la Junta 3 con organizadores FILEY; ver [Decisiones pendientes](#6-decisiones-pendientes) y [RSM - Junta 3 con organizadores FILEY](<RSM - Junta 3 con organizadores FILEY.md>)).
 
 ### 5.2 SAL
 
@@ -355,6 +358,12 @@ Decisiones que quedaron abiertas en esta sesión. **No se resuelven aquí**; se 
 > - Herramienta **dev-side**: el equipo de desarrollo la usa para armar/configurar la herramienta client-side; el aplicante nunca la ve directamente.
 > - La misma herramienta **embebida en el programa**: el administrador la usa directamente, sin pasar por desarrollo.
 
+<!-- -->
+
+> [!success] Resuelta — Junta 3 con organizadores FILEY
+> El armador/CRUD de convocatorias queda **fuera de alcance** por ahora: la herramienta es hardcodeada (ninguna de las dos variantes anteriores). Ver
+> [RSM - Junta 3 con organizadores FILEY](<RSM - Junta 3 con organizadores FILEY.md>).
+
 ### D2 — Dominio del CRUD de bloques de horario `[PRG]` / `[SAL]`
 
 > [!warning]
@@ -369,10 +378,22 @@ Decisiones que quedaron abiertas en esta sesión. **No se resuelven aquí**; se 
 >
 > **Consecuencia abierta:** de esta decisión depende si las acciones de bloques (Administrador → Programar actividades, puntos 1–2) se mueven a "Salas y salones".
 
+<!-- -->
+
+> [!success] Resuelta — Junta 3 con organizadores FILEY
+> Ninguna de las dos variantes: los bloques de horario **no tienen CRUD** en ningún dominio. Quedan hardcodeados por panel de programación — 1:15 en el panel de Eventos, 1:00 (50 min de actividad + 10 min de descanso) en el de Talleres. Una sala se crea sin ningún horario relacionado. Ver
+> [RSM - Junta 3 con organizadores FILEY](<RSM - Junta 3 con organizadores FILEY.md>).
+
 ### D3 — Modelo de notificaciones `[REG]` / `[PRG]`
 
 > [!warning]
 > No está establecido si las notificaciones serán **granuladas por dominio** o una **función transversal** que concentre las notificaciones de todos los dominios en una barra lateral del lado Aplicante/Participante. Si terminan siendo por módulo, esos módulos podrían ser consumidos por un panel de notificaciones del Participante que los agregue. Afecta a la definición de *Notificación* y a CU-PRG-009.
+
+<!-- -->
+
+> [!success] Resuelta — Junta 3 con organizadores FILEY
+> Por módulo: se descarta la barra/bandeja transversal. Cada panel (incluyendo los de revisión de propuestas, que viven por dominio y no en `REG`) tiene su propio apartado de notificaciones. Ver
+> [RSM - Junta 3 con organizadores FILEY](<RSM - Junta 3 con organizadores FILEY.md>).
 
 ### D4 — Condiciones fuera del formulario `[REG]`
 
