@@ -5,13 +5,13 @@ tags:
   - tipo/caso-de-uso
   - dom/tal
 fecha: 2026-06-25
-id: CU-TAL-004
+id: CU-TAL-003
 dominio: TAL
 reglas_de_negocio: []
 ---
-# CU-TAL-004 Consultar mis propuestas de actividad y revisar su estado actual
+# CU-TAL-003 Consultar mis propuestas de actividad y revisar su estado actual
 
-> [!note] Equivalente a CU-EVT-004 en la convocatoria de Hipólito
+> [!note] Equivalente a CU-EVT-003 en la convocatoria de Hipólito
 > Misma necesidad de seguimiento, y con los **mismos estados de dictamen** que `EVT`
 > (corrección 2026-06-29: Elvira sí dictamina cada propuesta en el sistema — ver CU-TAL-009).
 
@@ -21,7 +21,7 @@ El tallerista consulta todas sus propuestas de actividad infantil/juvenil regist
 
 ## Alcance
 
-Módulo de Talleres (TAL) — vista de seguimiento del tallerista. Muestra únicamente las propuestas asociadas a la cuenta con sesión activa en la convocatoria infantil/juvenil. No cubre la edición de propuestas (CU-TAL-003) ni el dictamen (CU-TAL-009).
+Módulo de Talleres (TAL) — vista de seguimiento del tallerista. Muestra únicamente las propuestas asociadas a la cuenta con sesión activa en la convocatoria infantil/juvenil. No cubre la edición de propuestas (CU-TAL-004) ni el dictamen (CU-TAL-009).
 
 ## Actores
 
@@ -60,8 +60,8 @@ No se realizan cambios en el sistema; la consulta es de solo lectura.
 
 | Estado | Cuándo aparece | Descripción |
 | --- | --- | --- |
-| `pendiente` | Desde el envío (CU-TAL-002) o el reenvío (CU-TAL-003) hasta el dictamen de Elvira | La propuesta está en revisión. |
-| `cambios_solicitados` | Elvira solicitó cambios (CU-TAL-009, A1) | Se muestra el mensaje de Elvira y acceso directo a CU-TAL-003. |
+| `pendiente` | Desde el envío (CU-TAL-002) o el reenvío (CU-TAL-004) hasta el dictamen de Elvira | La propuesta está en revisión. |
+| `cambios_solicitados` | Elvira solicitó cambios (CU-TAL-009, A1) | Se muestra el mensaje de Elvira y acceso directo a CU-TAL-004. |
 | `rechazada` | Elvira rechazó la propuesta (CU-TAL-009, A2) | Se muestra el motivo de rechazo registrado por Elvira. |
 | `aceptada` | Elvira aceptó la propuesta (CU-TAL-009) | La propuesta se convirtió en Actividad; la sala y el horario se comunicarán en una notificación posterior (`PRG`). |
 | `programada` | Cuando el panel de Elvira (`PRG`) asigna sala y horario, y ese horario queda **final** | El tallerista ve sus fechas y lugares asignados (precisión 2026-06-29: el catálogo solo se publica a `VIS` una vez que el horario es final, no mientras es preliminar). |
@@ -89,4 +89,4 @@ No se realizan cambios en el sistema; la consulta es de solo lectura.
 
 - **Folio de registro:** identificador único asignado al enviar (CU-TAL-002).
 - **Estado `programada`:** incluye las fechas, turnos y sala asignados; lo actualiza el panel de Elvira en `PRG` (ver `PRG/CU-PRG Índice.md`), no el tallerista.
-- Este CU no permite editar la propuesta (ver CU-TAL-003) ni dictaminarla (ver CU-TAL-009).
+- Este CU no permite editar la propuesta (ver CU-TAL-004) ni dictaminarla (ver CU-TAL-009).

@@ -17,23 +17,26 @@ Inventario de casos de uso del dominio **Talleres** (`TAL`): la convocatoria de 
 
 - [CU-TAL-001 Configurar la convocatoria de actividades infantiles y juveniles](<A - Convocatoria/CU-TAL-001 Configurar la convocatoria de actividades infantiles y juveniles.md>)
 - [CU-TAL-002 Registro de los datos de la propuesta de actividad infantil o juvenil](<A - Convocatoria/CU-TAL-002 Registo de los datos de la propuesta de actividad infantil o juvenil.md>)
-- [CU-TAL-003 Editar una propuesta en respuesta a una solicitud de cambios del administrador](<A - Convocatoria/CU-TAL-003 Editar una propuesta en respuesta a una solicitud de cambios del administrador.md>)
-- [CU-TAL-004 Consultar mis propuestas de actividad y revisar su estado actual](<A - Convocatoria/CU-TAL-004 Consultar mis propuestas de actividad y revisar su estado actual.md>)
+- [CU-TAL-003 Consultar mis propuestas de actividad y revisar su estado actual](<A - Convocatoria/CU-TAL-003 Consultar mis propuestas de actividad y revisar su estado actual.md>)
 
-## B. Cierre y Constancias
+## B. Revisión y Selección
 
-- [CU-TAL-005 Descargar constancia de participación](<B - Cierre y Constancias/CU-TAL-005 Descargar constancia de participación.md>)
+- [CU-TAL-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador](<B - Revisión y Selección/CU-TAL-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador.md>)
 
-## C. Publicación
+## C. Cierre y Constancias
 
-- [CU-TAL-006 Generar la ficha PDF de una actividad](<C - Publicacion/CU-TAL-006 Generar la ficha PDF de una actividad.md>)
+- [CU-TAL-005 Descargar constancia de participación](<C - Cierre y Constancias/CU-TAL-005 Descargar constancia de participación.md>)
 
-## D. Herramientas de Administración
+## D. Publicación
 
-- [CU-TAL-007 Consultar la lista de propuestas, filtrable](<D - Herramientas de Administración/CU-TAL-007 Consultar la lista de propuestas, filtrable.md>)
-- [CU-TAL-008 Revisar el detalle de una propuesta](<D - Herramientas de Administración/CU-TAL-008 Revisar el detalle de una propuesta.md>)
-- [CU-TAL-009 Dictaminar una propuesta](<D - Herramientas de Administración/CU-TAL-009 Dictaminar una propuesta.md>)
-- [CU-TAL-010 Enviar notificaciones de resultado en lote](<D - Herramientas de Administración/CU-TAL-010 Enviar notificaciones de resultado en lote.md>)
+- [CU-TAL-006 Generar la ficha PDF de una actividad](<D - Publicación/CU-TAL-006 Generar la ficha PDF de una actividad.md>)
+
+## E. Herramientas de Administración
+
+- [CU-TAL-007 Consultar la lista de propuestas, filtrable](<E - Herramientas de Administración/CU-TAL-007 Consultar la lista de propuestas, filtrable.md>)
+- [CU-TAL-008 Revisar el detalle de una propuesta](<E - Herramientas de Administración/CU-TAL-008 Revisar el detalle de una propuesta.md>)
+- [CU-TAL-009 Dictaminar una propuesta](<E - Herramientas de Administración/CU-TAL-009 Dictaminar una propuesta.md>)
+- [CU-TAL-010 Enviar notificaciones de resultado en lote](<E - Herramientas de Administración/CU-TAL-010 Enviar notificaciones de resultado en lote.md>)
 
 ---
 
@@ -117,7 +120,7 @@ Inventario de casos de uso del dominio **Talleres** (`TAL`): la convocatoria de 
 
 - **Volumen y cadencia de revisión:** ¿Elvira revisa conforme llegan las propuestas (como Hipólito) o hasta el cierre de la convocatoria? Sigue abierto, ver `docs/soporte/meetings/meeting notes/Preguntas para la siguiente sesion.md`.
 - **Notificación en lote vs. caso por caso:** CU-TAL-010 extrapola por simetría con `EVT`; no hay evidencia directa de que Elvira notifique en lote.
-- **Ventana de edición post-aceptación:** ¿existe, además de CU-TAL-003 (respuesta a cambios solicitados), una ventana en la que el tallerista edite su actividad ya aceptada (como sugiere la Junta 2 con organizadores FILEY para "registrantes aceptados")? Ninguno de los dos dominios (`EVT` ni `TAL`) tiene hoy un CU dedicado a esto.
+- **Ventana de edición post-aceptación:** ¿existe, además de CU-TAL-004 (respuesta a cambios solicitados), una ventana en la que el tallerista edite su actividad ya aceptada (como sugiere la Junta 2 con organizadores FILEY para "registrantes aceptados")? Ninguno de los dos dominios (`EVT` ni `TAL`) tiene hoy un CU dedicado a esto.
 - **Mecanismo de "horario final":** confirmado que `VIS` solo consume catálogo final, nunca preliminar (ver nota arriba), pero no está definido cómo una Programación de `PRG` pasa de preliminar a final.
 - **Fecha de habilitación de constancias (CU-TAL-005):** no se ha confirmado una fecha análoga al 26 de abril de `EVT`.
 

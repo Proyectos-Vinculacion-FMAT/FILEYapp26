@@ -17,25 +17,28 @@ Inventario de casos de uso del dominio **Eventos Generales** (`EVT`): la convoca
 
 - [CU-EVT-001 Configurar la convocatoria](<A - Convocatoria/CU-EVT-001 Configurar la convocatoria.md>)
 - [CU-EVT-002 Registro de la propuesta de la actividad](<A - Convocatoria/CU-EVT-002 Registro de la propuesta de la actividad.md>)
-- [CU-EVT-003 Editar una propuesta en respuesta a una solicitud de cambios del administrador](<A - Convocatoria/CU-EVT-003 Editar una propuesta en respuesta a una solicitud de cambios del administrador.md>)
-- [CU-EVT-004 Consultar mis propuestas y revisar su estado actual](<A - Convocatoria/CU-EVT-004 Consultar mis propuestas y revisar su estado actual.md>)
+- [CU-EVT-003 Consultar mis propuestas y revisar su estado actual](<A - Convocatoria/CU-EVT-003 Consultar mis propuestas y revisar su estado actual.md>)
 
-## B. Cierre y Constancias
+## B. Revisión y Selección
 
-- [CU-EVT-005 Descargar constancia de participación](<B - Cierre y Constancias/CU-EVT-005 Descargar constancia de participación.md>)
+- [CU-EVT-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador](<B - Revisión y Selección/CU-EVT-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador.md>)
 
-## C. Publicación
+## C. Cierre y Constancias
 
-- [CU-EVT-006 Generar la ficha PDF de una actividad individual](<C - Publicación/CU-EVT-006 Generar la ficha PDF de una actividad individual.md>)
+- [CU-EVT-005 Descargar constancia de participación](<C - Cierre y Constancias/CU-EVT-005 Descargar constancia de participación.md>)
 
-## D. Herramientas de Administración
+## D. Publicación
 
-- [CU-EVT-007 Consultar la lista de propuestas, filtrable](<D - Herramientas de Administración/CU-EVT-007 Consultar la lista de propuestas, filtrable.md>)
-- [CU-EVT-008 Revisar el detalle de una propuesta](<D - Herramientas de Administración/CU-EVT-008 Revisar el detalle de una propuesta.md>)
-- [CU-EVT-009 Dictaminar una propuesta](<D - Herramientas de Administración/CU-EVT-009 Dictaminar una propuesta.md>)
-- [CU-EVT-010 Enviar notificaciones de resultado en lote](<D - Herramientas de Administración/CU-EVT-010 Enviar notificaciones de resultado en lote.md>)
-- [CU-EVT-011 Visualizar el número de propuestas por estado](<D - Herramientas de Administración/CU-EVT-011 Visualizar el número de propuestas por estado.md>)
-- [CU-EVT-012 Marcar la recepción del ejemplar físico enviado por el aplicante](<D - Herramientas de Administración/CU-EVT-012 Marcar la recepción del ejemplar físico enviado por el aplicante.md>)
+- [CU-EVT-006 Generar la ficha PDF de una actividad individual](<D - Publicación/CU-EVT-006 Generar la ficha PDF de una actividad individual.md>)
+
+## E. Herramientas de Administración
+
+- [CU-EVT-007 Consultar la lista de propuestas, filtrable](<E - Herramientas de Administración/CU-EVT-007 Consultar la lista de propuestas, filtrable.md>)
+- [CU-EVT-008 Revisar el detalle de una propuesta](<E - Herramientas de Administración/CU-EVT-008 Revisar el detalle de una propuesta.md>)
+- [CU-EVT-009 Dictaminar una propuesta](<E - Herramientas de Administración/CU-EVT-009 Dictaminar una propuesta.md>)
+- [CU-EVT-010 Enviar notificaciones de resultado en lote](<E - Herramientas de Administración/CU-EVT-010 Enviar notificaciones de resultado en lote.md>)
+- [CU-EVT-011 Visualizar el número de propuestas por estado](<E - Herramientas de Administración/CU-EVT-011 Visualizar el número de propuestas por estado.md>)
+- [CU-EVT-012 Marcar la recepción del ejemplar físico enviado por el aplicante](<E - Herramientas de Administración/CU-EVT-012 Marcar la recepción del ejemplar físico enviado por el aplicante.md>)
 
 ---
 

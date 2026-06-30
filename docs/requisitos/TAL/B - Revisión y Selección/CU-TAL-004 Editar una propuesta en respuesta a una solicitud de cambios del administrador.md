@@ -5,14 +5,14 @@ tags:
   - tipo/caso-de-uso
   - dom/tal
 fecha: 2026-06-28
-id: CU-TAL-003
+id: CU-TAL-004
 dominio: TAL
 reglas_de_negocio:
   - La edición solo está disponible mientras la convocatoria esté en estado `abierta`; al cerrarse, el sistema bloquea cualquier cambio.
   - El tallerista solo puede editar sus propias propuestas; no puede ver ni editar las de otros.
   - El folio y la fecha de envío originales no se modifican al editar.
 ---
-# CU-TAL-003 Editar una propuesta en respuesta a una solicitud de cambios del administrador
+# CU-TAL-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador
 
 > [!warning] Corrección (2026-06-29) — sí hay dictamen y `cambios_solicitados`
 > Una versión anterior de este CU asumía edición libre en cualquier momento porque se creía
@@ -64,7 +64,7 @@ El tallerista recibe la notificación de que Elvira solicitó cambios en su prop
 
 ## Flujo principal
 
-1. El tallerista accede a "Mis propuestas" (CU-TAL-004) y selecciona la propuesta en estado `cambios_solicitados`.
+1. El tallerista accede a "Mis propuestas" (CU-TAL-003) y selecciona la propuesta en estado `cambios_solicitados`.
 2. El sistema muestra el detalle de la propuesta junto con el mensaje de cambios solicitados por Elvira.
 3. El tallerista modifica los campos señalados.
 4. El tallerista reenvía la propuesta.

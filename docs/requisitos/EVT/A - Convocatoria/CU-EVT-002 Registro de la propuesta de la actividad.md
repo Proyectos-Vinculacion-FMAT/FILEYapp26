@@ -21,7 +21,7 @@ El aplicante captura en el formulario de registro todos los datos de su propuest
 
 ## Alcance
 
-Módulo EVT — formulario de registro y envío de propuesta. El aplicante debe estar autenticado (CU-REG-002). Cubre la captura, la validación local de los datos del formulario, y el envío y alta del registro `Propuesta`. No cubre la edición de una propuesta ya enviada (CU-EVT-003).
+Módulo EVT — formulario de registro y envío de propuesta. El aplicante debe estar autenticado (CU-REG-002). Cubre la captura, la validación local de los datos del formulario, y el envío y alta del registro `Propuesta`. No cubre la edición de una propuesta ya enviada (CU-EVT-004).
 
 ## Actores
 

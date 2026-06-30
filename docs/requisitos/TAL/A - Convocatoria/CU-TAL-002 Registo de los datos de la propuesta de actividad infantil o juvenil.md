@@ -35,7 +35,7 @@ El tallerista captura en el formulario de registro todos los datos de su propues
 
 ## Alcance
 
-Módulo de Talleres (TAL) — formulario de registro y envío de propuesta infantil/juvenil. El tallerista debe estar autenticado (CU-REG-002). Cubre la captura, la validación local y el envío de la propuesta. No cubre la edición posterior (CU-TAL-003), el dictamen (CU-TAL-009) ni el registro de visitas escolares, que es responsabilidad del dominio `VIS` (ver `VIS/CU-VIS Índice.md`, CU-VIS-001). A diferencia de CU-EVT-002, no existe paso de categorización ni carga de archivos adjuntos.
+Módulo de Talleres (TAL) — formulario de registro y envío de propuesta infantil/juvenil. El tallerista debe estar autenticado (CU-REG-002). Cubre la captura, la validación local y el envío de la propuesta. No cubre la edición posterior (CU-TAL-004), el dictamen (CU-TAL-009) ni el registro de visitas escolares, que es responsabilidad del dominio `VIS` (ver `VIS/CU-VIS Índice.md`, CU-VIS-001). A diferencia de CU-EVT-002, no existe paso de categorización ni carga de archivos adjuntos.
 
 ## Actores
 

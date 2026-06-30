@@ -5,13 +5,13 @@ tags:
   - tipo/caso-de-uso
   - dom/evt
 fecha: 2026-06-24
-id: CU-EVT-004
+id: CU-EVT-003
 dominio: EVT
 reglas_de_negocio: []
 ---
-# CU-EVT-004 Consultar mis propuestas y revisar su estado actual
+# CU-EVT-003 Consultar mis propuestas y revisar su estado actual
 
-> [!note] Equivalente a CU-TAL-004 en la convocatoria de Elvira
+> [!note] Equivalente a CU-TAL-003 en la convocatoria de Elvira
 > La misma necesidad de seguimiento existe en ambas convocatorias (Hipólito y Elvira), con
 > implementaciones paralelas pero independientes — no hay un único CU compartido entre EVT y
 > TAL, dado que cada convocatoria tiene su propio ciclo de estados.
@@ -22,7 +22,7 @@ El aplicante revisa el estado actualizado de todas sus propuestas enviadas en la
 
 ## Alcance
 
-Módulo EVT — vista de seguimiento del proponente. Muestra únicamente las propuestas asociadas a la cuenta con sesión activa. No cubre la edición de propuestas, que corresponde a CU-EVT-003.
+Módulo EVT — vista de seguimiento del proponente. Muestra únicamente las propuestas asociadas a la cuenta con sesión activa. No cubre la edición de propuestas, que corresponde a CU-EVT-004.
 
 ## Actores
 
@@ -54,7 +54,7 @@ El aplicante desea conocer el estado actual de sus propuestas enviadas.
 2. El sistema lista todas las propuestas del proponente para la edición activa, mostrando por cada una: folio, tipo de actividad, título y estado actual.
 3. El aplicante selecciona una propuesta para ver su detalle.
 4. El sistema muestra el detalle completo: todos los datos enviados, estado actual y —según el estado— la información adicional correspondiente:
-   - Si `cambios_solicitados`: el `mensaje_cambios_solicitados` del administrador y acceso directo a CU-EVT-003.
+   - Si `cambios_solicitados`: el `mensaje_cambios_solicitados` del administrador y acceso directo a CU-EVT-004.
    - Si `rechazada`: el `motivo_rechazo` registrado por el administrador.
    - Si `aceptada`: confirmación de aceptación; la sala y horario se comunicarán en una notificación posterior.
    - Si `pendiente`: indicación de que la propuesta está en revisión.

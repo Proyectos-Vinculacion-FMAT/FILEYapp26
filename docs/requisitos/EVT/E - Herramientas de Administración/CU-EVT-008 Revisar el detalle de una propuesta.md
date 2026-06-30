@@ -17,7 +17,7 @@ El administrador examina toda la información de una propuesta —datos del prop
 
 ## Alcance
 
-Módulo EVT — vista de detalle de propuesta. Es la antesala del dictamen (CU-EVT-009). No cubre la edición de la propuesta por parte del proponente (CU-EVT-003).
+Módulo EVT — vista de detalle de propuesta. Es la antesala del dictamen (CU-EVT-009). No cubre la edición de la propuesta por parte del proponente (CU-EVT-004).
 
 ## Actores
 

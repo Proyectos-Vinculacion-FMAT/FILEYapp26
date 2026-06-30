@@ -66,7 +66,7 @@ Desde el detalle de una propuesta (CU-EVT-008), el administrador decide emitir s
 2. El sistema solicita el `mensaje_cambios_solicitados` (campo de texto obligatorio) indicando qué debe corregir el proponente.
 3. El administrador redacta el mensaje y confirma.
 4. El sistema cambia la propuesta a `cambios_solicitados` y registra la fecha de revisión y el revisor.
-5. El sistema notifica de inmediato al proponente por correo, para que pueda corregir y reenviar (CU-EVT-003) antes del cierre de la convocatoria.
+5. El sistema notifica de inmediato al proponente por correo, para que pueda corregir y reenviar (CU-EVT-004) antes del cierre de la convocatoria.
 6. El administrador puede solicitar cambios cuantas veces sea necesario sobre la misma propuesta; él determina cuándo la información es suficiente.
 
 ### A2. Rechazar

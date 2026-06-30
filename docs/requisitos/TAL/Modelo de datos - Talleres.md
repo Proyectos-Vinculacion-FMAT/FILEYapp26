@@ -164,7 +164,7 @@ fecha: 2026-06-29
 
 | Entidad                   | Casos de uso relacionados                                              |
 | ------------------------- | ---------------------------------------------------------------------- |
-| Tallerista                | CU-TAL-002, CU-TAL-003                                                 |
+| Tallerista                | CU-TAL-002, CU-TAL-004                                                 |
 | TipoActividadTAL          | CU-TAL-002, CU-TAL-006                                                 |
 | PropuestaTaller           | CU-TAL-002 a CU-TAL-004, CU-TAL-007 a CU-TAL-010                       |
 | Actividad                 | CU-TAL-005, CU-TAL-006, CU-TAL-009; y CU-PRG-002 a CU-PRG-004 en `PRG` |
@@ -180,7 +180,7 @@ fecha: 2026-06-29
   confirmada — ver advertencia en CU-TAL-010.
 - Confirmar si existe una ventana de edición **posterior a la aceptación** (similar a la que
   describe la Junta 2 con organizadores FILEY para "registrantes aceptados"), separada de la
-  edición por `cambios_solicitados` (CU-TAL-003) — pendiente, ver `CU-TAL Índice.md`.
+  edición por `cambios_solicitados` (CU-TAL-004) — pendiente, ver `CU-TAL Índice.md`.
 - El mecanismo de "horario final" que gatilla la publicación a `VIS` vive conceptualmente en
   `PRG` (ver "Temas abiertos" en `PRG/Modelo de datos - Programación.md`), no en este modelo.
 
