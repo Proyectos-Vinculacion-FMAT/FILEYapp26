@@ -1,5 +1,5 @@
 ---
-estado: acpetado
+estado: aceptado
 version: 0.1
 tags:
   - requisitos

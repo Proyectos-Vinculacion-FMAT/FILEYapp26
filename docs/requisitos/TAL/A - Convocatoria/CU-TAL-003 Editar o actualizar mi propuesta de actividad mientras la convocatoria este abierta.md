@@ -6,7 +6,7 @@ tags:
   - caso-de-uso
   - talleres
 fecha: 2026-06-28
-id: CU-TAL-005
+id: CU-TAL-003
 dominio: TAL
 reglas_de_negocio:
   - La edición solo está disponible mientras la convocatoria esté en estado `abierta`; al cerrarse, el sistema bloquea cualquier cambio.
@@ -14,7 +14,7 @@ reglas_de_negocio:
   - No existe solicitud de cambios por parte del administrador; la edición es autogestionada por el tallerista.
   - El folio y la fecha de envío originales no se modifican al editar.
 ---
-# CU-TAL-005 Editar o actualizar mi propuesta de actividad mientras la convocatoria esté abierta
+# CU-TAL-003 Editar o actualizar mi propuesta de actividad mientras la convocatoria esté abierta
 
 > **Diferencia clave con EVT:** en la convocatoria infantil/juvenil no hay dictamen ni solicitud
 > de cambios del administrador (no existe el flujo de revisión de Hipólito). La edición es

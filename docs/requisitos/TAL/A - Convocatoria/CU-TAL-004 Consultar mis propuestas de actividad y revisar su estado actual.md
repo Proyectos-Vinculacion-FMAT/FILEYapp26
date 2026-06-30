@@ -6,11 +6,11 @@ tags:
   - caso-de-uso
   - talleres
 fecha: 2026-06-25
-id: CU-TAL-006
+id: CU-TAL-004
 dominio: TAL
 reglas_de_negocio: []
 ---
-# CU-TAL-006 Consultar mis propuestas de actividad y revisar su estado actual
+# CU-TAL-004 Consultar mis propuestas de actividad y revisar su estado actual
 
 > Borrador inicial (título y descripción). Inspirado en CU-EVT-005, pero **sin estados de
 > dictamen** (en TAL no hay revisión propuesta-por-propuesta como con Hipólito).

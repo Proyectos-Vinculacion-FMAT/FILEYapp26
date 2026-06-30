@@ -37,7 +37,7 @@ EVT:  Convocatoria → Revisión → Programación  → Confirmación y Cierre  
 
 ---
 
-## primera version
+## primera version (historial)
 
 ### A. Convocatoria
 

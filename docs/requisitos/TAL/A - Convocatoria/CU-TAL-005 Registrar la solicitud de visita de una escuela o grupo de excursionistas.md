@@ -7,7 +7,7 @@ tags:
   - talleres
   - visitas-escolares
 fecha: 2026-06-28
-id: CU-TAL-007
+id: CU-TAL-005
 dominio: TAL
 reglas_de_negocio:
   - El folio y la fecha de recepción los genera el sistema al enviar; el representante no los captura.
@@ -15,7 +15,7 @@ reglas_de_negocio:
   - Una solicitud puede incluir uno o más grupos; cada grupo es independiente en grado, responsable y cantidad de alumnos.
   - El envío de la solicitud no asigna actividades; la asignación la realiza Elvira en la fase de programación.
 ---
-# CU-TAL-007 Registrar la solicitud de visita de una escuela o grupo de excursionistas
+# CU-TAL-005 Registrar la solicitud de visita de una escuela o grupo de excursionistas
 
 > Caso de uso completado con base en la ficha física "Registro para visitas escolares 2026" y
 > el formulario en línea de FILEY (Google Forms). Da cobertura a RF-TAL-03.
