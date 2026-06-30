@@ -78,8 +78,8 @@ Homologado en
 | ------ | ------- | ------ | --------------------- | ----------------------- | ---------- |
 | `REG` | Registros / Convocatorias | Transversal: solo la **captura** (formularios/convocatorias) de propuestas para `STD`/`EVT`/`TAL`/`VIS`; la **revisión** vive en cada dominio, no en `REG` (ver nota abajo) | Juan Manuel Miranda | — | Pendiente: aún sin carpeta en `requisitos/`; en desarrollo en otra rama |
 | `STD` | Stands / Expositores | Renta, reserva, pago y confirmación de espacios en el showfloor | Hugo Janssen | Hipólito / Gilberto | [`STD/CU-STD Índice.md`](<STD/CU-STD Índice.md>) · `Modelo de datos - Stands.md` · `Proceso de alto nivel - Stands.md` |
-| `EVT` | Eventos | Actividades de público general (conversatorio, conferencia, charla, mesa redonda, presentación de libro/revista, lectura de obra, encuentro) | Juan Manuel Miranda | Hipólito | Pendiente: aún sin carpeta en `requisitos/` |
-| `TAL` | Talleres | Actividades de aforo reducido, normalmente infantil/juvenil | Juan Manuel Miranda | Elvira | Pendiente: aún sin carpeta en `requisitos/` |
+| `EVT` | Eventos | Actividades de público general (conversatorio, conferencia, charla, mesa redonda, presentación de libro/revista, lectura de obra, encuentro) | Juan Manuel Miranda | Hipólito | [`EVT/CU-EVT Índice.md`](<EVT/CU-EVT Índice.md>) · `Modelo de datos - Eventos.md` · `Proceso de alto nivel - Eventos.md` · `Estructura de vistas - Eventos.md` |
+| `TAL` | Talleres | Actividades de aforo reducido, normalmente infantil/juvenil | Juan Manuel Miranda | Elvira | [`TAL/CU-TAL Índice.md`](<TAL/CU-TAL Índice.md>) · `Modelo de datos - Talleres.md` · `Proceso de alto nivel - Talleres.md` |
 | `VIS` | Visitas escolares | Itinerarios de instituciones que reservan cupo en el catálogo de talleres/actividades | Isaac Ortiz | Elvira | [`VIS/CU-VIS Índice.md`](<VIS/CU-VIS Índice.md>) · `Modelo de datos - Visitas escolares.md` |
 | `PRG` | Programa General | Organización espacio-temporal de las actividades aceptadas de `EVT`/`TAL` | Isaac Ortiz | Hipólito / Elvira | [`PRG/CU-PRG Índice.md`](<PRG/CU-PRG Índice.md>) · `Modelo de datos - Programación.md` |
 | `SAL` | Salas y salones | Catálogo único de espacios (salones y sus salas) | Isaac Ortiz | Hipólito / Elvira | [`SAL/CU-SAL Índice.md`](<SAL/CU-SAL Índice.md>) |
@@ -125,14 +125,17 @@ Los requisitos **se dividen por dominio** y se documentan como **casos de uso** 
 requisitos/
 ├── README.md
 ├── CU-XX-NN Template.md
+├── EVT/   → CU-EVT-NNN  (eventos generales; ver EVT/CU-EVT Índice.md)
 ├── PRG/   → CU-PRG-NNN  (programa general; ver PRG/CU-PRG Índice.md)
 ├── SAL/   → CU-SAL-NNN  (salas y salones; ver SAL/CU-SAL Índice.md)
 ├── STD/   → CU-STD-NNN  (stands; incluye índice de CU, modelo de datos y proceso de alto nivel)
+├── TAL/   → CU-TAL-NNN  (actividades infantiles/juveniles; ver TAL/CU-TAL Índice.md)
 └── VIS/   → CU-VIS-NNN  (visitas escolares; ver VIS/CU-VIS Índice.md)
 ```
 
 > [!note]
-> `REG`, `EVT` y `TAL` (responsabilidad de Juan Manuel Miranda) todavía no tienen carpeta en
+> `EVT` y `TAL` se trajeron y homologaron a esta convención el 2026-06-29 (antes en la rama
+> `main-juan`, responsabilidad de Juan Manuel Miranda). `REG` todavía no tiene carpeta en
 > este repositorio. Al abrirse, seguir la misma convención: carpeta `DOM/`, índice
 > `CU-DOM Índice.md` y un archivo por caso de uso a partir de [`CU-XX-NN Template.md`](<CU-XX-NN Template.md>).
 
@@ -143,7 +146,7 @@ requisitos/
 
 ## Relación entre dominios
 
-- `REG` (Convocatorias) es el **paso previo transversal**, pero solo para la **captura**: cualquier propuesta de `STD`, `EVT`, `TAL` o `VIS` se llena ahí. La **revisión** de esa propuesta (Aceptar/Solicitud de cambios/Rechazar) **no** vive en `REG`: cada dominio tiene su propio panel de revisión, visible solo para administradores, igual que ya hacen `STD` y `VIS` con sus propios CUs de revisión; `EVT` y `TAL` tendrán el suyo cuando se abra su carpeta. Al **Aceptarse**, el Aplicante pasa a Participante y, si es de tipo `EVT`/`TAL`, la propuesta se convierte en **Actividad** (ver
+- `REG` (Convocatorias) es el **paso previo transversal**, pero solo para la **captura**: cualquier propuesta de `STD`, `EVT`, `TAL` o `VIS` se llena ahí. La **revisión** de esa propuesta (Aceptar/Solicitud de cambios/Rechazar) **no** vive en `REG`: cada dominio tiene su propio panel de revisión, visible solo para administradores, con el mismo dictamen por propuesta dentro del sistema — incluido `TAL` (confirmado directamente por el cliente el 2026-06-29; ver `TAL/CU-TAL Índice.md`). Al **Aceptarse**, el Aplicante pasa a Participante y, si es de tipo `EVT`/`TAL`, la propuesta se convierte en **Actividad** (ver
   [Junta 3 §2.2](<../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#22-registros-reg>),
   [§2.1](<../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#21-actores>)
   y la aclaración de seguimiento en
@@ -153,10 +156,15 @@ requisitos/
   [PRG/CU-PRG Índice.md](<PRG/CU-PRG Índice.md>)
   y
   [SAL/CU-SAL Índice.md](<SAL/CU-SAL Índice.md>)).
-- `VIS` depende de `EVT`/`TAL`: una visita escolar reserva **cupo** en actividades que Hipólito o Elvira marcaron como aptas para nivel infantil/juvenil (ver
+- `VIS` depende de `EVT`/`TAL`, pero el peso normal es de `TAL`: una visita escolar reserva
+  **cupo** sobre todo en **talleres** de Elvira (`TAL`), que sí tienen aforo limitado (ver
   [Junta 2 con organizadores FILEY](<../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#tipos-de-eventos>)
   y
   [Junta 3 §4.3](<../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#43-participante>)).
+  Hipólito (`EVT`) puede, a su discreción, marcar **casos excepcionales** de su programa como
+  aptos para nivel infantil/juvenil para que aparezcan también en el catálogo de `VIS`; como
+  sus eventos **no tienen límite de cupo**, la validación normal de cupo de `VIS`
+  (CU-VIS-011) no aplica con normalidad sobre esos casos (precisión 2026-06-29).
   `VIS` no genera Actividad ni entra al programa de `PRG` por sí misma; solo consume cupo de actividades que ya están ahí.
 
 ## Pendientes por validar

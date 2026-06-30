@@ -60,8 +60,8 @@ fuente de verdad de qué es cada dominio; aquí solo se listan los códigos como
 | `dom/sal` | Salas y salones | Documentado |
 | `dom/vis` | Visitas escolares | Documentado |
 | `dom/reg` | Registros / Convocatorias (core transversal) | Sin carpeta aún |
-| `dom/evt` | Eventos | Sin carpeta aún |
-| `dom/tal` | Talleres | Sin carpeta aún |
+| `dom/evt` | Eventos | Documentado |
+| `dom/tal` | Talleres | Documentado |
 | `dom/pag` | Pagos | Futuro (reservado) |
 | `dom/acc` | Acceso y verificación | Futuro (reservado) |
 | `dom/cnt` | Contabilidad de visitantes (antes `VIS`) | Futuro (reservado) |

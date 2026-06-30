@@ -5,7 +5,7 @@ tags:
   - tipo/caso-de-uso
   - dom/vis
 fecha: 2026-06-24
-id: CU-VIS-008
+id: CU-VIS-007
 dominio: VIS
 responsable: Nombre
 issue_relacionado: PSD-XX
@@ -18,11 +18,11 @@ trazabilidad:
   ddr:
     - DDR-XX
 ---
-# CU-VIS-008 Rechazar una propuesta con motivo
+# CU-VIS-007 Solicitar cambios a una propuesta
 
 ## Objetivo
 
-Permitir al Administrador rechazar una propuesta de visita escolar indicando el motivo; el actor permanece como Aplicante.
+Permitir al Administrador solicitar cambios a una propuesta de visita escolar, indicando el motivo; la propuesta sigue siendo propuesta y el actor permanece como Aplicante.
 
 ## Alcance
 

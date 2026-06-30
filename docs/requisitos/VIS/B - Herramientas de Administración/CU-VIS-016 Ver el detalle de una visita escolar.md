@@ -5,7 +5,7 @@ tags:
   - tipo/caso-de-uso
   - dom/vis
 fecha: 2026-06-24
-id: CU-VIS-005
+id: CU-VIS-016
 dominio: VIS
 responsable: Nombre
 issue_relacionado: PSD-XX
@@ -18,11 +18,11 @@ trazabilidad:
   ddr:
     - DDR-XX
 ---
-# CU-VIS-005 Revisar el detalle de una propuesta (datos de la escuela/institución)
+# CU-VIS-016 Ver el detalle de una visita escolar
 
 ## Objetivo
 
-Permitir al Administrador revisar el detalle de una propuesta de visita escolar —datos de la escuela/institución y de su contacto— para decidir su resolución.
+Permitir al Administrador ver el detalle de una visita escolar aceptada: datos de la escuela/institución, su itinerario armado y los cupos que ocupa en cada taller.
 
 ## Alcance
 

@@ -124,6 +124,12 @@ fecha: 2026-06-29
   deriva siempre en vivo de las Programaciones vigentes al momento de renderizar el correo.
 - `tiene_empalme` puede calcularse en consulta (no almacenarse) si el volumen de Programaciones
   por sala es bajo; decisión de implementación, no de negocio.
+- **Preliminar vs. final** (precisión 2026-06-29): `VIS` solo puede reservar cupo sobre una
+  Programación con horario **final**, nunca preliminar (ver `VIS/Modelo de datos - Visitas
+  escolares.md`, sección 2.6). Este modelo no distingue hoy ese estado — falta decidir si es
+  un campo explícito de `Programación` (p. ej. `es_final`, que el Administrador marca a su
+  discreción) o si se deriva de que `estado_notificacion` ya esté `notificada` y sin
+  `RespuestaProgramación` de rechazo pendiente.
 
 ---
 

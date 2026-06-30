@@ -25,7 +25,7 @@ trazabilidad:
 Permitir al Participante quitar un taller que reservó de su itinerario **antes de generarlo de forma final** (corrección de un error de selección), liberando el cupo que ocupaba para que otra visita escolar pueda reservarlo.
 
 > [!note] Distinto de la baja administrativa
-> Este CU es la **autocorrección del Participante** mientras arma su itinerario: quitar algo elegido por error, antes de que el itinerario quede final. La baja por **cancelación imprevista** posterior, hecha por la coordinación, es otro caso de uso: [CU-VIS-017](<../D - Administración/CU-VIS-017 Quitar manualmente una visita de un taller (cancelación imprevista).md>) (acción de **Administrador**). Origen de la baja administrativa: [Junta 2 — Pendientes por definir](<../../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>).
+> Este CU es la **autocorrección del Participante** mientras arma su itinerario: quitar algo elegido por error, antes de que el itinerario quede final. La baja por **cancelación imprevista** posterior, hecha por la coordinación, es otro caso de uso: [CU-VIS-017](<../B - Herramientas de Administración/CU-VIS-017 Quitar manualmente una visita de un taller.md>) (acción de **Administrador**). Origen de la baja administrativa: [Junta 2 — Pendientes por definir](<../../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>).
 
 ## Alcance
 

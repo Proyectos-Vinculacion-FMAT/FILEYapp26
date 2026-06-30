@@ -25,7 +25,7 @@ trazabilidad:
 Permitir al Aplicante registrar su propuesta de visita escolar, capturando los datos de la escuela/institución, de su contacto, de su(s) representante(s) por grupo y la **cantidad de alumnos/visitantes** que asistirán, para participar en la convocatoria de visitas escolares.
 
 > [!note] Dato obligatorio — cantidad de visitantes
-> La **cantidad de alumnos/visitantes** que asistirán debe declararse explícitamente en la propuesta. Es el dato contra el que se valida el *Cupo* restante de cada actividad ([CU-VIS-011](<../C - Catálogo y reserva de talleres/CU-VIS-011 Validar que el cupo restante del taller cubra la cantidad de visitantes.md>)) y el que alimenta la numeralia de asistentes ([CU-VIS-015](<../D - Administración/CU-VIS-015 Consultar la lista de visitas escolares aceptadas, filtrable.md>)). Fuente: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>) ("la cantidad de alumnos que reservarán su asistencia").
+> La **cantidad de alumnos/visitantes** que asistirán debe declararse explícitamente en la propuesta. Es el dato contra el que se valida el *Cupo* restante de cada actividad ([CU-VIS-011](<../C - Catálogo y reserva de talleres/CU-VIS-011 Validar que el cupo restante del taller cubra la cantidad de visitantes.md>)) y el que alimenta la numeralia de asistentes ([CU-VIS-015](<../B - Herramientas de Administración/CU-VIS-015 Consultar la lista de visitas escolares aceptadas, filtrable.md>)). Fuente: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>) ("la cantidad de alumnos que reservarán su asistencia").
 
 <!-- -->
 

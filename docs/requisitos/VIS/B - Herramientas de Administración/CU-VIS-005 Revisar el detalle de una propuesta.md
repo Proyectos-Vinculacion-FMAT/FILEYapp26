@@ -4,8 +4,8 @@ version: 0.01
 tags:
   - tipo/caso-de-uso
   - dom/vis
-fecha: 2026-06-25
-id: CU-VIS-017
+fecha: 2026-06-24
+id: CU-VIS-005
 dominio: VIS
 responsable: Nombre
 issue_relacionado: PSD-XX
@@ -18,14 +18,11 @@ trazabilidad:
   ddr:
     - DDR-XX
 ---
-# CU-VIS-017 Quitar manualmente una visita de un taller (cancelación imprevista)
+# CU-VIS-005 Revisar el detalle de una propuesta
 
 ## Objetivo
 
-Permitir al Administrador quitar manualmente a una visita escolar de un taller ya reservado en casos de cancelación imprevista, liberando el cupo que ocupaba para que vuelva a estar disponible.
-
-> [!note] Distinto de la autocorrección del Participante
-> Esta es la **baja administrativa** posterior, a cargo de la coordinación, para casos de **cancelación imprevista** (la escuela avisa que no asistirá, un cambio de última hora, etc.). No debe confundirse con [CU-VIS-014](<../C - Catálogo y reserva de talleres/CU-VIS-014 Quitar un taller reservado del itinerario (liberar el cupo).md>), que es la autocorrección del propio Participante mientras arma su itinerario, antes de generarlo de forma final. Origen: [Junta 2 — Pendientes por definir](<../../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#pendientes-por-definir>).
+Permitir al Administrador revisar el detalle de una propuesta de visita escolar —datos de la escuela/institución y de su contacto— para decidir su resolución.
 
 ## Alcance
 

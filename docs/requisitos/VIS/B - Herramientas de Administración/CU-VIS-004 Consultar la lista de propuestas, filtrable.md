@@ -5,7 +5,7 @@ tags:
   - tipo/caso-de-uso
   - dom/vis
 fecha: 2026-06-24
-id: CU-VIS-006
+id: CU-VIS-004
 dominio: VIS
 responsable: Nombre
 issue_relacionado: PSD-XX
@@ -18,11 +18,11 @@ trazabilidad:
   ddr:
     - DDR-XX
 ---
-# CU-VIS-006 Aceptar una propuesta de visita escolar
+# CU-VIS-004 Consultar la lista de propuestas, filtrable
 
 ## Objetivo
 
-Permitir al Administrador aceptar una propuesta de visita escolar; al aceptarla, el Aplicante pasa a ser Participante y puede armar el itinerario de su visita.
+Permitir al Administrador consultar la lista de propuestas de visita escolar, filtrándola por su estado de revisión (*Pendiente a revisión*, *Aceptada*, *Solicitud de cambios* o *Rechazada*).
 
 ## Alcance
 

@@ -114,13 +114,16 @@ fecha: 2026-06-29
 
 > El **Cupo** (CU-VIS-011) es una propiedad **derivada**, no una entidad propia: cupo restante
 > de una Programación = aforo de su Sala (`SAL`) − suma de `cantidad_alumnos` de sus
-> ReservaTaller activas.
+> ReservaTaller activas. **Excepción (precisión 2026-06-29):** si la Actividad detrás de la
+> Programación es de `EVT` (caso excepcional que Hipólito marcó como apto para infantil/
+> juvenil, ver CU-VIS-010), **no tiene límite de cupo** — el cálculo de cupo restante no aplica
+> y la reserva no se rechaza por cantidad. Esto solo rige para Actividades de `TAL`.
 
 | Atributo         | Descripción                                                                                                                                    |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | id               | Identificador único.                                                                                                                           |
 | visita_id        | FK → Visita.                                                                                                                                   |
-| programacion_id  | FK → Programación (`PRG`) — la reserva es contra una **ocasión concreta** del taller (fecha/sala/bloque), no contra la Actividad en abstracto. |
+| programacion_id  | FK → Programación (`PRG`) — la reserva es contra una **ocasión concreta** del taller (fecha/sala/bloque), no contra la Actividad en abstracto. Solo puede referenciar una Programación cuyo horario ya es **final** (ver nota abajo); mientras sea preliminar, esa Programación no es elegible para reservar. |
 | cantidad_alumnos | Alumnos de **esta** Visita asignados a **esta** Programación (selección libre por asiento: el grupo puede repartirse entre varias).            |
 | fecha_reserva    | Cuándo se reservó.                                                                                                                             |
 
@@ -176,6 +179,12 @@ fecha: 2026-06-29
   ejemplo real (ver
   [Carta de confirmación](<../../soporte/extraido/Material%20para%20Registro%20de%20Actividades%20FILEY%202027/Carta%20de%20confirmaci%C3%B3n.%20SECUNDARIA%20EDMUNDO%20VILLALVA%20RODR%C3%8DGUEZ.md>)),
   pero el diseño/membrete final de FILEY sigue pendiente.
+- **Mecanismo de "horario final"** (precisión 2026-06-29): confirmado que `ReservaTaller` solo
+  puede apuntar a una Programación con horario **final**, nunca preliminar — pero no está
+  definido **cómo** una Programación pasa de preliminar a final (¿acción explícita del
+  Administrador en `PRG`, o derivada de que ya no haya rechazos/cambios pendientes en
+  CU-PRG-009?). Afecta también a `PRG/Modelo de datos - Programación.md`, que hoy no modela
+  esta distinción.
 
 ---
 

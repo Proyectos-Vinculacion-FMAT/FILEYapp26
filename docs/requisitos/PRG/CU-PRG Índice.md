@@ -1,10 +1,11 @@
 ---
 estado: propuesta
-version: 0.3
+version: 0.4
 tags:
   - tipo/indice
   - dom/prg
 fecha: 2026-06-24
+fecha_actualizacion: 2026-06-29
 ---
 # CU-PRG — Índice de casos de uso (Programación)
 
@@ -13,12 +14,33 @@ partir de las actividades aceptadas (`EVT`/`TAL`), notificación/confirmación d
 asignación, y visibilidad/exportación. Homologado en la
 [Junta 3 con Equipo de desarrollo](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md>);
 la redacción detallada (flujo principal, alternos y excepciones) sigue sujeta a revisión.
-Cada CU enlaza a su archivo y, debajo, a la evidencia (junta o material de FILEY) que lo
-sustenta.
+Las notas, los ajustes de homologación y la evidencia que sustenta cada CU se concentran al
+final de este índice.
 
 **Actores:** Administrador · Participante · Todos · Sistema.
 
-> [!note]
+## A. Armado del programa
+
+- [CU-PRG-001 Consultar lista de actividades de mi panel](<A - Armado del programa/CU-PRG-001 Consultar lista de actividades de mi panel.md>)
+- [CU-PRG-002 Asignar una programación a una actividad](<A - Armado del programa/CU-PRG-002 Asignar una programación a una actividad.md>)
+- [CU-PRG-003 Editar una programación de una actividad](<A - Armado del programa/CU-PRG-003 Editar una programación de una actividad.md>)
+- [CU-PRG-004 Eliminar una programación de una actividad](<A - Armado del programa/CU-PRG-004 Eliminar una programación de una actividad.md>)
+
+## B. Notificación y confirmación de asignación
+
+- [CU-PRG-008 Notificar al Participante su fecha, sala y horario asignados (segunda notificación)](<B - Notificación y confirmación/CU-PRG-008 Notificar al Participante su fecha, sala y horario asignados (segunda notificación).md>)
+- [CU-PRG-009 El Participante confirma su asistencia o incomparecencia al horario asignado](<B - Notificación y confirmación/CU-PRG-009 El Participante confirma su asistencia o incomparecencia al horario asignado.md>)
+
+## C. Visibilidad y exportación
+
+- [CU-PRG-010 Consultar el programa publicado mediante su URL estática](<C - Visibilidad y exportación/CU-PRG-010 Consultar el programa publicado mediante su URL estática.md>)
+- [CU-PRG-011 Exportar el programa a Excel o Word para uso interno](<C - Visibilidad y exportación/CU-PRG-011 Exportar el programa a Excel o Word para uso interno.md>)
+
+---
+
+## Notas y aclaraciones
+
+> [!note] Dos programas independientes
 > Son **dos programas independientes**: uno de eventos y uno de talleres. Cualquier
 > Administrador puede entrar a cualquiera de los dos paneles; quién edita cuál se decide
 > de manera interna, no por permisos del sistema. Solo el programa de **talleres** admite
@@ -46,29 +68,7 @@ sustenta.
 > acción aparte y a discreción del Administrador —por actividad o de forma masiva—, no algo que
 > se dispare al guardar.
 
-## A. Armado del programa
-
-- [CU-PRG-001 Consultar lista de actividades de mi panel](<A - Armado del programa/CU-PRG-001 Consultar lista de actividades de mi panel.md>) — *Administrador*
-  
-- [CU-PRG-002 Asignar una programación a una actividad](<A - Armado del programa/CU-PRG-002 Asignar una programación a una actividad.md>) — *Administrador*
-
-- [CU-PRG-003 Editar una programación de una actividad](<A - Armado del programa/CU-PRG-003 Editar una programación de una actividad.md>) — *Administrador*
-
-- [CU-PRG-004 Eliminar una programación de una actividad](<A - Armado del programa/CU-PRG-004 Eliminar una programación de una actividad.md>) — *Administrador*
-
-## B. Notificación y confirmación de asignación
-
-- [CU-PRG-008 Notificar al Participante su fecha, sala y horario asignados (segunda notificación)](<B - Notificación y confirmación/CU-PRG-008 Notificar al Participante su fecha, sala y horario asignados (segunda notificación).md>) — *Sistema*
-
-- [CU-PRG-009 El Participante confirma su asistencia o incomparecencia al horario asignado](<B - Notificación y confirmación/CU-PRG-009 El Participante confirma su asistencia o incomparecencia al horario asignado.md>) — *Participante*
-
-## C. Visibilidad y exportación
-
-- [CU-PRG-010 Consultar el programa publicado mediante su URL estática](<C - Visibilidad y exportación/CU-PRG-010 Consultar el programa publicado mediante su URL estática.md>) — *Todos*
-
-- [CU-PRG-011 Exportar el programa a Excel o Word para uso interno](<C - Visibilidad y exportación/CU-PRG-011 Exportar el programa a Excel o Word para uso interno.md>) — *Administrador*
-
----
+<!-- -->
 
 > [!warning] Hueco conocido (R5 del análisis de archivos)
 > Estos casos de uso modelan asignar/editar/quitar actividades **aceptadas**, pero **no**
@@ -122,7 +122,7 @@ La numeración de CUs es solo de conteo y no se reutiliza ni se recorre tras est
 
 - CU-PRG-001: renombre y alcance acordados en [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) ("se consultan las actividades... sin importar su estado de programación") y en [§4.1 Administrador, punto 3](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>).
 
-- CU-PRG-002: renombrado de "Asignar una actividad a una sala y a uno o varios bloques de horario" a "Asignar una programación a una actividad" (precisión interna, 2026-06-29), para nombrar directamente la acción y dejar la explicación dentro del documento; absorbe CU-PRG-005 y CU-PRG-007 según [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) y [§4.1, puntos 4–6](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>); duración fija y hardcodeada del bloque, distinta por panel — **1:15** en el panel de Eventos, **1:00** (50 min de actividad + 10 min de descanso) en el panel de Talleres — resuelto en la Junta 3 con organizadores FILEY (ver [RSM - Junta 3 con organizadores FILEY](<../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>)); antecedente en [Junta 2 con organizadores FILEY — Horarios y bloques de actividades](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#horarios-y-bloques-de-actividades>). El disparador real (botón "Programar" que reemplaza a "Revisar" tras aceptar la propuesta) y el guardado implícito (sin botón de "guardar el programa") son precisión interna, 2026-06-29 (ver notas al inicio de este índice).
+- CU-PRG-002: renombrado de "Asignar una actividad a una sala y a uno o varios bloques de horario" a "Asignar una programación a una actividad" (precisión interna, 2026-06-29), para nombrar directamente la acción y dejar la explicación dentro del documento; absorbe CU-PRG-005 y CU-PRG-007 según [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) y [§4.1, puntos 4–6](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>); duración fija y hardcodeada del bloque, distinta por panel — **1:15** en el panel de Eventos, **1:00** (50 min de actividad + 10 min de descanso) en el panel de Talleres — resuelto en la Junta 3 con organizadores FILEY (ver [RSM - Junta 3 con organizadores FILEY](<../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>)); antecedente en [Junta 2 con organizadores FILEY — Horarios y bloques de actividades](<../../soporte/meetings/resumenes/RSM - Junta 2 con organizadores FILEY.md#horarios-y-bloques-de-actividades>). El disparador real (botón "Programar" que reemplaza a "Revisar" tras aceptar la propuesta) y el guardado implícito (sin botón de "guardar el programa") son precisión interna, 2026-06-29 (ver Notas y aclaraciones).
 
 - CU-PRG-003: renombrado de "Editar la asignación (sala u horario) de una actividad ya programada" a "Editar una programación de una actividad" (precisión interna, 2026-06-29); nota "editar = mover" en [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) y [§4.1, punto 7](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>).
 
@@ -134,4 +134,4 @@ La numeración de CUs es solo de conteo y no se reutiliza ni se recorre tras est
 
 - CU-PRG-010: unifica CU-PRG-010 y CU-PRG-012 según [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) y el glosario de *Visualización de programa* (§2.7 "Programación `[PRG]`" del mismo documento); el formato de salida (vista por salón/sala) sigue el modelo de [Programa General FILEY 2026](<../../soporte/extraido/Material para Registro de Actividades FILEY 2027/Programa General FILEY 2026.md>) (programa impreso maquetable).
 
-- PRG-011: [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) (ya no genera PDF; Excel/Word de uso interno) y [§4.1, punto 11](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>); formato modelo en el libro [Programación General FILEY 2027](<../../soporte/extraido/Indice.md>) (una hoja por salón, ver tabla "Programación General FILEY 2027" del índice de extraídos).
+- CU-PRG-011: [Junta 3 §5.1](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#51-prg>) (ya no genera PDF; Excel/Word de uso interno) y [§4.1, punto 11](<../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#41-administrador>); formato modelo en el libro [Programación General FILEY 2027](<../../soporte/extraido/Indice.md>) (una hoja por salón, ver tabla "Programación General FILEY 2027" del índice de extraídos).

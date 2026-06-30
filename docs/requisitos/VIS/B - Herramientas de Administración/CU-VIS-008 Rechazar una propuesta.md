@@ -5,7 +5,7 @@ tags:
   - tipo/caso-de-uso
   - dom/vis
 fecha: 2026-06-24
-id: CU-VIS-016
+id: CU-VIS-008
 dominio: VIS
 responsable: Nombre
 issue_relacionado: PSD-XX
@@ -18,11 +18,11 @@ trazabilidad:
   ddr:
     - DDR-XX
 ---
-# CU-VIS-016 Ver el detalle de una visita escolar (escuela, itinerario, cupos)
+# CU-VIS-008 Rechazar una propuesta
 
 ## Objetivo
 
-Permitir al Administrador ver el detalle de una visita escolar aceptada: datos de la escuela/institución, su itinerario armado y los cupos que ocupa en cada taller.
+Permitir al Administrador rechazar una propuesta de visita escolar indicando el motivo; el actor permanece como Aplicante.
 
 ## Alcance
 

@@ -5,7 +5,7 @@ tags:
   - tipo/caso-de-uso
   - dom/vis
 fecha: 2026-06-24
-id: CU-VIS-007
+id: CU-VIS-006
 dominio: VIS
 responsable: Nombre
 issue_relacionado: PSD-XX
@@ -18,11 +18,11 @@ trazabilidad:
   ddr:
     - DDR-XX
 ---
-# CU-VIS-007 Solicitar cambios a una propuesta con motivo
+# CU-VIS-006 Aceptar una propuesta
 
 ## Objetivo
 
-Permitir al Administrador solicitar cambios a una propuesta de visita escolar, indicando el motivo; la propuesta sigue siendo propuesta y el actor permanece como Aplicante.
+Permitir al Administrador aceptar una propuesta de visita escolar; al aceptarla, el Aplicante pasa a ser Participante y puede armar el itinerario de su visita.
 
 ## Alcance
 
