@@ -70,7 +70,7 @@ Desde el detalle de una propuesta (CU-TAL-008), Elvira decide emitir su dictamen
 2. El sistema solicita un mensaje de texto obligatorio indicando qué debe corregir el tallerista.
 3. Elvira redacta el mensaje y confirma.
 4. El sistema cambia la propuesta a `cambios_solicitados` y registra la fecha de revisión.
-5. El sistema notifica de inmediato al tallerista por correo, para que pueda corregir y reenviar (CU-TAL-003) antes del cierre de la convocatoria.
+5. El sistema notifica de inmediato al tallerista por correo, para que pueda corregir y reenviar (CU-TAL-004) antes del cierre de la convocatoria.
 
 ### A2. Rechazar
 

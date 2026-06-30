@@ -267,7 +267,7 @@ Cuando `tipo_actividad` = Presentación de libro, se capturan campos adicionales
 
 | Entidad                                 | Casos de uso relacionados                                                                      |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Proponente                              | CU-EVT-002, CU-EVT-003                                                                         |
+| Proponente                              | CU-EVT-002, CU-EVT-004                                                                         |
 | TipoActividad                           | CU-EVT-033 (administra el catálogo), CU-EVT-030 (usa el nombre en la ficha PDF)                |
 | Propuesta / PropuestaAdjunto            | CU-EVT-002, CU-EVT-003, CU-EVT-004, CU-EVT-007, CU-EVT-008, CU-EVT-009, CU-EVT-010, CU-EVT-012 |
 | Actividad                               | CU-EVT-009, CU-EVT-013, CU-EVT-016, CU-EVT-021, CU-EVT-025, CU-EVT-028, CU-EVT-031, CU-EVT-032 |

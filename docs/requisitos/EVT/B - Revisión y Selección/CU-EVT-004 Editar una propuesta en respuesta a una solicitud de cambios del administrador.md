@@ -5,11 +5,11 @@ tags:
   - tipo/caso-de-uso
   - dom/evt
 fecha: 2026-06-24
-id: CU-EVT-003
+id: CU-EVT-004
 dominio: EVT
 reglas_de_negocio: []
 ---
-# CU-EVT-003 Editar una propuesta en respuesta a una solicitud de cambios del administrador
+# CU-EVT-004 Editar una propuesta en respuesta a una solicitud de cambios del administrador
 
 ## Objetivo
 

@@ -17,7 +17,7 @@ Elvira examina toda la información de una propuesta de taller —datos del resp
 
 ## Alcance
 
-Módulo de Talleres (TAL) — vista de detalle de propuesta. Es la antesala del dictamen (CU-TAL-009). No cubre la edición de la propuesta por parte del tallerista (CU-TAL-003).
+Módulo de Talleres (TAL) — vista de detalle de propuesta. Es la antesala del dictamen (CU-TAL-009). No cubre la edición de la propuesta por parte del tallerista (CU-TAL-004).
 
 ## Actores
 
