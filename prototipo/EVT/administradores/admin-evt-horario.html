@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FILEY 2027 — Panel Eventos · Programa (calendario)</title>
+<title>FILEY 2027 — Panel Eventos · Tablero de programación</title>
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="admin.css">
 </head>
@@ -38,20 +38,27 @@
   <div class="admin-main">
     <div class="admin-toolbar">
       <button class="menu-btn" title="Menú">☰</button>
-      <span class="crumb"><a href="admin-evt-programa.html">Programa</a> › Calendario</span>
+      <span class="crumb"><a href="admin-evt-programa.html">Programa</a> › Tablero</span>
     </div>
 
     <div class="admin-content">
       <div class="page-head">
-        <h1>Programa · Calendario</h1>
-        <p>Vista de un día: cada salón en una columna y los bloques fijos de 1:15 en las filas.
-          Sirve para ver empalmes y el acomodo general del día.</p>
+        <h1>Programa · Tablero</h1>
+        <p>Arma el programa colocando las actividades <strong>ya aceptadas</strong> en la rejilla:
+          cada salón es una columna y los bloques fijos de 1:15 son las filas.</p>
       </div>
 
-      <!-- Pestañas: lista / calendario (activo) -->
-      <div class="chips" style="margin-bottom:20px">
-        <a class="chip" href="admin-evt-programa.html">📋 Actividades</a>
-        <span class="chip is-active">📅 Calendario</span>
+      <!-- Banner: aclaración de maqueta (clic-para-colocar vs arrastrar) -->
+      <div class="mock-banner">
+        <span class="ico">🖱️</span>
+        <div>En la <strong>aplicación real se arrastra</strong> la actividad desde el panel izquierdo hasta el bloque.
+          En esta <strong>maqueta se hace clic</strong>: primero la actividad, luego el bloque libre (o directo en el bloque).</div>
+      </div>
+
+      <!-- Pestañas: lista / tablero (activo) -->
+      <div class="chips" style="margin-bottom:4px">
+        <a class="chip" href="admin-evt-programa.html">📋 Ver como lista</a>
+        <span class="chip is-active">🗓️ Tablero</span>
       </div>
 
       <!-- Barra de día + acciones -->
@@ -61,74 +68,87 @@
           <span class="chip is-active">Jueves 14 nov 2027</span>
           <button class="cal-nav" title="Día siguiente">›</button>
         </div>
-        <div style="display:flex;gap:10px">
-          <a class="btn btn-ghost" href="admin-evt-programa.html">+ Programar actividad</a>
-          <button class="btn btn-primary" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios</button>
-        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
       </div>
 
-      <!-- Rejilla de horario -->
-      <div class="sched">
-        <table>
-          <thead>
-            <tr>
-              <th class="time-col">Horario</th>
-              <th>Salón Chichén Itzá</th>
-              <th>Salón Uxmal</th>
-              <th>Auditorio M. Cepeda</th>
-              <th>Sala de Estados</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="time-col">10:00<br>11:15</td>
-              <td class="slot">
-                <div class="act"><strong>Poesía joven del Mayab</strong><small>Recital · notificada ✓</small></div>
-              </td>
-              <td class="slot free"></td>
-              <td class="slot">
-                <div class="act"><strong>Conferencia inaugural</strong><small>Conferencia · notificada ✓</small></div>
-              </td>
-              <td class="slot free"></td>
-            </tr>
-            <tr>
-              <td class="time-col">11:30<br>12:45</td>
-              <td class="slot">
-                <div class="act clash"><strong>El mar que nos habita ⚠️</strong><small>Empalme con “Poesía joven” · sin notificar</small></div>
-              </td>
-              <td class="slot">
-                <div class="act"><strong>Voces de la narrativa</strong><small>Conversatorio · sin notificar</small></div>
-              </td>
-              <td class="slot free"></td>
-              <td class="slot free"></td>
-            </tr>
-            <tr>
-              <td class="time-col">13:00<br>14:15</td>
-              <td class="slot free"></td>
-              <td class="slot free"></td>
-              <td class="slot">
-                <div class="act"><strong>Lengua maya y tecnología</strong><small>Conferencia · notificada ✓</small></div>
-              </td>
-              <td class="slot free"></td>
-            </tr>
-            <tr>
-              <td class="time-col">16:00<br>17:15</td>
-              <td class="slot free"></td>
-              <td class="slot">
-                <div class="act"><strong>Encuadernación artesanal</strong><small>Taller · sin notificar</small></div>
-              </td>
-              <td class="slot free"></td>
-              <td class="slot free"></td>
-            </tr>
-            <tr>
-              <td class="time-col">17:30<br>18:45</td>
-              <td class="slot free"></td>
-              <td class="slot free"></td>
-              <td class="slot free"></td>
-              <td class="slot free"></td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Layout: riel "por programar" + rejilla -->
+      <div class="prg-layout">
+
+        <!-- Riel lateral: actividades aceptadas sin sala/horario -->
+        <aside class="rail">
+          <h3>Por programar <span class="count" style="font-size:12px;color:var(--gris-500)">(12)</span></h3>
+          <p class="hint">Aceptadas sin sala/horario. En la app se arrastran a un bloque; aquí, clic para seleccionar.</p>
+
+          <div class="rail-item" onclick="seleccionar(this)">
+            <span class="grip">⠿</span>
+            <div class="r-body"><strong>Voces de la narrativa yucateca</strong><small>EVE-2027-0031 · Conversatorio</small></div>
+          </div>
+          <div class="rail-item" onclick="seleccionar(this)">
+            <span class="grip">⠿</span>
+            <div class="r-body"><strong>El mar que nos habita</strong><small>EVE-2027-0042 · Presentación de libro</small></div>
+          </div>
+          <div class="rail-item" onclick="seleccionar(this)">
+            <span class="grip">⠿</span>
+            <div class="r-body"><strong>Mesa redonda: literatura y frontera</strong><small>EVE-2027-0009 · Mesa redonda</small></div>
+          </div>
+          <div class="rail-empty">…y 9 más</div>
+        </aside>
+
+        <!-- Rejilla de horario: salones × bloques (Eventos = salón completo, 1 sala) -->
+        <div class="sched">
+          <table>
+            <thead>
+              <tr>
+                <th class="time-col">Horario</th>
+                <th>Salón Chichén Itzá</th>
+                <th>Salón Uxmal</th>
+                <th>Auditorio M. Cepeda</th>
+                <th>Sala de Estados</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="time-col">10:00<br>11:15</td>
+                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>Conferencia inaugural</strong><small>Conferencia · notificada ✓</small></div></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+              </tr>
+              <tr>
+                <td class="time-col">11:30<br>12:45</td>
+                <!-- Empalme REAL: dos actividades en la misma sala y el mismo bloque -->
+                <td class="slot" style="display:flex;flex-direction:column;gap:4px">
+                  <div class="act clash" onclick="abrir('m-asignar')"><strong>Poesía joven del Mayab ⚠️</strong><small>Recital · empalme · sin notificar</small></div>
+                  <div class="act clash" onclick="abrir('m-asignar')"><strong>Antología del Mayab ⚠️</strong><small>Presentación · empalme · sin notificar</small></div>
+                </td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+              </tr>
+              <tr>
+                <td class="time-col">13:00<br>14:15</td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>Lengua maya y tecnología</strong><small>Conferencia · notificada ✓</small></div></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+              </tr>
+              <tr>
+                <td class="time-col">16:00<br>17:15</td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>Encuadernación artesanal</strong><small>Taller · sin notificar</small></div></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+              </tr>
+              <tr>
+                <td class="time-col">17:30<br>18:45</td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+                <td class="slot free" onclick="abrir('m-asignar')"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:13px;color:var(--gris-500)">
@@ -137,10 +157,99 @@
 
       <div class="note note-warn" style="margin-top:16px">
         <div class="ico">⚠️</div>
-        <div>Hay <strong>1 empalme sin resolver</strong> (Salón Chichén Itzá, 11:30). Mientras exista, no se
-          puede notificar el horario de las actividades afectadas. Muévelas desde
-          <a href="admin-evt-programar.html">Programar / Editar</a> (editar = mover a otra sala o bloque).</div>
+        <div>Hay <strong>1 empalme sin resolver</strong> (Salón Chichén Itzá, 11:30). Mientras exista, no se puede
+          notificar el horario de las actividades afectadas. Muévelas a otro bloque (en la app, arrastrando;
+          aquí, con el botón <strong>Editar</strong> del bloque). El guardado es inmediato, sin botón de “guardar”.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: asignar / colocar en un bloque (CU-PRG-002) — estilo "Nuevo evento" de Outlook -->
+<div class="modal-back" id="m-asignar" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-head"><h3>Colocar en el programa</h3><p>Asignar sala y bloque a una actividad aceptada · se guarda al instante</p></div>
+    <div class="evt-dialog">
+
+      <!-- Izquierda: formulario tipo Outlook -->
+      <div class="evt-form">
+        <div class="evt-row">
+          <span class="ic">🧩</span>
+          <div class="f">
+            <label>Actividad</label>
+            <select style="width:100%">
+              <option>El mar que nos habita — EVE-2027-0042 (Presentación de libro)</option>
+              <option>Voces de la narrativa yucateca — EVE-2027-0031 (Conversatorio)</option>
+            </select>
+          </div>
+        </div>
+        <div class="evt-row">
+          <span class="ic">👥</span>
+          <div class="f">
+            <label>Proponente / participantes</label>
+            <div class="big">Editorial La Nave</div>
+            <small style="color:var(--gris-500)">Renata Solís (autora) · Jorge Cauich (moderador)</small>
+          </div>
+        </div>
+        <div class="evt-row">
+          <span class="ic">🕒</span>
+          <div class="f">
+            <label>Fecha y bloque (fijo de 1:15)</label>
+            <div class="big">Jue 14 nov 2027 · 11:30 – 12:45</div>
+            <div class="chips" style="margin-top:8px">
+              <span class="chip">10:00–11:15</span>
+              <span class="chip is-active">11:30–12:45</span>
+              <span class="chip">13:00–14:15</span>
+              <span class="chip">16:00–17:15</span>
+            </div>
+            <small style="color:var(--gris-500);display:block;margin-top:6px">Si necesita más tiempo, marca también el siguiente bloque completo.</small>
+          </div>
+        </div>
+        <div class="evt-row">
+          <span class="ic">📍</span>
+          <div class="f">
+            <label>Salón / sala</label>
+            <select style="width:100%">
+              <option>Salón Chichén Itzá</option>
+              <option>Salón Uxmal</option>
+              <option>Auditorio Manuel Cepeda</option>
+              <option>Sala de exhibición de Estados</option>
+            </select>
+          </div>
+        </div>
+        <div class="evt-row">
+          <span class="ic">⚠️</span>
+          <div class="f">
+            <label>Aviso de empalme</label>
+            <small style="color:var(--err-600)">El bloque 11:30–12:45 en Chichén Itzá ya está ocupado (“Poesía joven del Mayab” y
+              “Antología del Mayab”). Puedes colocarla igual, pero deberás resolver el empalme antes de notificar.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Derecha: mini-calendario de día con el bloque ubicado (verde, como Outlook) -->
+      <div class="evt-preview">
+        <div class="pv-head">
+          <span>Jue, 14 nov 2027</span>
+          <span class="nav"><button title="Día anterior">‹</button><button title="Día siguiente">›</button></span>
+        </div>
+        <div class="day-mini">
+          <div class="drow"><div class="dh">10:00</div><div class="dcell taken"><div class="mini-act">Conferencia inaugural</div></div></div>
+          <div class="drow"><div class="dh">11:30</div><div class="dcell taken">
+            <div class="mini-act" style="margin-bottom:4px">Poesía joven · Antología (empalme)</div>
+            <div class="ev-block"><span class="grab-dot top"></span>11:30 – 12:45 · El mar que nos habita<span class="grab-dot bot"></span></div>
+          </div></div>
+          <div class="drow"><div class="dh">13:00</div><div class="dcell"></div></div>
+          <div class="drow"><div class="dh">16:00</div><div class="dcell"></div></div>
+          <div class="drow"><div class="dh">17:30</div><div class="dcell"></div></div>
+        </div>
+        <p class="pv-foot">🖱️ En la app real arrastras/estiras el bloque verde como en Outlook.
+          Aquí el bloque es <strong>fijo de 1:15</strong>: para más tiempo, ocupa el siguiente.</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrar('m-asignar')">Cancelar</button>
+      <a class="btn btn-gold" href="admin-evt-horario.html">Colocar en el programa · se guarda solo</a>
     </div>
   </div>
 </div>
@@ -157,13 +266,19 @@
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="document.getElementById('m-notif').hidden=true">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrar('m-notif')">Cancelar</button>
       <a class="btn btn-primary" href="admin-evt-horario.html">Confirmar y notificar</a>
     </div>
   </div>
 </div>
 
 <script>
+  function abrir(id){ document.getElementById(id).hidden = false; }
+  function cerrar(id){ document.getElementById(id).hidden = true; }
+  function seleccionar(el){
+    document.querySelectorAll('.rail-item').forEach(function(i){ i.classList.remove('is-selected'); });
+    el.classList.add('is-selected');
+  }
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
   });

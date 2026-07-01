@@ -65,7 +65,48 @@ de STD ya construyó ese patrón (`admin-layout.component.ts`). Secciones para E
   la propuesta está pendiente → **"Revisar"**. En cuanto se **Acepta** → ese mismo botón pasa a
   **"Programar"**. No se puede programar sin aceptar antes. (Nota del índice de `EVT` y de `PRG`.)
 
-### 2. Programa / Horario — etapa de programación (`PRG`)
+### 2. Programa — etapa de programación (`PRG`) · **diseño híbrido compartido Hipólito/Elvira**
+
+> **Decisión de diseño (v3):** la programación se arma en un **tablero híbrido** con la rejilla
+> salas × bloques como lienzo principal (más un riel lateral de "Por programar"); la **lista**
+> queda como vista alterna (móvil y "todas las ocasiones de una actividad", CU-PRG-002 A2). El
+> modal de asignación imita el diálogo **"Nuevo evento" de Outlook**: formulario a la izquierda
+> (actividad, fecha/bloque, sala) + **mini-calendario de día** a la derecha con el bloque ubicado.
+>
+> **Alcance de esta maqueta: solo la vista de Hipólito (Eventos).** Elvira **no** ve el programa
+> de Hipólito ni al revés: cada quien entra a su propio panel (Hipólito → Eventos; Elvira →
+> Talleres, su propio módulo, aún **no maquetado**). No hay "switch de panel" en la UI —eso rompería
+> la separación—. Lo que **sí** se conserva es que ambos paneles se construyen sobre la **misma
+> base de diseño**: cuando se maquete el de Elvira, reusa este esqueleto parametrizado, sin
+> reinventarlo.
+>
+> ⚠️ **Maqueta vs. UI real:** en la **aplicación real se arrastra** la actividad desde el riel
+> hasta el bloque (patrón resource-view tipo pretalx/FullCalendar), y el bloque verde del diálogo
+> se estira como en Outlook. En **esta maqueta estática se hace clic** (primero la actividad,
+> luego el bloque → modal de confirmación) y el bloque es **fijo de 1:15**. Solo se difiere la
+> *física del arrastre*; el layout y el flujo son los definitivos. El tablero lleva un **banner**
+> que lo aclara, y el modal de asignación lo repite.
+>
+> **Base compartida — qué es idéntico** (para cuando se construya el panel de Elvira): sidebar,
+> riel de aceptadas por programar, rejilla salas × bloques, empalme no bloqueante (bloquea
+> notificar, no guardar), guardado implícito (sin botón "guardar"), notificar en lote, y el
+> diálogo de asignación estilo Outlook.
+>
+> **Base compartida — qué cambia según `panel`** (una sola variable de configuración; hoy solo se
+> maqueta la columna de Eventos):
+>
+> | Parámetro | Eventos (Hipólito) — **maquetado** | Talleres (Elvira) — pendiente de maquetar |
+> |---|---|---|
+> | Duración de bloque | 1:15 | 1:00 (50 min + 10 de descanso) |
+> | Repetir una actividad | No (0–1 programación) | **Sí** (N ocasiones para llenar huecos, CU-PRG-002 A1) — badge "ocasión N de M" |
+> | Sala | Salón completo (1 sala) | **Sub-salas**: un salón se subdivide en salas A/B/C en paralelo (`SAL`), cada columna con su aforo |
+> | Aforo | No se muestra | Se muestra por sala (👥); el cupo real lo valida `VIS`, `PRG` solo lo exhibe |
+>
+> **Pantallas (solo Eventos):** `admin-evt-horario.html` (tablero híbrido + diálogo Outlook),
+> `admin-evt-programa.html` (lista alterna) y `admin-evt-programar.html` (formulario de una
+> actividad y sus ocasiones). El tablero de Talleres se maquetará en el panel propio de Elvira.
+
+
 Es la vista de armado del calendario del programa, y el botón de **visualización del horario**
 que menciona el índice de `PRG`. Aquí:
 - Se listan las actividades **aceptadas** con su estado de programación (*pendiente* /
@@ -120,10 +161,15 @@ estilo Outlook, rejilla de horario).
    botón "Revisar" / "Programar" según estado. Aterrizaje del panel. **CU-EVT-007 (+011 resumen)**
 5. `administradores/admin-evt-detalle-propuesta.html` — detalle + adjuntos + ejemplar físico +
    dictamen en **modales** (Aceptar / Solicitar cambios / Rechazar). **CU-EVT-008 / 009 / 012**
-6. `administradores/admin-evt-programar.html` — asignar sala + bloque(s) de 1:15, con alerta de
-   empalme. **CU-PRG-002 / 003 / 004**
-7. `administradores/admin-evt-horario.html` — rejilla del programa (salas × bloques, vista de un
-   día), empalmes y "Notificar horarios". **CU-PRG-001 / 008**
+5b. `administradores/admin-evt-detalle-rechazada.html` — detalle en **solo lectura** de una
+   propuesta ya rechazada: formulario con las respuestas del aplicante + panel con el **motivo**
+   registrado por el administrador. **CU-EVT-008** (consulta del detalle con dictamen anterior).
+6. `administradores/admin-evt-programar.html` — formulario de una actividad y sus ocasiones:
+   asignar sala + bloque(s) de 1:15, con alerta de empalme; **sin botón "guardar"** (implícito).
+   **CU-PRG-002 / 003 / 004**
+7. `administradores/admin-evt-horario.html` — **tablero híbrido**: riel "Por programar" + rejilla
+   (salas × bloques, un día) + **diálogo de asignación estilo Outlook** (formulario + mini-día con
+   el bloque en verde); empalmes y "Notificar horarios". **CU-PRG-001 / 002 / 008**
 8. `administradores/admin-evt-notificaciones.html` — resultados de selección en lote. **CU-EVT-010**
 9. `administradores/admin-evt-seguimiento.html` — contadores por estado + cupos (vista propia). **CU-EVT-011**
 10. `administradores/admin-evt-configuracion.html` — fechas (calendario Outlook) y cupos. **CU-EVT-001**
