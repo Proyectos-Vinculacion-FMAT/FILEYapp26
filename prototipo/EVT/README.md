@@ -7,10 +7,27 @@ hasta que envía su propuesta de actividad para el programa general (Eventos).
 > Diseño **demostrativo**: no guarda datos ni envía nada. Los botones navegan entre
 > pantallas para simular el recorrido completo.
 
+## Estructura de carpetas
+
+El prototipo se divide por tipo de usuario, compartiendo la hoja de estilos base:
+
+```
+prototipo/EVT/
+├── styles.css                 ← paleta/estilos compartidos (raíz)
+├── aplicantes/                ← flujo del proponente externo (index.html, otp.html, …)
+│   └── app.js                 ← campos dinámicos del formulario
+└── administradores/           ← vista del administrador (Hipólito)
+    └── admin.css              ← shell del panel: sidebar, chips, calendario, horario
+```
+
+Los HTML de `aplicantes/` y `administradores/` enlazan `../styles.css`; los de
+`administradores/` además enlazan su `admin.css` local.
+
 ## Cómo verlo
 
-Abre **`index.html`** en cualquier navegador (doble clic). Desde ahí puedes avanzar con los
-botones, o usar la barra superior de prototipo para saltar a cualquier paso.
+Flujo del proponente: abre **`aplicantes/index.html`**. Vista del administrador: abre
+**`administradores/admin-otp.html`** (o entra desde el enlace "Acceso administrativo" del
+`index.html` del proponente). Avanza con los botones o con la barra superior de prototipo.
 
 ## Pantallas (en orden del flujo)
 

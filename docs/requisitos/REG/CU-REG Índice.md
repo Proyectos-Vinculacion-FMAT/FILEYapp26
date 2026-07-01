@@ -16,11 +16,14 @@ Inventario de casos de uso del **Core Registros**: creación de cuenta, inicio d
 - **Usuario externo** — proponente, tallerista o representante escolar que accede esporádicamente (una vez al año).
 - **Usuario administrativo** — Hipólito (EVE), Elvira (TAL), administrador general; acceden con frecuencia diaria durante meses.
 
-> [!important]
-> Existen **dos mecanismos de autenticación** según el tipo de actor:
+> [!important] Autenticación unificada por OTP (actualizado 2026-06-30)
+> **Todos** los usuarios —externos y administrativos— inician sesión con **OTP por correo**
+> (sin contraseña). El equipo unificó el mecanismo para simplificar la implementación (ver
+> CU-REG-003, cambio de decisión). Lo que distingue a un administrador no es el mecanismo de
+> login sino tener al menos un `RolPermiso` registrado.
 >
-> - **OTP por correo** (sin contraseña) → usuarios externos. Acordado en Junta 2.
-> - **Usuario + contraseña** (sesión persistente) → usuarios administrativos. La frecuencia de acceso hace inviable el OTP para este perfil.
+> - En la v0.1, los usuarios administrativos usaban **usuario + contraseña**; esa decisión
+>   quedó **derogada**.
 
 <!-- -->
 
@@ -33,9 +36,10 @@ Inventario de casos de uso del **Core Registros**: creación de cuenta, inicio d
 
 - **CU-REG-001** Registrar nueva cuenta de usuario externo — *Usuario externo*
 - **CU-REG-002** Iniciar sesión como usuario externo (OTP por correo) — *Usuario externo*
-- **CU-REG-003** Iniciar sesión como usuario administrativo (usuario + contraseña) — *Usuario administrativo*
+- **CU-REG-003** Iniciar sesión como usuario administrativo (OTP por correo) — *Usuario administrativo*
 - **CU-REG-004** Cerrar sesión — *Cualquier usuario autenticado*
 - **CU-REG-005** Crear cuenta de usuario administrativo y asignar permisos de módulo — *Administrador general*
+- **CU-REG-006** Consultar los módulos administrables y entrar a un panel — *Usuario administrativo*
 
 ---
 
@@ -54,4 +58,5 @@ Inventario de casos de uso del **Core Registros**: creación de cuenta, inicio d
 
 - [ ] ¿Correo y teléfono son **ambos obligatorios** al registrarse, o basta con el correo? (Pendiente de la junta del lunes 22-Jun — ver `Definicion de Cores.md`)
 - [ ] ¿Qué pasa si dos registros tienen el mismo correo pero distinto teléfono? (Posible duplicado de escuela registrándose varias veces — ver `Definicion de Cores.md`)
-- [ ] ¿Los usuarios administrativos también usan OTP o siempre contraseña? **Propuesta actual:** contraseña para admins. Confirmar con Hipólito y Elvira.
+- [x] ¿Los usuarios administrativos también usan OTP o siempre contraseña? **Resuelto (2026-06-30):** OTP para todos; se derogó la contraseña para admins (ver CU-REG-003).
+- [ ] Homologar CU-REG-005 al nuevo esquema OTP: al provisionar una cuenta administrativa ya no se envía enlace para "establecer contraseña"; basta crear la `Persona` y su `RolPermiso`.

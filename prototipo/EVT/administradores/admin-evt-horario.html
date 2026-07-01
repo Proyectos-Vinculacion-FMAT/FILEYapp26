@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Panel Eventos · Programa (calendario)</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="topbar admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Panel de Eventos</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-modulos.html" class="chip-modulo">🎤 Eventos · cambiar módulo</a>
+      <div class="user-chip"><span class="avatar">HC</span> Hipólito C.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="admin-body">
+
+  <aside class="sidebar">
+    <div class="side-section">Programa general</div>
+    <nav class="side-nav">
+      <a class="side-link" href="admin-evt-propuestas.html"><span class="ico">📄</span> Propuestas</a>
+      <a class="side-link" href="admin-evt-notificaciones.html"><span class="ico">🔔</span> Notificaciones</a>
+      <a class="side-link active" href="admin-evt-programa.html"><span class="ico">📅</span> Programa</a>
+      <a class="side-link" href="admin-evt-seguimiento.html"><span class="ico">📊</span> Seguimiento</a>
+      <a class="side-link" href="admin-evt-configuracion.html"><span class="ico">⚙️</span> Configuración</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-toolbar">
+      <button class="menu-btn" title="Menú">☰</button>
+      <span class="crumb"><a href="admin-evt-programa.html">Programa</a> › Calendario</span>
+    </div>
+
+    <div class="admin-content">
+      <div class="page-head">
+        <h1>Programa · Calendario</h1>
+        <p>Vista de un día: cada salón en una columna y los bloques fijos de 1:15 en las filas.
+          Sirve para ver empalmes y el acomodo general del día.</p>
+      </div>
+
+      <!-- Pestañas: lista / calendario (activo) -->
+      <div class="chips" style="margin-bottom:20px">
+        <a class="chip" href="admin-evt-programa.html">📋 Actividades</a>
+        <span class="chip is-active">📅 Calendario</span>
+      </div>
+
+      <!-- Barra de día + acciones -->
+      <div class="toolbar-row">
+        <div class="chips">
+          <button class="cal-nav" title="Día anterior">‹</button>
+          <span class="chip is-active">Jueves 14 nov 2027</span>
+          <button class="cal-nav" title="Día siguiente">›</button>
+        </div>
+        <div style="display:flex;gap:10px">
+          <a class="btn btn-ghost" href="admin-evt-programa.html">+ Programar actividad</a>
+          <button class="btn btn-primary" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios</button>
+        </div>
+      </div>
+
+      <!-- Rejilla de horario -->
+      <div class="sched">
+        <table>
+          <thead>
+            <tr>
+              <th class="time-col">Horario</th>
+              <th>Salón Chichén Itzá</th>
+              <th>Salón Uxmal</th>
+              <th>Auditorio M. Cepeda</th>
+              <th>Sala de Estados</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="time-col">10:00<br>11:15</td>
+              <td class="slot">
+                <div class="act"><strong>Poesía joven del Mayab</strong><small>Recital · notificada ✓</small></div>
+              </td>
+              <td class="slot free"></td>
+              <td class="slot">
+                <div class="act"><strong>Conferencia inaugural</strong><small>Conferencia · notificada ✓</small></div>
+              </td>
+              <td class="slot free"></td>
+            </tr>
+            <tr>
+              <td class="time-col">11:30<br>12:45</td>
+              <td class="slot">
+                <div class="act clash"><strong>El mar que nos habita ⚠️</strong><small>Empalme con “Poesía joven” · sin notificar</small></div>
+              </td>
+              <td class="slot">
+                <div class="act"><strong>Voces de la narrativa</strong><small>Conversatorio · sin notificar</small></div>
+              </td>
+              <td class="slot free"></td>
+              <td class="slot free"></td>
+            </tr>
+            <tr>
+              <td class="time-col">13:00<br>14:15</td>
+              <td class="slot free"></td>
+              <td class="slot free"></td>
+              <td class="slot">
+                <div class="act"><strong>Lengua maya y tecnología</strong><small>Conferencia · notificada ✓</small></div>
+              </td>
+              <td class="slot free"></td>
+            </tr>
+            <tr>
+              <td class="time-col">16:00<br>17:15</td>
+              <td class="slot free"></td>
+              <td class="slot">
+                <div class="act"><strong>Encuadernación artesanal</strong><small>Taller · sin notificar</small></div>
+              </td>
+              <td class="slot free"></td>
+              <td class="slot free"></td>
+            </tr>
+            <tr>
+              <td class="time-col">17:30<br>18:45</td>
+              <td class="slot free"></td>
+              <td class="slot free"></td>
+              <td class="slot free"></td>
+              <td class="slot free"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:13px;color:var(--gris-500)">
+        <span>🟦 Programada · <span style="color:var(--err-600)">🟥 Empalme por resolver</span> · celda vacía = bloque libre</span>
+      </div>
+
+      <div class="note note-warn" style="margin-top:16px">
+        <div class="ico">⚠️</div>
+        <div>Hay <strong>1 empalme sin resolver</strong> (Salón Chichén Itzá, 11:30). Mientras exista, no se
+          puede notificar el horario de las actividades afectadas. Muévelas desde
+          <a href="admin-evt-programar.html">Programar / Editar</a> (editar = mover a otra sala o bloque).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: notificar horarios -->
+<div class="modal-back" id="m-notif" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3>Notificar horarios</h3><p>Segunda notificación: sala y hora asignadas.</p></div>
+    <div class="modal-body">
+      <div class="note note-info" style="margin:0 0 12px">
+        <div class="ico">📅</div>
+        <div>Se avisará a los participantes con actividad programada cuyo horario aún no se ha notificado.
+          Las actividades con <strong>empalme pendiente</strong> quedan excluidas hasta resolverlo.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('m-notif').hidden=true">Cancelar</button>
+      <a class="btn btn-primary" href="admin-evt-horario.html">Confirmar y notificar</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.modal-back').forEach(function(b){
+    b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
+  });
+</script>
+
+</body>
+</html>
