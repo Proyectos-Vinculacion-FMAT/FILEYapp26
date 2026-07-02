@@ -292,6 +292,7 @@ textarea { resize: vertical; min-height: 80px; }
 .banner-stand { background: linear-gradient(135deg, var(--azul-grad-claro), var(--azul-grad-oscuro)); }
 .banner-infantil { background: linear-gradient(135deg, #1d8a4e, #0a6b53); }
 .banner-eventos { background: linear-gradient(135deg, var(--oro-600), var(--oro-700)); }
+.banner-visitas { background: linear-gradient(135deg, #7c5cc4, #5b3aa0); }
 .conv-body { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .conv-body p { margin: 0; font-size: 13.5px; color: var(--gris-700); flex: 1; }
 .conv-dates { font-size: 12.5px; color: var(--gris-500); display: flex; align-items: center; gap: 6px; }
