@@ -83,15 +83,15 @@
     <div class="vis-horario-header">
       <div class="vis-turno-selector">
         <span class="vis-turno-selector__label">Turno</span>
-        <select class="vis-turno-dropdown" id="turno-select">
+        <div class="select-wrap"><select class="vis-turno-dropdown" id="turno-select">
           <option value="matutino">Matutino</option>
           <option value="vespertino">Vespertino</option>
-        </select>
+        </select></div>
       </div>
       <div class="vis-dia-selector">
-        <button type="button" class="vis-dia-caret" aria-label="Día anterior">‹</button>
+        <button type="button" class="vis-dia-btn" aria-label="Día anterior" disabled><svg width="26" height="30" viewBox="0 0 26 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0.999998 16.2926C-0.333335 15.5228 -0.333333 13.5983 1 12.8285L22.75 0.271127C24.0833 -0.498673 25.75 0.463579 25.75 2.00318V27.1179C25.75 28.6575 24.0833 29.6198 22.75 28.85L0.999998 16.2926Z"/></svg></button>
         <span class="vis-dia-selector__text">14 de marzo de 2028</span>
-        <button type="button" class="vis-dia-caret" aria-label="Día siguiente">›</button>
+        <button type="button" class="vis-dia-btn" aria-label="Día siguiente"><svg width="26" height="30" viewBox="0 0 26 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M24.75 12.8285C26.0833 13.5983 26.0833 15.5228 24.75 16.2926L3 28.85C1.66666 29.6198 0 28.6575 0 27.1179V2.00318C0 0.463576 1.66667 -0.498672 3 0.271129L24.75 12.8285Z"/></svg></button>
       </div>
     </div>
     <div class="vis-horario-wrap" id="horario-wrap"><!-- app.js inyecta las áreas matutino + vespertino --></div>

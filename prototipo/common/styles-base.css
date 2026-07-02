@@ -220,11 +220,42 @@ select {
   -webkit-appearance: none;
   appearance: none;
   padding-right: 34px;
-  background-image: var(--caret-svg);
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 11px;
   cursor: pointer;
+}
+
+/* Wrapper para select: provee el caret via ::after con mask-image (funciona en file://)
+   Inicio: azul apuntando arriba. Hover: dorado. Focus-within: gira clockwise hacia abajo. */
+.select-wrap {
+  position: relative;
+  display: block;
+}
+.select-wrap select { width: 100%; }
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  pointer-events: none;
+  width: 11px;
+  height: 6px;
+  background-color: var(--color-azul-texto);
+  -webkit-mask-image: var(--caret-svg);
+  mask-image: var(--caret-svg);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transform: translateY(-50%) rotate(180deg);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.select-wrap:hover::after {
+  background-color: var(--color-dorado-encabezado);
+}
+.select-wrap:focus-within::after {
+  transform: translateY(-50%) rotate(360deg);
+  background-color: var(--color-dorado-encabezado);
 }
 input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--azul-600); box-shadow: 0 0 0 3px var(--azul-100);

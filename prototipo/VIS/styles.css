@@ -157,13 +157,14 @@
 .vis-tabla tbody tr.vis-row:hover td { background: var(--azul-050); }
 .vis-tabla .folio { font-weight: 700; color: var(--color-azul-institucional); }
 .vis-tabla__toggle {
-  background: none; border: none; color: var(--color-dorado-encabezado); font-weight: 700; font-size: 14px;
+  background: none; border: none; color: var(--color-azul-texto); font-weight: 700; font-size: 14px;
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+  transition: color 0.2s ease;
 }
-.vis-tabla__toggle:hover { text-decoration: underline; }
+.vis-tabla__toggle:hover { color: var(--color-dorado-encabezado); text-decoration: none; }
 .vis-tabla__toggle-icon { display: inline-flex; align-items: center; }
-.vis-tabla__toggle-icon svg { display: block; width: 12px; height: 6px; transform: rotate(-90deg); transition: transform 0.2s ease; }
-.vis-tabla__toggle.is-open .vis-tabla__toggle-icon svg { transform: rotate(0deg); }
+.vis-tabla__toggle-icon svg { display: block; width: 12px; height: 6px; transform: rotate(180deg); transition: transform 0.2s ease; }
+.vis-tabla__toggle.is-open .vis-tabla__toggle-icon svg { transform: rotate(360deg); }
 .vis-tabla__row-detail { display: none; }
 .vis-tabla__row-detail.is-open { display: table-row; }
 .vis-tabla__row-detail > td { padding: 0 14px 14px; background: var(--gris-050); }
@@ -210,11 +211,15 @@
 .vis-horario-header { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 12px 20px; background: var(--color-azul-institucional); flex-shrink: 0; }
 .vis-turno-selector { display: flex; align-items: center; gap: 12px; }
 .vis-turno-selector__label { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .06em; }
-.vis-turno-dropdown { min-width: 170px; padding: 8px 34px 8px 14px; background: #fff var(--caret-svg) no-repeat right 13px center / 11px; color: var(--color-azul-texto); border: none; border-radius: var(--radio-sm); font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; -webkit-appearance: none; appearance: none; }
-.vis-dia-selector { display: flex; align-items: center; gap: 10px; }
+.vis-turno-dropdown { min-width: 170px; padding: 8px 34px 8px 14px; background: #fff; color: var(--color-azul-texto); border: none; border-radius: var(--radio-sm); font-size: 14px; font-weight: 700; font-family: inherit; }
+.vis-dia-selector { display: flex; align-items: center; gap: 14px; }
 .vis-dia-selector__text { font-size: 15px; font-weight: 600; color: #fff; min-width: 150px; text-align: center; }
-.vis-dia-caret { background: rgba(255,255,255,.12); border: none; width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; cursor: pointer; font-size: 15px; transition: background .15s; }
-.vis-dia-caret:hover { background: rgba(255,255,255,.28); }
+.vis-dia-btn {
+  background: none; border: none; padding: 4px; display: flex; align-items: center;
+  color: rgba(255,255,255,.85); cursor: pointer; transition: color 0.15s ease;
+}
+.vis-dia-btn:hover:not(:disabled) { color: var(--color-dorado-encabezado); }
+.vis-dia-btn:disabled { color: rgba(255,255,255,.25); cursor: not-allowed; }
 
 /* Grid: header blanco (Sala + bloques horarios). */
 .vis-horario-wrap { display: flex; overflow-x: auto; border: 3px solid var(--color-azul-degradado-oscuro); border-top: none; }
