@@ -1,65 +1,55 @@
-# Prototipo UI — Eventos FILEY 2027 (flujo del proponente)
+# Prototipo — EVT (Eventos)
 
-Prototipo **estático en HTML/CSS** para mostrar a los clientes (Hipólito y equipo).
-Cubre el flujo del **proponente externo** desde que entra por primera vez a la página
-hasta que envía su propuesta de actividad para el programa general (Eventos).
+HTML/CSS/JS estático demostrativo para el módulo de propuestas de actividades FILEY.
+No guarda ni envía datos; los botones navegan entre pantallas para simular el recorrido.
 
-> Diseño **demostrativo**: no guarda datos ni envía nada. Los botones navegan entre
-> pantallas para simular el recorrido completo.
+## Estructura
 
-## Estructura de carpetas
-
-El prototipo se divide por tipo de usuario, compartiendo la hoja de estilos base:
-
-```
+```text
 prototipo/EVT/
-├── styles.css                 ← paleta/estilos compartidos (raíz)
-├── aplicantes/                ← flujo del proponente externo (index.html, otp.html, …)
-│   └── app.js                 ← campos dinámicos del formulario
-└── administradores/           ← vista del administrador (Hipólito)
-    └── admin.css              ← shell del panel: sidebar, chips, calendario, horario
+  index.html          ← hub selector de rol (aplicante / administrador)
+  styles.css          ← estilos del dominio (extiende ../common/styles-base.css)
+  app.js              ← campos dinámicos del formulario de propuesta
+  aplicantes/         ← flujo del proponente externo
+  administradores/    ← panel del administrador
+    admin.css         ← shell del panel: sidebar, chips, calendario, rejilla de horario
 ```
-
-Los HTML de `aplicantes/` y `administradores/` enlazan `../styles.css`; los de
-`administradores/` además enlazan su `admin.css` local.
 
 ## Cómo verlo
 
-Flujo del proponente: abre **`aplicantes/index.html`**. Vista del administrador: abre
-**`administradores/admin-otp.html`** (o entra desde el enlace "Acceso administrativo" del
-`index.html` del proponente). Avanza con los botones o con la barra superior de prototipo.
+- **Proponente:** abre `aplicantes/index.html`
+- **Administrador:** abre `administradores/admin-otp.html` (o desde el enlace
+  "¿Eres parte del comité organizador?" en `aplicantes/index.html`)
+- Navega con los botones o con la barra de prototipo superior.
 
-## Pantallas (en orden del flujo)
+## Mapa de pantallas y flujo
 
-| # | Archivo | Pantalla | CU relacionado |
-|---|---------|----------|----------------|
-| 1 | `index.html` | Acceso (ingresa correo) | CU-REG-002 |
-| 2 | `registro.html` | Crear cuenta (nombre + teléfono) — solo primera vez | CU-REG-001 |
-| 3 | `otp.html` | Código de acceso por correo (OTP) | CU-REG-002 |
-| 4 | `convocatorias.html` | Convocatorias abiertas (Stands, Infantil/Juvenil, Eventos) | — |
-| 5 | `convocatoria-eventos.html` | Información de la convocatoria (fechas, tipos, requisitos, cupos) → Aplicar | CU-EVE-001 |
-| 6 | `formulario.html` | Formulario de propuesta (datos de participación → tipo → campos dinámicos) | CU-EVE-002 / 003 |
-| 7 | `confirmacion.html` | Confirmación con folio | CU-EVE-002 |
-| + | `mis-propuestas.html` | Seguimiento de propuestas (P2) | CU-EVE-036 |
+Ver [mapas/EVT.md](../mapas/EVT.md)
 
-## Decisiones de diseño acordadas
+## Decisiones de diseño
 
-- **Datos de participación primero:** nombre, correo y teléfono se precargan de la cuenta;
-  dependencia, cargo y ciudad/estado se piden en el formulario **antes** de elegir el tipo,
-  porque son comunes a todos los tipos de actividad.
-- **Tres convocatorias visibles** para todos; las **cerradas no desaparecen**, se muestran
-  con el estado "Convocatoria cerrada".
-- **Página de información** previa al formulario, con botón de "Aplicar".
-- **Campos por tipo:** el formulario muestra dinámicamente los campos de cada uno de los
-  8 tipos de actividad, tomados del documento *Registro de propuestas FILEY 2027*.
+- **Datos comunes primero:** nombre/correo/teléfono se precargan de la cuenta; dependencia,
+  cargo y ciudad/estado se capturan en el formulario antes de elegir el tipo de actividad,
+  porque son comunes a todos los tipos.
+- **Convocatorias cerradas visibles:** se atenúan con el estado "Convocatoria cerrada" pero
+  no desaparecen.
+- **Acceso admin por OTP** (misma mecánica que el aplicante — decisión de equipo;
+  CU-REG-003 actualizado para usar OTP en lugar de contraseña).
+- **Hipólito como admin general** (`modulo = *`): ve los 3 módulos (Eventos, Infantil/Juvenil,
+  Stands) pero solo Eventos es navegable en esta maqueta. Los otros aparecen como
+  "Próximamente".
+- **Tablero de programación híbrido:** rejilla salas × bloques como lienzo principal + riel
+  lateral "Por programar". Clic en lugar de arrastre (se difiere la física del arrastre;
+  layout y flujo son los definitivos). El modal de asignación imita el diálogo "Nuevo evento"
+  de Outlook.
+- **Guardado implícito** en programación: cada cambio queda guardado sin botón explícito.
+- **Dictamen con modales** dentro del detalle de propuesta (no página aparte).
+- **Seguimiento** como sección propia en el sidebar (no inline en la lista).
+- **Panel de Talleres (Elvira) pendiente:** reutilizará este mismo esqueleto parametrizado;
+  los parámetros que cambian están documentados en [mapas/EVT.md](../mapas/EVT.md).
 
-## Identidad visual
+## Pendientes (fuera del alcance de esta maqueta)
 
-- **Colores:** azul institucional + dorado (UADY), según `diseño_UI.md`.
-- **Referencias:** distribución y estilo de filey.org / uady.mx.
-- Logo representado como marca tipográfica "FILEY" (placeholder del logo oficial UADY/FILEY).
-
-## Archivos de apoyo
-
-- `styles.css` — estilos compartidos (paleta, componentes).
-- `app.js` — genera los campos del formulario según el tipo de actividad elegido.
+- Re-dictamen: cambiar un dictamen ya emitido (CU-EVT-009 A3)
+- Gestión de usuarios administrativos / superadmin (CU-REG-005)
+- Panel de Talleres (Elvira) — ver nota en decisiones de diseño

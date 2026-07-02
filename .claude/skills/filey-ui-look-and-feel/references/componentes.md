@@ -1,6 +1,17 @@
-# Inventario de componentes — prototipo/REG - EVT
+# Inventario de componentes
 
-Todas las clases viven en `prototipo/REG - EVT/styles.css`. No hay build step: es CSS plano servido directo, así que cualquier pantalla nueva solo necesita `<link rel="stylesheet" href="styles.css">`.
+> **Nota:** Este archivo está supersedido por los archivos específicos.
+> La fuente canónica de CSS compartido es `prototipo/common/styles-base.css` (no `prototipo/REG - EVT/styles.css`).
+> El contenido de este archivo se mantiene como referencia de respaldo.
+>
+> - Componentes comunes (todos los dominios): [`componentes-comunes.md`](componentes-comunes.md)
+> - Componentes exclusivos de VIS: [`componentes-vis.md`](componentes-vis.md)
+
+---
+
+## Inventario legacy — prototipo/REG - EVT
+
+Todas las clases viven en `prototipo/common/styles-base.css` (la ruta `prototipo/REG - EVT/styles.css` ya no existe). No hay build step: es CSS plano servido directo, así que cualquier pantalla nueva solo necesita `<link rel="stylesheet" href="../common/styles-base.css">` (o el import equivalente desde el `styles.css` del dominio).
 
 ## Estructura de página
 
