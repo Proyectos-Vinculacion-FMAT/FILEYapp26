@@ -10,8 +10,7 @@ Flujo de la escuela solicitante: acceso (via REG) → propuesta → reserva de t
 | 5 | Info convocatoria VIS | `aplicantes/convocatoria-vis.html` | — |
 | 6 | Registrar mi escuela (propuesta) | `aplicantes/formulario-vis.html` | CU-VIS-001 |
 | 7 | Confirmación con folio | `aplicantes/confirmacion-vis.html` | — |
-| 8 | Mi registro (lista de visitas) | `aplicantes/mis-visitas.html` | CU-VIS-003 |
-| 8b | Detalle de mi visita | `aplicantes/mi-visita.html` | CU-VIS-003 |
+| 8 | Mi registro (detalle de la visita) | `aplicantes/mi-visita.html` | CU-VIS-003 |
 | 9 | Reservar talleres (catálogo) | `aplicantes/reservar.html` | CU-VIS-010 / 011 / 012 — ⚠ catálogo no filtra por nivel; brecha C1+C4 en análisis |
 | 10 | Ver / confirmar itinerario | `aplicantes/itinerario.html` | CU-VIS-013 / 014 |
 
