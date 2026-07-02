@@ -224,7 +224,8 @@ select {
 }
 
 /* Wrapper para select: provee el caret via ::after con mask-image (funciona en file://)
-   Inicio: azul apuntando arriba. Hover: dorado. Focus-within: gira clockwise hacia abajo. */
+   JS añade/quita .is-open en focus/change/blur — no depende de :focus-within para evitar
+   que el navegador mantenga el estado activo tras seleccionar una opción. */
 .select-wrap {
   position: relative;
   display: block;
@@ -253,7 +254,7 @@ select {
 .select-wrap:hover::after {
   background-color: var(--color-dorado-encabezado);
 }
-.select-wrap:focus-within::after {
+.select-wrap.is-open::after {
   transform: translateY(-50%) rotate(360deg);
   background-color: var(--color-dorado-encabezado);
 }

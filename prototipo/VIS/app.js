@@ -419,12 +419,20 @@
   }());
 
   /* =====================================================
-     5. Select-wrap: blur al seleccionar para devolver
-        caret a posición/color inicial (focus-within se
-        mantiene activo hasta que el select pierde foco)
+     5. Select-wrap: gestión explícita de .is-open
+        No se usa :focus-within porque el navegador no lo
+        desactiva al seleccionar una opción (focus se
+        mantiene en el select tras el change).
      ===================================================== */
-  document.querySelectorAll('.select-wrap select').forEach(function (sel) {
-    sel.addEventListener('change', function () { this.blur(); });
+  document.querySelectorAll('.select-wrap').forEach(function (wrap) {
+    var sel = wrap.querySelector('select');
+    if (!sel) return;
+    sel.addEventListener('focus', function () { wrap.classList.add('is-open'); });
+    sel.addEventListener('change', function () {
+      wrap.classList.remove('is-open');
+      sel.blur();
+    });
+    sel.addEventListener('blur', function () { wrap.classList.remove('is-open'); });
   });
 
 }());

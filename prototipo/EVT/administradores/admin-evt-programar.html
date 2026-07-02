@@ -148,8 +148,11 @@
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
   });
-  document.querySelectorAll('.select-wrap select').forEach(function(s){
-    s.addEventListener('change', function(){ this.blur(); });
+  document.querySelectorAll('.select-wrap').forEach(function(w){
+    var s = w.querySelector('select'); if(!s) return;
+    s.addEventListener('focus', function(){ w.classList.add('is-open'); });
+    s.addEventListener('change', function(){ w.classList.remove('is-open'); s.blur(); });
+    s.addEventListener('blur', function(){ w.classList.remove('is-open'); });
   });
 </script>
 
