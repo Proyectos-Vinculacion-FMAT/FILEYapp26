@@ -1,0 +1,6 @@
+/* FILEY 2027 — Prototipo UI (REG — autenticación + convocatorias)
+   Los tokens y el shell están en common/styles-base.css.
+   Aquí van solo sobrescrituras o añadidos específicos de REG
+   (actualmente ninguno; el archivo existe por convención). */
+
+@import '../common/styles-base.css';

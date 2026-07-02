@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Admin · Propuestas</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Administración · VIS</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-propuestas.html">Propuestas</a>
+      <a href="admin-visitas.html">Visitas</a>
+      <a href="admin-escuela.html">Registrar escuela</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <b>A2. Revisar propuestas (CU-VIS-004…008)</b> <span class="sep">›</span>
+  <a href="admin-visitas.html">A3. Visitas</a> <span class="sep">›</span>
+  <a href="admin-escuela.html">A4. Registrar / editar escuela</a>
+  &nbsp;·&nbsp; <a href="../REG/index.html">Registrante ↗</a>
+</div></div>
+
+<main class="page page-wide">
+  <div class="page-head">
+    <h1>Propuestas de visita</h1>
+    <p>Revisa cada propuesta y emite un dictamen: acéptala, solicita cambios o recházala con motivo.
+       El sistema notifica al aplicante automáticamente.</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="vis-filters">
+    <div class="field"><label>Estado</label>
+      <select><option>Pendientes de revisión</option><option>Todas</option><option>Aceptadas</option><option>Cambios solicitados</option><option>Rechazadas</option></select>
+    </div>
+    <div class="field"><label>Nivel educativo</label>
+      <select><option>Todos</option><option>Primaria</option><option>Secundaria</option><option>Preparatoria</option><option>Multigrado</option></select>
+    </div>
+    <div class="field"><label>Fecha de recepción</label>
+      <select><option>Cualquiera</option><option>Últimos 7 días</option><option>Este mes</option></select>
+    </div>
+    <div class="field" style="margin-left:auto">
+      <a class="btn btn-gold" href="admin-escuela.html">+ Registrar escuela manualmente</a>
+    </div>
+  </div>
+
+  <div class="vis-tabla-wrap">
+    <table class="vis-tabla">
+      <thead>
+        <tr>
+          <th>Folio</th><th>Representante</th><th>Instituto</th><th>Turno</th><th>Sector</th>
+          <th>Nivel</th><th>Ubicación</th><th>Visitantes</th><th>Estado</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Propuesta 1 -->
+        <tr class="vis-row">
+          <td class="folio">VIS-2027-045</td>
+          <td>Isaac Alejandro Ortiz Zaldivar</td>
+          <td>Benito Juárez García</td>
+          <td>Matutino</td><td>Público</td><td>Primaria</td>
+          <td>Mérida, Yucatán</td><td>90</td>
+          <td><span class="badge badge-pending">Pendiente</span></td>
+          <td><button type="button" class="vis-tabla__toggle" data-toggle>Revisar ▸</button></td>
+        </tr>
+        <tr class="vis-tabla__row-detail">
+          <td colspan="10">
+            <div class="vis-tabla-detail">
+              <div class="vis-tabla-detail__inner">
+                <div class="vis-ficha">
+                  <p class="vis-ficha__section">Representante</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">Nombre</span><span class="vis-ficha__value">Isaac Alejandro Ortiz Zaldivar</span>
+                    <span class="vis-ficha__key">Cargo</span><span class="vis-ficha__value">Docente</span>
+                    <span class="vis-ficha__key">Teléfono</span><span class="vis-ficha__value">999 458 8510</span>
+                    <span class="vis-ficha__key">Correo</span><span class="vis-ficha__value">prefecto112@instituto.ms</span>
+                  </div>
+                  <p class="vis-ficha__section" style="margin-top:12px">Instituto</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">Director</span><span class="vis-ficha__value">Marco López Pérez</span>
+                    <span class="vis-ficha__key">CCT</span><span class="vis-ficha__value">31DPR0681L</span>
+                    <span class="vis-ficha__key">Dirección</span><span class="vis-ficha__value">Calle 61 Núm. 287, Esperanza</span>
+                    <span class="vis-ficha__key">Correo institución</span><span class="vis-ficha__value">N/A</span>
+                    <span class="vis-ficha__key">Teléfono institución</span><span class="vis-ficha__value">N/A</span>
+                  </div>
+                </div>
+                <div class="vis-detail-actions">
+                  <a class="vis-itinerario-btn__pill" href="admin-escuela.html">🗓️ Ver / editar itinerario</a>
+                  <button type="button" class="btn btn-green">✓ Aceptar propuesta</button>
+                  <button type="button" class="btn btn-ghost">✎ Solicitar cambios</button>
+                  <button type="button" class="btn btn-danger">✕ Rechazar</button>
+                </div>
+              </div>
+              <div class="vis-grupos-row">
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 1</div><div class="vis-grupo-card__body"><span>Grado: Sexto</span><span>Visitantes: 35</span><span>Responsable: Erick Matos Pantoja</span></div></div>
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 2</div><div class="vis-grupo-card__body"><span>Grado: Cuarto</span><span>Visitantes: 35</span><span>Responsable: Juan López Salvador</span></div></div>
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 3</div><div class="vis-grupo-card__body"><span>Grado: Quinto</span><span>Visitantes: 20</span><span>Responsable: Enrique Segoviano Ruiz</span></div></div>
+              </div>
+              <div class="note note-info" style="margin:0">
+                <div class="ico">💬</div>
+                <div>Si eliges <strong>Solicitar cambios</strong> o <strong>Rechazar</strong>, se abrirá un campo para
+                  escribir el motivo que se enviará al aplicante.</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Propuesta 2 -->
+        <tr class="vis-row">
+          <td class="folio">VIS-2027-046</td>
+          <td>María Ruiz Arjona</td>
+          <td>Ermilo Abreu Gómez</td>
+          <td>Matutino</td><td>Público</td><td>Secundaria</td>
+          <td>Mérida, Yucatán</td><td>76</td>
+          <td><span class="badge badge-pending">Pendiente</span></td>
+          <td><button type="button" class="vis-tabla__toggle" data-toggle>Revisar ▸</button></td>
+        </tr>
+        <tr class="vis-tabla__row-detail">
+          <td colspan="10">
+            <div class="vis-tabla-detail">
+              <div class="vis-tabla-detail__inner">
+                <div class="vis-ficha">
+                  <p class="vis-ficha__section">Representante</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">Nombre</span><span class="vis-ficha__value">María Ruiz Arjona</span>
+                    <span class="vis-ficha__key">Cargo</span><span class="vis-ficha__value">Prefecto(a)</span>
+                    <span class="vis-ficha__key">Teléfono</span><span class="vis-ficha__value">999 120 4488</span>
+                    <span class="vis-ficha__key">Correo</span><span class="vis-ficha__value">mruiz@ermiloabreu.edu.mx</span>
+                  </div>
+                  <p class="vis-ficha__section" style="margin-top:12px">Instituto</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">Director</span><span class="vis-ficha__value">Rodrigo Canché Uc</span>
+                    <span class="vis-ficha__key">CCT</span><span class="vis-ficha__value">31DES0042K</span>
+                    <span class="vis-ficha__key">Dirección</span><span class="vis-ficha__value">Calle 50 x 39, Centro</span>
+                    <span class="vis-ficha__key">Correo institución</span><span class="vis-ficha__value">contacto@ermiloabreu.edu.mx</span>
+                    <span class="vis-ficha__key">Teléfono institución</span><span class="vis-ficha__value">999 928 1140</span>
+                  </div>
+                </div>
+                <div class="vis-detail-actions">
+                  <a class="vis-itinerario-btn__pill" href="admin-escuela.html">🗓️ Ver / editar itinerario</a>
+                  <button type="button" class="btn btn-green">✓ Aceptar propuesta</button>
+                  <button type="button" class="btn btn-ghost">✎ Solicitar cambios</button>
+                  <button type="button" class="btn btn-danger">✕ Rechazar</button>
+                </div>
+              </div>
+              <div class="vis-grupos-row">
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 1</div><div class="vis-grupo-card__body"><span>Grado: Primero</span><span>Visitantes: 38</span><span>Responsable: María Ruiz Arjona</span></div></div>
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 2</div><div class="vis-grupo-card__body"><span>Grado: Segundo</span><span>Visitantes: 38</span><span>Responsable: María Ruiz Arjona</span></div></div>
+              </div>
+              <div class="note note-warn" style="margin:0">
+                <div class="ico">⚠️</div>
+                <div>El Grupo 1 declara <strong>38 alumnos</strong> (máximo 35 por grupo). Considera solicitar cambios.</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Propuesta 3 (ya aceptada) -->
+        <tr class="vis-row">
+          <td class="folio">VIS-2027-001</td>
+          <td>Isaac Alejandro Ortiz Zaldivar</td>
+          <td>Benito Juárez García</td>
+          <td>Matutino</td><td>Público</td><td>Primaria</td>
+          <td>Mérida, Yucatán</td><td>90</td>
+          <td><span class="badge badge-accepted">Aceptada</span></td>
+          <td><button type="button" class="vis-tabla__toggle" data-toggle>Revisar ▸</button></td>
+        </tr>
+        <tr class="vis-tabla__row-detail">
+          <td colspan="10">
+            <div class="vis-tabla-detail">
+              <div class="vis-tabla-detail__inner">
+                <div class="vis-ficha">
+                  <p class="vis-ficha__section">Propuesta aceptada</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">Aceptada por</span><span class="vis-ficha__value">Elvira (Admin)</span>
+                    <span class="vis-ficha__key">Fecha</span><span class="vis-ficha__value">2 de septiembre de 2027</span>
+                    <span class="vis-ficha__key">Itinerario</span><span class="vis-ficha__value">3 talleres reservados</span>
+                  </div>
+                </div>
+                <div class="vis-detail-actions">
+                  <a class="vis-itinerario-btn__pill" href="admin-visitas.html">🚌 Ver en visitas aceptadas</a>
+                  <a class="btn btn-ghost" href="admin-escuela.html">✎ Editar datos / grupos</a>
+                </div>
+              </div>
+              <div class="note note-green" style="margin:0">
+                <div class="ico">✅</div>
+                <div>Esta propuesta ya es una <strong>visita aceptada</strong>. Gestiona sus reservaciones desde
+                  <a href="admin-visitas.html">Visitas</a>.</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Panel de administración · Visitas escolares</div>
+</div></footer>
+
+<script src="app.js"></script>
+</body>
+</html>

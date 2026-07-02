@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Panel Eventos · Propuestas</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="topbar admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Panel de Eventos</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-modulos.html" class="chip-modulo">🎤 Eventos · cambiar módulo</a>
+      <div class="user-chip"><span class="avatar">HC</span> Hipólito C.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="admin-body">
+
+  <aside class="sidebar">
+    <div class="side-section">Programa general</div>
+    <nav class="side-nav">
+      <a class="side-link active" href="admin-evt-propuestas.html"><span class="ico">📄</span> Propuestas</a>
+      <a class="side-link" href="admin-evt-notificaciones.html"><span class="ico">🔔</span> Notificaciones</a>
+      <a class="side-link" href="admin-evt-programa.html"><span class="ico">📅</span> Programa</a>
+      <a class="side-link" href="admin-evt-seguimiento.html"><span class="ico">📊</span> Seguimiento</a>
+      <a class="side-link" href="admin-evt-configuracion.html"><span class="ico">⚙️</span> Configuración</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-toolbar">
+      <button class="menu-btn" title="Menú">☰</button>
+      <span class="crumb">Eventos · Propuestas</span>
+    </div>
+
+    <div class="admin-content">
+      <div class="page-head">
+        <h1>Propuestas</h1>
+        <p>Revisa, dictamina y da seguimiento a las propuestas recibidas en la convocatoria de Eventos FILEY 2027.</p>
+      </div>
+
+      <!-- Tarjetas resumen -->
+      <div class="stat-grid">
+        <div class="stat-card accent-blue">
+          <span class="k">Recibidas</span>
+          <span class="v">42</span>
+          <span class="foot">Total de la edición</span>
+        </div>
+        <div class="stat-card accent-warn">
+          <span class="k">Pendientes</span>
+          <span class="v">18</span>
+          <span class="foot">Por revisar / con cambios</span>
+        </div>
+        <div class="stat-card accent-ok">
+          <span class="k">Aceptadas</span>
+          <span class="v">19</span>
+          <span class="foot">7 ya programadas</span>
+        </div>
+        <div class="stat-card accent-err">
+          <span class="k">Rechazadas</span>
+          <span class="v">5</span>
+          <span class="foot">Con motivo registrado</span>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="toolbar-row">
+        <div class="chips">
+          <span class="chip is-active">Todas <span class="count">42</span></span>
+          <span class="chip">Pendientes <span class="count">14</span></span>
+          <span class="chip">Cambios solicitados <span class="count">4</span></span>
+          <span class="chip">Aceptadas <span class="count">19</span></span>
+          <span class="chip">Rechazadas <span class="count">5</span></span>
+        </div>
+        <div class="searchbox">
+          <span class="ico">🔍</span>
+          <input type="text" placeholder="Buscar por folio, proponente o título…">
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="card" style="overflow:hidden">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Folio</th><th>Actividad</th><th>Proponente</th>
+              <th>Tipo</th><th>Categoría</th><th>Estado</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="folio">EVE-2027-0042</td>
+              <td>El mar que nos habita</td>
+              <td>Editorial La Nave</td>
+              <td>Presentación de libro</td>
+              <td>Literaria · Externo</td>
+              <td><span class="badge badge-pending">Pendiente</span></td>
+              <td><a class="btn btn-primary btn-row" href="admin-evt-detalle-propuesta.html">Revisar</a></td>
+            </tr>
+            <tr>
+              <td class="folio">EVE-2027-0031</td>
+              <td>Voces de la narrativa yucateca</td>
+              <td>Ana Rivas Pool</td>
+              <td>Conversatorio</td>
+              <td>Literaria · Externo</td>
+              <td><span class="badge badge-accepted">Aceptada</span></td>
+              <td><a class="btn btn-gold btn-row" href="admin-evt-programar.html">Programar</a></td>
+            </tr>
+            <tr>
+              <td class="folio">EVE-2027-0025</td>
+              <td>Lengua maya y tecnología</td>
+              <td>Dr. Uriel Canché (UADY)</td>
+              <td>Conferencia</td>
+              <td>Académica · UADY</td>
+              <td><span class="badge badge-changes">Cambios solicitados</span></td>
+              <td><a class="btn btn-primary btn-row" href="admin-evt-detalle-propuesta.html">Revisar</a></td>
+            </tr>
+            <tr>
+              <td class="folio">EVE-2027-0022</td>
+              <td>Taller de encuadernación artesanal</td>
+              <td>Colectivo Papel &amp; Tinta</td>
+              <td>Taller</td>
+              <td>Literaria · Externo</td>
+              <td><span class="badge badge-accepted">Aceptada</span></td>
+              <td><span class="link-arrow">✓ Programada</span></td>
+            </tr>
+            <tr>
+              <td class="folio">EVE-2027-0018</td>
+              <td>Cómo publicar tu primer libro</td>
+              <td>Mariana Us Chi</td>
+              <td>Charla</td>
+              <td>—</td>
+              <td><span class="badge badge-rejected">Rechazada</span></td>
+              <td><a class="link-arrow" href="admin-evt-detalle-rechazada.html">Ver detalle →</a></td>
+            </tr>
+            <tr>
+              <td class="folio">EVE-2027-0009</td>
+              <td>Mesa redonda: literatura y frontera</td>
+              <td>Casa Editorial del Sureste</td>
+              <td>Mesa redonda</td>
+              <td>Literaria · Externo</td>
+              <td><span class="badge badge-pending">Pendiente</span></td>
+              <td><a class="btn btn-primary btn-row" href="admin-evt-detalle-propuesta.html">Revisar</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note note-info" style="margin-top:20px">
+        <div class="ico">ℹ️</div>
+        <div>Al <strong>aceptar</strong> una propuesta, su botón <strong>“Revisar”</strong> se convierte en
+          <strong>“Programar”</strong> (asignar sala y horario). No se puede programar una actividad sin aceptarla antes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.modal-back').forEach(function(b){
+    b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
+  });
+</script>
+
+</body>
+</html>

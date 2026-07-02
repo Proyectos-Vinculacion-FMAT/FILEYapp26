@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Admin · Registrar / editar escuela</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Administración · VIS</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-propuestas.html">Propuestas</a>
+      <a href="admin-visitas.html">Visitas</a>
+      <a href="admin-escuela.html">Registrar escuela</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A2. Propuestas</a> <span class="sep">›</span>
+  <a href="admin-visitas.html">A3. Visitas</a> <span class="sep">›</span>
+  <b>A4. Registrar / editar escuela (CU-VIS-016 / 017)</b>
+  &nbsp;·&nbsp; <a href="../REG/index.html">Registrante ↗</a>
+</div></div>
+
+<main class="page page-narrow">
+  <div class="breadcrumb">
+    <a href="admin-visitas.html">Visitas</a> <span>›</span> Editar escuela · VIS-2027-001
+  </div>
+
+  <div class="page-head">
+    <h1>Editar escuela — Benito Juárez García</h1>
+    <p>Como administrador puedes registrar una escuela manualmente o editar los datos, grupos y
+       reservaciones de una escuela ya registrada. Los grupos <strong>sí</strong> son editables desde aquí.</p>
+  </div>
+
+  <div class="note note-info">
+    <div class="ico">🧰</div>
+    <div>Esta misma pantalla se usa para <strong>registrar una escuela desde cero</strong> (con los campos vacíos)
+      o para <strong>editar</strong> una existente. Aquí se muestra la edición de <strong>VIS-2027-001</strong>.</div>
+  </div>
+
+  <form onsubmit="return false">
+
+    <!-- Datos de la institución -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">1</span>
+        <div><h3>Datos de la institución</h3><p>Editables por la coordinación</p></div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field"><label>Nombre de la institución</label><input type="text" value="Benito Juárez García"></div>
+          <div class="field"><label>CCT</label><input type="text" value="31DPR0681L"></div>
+        </div>
+        <div class="grid-3">
+          <div class="field"><label>Sector</label><select><option selected>Pública</option><option>Privada</option></select></div>
+          <div class="field"><label>Turno</label><select><option selected>Matutino</option><option>Vespertino</option></select></div>
+          <div class="field"><label>Nivel educativo</label><select><option selected>Primaria</option><option>Secundaria</option><option>Preparatoria</option><option>Multigrado</option></select></div>
+        </div>
+        <div class="grid-3">
+          <div class="field"><label>Estado</label><select><option selected>Yucatán</option><option>Campeche</option><option>Quintana Roo</option></select></div>
+          <div class="field"><label>Municipio</label><select><option selected>Mérida</option><option>Tizimín</option><option>Otro…</option></select></div>
+          <div class="field"><label>Director(a)</label><input type="text" value="Marco López Pérez"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Responsable -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">2</span>
+        <div><h3>Responsable de la visita</h3><p>Contacto que registró la visita</p></div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field"><label>Nombre</label><input type="text" value="Isaac Alejandro Ortiz Zaldivar"></div>
+          <div class="field"><label>Cargo</label><select><option>Director(a)</option><option selected>Docente</option><option>Prefecto(a)</option></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Teléfono</label><input type="tel" value="999 458 8510"></div>
+          <div class="field"><label>Correo</label><input type="email" value="prefecto112@instituto.ms"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grupos editables -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">3</span>
+        <div><h3>Grupos</h3><p>Editables por la coordinación · hasta 3 · máx. 35 por grupo</p></div>
+      </div>
+      <div class="section-body">
+        <div id="grupos-list">
+          <div class="grupo-block" data-grupo>
+            <div class="grupo-block__head"><strong data-grupo-title>Grupo 1</strong><button type="button" class="grupo-remove" data-grupo-remove>Quitar</button></div>
+            <div class="grid-3">
+              <div class="field"><label>Grado</label><input type="text" value="Sexto"></div>
+              <div class="field"><label>Alumnos</label><input type="number" min="1" max="35" class="grupo-cant" value="35"></div>
+              <div class="field"><label>Representante</label><input type="text" value="Erick Matos Pantoja"></div>
+            </div>
+          </div>
+          <div class="grupo-block" data-grupo>
+            <div class="grupo-block__head"><strong data-grupo-title>Grupo 2</strong><button type="button" class="grupo-remove" data-grupo-remove>Quitar</button></div>
+            <div class="grid-3">
+              <div class="field"><label>Grado</label><input type="text" value="Cuarto"></div>
+              <div class="field"><label>Alumnos</label><input type="number" min="1" max="35" class="grupo-cant" value="35"></div>
+              <div class="field"><label>Representante</label><input type="text" value="Juan López Salvador"></div>
+            </div>
+          </div>
+          <div class="grupo-block" data-grupo>
+            <div class="grupo-block__head"><strong data-grupo-title>Grupo 3</strong><button type="button" class="grupo-remove" data-grupo-remove>Quitar</button></div>
+            <div class="grid-3">
+              <div class="field"><label>Grado</label><input type="text" value="Quinto"></div>
+              <div class="field"><label>Alumnos</label><input type="number" min="1" max="35" class="grupo-cant" value="20"></div>
+              <div class="field"><label>Representante</label><input type="text" value="Enrique Segoviano Ruiz"></div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="add-grupo">+ Agregar grupo</button>
+        <div class="total-box" id="total-box" style="margin-top:16px">
+          <span>Total de alumnos/visitantes</span>
+          <span><strong id="total-alumnos">90</strong> / 105 máximo</span>
+        </div>
+        <div class="note note-err" id="over-note" style="display:none; margin-top:12px">
+          <div class="ico">⚠️</div><div>Supera el máximo de 105 alumnos por propuesta.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reservaciones / cupos -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">4</span>
+        <div><h3>Reservaciones y cupos</h3><p>Editar la asignación de talleres de esta escuela (CU-VIS-017)</p></div>
+      </div>
+      <div class="section-body">
+        <div class="vis-itin-list">
+          <div class="vis-itin-item">
+            <div class="vis-itin-item__day">14 mar · 9:00</div>
+            <div class="vis-itin-item__main"><strong>Ciencia divertida</strong><span>Sala 2 · cupo restante 44/45</span></div>
+            <div class="vis-itin-item__groups"><span class="vis-grupo-badge">G1</span></div>
+            <button type="button" class="btn btn-danger btn-sm" data-itin-remove>Quitar</button>
+          </div>
+          <div class="vis-itin-item">
+            <div class="vis-itin-item__day">14 mar · 10:00</div>
+            <div class="vis-itin-item__main"><strong>Taller de ilustración</strong><span>Sala 1 · cupo restante 22/45</span></div>
+            <div class="vis-itin-item__groups"><span class="vis-grupo-badge">G3</span></div>
+            <button type="button" class="btn btn-danger btn-sm" data-itin-remove>Quitar</button>
+          </div>
+          <div class="vis-itin-item">
+            <div class="vis-itin-item__day">14 mar · 12:00</div>
+            <div class="vis-itin-item__main"><strong>Dibujo con luz</strong><span>Sala 3 · cupo restante 0/45 · lleno</span></div>
+            <div class="vis-itin-item__groups"><span class="vis-grupo-badge">G1</span><span class="vis-grupo-badge">G3</span></div>
+            <button type="button" class="btn btn-danger btn-sm" data-itin-remove>Quitar</button>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <a class="btn btn-ghost" href="reservar.html">+ Agregar / cambiar talleres en el catálogo →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card card-pad">
+      <div class="form-actions" style="border-top:none; padding-top:0">
+        <a class="btn btn-ghost spacer" href="admin-visitas.html">Cancelar</a>
+        <a class="btn btn-primary btn-lg" href="admin-visitas.html">Guardar cambios</a>
+      </div>
+    </div>
+
+  </form>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Panel de administración · Visitas escolares</div>
+</div></footer>
+
+<script src="app.js"></script>
+</body>
+</html>

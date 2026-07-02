@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Código de acceso</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · Flujo del proponente (Eventos) —
+  <a href="index.html">1. Acceso</a> ›
+  <a href="registro.html">2. Registro</a> ›
+  <a href="otp.html">3. Código</a> ›
+  <a href="convocatorias.html">4. Convocatorias</a> ›
+  <a href="convocatoria-eventos.html">5. Convocatoria</a> ›
+  <a href="formulario.html">6. Propuesta</a> ›
+  <a href="confirmacion.html">7. Confirmación</a>
+</div></div>
+
+<div class="auth-wrap">
+  <div class="auth-hero">
+    <div class="logo-lg"><span>FIL</span><span>EY</span></div>
+    <h2>Tu acceso seguro, sin contraseñas</h2>
+    <p>Te enviamos un código de un solo uso a tu correo. Es válido por 15 minutos y
+       garantiza que solo tú entres a tu cuenta.</p>
+    <div class="pills">
+      <span>⏱️ Válido 15 minutos</span>
+      <span>🔁 Puedes reenviarlo</span>
+    </div>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-card">
+      <h3>Ingresa tu código</h3>
+      <p class="sub">Enviamos un código de 6 dígitos a <strong>lectora@ejemplo.com</strong></p>
+
+      <form onsubmit="return false">
+        <div class="otp-row">
+          <input maxlength="1" inputmode="numeric" value="4">
+          <input maxlength="1" inputmode="numeric" value="9">
+          <input maxlength="1" inputmode="numeric" value="2">
+          <input maxlength="1" inputmode="numeric" value="">
+          <input maxlength="1" inputmode="numeric" value="">
+          <input maxlength="1" inputmode="numeric" value="">
+        </div>
+        <div class="otp-meta">
+          <span>El código vence en <strong>14:32</strong></span>
+          <a href="#">Reenviar código</a>
+        </div>
+        <a class="btn btn-primary btn-block btn-lg" href="convocatorias.html" style="margin-top:22px">Verificar y entrar</a>
+      </form>
+
+      <div class="auth-foot">
+        ¿No te llegó? Revisa tu carpeta de spam o <a href="#">reenvía el código</a>.
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

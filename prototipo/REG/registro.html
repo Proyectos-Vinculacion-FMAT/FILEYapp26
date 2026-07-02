@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Crear cuenta</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · REG —
+  <a href="index.html">1. Acceso</a> <span class="sep">›</span>
+  <b>2. Registro</b> <span class="sep">›</span>
+  <a href="otp.html">3. Código</a> <span class="sep">›</span>
+  <a href="convocatorias.html">4. Convocatorias</a>
+  &nbsp;·&nbsp; <a href="../EVT/convocatoria-eventos.html">EVT ↗</a>
+  &nbsp;·&nbsp; <a href="../VIS/convocatoria-vis.html">VIS ↗</a>
+</div></div>
+
+<div class="auth-wrap">
+  <div class="auth-hero">
+    <div class="logo-lg"><span>FIL</span><span>EY</span></div>
+    <h2>Crea tu cuenta una sola vez</h2>
+    <p>Con estos datos básicos tendrás acceso a todas las convocatorias abiertas de FILEY 2027.
+       No necesitas contraseña: entras con un código que enviamos a tu correo.</p>
+    <div class="pills">
+      <span>✅ Solo correo, nombre y teléfono</span>
+      <span>🔒 Sin contraseñas</span>
+    </div>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-card">
+      <h3>Crear cuenta</h3>
+      <p class="sub">No encontramos una cuenta con ese correo. Completa tus datos para registrarte.</p>
+
+      <form onsubmit="return false">
+        <div class="field">
+          <label>Correo electrónico <span class="req">*</span></label>
+          <input type="email" value="lectora@ejemplo.com" readonly>
+        </div>
+        <div class="field">
+          <label>Nombre completo <span class="req">*</span></label>
+          <input type="text" placeholder="Nombre(s) y apellidos">
+        </div>
+        <div class="field">
+          <label>Número telefónico <span class="req">*</span></label>
+          <input type="tel" placeholder="999 000 0000">
+        </div>
+        <a class="btn btn-primary btn-block btn-lg" href="otp.html">Crear cuenta y continuar</a>
+      </form>
+
+      <div class="auth-foot">
+        ¿Ese no es tu correo? <a href="index.html">Volver al acceso</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

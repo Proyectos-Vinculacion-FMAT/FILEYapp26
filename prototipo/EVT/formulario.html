@@ -17,25 +17,25 @@
     display: inline-flex; align-items: center; gap: 6px;
     border: 1.5px solid var(--gris-300); border-radius: 999px;
     padding: 6px 14px; font-size: 14px; font-weight: 500;
-    color: var(--gris-700); background: var(--blanco);
+    color: var(--gris-700); background: var(--color-blanco);
     transition: all .15s ease; cursor: pointer; user-select: none;
   }
   .check-chip input:checked + .chip {
     border-color: var(--azul-600); background: var(--azul-050);
-    color: var(--azul-900); font-weight: 600;
+    color: var(--color-azul-institucional-enfoque); font-weight: 600;
   }
   .check-chip input:checked + .chip::before { content: "✓ "; font-size: 12px; }
-  .check-chip .chip:hover { border-color: var(--azul-400); background: var(--azul-050); }
+  .check-chip .chip:hover { border-color: var(--azul-600); background: var(--azul-050); }
 
   .tipo-opt {
-    border: 1.5px solid var(--gris-300); background: var(--blanco);
+    border: 1.5px solid var(--gris-300); background: var(--color-blanco);
     border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;
     text-align: center; font-family: inherit; font-size: 14px; font-weight: 600;
     color: var(--gris-700); transition: all .15s ease;
   }
   .tipo-opt .em { display: block; font-size: 24px; margin-bottom: 8px; }
   .tipo-opt:hover { border-color: var(--azul-600); background: var(--azul-050); }
-  .tipo-opt.is-active { border-color: var(--oro-600); background: var(--oro-050); color: var(--azul-900); box-shadow: 0 0 0 3px var(--oro-050); }
+  .tipo-opt.is-active { border-color: var(--color-dorado-encabezado); background: var(--oro-050); color: var(--color-azul-institucional-enfoque); box-shadow: 0 0 0 3px var(--oro-050); }
   @media (max-width: 720px){ .tipo-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
@@ -48,7 +48,7 @@
       <div class="brand-text"><strong>FILEY 2027</strong><small>Portal del proponente</small></div>
     </div>
     <nav class="topnav">
-      <a href="convocatorias.html">Convocatorias</a>
+      <a href="../REG/convocatorias.html">Convocatorias</a>
       <a href="mis-propuestas.html">Mis propuestas</a>
       <div class="user-chip"><span class="avatar">LR</span> Lectora R.</div>
     </nav>
@@ -56,12 +56,21 @@
 </header>
 
 <div class="proto-bar"><div class="proto-bar-inner">
-  <span class="dot"></span> Paso 6 de 7 · Formulario de propuesta — los datos de participación van primero, antes de elegir el tipo
+  <span class="dot"></span> Prototipo FILEY 2027 · EVT —
+  <a href="../REG/index.html">1. Acceso</a> <span class="sep">›</span>
+  <a href="../REG/registro.html">2. Registro</a> <span class="sep">›</span>
+  <a href="../REG/otp.html">3. Código</a> <span class="sep">›</span>
+  <a href="../REG/convocatorias.html">4. Convocatorias</a> <span class="sep">›</span>
+  <a href="convocatoria-eventos.html">E1. Convocatoria EVT</a> <span class="sep">›</span>
+  <b>E2. Mi propuesta</b> <span class="sep">›</span>
+  <a href="confirmacion.html">E3. Confirmación</a> <span class="sep">›</span>
+  <a href="mis-propuestas.html">E4. Mis propuestas</a>
+  &nbsp;·&nbsp; <a href="../VIS/convocatoria-vis.html">VIS ↗</a>
 </div></div>
 
 <main class="page page-narrow">
   <div class="breadcrumb">
-    <a href="convocatorias.html">Convocatorias</a> <span>›</span>
+    <a href="../REG/convocatorias.html">Convocatorias</a> <span>›</span>
     <a href="convocatoria-eventos.html">Actividades FILEY (Eventos)</a> <span>›</span> Enviar propuesta
   </div>
 

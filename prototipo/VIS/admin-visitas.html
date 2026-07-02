@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Admin · Visitas aceptadas</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Administración · VIS</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-propuestas.html">Propuestas</a>
+      <a href="admin-visitas.html">Visitas</a>
+      <a href="admin-escuela.html">Registrar escuela</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A2. Propuestas</a> <span class="sep">›</span>
+  <b>A3. Visitas aceptadas (CU-VIS-015…017)</b> <span class="sep">›</span>
+  <a href="admin-escuela.html">A4. Registrar / editar escuela</a>
+  &nbsp;·&nbsp; <a href="../REG/index.html">Registrante ↗</a>
+</div></div>
+
+<main class="page page-wide">
+  <div class="page-head">
+    <h1>Visitas escolares aceptadas</h1>
+    <p>Consulta qué escuela va a qué taller, la numeralia de asistentes y gestiona las reservaciones
+       de cada visita (editar o dar de baja de un taller).</p>
+  </div>
+
+  <!-- Numeralia -->
+  <div class="vis-stats">
+    <div class="vis-stat"><strong>38</strong><span>Escuelas aceptadas</span></div>
+    <div class="vis-stat"><strong>2,915</strong><span>Alumnos/visitantes</span></div>
+    <div class="vis-stat"><strong>214</strong><span>Talleres reservados</span></div>
+    <div class="vis-stat"><strong>17 mar</strong><span>Día con más demanda</span></div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="vis-filters">
+    <div class="field"><label>Escuela</label><input type="text" placeholder="Buscar por nombre…"></div>
+    <div class="field"><label>Taller</label>
+      <select><option>Todos</option><option>Taller de ilustración</option><option>Ciencia divertida</option><option>Función de cine</option></select>
+    </div>
+    <div class="field"><label>Día</label>
+      <select><option>Todos</option><option>14 de marzo</option><option>15 de marzo</option><option>17 de marzo</option></select>
+    </div>
+  </div>
+
+  <div class="vis-tabla-wrap">
+    <table class="vis-tabla">
+      <thead>
+        <tr>
+          <th>Folio</th><th>Instituto</th><th>Nivel</th><th>Ubicación</th>
+          <th>Visitantes</th><th>Talleres</th><th>Día</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Visita 1 -->
+        <tr class="vis-row">
+          <td class="folio">VIS-2027-001</td>
+          <td>Benito Juárez García</td>
+          <td>Primaria</td>
+          <td>Mérida, Yucatán</td>
+          <td>90</td><td>3</td><td>14 de marzo</td>
+          <td><button type="button" class="vis-tabla__toggle" data-toggle>Detalle ▸</button></td>
+        </tr>
+        <tr class="vis-tabla__row-detail">
+          <td colspan="8">
+            <div class="vis-tabla-detail">
+              <div class="vis-tabla-detail__inner">
+                <div class="vis-ficha">
+                  <p class="vis-ficha__section">Reservaciones activas</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">14 mar · 9:00 · Sala 2</span><span class="vis-ficha__value">Ciencia divertida — G1</span>
+                    <span class="vis-ficha__key">14 mar · 10:00 · Sala 1</span><span class="vis-ficha__value">Taller de ilustración — G3</span>
+                    <span class="vis-ficha__key">14 mar · 12:00 · Sala 3</span><span class="vis-ficha__value">Dibujo con luz — G1, G3</span>
+                  </div>
+                </div>
+                <div class="vis-detail-actions">
+                  <a class="vis-itinerario-btn__pill" href="admin-escuela.html">✎ Editar reservaciones</a>
+                  <button type="button" class="btn btn-danger">✕ Quitar de un taller (baja)</button>
+                </div>
+              </div>
+              <div class="vis-grupos-row">
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 1</div><div class="vis-grupo-card__body"><span>Grado: Sexto</span><span>Visitantes: 35</span><span>Talleres: 2</span></div></div>
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 2</div><div class="vis-grupo-card__body"><span>Grado: Cuarto</span><span>Visitantes: 35</span><span>Talleres: 0</span></div></div>
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 3</div><div class="vis-grupo-card__body"><span>Grado: Quinto</span><span>Visitantes: 20</span><span>Talleres: 2</span></div></div>
+              </div>
+              <div class="note note-warn" style="margin:0">
+                <div class="ico">🔧</div>
+                <div><strong>Baja por cancelación imprevista (CU-VIS-017):</strong> al quitar la visita de un taller,
+                  el cupo queda libre de inmediato para otras escuelas.</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Visita 2 -->
+        <tr class="vis-row">
+          <td class="folio">VIS-2027-008</td>
+          <td>Instituto Modelo</td>
+          <td>Preparatoria</td>
+          <td>Kanasín, Yucatán</td>
+          <td>68</td><td>2</td><td>17 de marzo</td>
+          <td><button type="button" class="vis-tabla__toggle" data-toggle>Detalle ▸</button></td>
+        </tr>
+        <tr class="vis-tabla__row-detail">
+          <td colspan="8">
+            <div class="vis-tabla-detail">
+              <div class="vis-tabla-detail__inner">
+                <div class="vis-ficha">
+                  <p class="vis-ficha__section">Reservaciones activas</p>
+                  <div class="vis-ficha__grid">
+                    <span class="vis-ficha__key">17 mar · 11:00 · Gran Foro</span><span class="vis-ficha__value">Charla juvenil — G1, G2</span>
+                    <span class="vis-ficha__key">17 mar · 15:00 · Sala 4</span><span class="vis-ficha__value">Función de cine — G1, G2</span>
+                  </div>
+                </div>
+                <div class="vis-detail-actions">
+                  <a class="vis-itinerario-btn__pill" href="admin-escuela.html">✎ Editar reservaciones</a>
+                  <button type="button" class="btn btn-danger">✕ Quitar de un taller (baja)</button>
+                </div>
+              </div>
+              <div class="vis-grupos-row">
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 1</div><div class="vis-grupo-card__body"><span>Grado: 4º sem.</span><span>Visitantes: 34</span><span>Talleres: 2</span></div></div>
+                <div class="vis-grupo-card"><div class="vis-grupo-card__header">Grupo 2</div><div class="vis-grupo-card__body"><span>Grado: 4º sem.</span><span>Visitantes: 34</span><span>Talleres: 2</span></div></div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Panel de administración · Visitas escolares</div>
+</div></footer>
+
+<script src="app.js"></script>
+</body>
+</html>
