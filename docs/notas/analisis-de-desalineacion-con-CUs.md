@@ -23,9 +23,10 @@ el cliente:
 
 ### CU-VIS-001 — Registrar la propuesta ↔ `formulario-vis.html`
 
-**Estado: 🟡 Media (una omisión y una inconsistencia de campo)**
+**Estado: 🟡 Media (una omisión y una inconsistencia de campo):**
 
 **Qué cubre el prototipo correctamente:**
+
 - Sección 1 (Responsable): nombre, cargo (Director/Docente/Prefecto), correo y
   teléfono pre-rellenados desde la cuenta. ✔
 - Sección 2 (Institución): nombre, CCT, sector, turno, nivel, estado (lista
@@ -37,18 +38,18 @@ el cliente:
 
 **Brechas:**
 
-| # | Brecha | Origen CU | Severidad |
-|---|--------|-----------|-----------|
-| A1 | El prototipo incluye "Preescolar" en el selector de nivel educativo (`<option>Preescolar</option>`). El CU no contempla ese nivel: los niveles confirmados son primaria, secundaria, preparatoria, universidad y multigrado. Universidad corre como "público general", no como visita escolar estándar. | CU-VIS-001 nota de campos (Junta 3) | 🟡 |
-| A2 | El campo "Municipio" no incluye "Cansahcab" en el prototipo. La lista del CU cita: Mérida, Tizimín, Cenotillo, Espita, Buctzotz, Cansahcab, Otro. El prototipo omite Cansahcab. | CU-VIS-001 precisión Elvira 2026-06-29 | 🟡 |
-| A3 | El CU distingue entre el correo del **responsable** (quien llena el registro, ej. docente) y el correo de **la institución**. El prototipo los captura correctamente en secciones separadas. Pero la sección 1 pre-rellena el teléfono del responsable desde la cuenta; el CU no menciona esa limitación — es una decisión de diseño correcta pero no anotada. Sin brecha funcional, solo un recordatorio de documentar la decisión. | CU-VIS-001 datos de contacto | 🟢 |
-| A4 | El CU cita que el folio y la fecha de recepción los asigna FILEY al recibir el registro. El prototipo los muestra en `confirmacion-vis.html` (folio VIS-2027-001) pero **no** en el formulario mismo. Alineado. | CU-VIS-001 precisión Elvira | 🟢 |
+| #   | Brecha                                                                                                                                                                                                                                                                                                                                                                                                                               | Origen CU                              | Severidad  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------- |
+| A1  | El prototipo incluye "Preescolar" en el selector de nivel educativo (`<option>Preescolar</option>`). El CU no contempla ese nivel: los niveles confirmados son primaria, secundaria, preparatoria, universidad y multigrado. Universidad corre como "público general", no como visita escolar estándar.                                                                                                                              | CU-VIS-001 nota de campos (Junta 3)    | 🟡         |
+| A2  | El campo "Municipio" no incluye "Cansahcab" en el prototipo. La lista del CU cita: Mérida, Tizimín, Cenotillo, Espita, Buctzotz, Cansahcab, Otro. El prototipo omite Cansahcab.                                                                                                                                                                                                                                                      | CU-VIS-001 precisión Elvira 2026-06-29 | 🟡         |
+| A3  | El CU distingue entre el correo del **responsable** (quien llena el registro, ej. docente) y el correo de **la institución**. El prototipo los captura correctamente en secciones separadas. Pero la sección 1 pre-rellena el teléfono del responsable desde la cuenta; el CU no menciona esa limitación — es una decisión de diseño correcta pero no anotada. Sin brecha funcional, solo un recordatorio de documentar la decisión. | CU-VIS-001 datos de contacto           | 🟢         |
+| A4  | El CU cita que el folio y la fecha de recepción los asigna FILEY al recibir el registro. El prototipo los muestra en `confirmacion-vis.html` (folio VIS-2027-001) pero **no** en el formulario mismo. Alineado.                                                                                                                                                                                                                      | CU-VIS-001 precisión Elvira            | 🟢         |
 
 ---
 
 ### CU-VIS-002 — Editar la propuesta ↔ prototipo
 
-**Estado: 🔴 Alta (sin pantalla propia)**
+**Estado: 🔴 Alta (sin pantalla propia):**
 
 El CU define que el Aplicante puede editar y reenviar la propuesta mientras
 esté en *Pendiente a revisión* o en *Solicitud de cambios*.
@@ -70,7 +71,7 @@ como pantalla esqueleto para el flujo.
 
 ### CU-VIS-003 — Consultar mi propuesta y su estado ↔ `mi-visita.html` / `mis-visitas.html`
 
-**Estado: 🟡 Media (el estado de revisión no se muestra explícitamente)**
+**Estado: 🟡 Media (el estado de revisión no se muestra explícitamente):**
 
 El prototipo muestra los datos del registro y las reservaciones activas, pero
 **no muestra el estado de revisión de la propuesta** (Pendiente · Aceptada ·
@@ -99,7 +100,7 @@ y, cuando sea "Solicitud de cambios", el enlace a la pantalla de edición (A2 ar
 
 ### CU-VIS-004 — Consultar lista de propuestas ↔ `admin-propuestas.html`
 
-**Estado: 🔴 Alta (pantalla combinada con CU-VIS-015–017, filtros incompletos)**
+**Estado: 🔴 Alta (pantalla combinada con CU-VIS-015–017, filtros incompletos):**
 
 `admin-propuestas.html` mezcla las propuestas y las visitas aceptadas en una sola
 tabla bajo el título "Visitas escolares registradas". El CU-VIS-004 es
@@ -108,17 +109,17 @@ estado de revisión), mientras que CU-VIS-015 es la **lista de visitas aceptadas
 
 **Brechas:**
 
-| # | Brecha | Severidad |
-|---|--------|-----------|
-| B1 | La tabla en `admin-propuestas.html` solo muestra visitas ya aceptadas (con reservaciones). No hay propuestas en estado *Pendiente a revisión* ni *Solicitud de cambios* ni *Rechazada*. El CU-VIS-004 exige poder filtrar por esos estados. | 🔴 |
-| B2 | No hay filtro por **estado de revisión** (Pendiente/Aceptada/Solicitud de cambios/Rechazada) en `admin-propuestas.html`. Los filtros visibles son: buscar escuela, día de visita y nivel educativo — suficientes para CU-VIS-015 pero incompletos para CU-VIS-004. | 🔴 |
-| B3 | La columna proto-bar etiqueta la pantalla como `CU-VIS-004…008 / 015…017`, lo que confirma que se intenta cubrir todo en una sola vista. Esta consolidación es válida como atajo de prototipo, pero hay que aclarar en la validación que en producción probablemente serán pestañas o secciones separadas. | 🟡 |
+| #   | Brecha                                                                                                                                                                                                                                                                                                     | Severidad  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| B1  | La tabla en `admin-propuestas.html` solo muestra visitas ya aceptadas (con reservaciones). No hay propuestas en estado *Pendiente a revisión* ni *Solicitud de cambios* ni *Rechazada*. El CU-VIS-004 exige poder filtrar por esos estados.                                                                | 🔴         |
+| B2  | No hay filtro por **estado de revisión** (Pendiente/Aceptada/Solicitud de cambios/Rechazada) en `admin-propuestas.html`. Los filtros visibles son: buscar escuela, día de visita y nivel educativo — suficientes para CU-VIS-015 pero incompletos para CU-VIS-004.                                         | 🔴         |
+| B3  | La columna proto-bar etiqueta la pantalla como `CU-VIS-004…008 / 015…017`, lo que confirma que se intenta cubrir todo en una sola vista. Esta consolidación es válida como atajo de prototipo, pero hay que aclarar en la validación que en producción probablemente serán pestañas o secciones separadas. | 🟡         |
 
 ---
 
 ### CU-VIS-005 — Revisar el detalle ↔ panel expandible en `admin-propuestas.html`
 
-**Estado: 🟡 Media (detalle visible pero falta la acción de dictamen explícita)**
+**Estado: 🟡 Media (detalle visible pero falta la acción de dictamen explícita):**
 
 El detalle inline (fila expandida) muestra ficha de representante, datos de
 institución y reservaciones activas. Es suficiente para revisar la propuesta.
@@ -137,9 +138,10 @@ los tres botones de resolución.
 
 ### CU-VIS-006, 007, 008 — Aceptar / Solicitar cambios / Rechazar ↔ prototipo
 
-**Estado: 🔴 Alta (ninguno está prototipado)**
+**Estado: 🔴 Alta (ninguno está prototipado):**
 
 No existe ninguna pantalla ni interacción que represente:
+
 - La confirmación de "Aceptar" con la notificación al Aplicante (CU-VIS-006).
 - El formulario de "Solicitar cambios" con campo de motivo/observaciones
   (CU-VIS-007).
@@ -157,7 +159,7 @@ cada una de estas tres acciones, con el campo de texto de motivo (CU-VIS-007 y
 
 ### CU-VIS-009 — Notificar el resultado ↔ prototipo
 
-**Estado: 🔴 Alta (no existe representación del correo ni de la notificación)**
+**Estado: 🔴 Alta (no existe representación del correo ni de la notificación):**
 
 La notificación automática al Aplicante no tiene ninguna representación visual
 en el prototipo. En contraste, `itinerario.html` sí muestra un `.note-green`
@@ -177,7 +179,7 @@ con CU-VIS-009.
 
 ### CU-VIS-015 — Lista de visitas aceptadas ↔ `admin-visitas.html`
 
-**Estado: 🟢 Bien cubierto (con matiz menor)**
+**Estado: 🟢 Bien cubierto (con matiz menor):**
 
 `admin-visitas.html` muestra la tabla de visitas aceptadas con filtros por
 escuela, taller y día. Incluye la numeralia (total de alumnos, escuelas aceptadas,
@@ -191,7 +193,7 @@ bloque `.vis-stats` (2,915 alumnos). Alineado. 🟢
 
 ### CU-VIS-016 — Ver el detalle de una visita ↔ `admin-visitas.html` (detalle inline) y `admin-escuela.html`
 
-**Estado: 🟡 Media (problema de rotulación de CU en pantallas)**
+**Estado: 🟡 Media (problema de rotulación de CU en pantallas):**
 
 `admin-escuela.html` está rotulado en su proto-bar como "A3. Registrar escuela
 (CU-VIS-016)" pero su contenido es en realidad un **formulario de alta manual**,
@@ -205,6 +207,7 @@ de datos — más cercana al flujo de CU-VIS-017 (gestión de reservaciones) o a
 un CU adicional de edición de datos.
 
 **Acción necesaria:** corregir los rótulos del proto-bar:
+
 - `admin-escuela.html` → CU-VIS-nuevo (registro manual por admin, no numerado aún).
 - `admin-escuela-edit.html` → CU-VIS-016/017.
 - El detalle real de CU-VIS-016 ya lo cubre `admin-visitas.html`.
@@ -213,7 +216,7 @@ un CU adicional de edición de datos.
 
 ### CU-VIS-017 — Quitar manualmente una visita de un taller ↔ `admin-visitas.html`
 
-**Estado: 🟡 Media (la acción existe pero está ambigua)**
+**Estado: 🟡 Media (la acción existe pero está ambigua):**
 
 En `admin-visitas.html` existe el botón "✕ Quitar de un taller (baja)" y la
 nota azul "Baja por cancelación imprevista (CU-VIS-017)". Bien.
@@ -244,18 +247,18 @@ de día (prev/next). El CU exige filtrar por **nivel educativo, día y turno**.
 
 **Brechas:**
 
-| # | Brecha | Severidad |
-|---|--------|-----------|
-| C1 | No hay filtro de nivel educativo aplicado. La nota en `reservar.html` dice "El catálogo muestra los talleres del nivel de tu propuesta — Primaria", pero **el catálogo muestra todos los talleres sin excepción**; la nota es incorrecta. El CU exige filtrar por nivel educativo de forma explícita. | 🔴 |
-| C2 | El grid de horario (`vis-horario-wrap`) se genera completamente por `app.js`. El HTML estático no muestra ningún taller de ejemplo en el código fuente; depende 100% de JS para renderizar. Esto hace el prototipo difícil de validar sin ejecutar el código. | 🟡 |
-| C3 | CU-VIS-010 distingue entre talleres de `TAL` (cupo limitado) y casos excepcionales de `EVT` (cupo ilimitado). El prototipo no diferencia visualmente ambos tipos. La nota en `reservar.html` menciona "actividades de acceso libre" como excepción, que es el proxy correcto, pero no queda claro de dónde viene esa categoría. | 🟡 |
-| C4 | **Discrepancia de nomenclatura de nivel educativo:** el formulario de propuesta (`formulario-vis.html`) captura `Primaria` como una única opción; el catálogo usa píldoras `Primaria alta` y `Primaria baja` como categorías separadas. No hay mapeo definido. Una escuela registrada como "Primaria" no puede saber qué talleres del catálogo corresponden a su grupo. Esta brecha afecta tanto al filtro del catálogo (C1) como al modelo de datos subyacente. | 🔴 |
+| #   | Brecha                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Severidad  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| C1  | No hay filtro de nivel educativo aplicado. La nota en `reservar.html` dice "El catálogo muestra los talleres del nivel de tu propuesta — Primaria", pero **el catálogo muestra todos los talleres sin excepción**; la nota es incorrecta. El CU exige filtrar por nivel educativo de forma explícita.                                                                                                                                                            | 🔴         |
+| C2  | El grid de horario (`vis-horario-wrap`) se genera completamente por `app.js`. El HTML estático no muestra ningún taller de ejemplo en el código fuente; depende 100% de JS para renderizar. Esto hace el prototipo difícil de validar sin ejecutar el código.                                                                                                                                                                                                    | 🟡         |
+| C3  | CU-VIS-010 distingue entre talleres de `TAL` (cupo limitado) y casos excepcionales de `EVT` (cupo ilimitado). El prototipo no diferencia visualmente ambos tipos. La nota en `reservar.html` menciona "actividades de acceso libre" como excepción, que es el proxy correcto, pero no queda claro de dónde viene esa categoría.                                                                                                                                  | 🟡         |
+| C4  | **Discrepancia de nomenclatura de nivel educativo:** el formulario de propuesta (`formulario-vis.html`) captura `Primaria` como una única opción; el catálogo usa píldoras `Primaria alta` y `Primaria baja` como categorías separadas. No hay mapeo definido. Una escuela registrada como "Primaria" no puede saber qué talleres del catálogo corresponden a su grupo. Esta brecha afecta tanto al filtro del catálogo (C1) como al modelo de datos subyacente. | 🔴         |
 
 ---
 
 ### CU-VIS-011 — Validar cupo ↔ `reservar.html`
 
-**Estado: 🟡 Media (la regla existe en texto pero no hay representación visual del estado de cupo lleno)**
+**Estado: 🟡 Media (la regla existe en texto pero no hay representación visual del estado de cupo lleno):**
 
 La nota final en `reservar.html` menciona: "Al confirmar, el sistema valida en
 tiempo real que los cupos no hayan sido tomados por otra escuela mientras
@@ -274,7 +277,7 @@ en `reservar.html` no explica esta granularidad.
 
 ### CU-VIS-012 — Reservar talleres ↔ `reservar.html`
 
-**Estado: 🟢 Bien cubierto (política resuelta, lógica en JS)**
+**Estado: 🟢 Bien cubierto (política resuelta, lógica en JS):**
 
 La cabecera de selección muestra los grupos y sus alumnos. La nota sobre
 selección libre por asiento está reflejada en el mensaje informativo inferior.
@@ -290,7 +293,7 @@ Puede ser válida, pero no está en el CU ni en el índice. Requiere confirmaci�
 
 ### CU-VIS-013 — Consultar el itinerario ↔ `itinerario.html`
 
-**Estado: 🟢 Bien cubierto**
+**Estado: 🟢 Bien cubierto:**
 
 `itinerario.html` muestra la lista de talleres reservados (fecha-hora, nombre,
 sala, grupos asignados). El Resumen lateral incluye folio, institución, nivel,
@@ -306,7 +309,7 @@ cancelación imprevista, contacta a la coordinación"). Alineado.
 
 ### CU-VIS-014 — Quitar un taller del itinerario ↔ `itinerario.html` / `mi-visita.html`
 
-**Estado: 🟢 Bien cubierto (con matiz de granularidad de grupo)**
+**Estado: 🟢 Bien cubierto (con matiz de granularidad de grupo):**
 
 `itinerario.html` tiene botón "Quitar" por ítem de taller. `mi-visita.html`
 tiene tanto "Quitar taller" (quita todos los grupos de esa actividad) como
@@ -321,25 +324,25 @@ en `mi-visita.html` pero no en `itinerario.html`, donde solo existe "Quitar"
 
 ## Resumen ejecutivo de brechas
 
-| CU | Pantalla | Severidad | Acción principal |
-|----|----------|-----------|-----------------|
-| CU-VIS-001 | `formulario-vis.html` | 🟡 | Quitar "Preescolar"; agregar "Cansahcab" |
-| CU-VIS-002 | — | 🔴 | Crear pantalla de edición para el Aplicante |
-| CU-VIS-003 | `mi-visita.html` | 🟡 | Mostrar badge de estado de revisión prominente |
-| CU-VIS-004 | `admin-propuestas.html` | 🔴 | Agregar filtro por estado; mostrar propuestas pendientes |
-| CU-VIS-005 | `admin-propuestas.html` | 🟡 | Agregar acciones de dictamen al panel de detalle |
-| CU-VIS-006 | — | 🔴 | Sin prototipo; crear flujo de aceptación |
-| CU-VIS-007 | — | 🔴 | Sin prototipo; crear flujo de solicitud de cambios |
-| CU-VIS-008 | — | 🔴 | Sin prototipo; crear flujo de rechazo |
-| CU-VIS-009 | — | 🔴 | Sin prototipo; mostrar confirmación de notificación |
-| CU-VIS-010 | `reservar.html` | 🔴 | Eliminar nota falsa de filtrado; implementar filtro real + resolver discrepancia Primaria / Primaria alta-baja |
-| CU-VIS-011 | `reservar.html` | 🟡 | Mostrar estado visual de cupo lleno en grid |
-| CU-VIS-012 | `reservar.html` | 🟢 | Revisar regla "un grupo por bloque" (no documentada en CU) |
-| CU-VIS-013 | `itinerario.html` | 🟢 | Alineado |
-| CU-VIS-014 | `itinerario.html` + `mi-visita.html` | 🟢 | Homogeneizar quitar-por-grupo entre pantallas |
-| CU-VIS-015 | `admin-visitas.html` | 🟢 | Alineado |
-| CU-VIS-016 | `admin-visitas.html` (inline) | 🟡 | Corregir rótulos de proto-bar en `admin-escuela.html` |
-| CU-VIS-017 | `admin-visitas.html` | 🟡 | Agregar selector de taller específico antes de la baja |
+| CU         | Pantalla                             | Severidad  | Acción principal                                                                                               |
+| ---------- | ------------------------------------ | ---------- | -------------------------------------------------------------------------------------------------------------- |
+| CU-VIS-001 | `formulario-vis.html`                | 🟡         | Quitar "Preescolar"; agregar "Cansahcab"                                                                       |
+| CU-VIS-002 | —                                    | 🔴         | Crear pantalla de edición para el Aplicante                                                                    |
+| CU-VIS-003 | `mi-visita.html`                     | 🟡         | Mostrar badge de estado de revisión prominente                                                                 |
+| CU-VIS-004 | `admin-propuestas.html`              | 🔴         | Agregar filtro por estado; mostrar propuestas pendientes                                                       |
+| CU-VIS-005 | `admin-propuestas.html`              | 🟡         | Agregar acciones de dictamen al panel de detalle                                                               |
+| CU-VIS-006 | —                                    | 🔴         | Sin prototipo; crear flujo de aceptación                                                                       |
+| CU-VIS-007 | —                                    | 🔴         | Sin prototipo; crear flujo de solicitud de cambios                                                             |
+| CU-VIS-008 | —                                    | 🔴         | Sin prototipo; crear flujo de rechazo                                                                          |
+| CU-VIS-009 | —                                    | 🔴         | Sin prototipo; mostrar confirmación de notificación                                                            |
+| CU-VIS-010 | `reservar.html`                      | 🔴         | Eliminar nota falsa de filtrado; implementar filtro real + resolver discrepancia Primaria / Primaria alta-baja |
+| CU-VIS-011 | `reservar.html`                      | 🟡         | Mostrar estado visual de cupo lleno en grid                                                                    |
+| CU-VIS-012 | `reservar.html`                      | 🟢         | Revisar regla "un grupo por bloque" (no documentada en CU)                                                     |
+| CU-VIS-013 | `itinerario.html`                    | 🟢         | Alineado                                                                                                       |
+| CU-VIS-014 | `itinerario.html` + `mi-visita.html` | 🟢         | Homogeneizar quitar-por-grupo entre pantallas                                                                  |
+| CU-VIS-015 | `admin-visitas.html`                 | 🟢         | Alineado                                                                                                       |
+| CU-VIS-016 | `admin-visitas.html` (inline)        | 🟡         | Corregir rótulos de proto-bar en `admin-escuela.html`                                                          |
+| CU-VIS-017 | `admin-visitas.html`                 | 🟡         | Agregar selector de taller específico antes de la baja                                                         |
 
 **Brechas críticas (5 pantallas faltantes o flujos ausentes):**
 CU-VIS-002 (edición del Aplicante) · CU-VIS-006 (aceptar) · CU-VIS-007

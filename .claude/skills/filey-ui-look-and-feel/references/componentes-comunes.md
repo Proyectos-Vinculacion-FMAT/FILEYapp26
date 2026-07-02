@@ -59,16 +59,16 @@ Para componentes exclusivos de VIS, ver `componentes-vis.md`.
 
 `.btn` (base) + modificador:
 
-| Clase | Apariencia | Uso |
-|-------|-----------|-----|
-| `.btn-primary` | Azul institucional, texto blanco | Acción principal en fondo blanco |
-| `.btn-gold` | Dorado, texto azul oscuro | Acción destacada |
-| `.btn-ghost` | Outline gris, fondo blanco | Acciones secundarias |
-| `.btn-special` | Fondo blanco, hover dorado | Sobre fondo azul oscuro (ej. `.cta-bar`) |
-| `.btn-danger` | Rojo, texto blanco | Acciones destructivas |
-| `.btn-sm` | Tamaño reducido | Botones inline en tablas o tarjetas |
-| `.btn-lg` | Tamaño grande | CTA principal de página |
-| `.btn-block` | Ancho completo | Formularios de una columna |
+| Clase          | Apariencia                       | Uso                                      |
+| -------------- | -------------------------------- | ---------------------------------------- |
+| `.btn-primary` | Azul institucional, texto blanco | Acción principal en fondo blanco         |
+| `.btn-gold`    | Dorado, texto azul oscuro        | Acción destacada                         |
+| `.btn-ghost`   | Outline gris, fondo blanco       | Acciones secundarias                     |
+| `.btn-special` | Fondo blanco, hover dorado       | Sobre fondo azul oscuro (ej. `.cta-bar`) |
+| `.btn-danger`  | Rojo, texto blanco               | Acciones destructivas                    |
+| `.btn-sm`      | Tamaño reducido                  | Botones inline en tablas o tarjetas      |
+| `.btn-lg`      | Tamaño grande                    | CTA principal de página                  |
+| `.btn-block`   | Ancho completo                   | Formularios de una columna               |
 
 ---
 
@@ -76,15 +76,15 @@ Para componentes exclusivos de VIS, ver `componentes-vis.md`.
 
 `.badge` + variante:
 
-| Clase | Color | Significado |
-|-------|-------|------------|
-| `.badge-open` | Verde (`--ok-*`) | Convocatoria / propuesta abierta |
-| `.badge-closed` | Gris | Cerrada |
-| `.badge-soon` | Azul | Próximamente |
-| `.badge-pending` | Ámbar (`--warn-*`) | Pendiente de revisión |
-| `.badge-accepted` | Verde | Aceptada / confirmada |
-| `.badge-rejected` | Rojo (`--err-*`) | Rechazada |
-| `.badge-changes` | Naranja | Solicitud de cambios |
+| Clase             | Color              | Significado                      |
+| ----------------- | ------------------ | -------------------------------- |
+| `.badge-open`     | Verde (`--ok-*`)   | Convocatoria / propuesta abierta |
+| `.badge-closed`   | Gris               | Cerrada                          |
+| `.badge-soon`     | Azul               | Próximamente                     |
+| `.badge-pending`  | Ámbar (`--warn-*`) | Pendiente de revisión            |
+| `.badge-accepted` | Verde              | Aceptada / confirmada            |
+| `.badge-rejected` | Rojo (`--err-*`)   | Rechazada                        |
+| `.badge-changes`  | Naranja            | Solicitud de cambios             |
 
 Para un estado nuevo: mapear a los tokens `--ok-*` / `--warn-*` / `--err-*`, nunca hex suelto.
 
@@ -94,13 +94,13 @@ Para un estado nuevo: mapear a los tokens `--ok-*` / `--warn-*` / `--err-*`, nun
 
 `.note` + variante (todas con ícono en `.ico` + texto):
 
-| Clase | Color | Uso |
-|-------|-------|-----|
-| `.note-info` | Azul claro | Información contextual |
-| `.note-warn` | Ámbar | Advertencia no bloqueante |
-| `.note-gold` | Dorado | Recomendación o tip |
-| `.note-green` | Verde | Confirmación o estado positivo |
-| `.note-err` | Rojo claro | Error o estado crítico |
+| Clase         | Color      | Uso                            |
+| ------------- | ---------- | ------------------------------ |
+| `.note-info`  | Azul claro | Información contextual         |
+| `.note-warn`  | Ámbar      | Advertencia no bloqueante      |
+| `.note-gold`  | Dorado     | Recomendación o tip            |
+| `.note-green` | Verde      | Confirmación o estado positivo |
+| `.note-err`   | Rojo claro | Error o estado crítico         |
 
 ---
 
@@ -132,6 +132,7 @@ Para un estado nuevo: mapear a los tokens `--ok-*` / `--warn-*` / `--err-*`, nun
 ## Formularios (elementos base)
 
 Todos los `<input>`, `<select>`, `<textarea>` heredan estilos de `common/`. Patrones adicionales:
+
 - `.select-wrap` — wrapper con caret SVG vía `mask-image` en `::after`. El caret está embebido como data-URI en `common/styles-base.css`.
 - `.form-row` / `.form-col` — layout de campos en fila.
 - `.field-group` — grupo de label + input.

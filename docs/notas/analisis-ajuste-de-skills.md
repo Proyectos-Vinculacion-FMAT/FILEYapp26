@@ -15,7 +15,7 @@ de componentes entre capas, y manejar SVGs escalables.
 
 ## 1. Arquitectura real del prototipo (lo que la skill debe entender)
 
-```
+```text
 prototipo/
   common/
     styles-base.css        ← base canónica compartida (tokens + shell + todos
@@ -39,7 +39,7 @@ prototipo/
 **Política de estructura de archivos por dominio** (canónica, todo dominio nuevo
 debe seguirla):
 
-```
+```text
 {DOM}/
   aplicantes/      ← HTMLs usados solo por aplicantes
   administradores/ ← HTMLs usados solo por administradores
@@ -56,7 +56,7 @@ debe seguirla):
 
 La bifurcación del flujo es:
 
-```
+```text
 REG (acceso + convocatorias)
   └── aplicantes → EVT/aplicantes · VIS/aplicantes · TAL/aplicantes · STD
   └── admin      → EVT/administradores · VIS/administradores · TAL/administradores
@@ -64,11 +64,11 @@ REG (acceso + convocatorias)
 
 **Lo que la skill afirma vs. la realidad:**
 
-| Afirmación de la skill | Realidad |
-|------------------------|---------|
-| Fuente canónica: `prototipo/REG - EVT/styles.css` | Esa ruta **no existe**. La canónica es `prototipo/common/styles-base.css` |
-| "Inventario de componentes reutilizables" → solo cubre REG-EVT | Todos los componentes comunes ya están en `common/`; VIS añade ~30 clases propias |
-| Menciona STD como "fuera de scope" | Correcto, pero la skill no menciona que EVT tiene un sub-CSS de admin (`admin.css`) ni que VIS no lo tiene |
+| Afirmación de la skill                                              | Realidad                                                                                                           |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Fuente canónica: `prototipo/REG - EVT/styles.css`                   | Esa ruta **no existe**. La canónica es `prototipo/common/styles-base.css`                                          |
+| "Inventario de componentes reutilizables" → solo cubre REG-EVT      | Todos los componentes comunes ya están en `common/`; VIS añade ~30 clases propias                                  |
+| Menciona STD como "fuera de scope"                                  | Correcto, pero la skill no menciona que EVT tiene un sub-CSS de admin (`admin.css`) ni que VIS no lo tiene         |
 | Cuatro patrones no negociables (login, conv-card, bento, proto-bar) | Los cuatro están en `common/`; la skill no sabe que en VIS el bento es distinto (`.vis-bento`, no `.section-card`) |
 
 ---
@@ -131,7 +131,7 @@ verdad.
 La skill trata el CSS del prototipo como si fuera un solo archivo monolítico. No
 explica la jerarquía de dos (o tres) capas:
 
-```
+```text
 Layer 1 — common/styles-base.css    (compartido, no modificar sin justificar)
 Layer 2 — {dominio}/styles.css      (específico del dominio, extiende Layer 1)
 Layer 3 — {dominio}/{sub}/admin.css (sub-contexto, extiende Layer 2)
@@ -183,12 +183,12 @@ documentarlo explícitamente como excepción pre-política, no como patrón a re
 
 ### Estado actual
 
-| Archivo | Tiene `width`/`height` hardcodeados | Usa `fill="currentColor"` | Escalable via CSS |
-|---------|-------------------------------------|--------------------------|-------------------|
-| `common/assets/caret.svg` | No (solo `viewBox`) | Sí | Sí ✔ |
-| `common/assets/next-day.svg` | **Sí** (`width="26" height="30"`) | Sí | No ✗ |
-| `common/assets/prev-day.svg` | Probablemente sí (mismo origen) | Sí | No ✗ |
-| SVGs en `skills/.../assets/` | Varios con `width`/`height` | Mixto | Mixto |
+| Archivo                      | Tiene `width`/`height` hardcodeados | Usa `fill="currentColor"` | Escalable via CSS |
+| ---------------------------- | ----------------------------------- | ------------------------- | ----------------- |
+| `common/assets/caret.svg`    | No (solo `viewBox`)                 | Sí                        | Sí ✔              |
+| `common/assets/next-day.svg` | **Sí** (`width="26" height="30"`)   | Sí                        | No ✗              |
+| `common/assets/prev-day.svg` | Probablemente sí (mismo origen)     | Sí                        | No ✗              |
+| SVGs en `skills/.../assets/` | Varios con `width`/`height`         | Mixto                     | Mixto             |
 
 El caret SVG usa `mask-image` (embebido como data-URI en `common/styles-base.css`),
 así que su tamaño lo controlan dos valores fijos (`width: 11px; height: 6px` en
@@ -198,6 +198,7 @@ el caret es un detalle de UI de tamaño invariable.
 Los botones prev/next del selector de día son el **modelo correcto** para SVGs de
 ícono escalables. El SVG declara solo `viewBox="0 0 26 30"` (sin `width`/`height`),
 y en `VIS/styles.css`:
+
 ```css
 .vis-dia-btn svg {
   display: block;
@@ -205,6 +206,7 @@ y en `VIS/styles.css`:
   width: calc(var(--vis-dia-btn-size) * 26 / 30); /* W/H del viewBox */
 }
 ```
+
 Los valores `26` y `30` se leen directamente del `viewBox` del SVG. Este es el
 tratamiento esperado para **todos** los SVGs de ícono: primero derivar el aspect
 ratio del `viewBox`, después expresarlo en el `calc()`.
@@ -289,7 +291,7 @@ antes de añadir o modificar CSS:
 
 ### ¿Dónde va un componente nuevo?
 
-```
+```text
 ¿Lo usará más de un dominio (REG, EVT, VIS, TAL)?
   Sí → va a common/styles-base.css, con nombre genérico
   No → va al styles.css del único dominio que lo usa
@@ -307,6 +309,7 @@ antes de añadir o modificar CSS:
 ### ¿Cuándo promover de dominio a `common/`?
 
 Un componente de dominio debe moverse a `common/` cuando:
+
 - Se necesita en un segundo dominio (regla del "segundo usuario").
 - La copia en ambos dominios empieza a divergir sin motivo funcional.
 
@@ -317,6 +320,7 @@ Señales de que hay que promover: el agente encuentra la misma clase en dos
 
 Un componente de `common/` debe bajarse al `styles.css` del único dominio que lo
 usa cuando:
+
 - Solo un dominio lo referencia (confirmado con `grep -r "nombre-clase" prototipo/`).
 - El componente tiene dependencias de tokens de un dominio específico.
 
@@ -326,6 +330,7 @@ aparece en los HTMLs de un solo dominio y usa tokens propios de ese dominio.
 ### ¿Cuándo mover un SVG de `common/assets/` a un directorio de dominio?
 
 Moverlo a `{dominio}/assets/` solo si:
+
 - El SVG tiene variante de color o forma distinta por dominio (y no puede
   resolverse con `fill="currentColor"`).
 - El SVG nunca se usa fuera de ese dominio.
@@ -339,11 +344,14 @@ En todos los demás casos, el SVG vive en `common/assets/`.
 ### M1 — Corregir la ruta de la fuente canónica [Alta]
 
 Cambiar:
-```
+
+```text
 prototipo/REG - EVT/styles.css (variables en :root)
 ```
+
 por:
-```
+
+```text
 prototipo/common/styles-base.css  ← fuente canónica para TODOS los dominios
 {dominio}/styles.css              ← extensión por dominio (importa common y añade lo propio)
 {dominio}/{sub}/admin.css         ← sub-contexto opcional (solo EVT lo tiene hoy)
@@ -354,14 +362,14 @@ prototipo/common/styles-base.css  ← fuente canónica para TODOS los dominios
 Añadir al inicio de la skill una tabla que muestre qué archivo leer antes de
 crear cualquier pantalla:
 
-| Tipo de pantalla | Leer primero | Leer después |
-|-----------------|--------------|--------------|
-| Login / acceso (REG) | `common/styles-base.css` | `REG/styles.css` (vacío hoy) |
-| Convocatorias usuario (EVT/usuario) | `common/styles-base.css` | `EVT/styles.css` (vacío hoy) |
-| Panel admin (EVT/admin) | `common/styles-base.css` | `EVT/administradores/admin.css` |
-| Visitas escolares (VIS) | `common/styles-base.css` | `VIS/styles.css` |
-| Admin VIS | `common/styles-base.css` | `VIS/styles.css` (incluye clases admin) |
-| STD | — | Fuera de alcance (Angular Material) |
+| Tipo de pantalla                    | Leer primero             | Leer después                            |
+| ----------------------------------- | ------------------------ | --------------------------------------- |
+| Login / acceso (REG)                | `common/styles-base.css` | `REG/styles.css` (vacío hoy)            |
+| Convocatorias usuario (EVT/usuario) | `common/styles-base.css` | `EVT/styles.css` (vacío hoy)            |
+| Panel admin (EVT/admin)             | `common/styles-base.css` | `EVT/administradores/admin.css`         |
+| Visitas escolares (VIS)             | `common/styles-base.css` | `VIS/styles.css`                        |
+| Admin VIS                           | `common/styles-base.css` | `VIS/styles.css` (incluye clases admin) |
+| STD                                 | —                        | Fuera de alcance (Angular Material)     |
 
 ### M3 — Crear `references/componentes-comunes.md` y `references/componentes-vis.md` [Alta]
 
@@ -371,7 +379,7 @@ Separar el inventario actual de componentes en dos archivos:
 a todos los dominios: `.topbar`, `.auth-wrap`, `.section-card`, `.conv-card`,
 `.btn-*`, `.badge-*`, `.note-*`, `.confirm-card`, `.proto-bar`, etc.
 
-**`componentes-vis.md`** — lo que está exclusivamente en `VIS/styles.css`: 
+**`componentes-vis.md`** — lo que está exclusivamente en `VIS/styles.css`:  
 `.vis-banner`, `.vis-bento`, `.vis-cupo`, `.vis-grupo-card`, `.vis-grupo-badge`,
 `.vis-horario-*`, `.vis-itin-*`, `.vis-reserva-bar`, `.vis-ficha`, `.vis-stats`,
 `.vis-tabla`, `.vis-filters`, `.grupo-block`, `.total-box`, etc.
@@ -388,6 +396,7 @@ una sección propia.
 ### M5 — Añadir las reglas SVG (sección 4) [Media]
 
 Incluir en la skill las 5 reglas de la sección 4, con énfasis en:
+
 - No poner `width`/`height` en el `<svg>`.
 - Usar `height: 1em; width: auto` en CSS para respetar el aspect ratio.
 - Cómo actualizar `next-day.svg` y `prev-day.svg` para quitar los atributos hardcodeados y actualizar el CSS de VIS para usar `width: auto`.
@@ -397,6 +406,7 @@ Incluir en la skill las 5 reglas de la sección 4, con énfasis en:
 Mantener el checklist actual como "checklist REG-EVT" y añadir un "checklist VIS":
 
 **Checklist VIS:**
+
 - [ ] Los tokens verdes usan `--color-verde-*` (de `common/`) o `--vis-*` (de `VIS/styles.css`), no hex sueltos
 - [ ] El banner de convocatoria usa `.vis-banner` (no `.conv-card`)
 - [ ] Las secciones de info usan `.vis-bento` con `.vis-bento__num` (verde, no azul)
@@ -406,6 +416,7 @@ Mantener el checklist actual como "checklist REG-EVT" y añadir un "checklist VI
 - [ ] Los SVGs de botones prev/next son `<svg>` inline o `<img>` desde `common/assets/`, sin `width`/`height` hardcodeados en el elemento
 
 **Checklist admin EVT:**
+
 - [ ] El shell usa `.admin-body > .sidebar + .admin-main`
 - [ ] Los chips de filtro son `.chip` + `.is-active` (no `.badge`)
 - [ ] Los modales de dictamen usan `.modal > .modal-head + .modal-body + .modal-foot`
@@ -417,13 +428,13 @@ Mantener el checklist actual como "checklist REG-EVT" y añadir un "checklist VI
 `EVT/administradores/admin.css` usa nombres de token que no existen en
 `common/styles-base.css`:
 
-| Token en `admin.css` | Equivalente correcto en `common/` |
-|----------------------|-----------------------------------|
-| `--blanco` | `--color-blanco` |
-| `--azul-institucional` | `--color-azul-institucional` |
+| Token en `admin.css`       | Equivalente correcto en `common/`                     |
+| -------------------------- | ----------------------------------------------------- |
+| `--blanco`                 | `--color-blanco`                                      |
+| `--azul-institucional`     | `--color-azul-institucional`                          |
 | `--azul-800`, `--azul-900` | No existen; usar `--color-azul-institucional-enfoque` |
-| `--azul-700` | `--azul-600` (el más cercano en `common/`) |
-| `--oro-600`, `--oro-700` | `--color-dorado-encabezado`, `--color-dorado-700` |
+| `--azul-700`               | `--azul-600` (el más cercano en `common/`)            |
+| `--oro-600`, `--oro-700`   | `--color-dorado-encabezado`, `--color-dorado-700`     |
 
 La skill debe señalar esta divergencia como **deuda técnica conocida** y
 prohibir al agente crear CSS nuevo que use los nombres incorrectos de `admin.css`.
@@ -455,13 +466,17 @@ sin invención. Añadir una mini-guía:
 
 ## 7. Priorización
 
-| Mejora | Impacto | Esfuerzo | Prioridad |
-|--------|---------|----------|-----------|
-| M1 — Corregir ruta canónica | Alto: elimina el error más grave | Mínimo (1 línea) | 🔴 |
-| M2 — Tabla de capas CSS | Alto: orienta al agente ante cualquier nueva pantalla | Bajo (tabla + 10 líneas) | 🔴 |
-| M3 — Inventario componentes comunes / VIS | Alto: elimina la principal causa de clases inventadas | Medio (2 archivos) | 🔴 |
-| M4 — Reglas de migración | Alto: evita que `common/` se contamine o se dupliquen estilos | Bajo (lista de decisiones) | 🔴 |
-| M5 — Reglas SVG | Medio: evita workarounds de aspect ratio y SVGs no escalables | Bajo | 🟡 |
-| M6 — Checklists por tipo de pantalla | Medio: valida el resultado de forma pertinente por dominio | Bajo | 🟡 |
-| M7 — Documentar divergencia de tokens en admin.css | Medio: evita propagar nombres incorrectos | Mínimo (tabla) | 🟡 |
-| M8 — Guía para nuevo dominio | Bajo a corto plazo; alto cuando llegue TAL | Bajo | 🟢 |
+| Mejora                                             | Impacto                                                       | Esfuerzo                   | Prioridad  |
+| -------------------------------------------------- | ------------------------------------------------------------- | -------------------------- | ---------- |
+| M1 — Corregir ruta canónica                        | Alto: elimina el error más grave                              | Mínimo (1 línea)           | 🔴         |
+| M2 — Tabla de capas CSS                            | Alto: orienta al agente ante cualquier nueva pantalla         | Bajo (tabla + 10 líneas)   | 🔴         |
+| M3 — Inventario componentes comunes / VIS          | Alto: elimina la principal causa de clases inventadas         | Medio (2 archivos)         | 🔴         |
+| M4 — Reglas de migración                           | Alto: evita que `common/` se contamine o se dupliquen estilos | Bajo (lista de decisiones) | 🔴         |
+| M5 — Reglas SVG                                    | Medio: evita workarounds de aspect ratio y SVGs no escalables | Bajo                       | 🟡         |
+| M6 — Checklists por tipo de pantalla               | Medio: valida el resultado de forma pertinente por dominio    | Bajo                       | 🟡         |
+| M7 — Documentar divergencia de tokens en admin.css | Medio: evita propagar nombres incorrectos                     | Mínimo (tabla)             | 🟡         |
+| M8 — Guía para nuevo dominio                       | Bajo a corto plazo; alto cuando llegue TAL                    | Bajo                       | 🟢         |
+
+[Alta]: <>
+[Media]: <>
+[Baja]: <>

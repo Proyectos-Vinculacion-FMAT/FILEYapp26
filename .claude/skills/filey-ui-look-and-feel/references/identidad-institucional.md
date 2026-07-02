@@ -9,9 +9,9 @@ Curado una sola vez a partir del CSS/HTML servido en producción de los 3 sitios
 
 ## Colores oficiales confirmados
 
-| Marca | Azul | Dorado | Fuente del dato |
-|---|---|---|---|
-| **FILEY** (filey.org) | `#01457C` | `#C99213` | hex dominante en el HTML/CSS servido (30+ apariciones cada uno) |
+| Marca                                    | Azul      | Dorado    | Fuente del dato                                                              |
+| ---------------------------------------- | --------- | --------- | ---------------------------------------------------------------------------- |
+| **FILEY** (filey.org)                    | `#01457C` | `#C99213` | hex dominante en el HTML/CSS servido (30+ apariciones cada uno)              |
 | **UADY** (uady.mx / matematicas.uady.mx) | `#002e5f` | `#c79316` | clases explícitas `.uady-azul` / `.uady-dorado` en el CSS del bundle Angular |
 
 **Hallazgo clave:** el azul y dorado de FILEY (`#01457C` / `#C99213`) son **exactamente** los que ya usa `prototipo/REG - EVT/styles.css` como `--azul-institucional` y `--dorado-encabezado`. El azul oscuro de UADY (`#002e5f`) es casi idéntico al `--azul-900` (`#00254d`) que el prototipo usa para fondos profundos/degradados. Es decir: **el prototipo REG-EVT ya está bien alineado con la marca real** — no hay que corregir su paleta, solo respetarla como fuente de verdad (ver tabla de tokens del prototipo en `styles.css`).

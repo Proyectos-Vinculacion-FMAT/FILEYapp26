@@ -21,7 +21,7 @@ Flujo del proponente externo: acceso → formulario de propuesta → seguimiento
 
 Flujo del administrador general (Hipólito): OTP → selección de módulo → panel EVT.
 
-```
+```text
 administradores/admin-otp.html          ← entrada vía "Acceso administrativo" en aplicantes/index.html
   → admin-modulos.html                  3 módulos; solo Eventos es navegable en esta maqueta
     → admin-evt-propuestas.html         dashboard: tabla filtrable + tarjetas de resumen
