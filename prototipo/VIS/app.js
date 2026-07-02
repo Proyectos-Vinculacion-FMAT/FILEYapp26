@@ -413,7 +413,7 @@
         var detail = row ? row.nextElementSibling : null;
         if (!detail || !detail.classList.contains('vis-tabla__row-detail')) return;
         var open = detail.classList.toggle('is-open');
-        btn.textContent = btn.textContent.replace(/[▸▾]/, open ? '▾' : '▸');
+        btn.classList.toggle('is-open', open);
       });
     });
   }());

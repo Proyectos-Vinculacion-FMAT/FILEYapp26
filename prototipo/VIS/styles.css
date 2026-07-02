@@ -161,6 +161,9 @@
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
 }
 .vis-tabla__toggle:hover { text-decoration: underline; }
+.vis-tabla__toggle-icon { display: inline-flex; align-items: center; }
+.vis-tabla__toggle-icon svg { display: block; width: 12px; height: 6px; transform: rotate(-90deg); transition: transform 0.2s ease; }
+.vis-tabla__toggle.is-open .vis-tabla__toggle-icon svg { transform: rotate(0deg); }
 .vis-tabla__row-detail { display: none; }
 .vis-tabla__row-detail.is-open { display: table-row; }
 .vis-tabla__row-detail > td { padding: 0 14px 14px; background: var(--gris-050); }
