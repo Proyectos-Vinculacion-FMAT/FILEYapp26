@@ -418,4 +418,13 @@
     });
   }());
 
+  /* =====================================================
+     5. Select-wrap: blur al seleccionar para devolver
+        caret a posición/color inicial (focus-within se
+        mantiene activo hasta que el select pierde foco)
+     ===================================================== */
+  document.querySelectorAll('.select-wrap select').forEach(function (sel) {
+    sel.addEventListener('change', function () { this.blur(); });
+  });
+
 }());

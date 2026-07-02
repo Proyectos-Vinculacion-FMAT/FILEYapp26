@@ -213,11 +213,12 @@
 .vis-turno-selector__label { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .06em; }
 .vis-turno-dropdown { min-width: 170px; padding: 8px 34px 8px 14px; background: #fff; color: var(--color-azul-texto); border: none; border-radius: var(--radio-sm); font-size: 14px; font-weight: 700; font-family: inherit; }
 .vis-dia-selector { display: flex; align-items: center; gap: 14px; }
-.vis-dia-selector__text { font-size: 15px; font-weight: 600; color: #fff; min-width: 150px; text-align: center; }
+.vis-dia-selector__text { font-size: 20px; font-weight: 600; color: #fff; min-width: 150px; text-align: center; }
 .vis-dia-btn {
-  background: none; border: none; padding: 4px; display: flex; align-items: center;
+  background: none; border: none; padding: 2px; display: flex; align-items: center;
   color: rgba(255,255,255,.85); cursor: pointer; transition: color 0.15s ease;
 }
+.vis-dia-btn svg { display: block; width: 18px; height: 21px; }
 .vis-dia-btn:hover:not(:disabled) { color: var(--color-dorado-encabezado); }
 .vis-dia-btn:disabled { color: rgba(255,255,255,.25); cursor: not-allowed; }
 
