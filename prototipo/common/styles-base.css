@@ -69,6 +69,9 @@
   --azul-600: #0a6fc2;
   --azul-100: #e6f0fa;
   --azul-050: #f3f8fd;
+
+  /* caret.svg (assets/caret.svg) como data-URI — evita CORS en file:// */
+  --caret-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 826 374' fill='%2300437C'%3E%3Cpath d='M731.872 6.864 412 318.672 92.128 6.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L389.664 380.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z'/%3E%3C/svg%3E");
 }
 
 * { box-sizing: border-box; }
@@ -212,6 +215,16 @@ input[type="text"], input[type="email"], input[type="tel"], input[type="number"]
   width: 100%; padding: 11px 13px; font-size: 14.5px; color: var(--tinta);
   border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
   background: var(--color-blanco); font-family: inherit;
+}
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 34px;
+  background-image: var(--caret-svg);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 11px;
+  cursor: pointer;
 }
 input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--azul-600); box-shadow: 0 0 0 3px var(--azul-100);

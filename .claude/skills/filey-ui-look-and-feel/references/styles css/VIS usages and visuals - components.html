@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FILEY — VIS (Visitantes): componentes y usos</title>
+<link rel="stylesheet" href="primary colors usage.css">
+<link rel="stylesheet" href="VIS usages and visuals - components.css">
+<style>
+  body {
+    margin: 0;
+    padding: 40px 0;
+    background: #eef1f6;
+    font-family: "Open Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Frame 1540px = ancho visible del prototipo. Grid (10 salas × 360px + 130px sala = 1630px) scrollea ~90px dentro de vis-horario-wrap. Tokens fp-: primary colors usage.css. Tokens VIS: VIS usages and visuals - components.css. -->
+  <main class="fp-frame">
+
+    <h1 class="fp-title">VIS — Visitantes escolares</h1>
+    <p class="fp-subtitle">Componentes del prototipo de visitas escolares FILEY</p>
+
+
+    <!-- ======================================================
+         1. PALETA VIS: COLORES Y GRADIENTES
+    ======================================================= -->
+    <section class="fp-section">
+      <h2 class="fp-section-title">Paleta VIS</h2>
+
+      <div class="vis-swatch-grid">
+        <div class="vis-swatch vis-swatch--verde-claro">#99BA15<br>Verde claro</div>
+        <div class="vis-swatch vis-swatch--verde-medio">#839F10<br>Verde badge</div>
+        <div class="vis-swatch vis-swatch--verde-oscuro">#3F4E00<br>Verde oscuro</div>
+        <div class="vis-swatch vis-swatch--magenta">Magenta<br>cupos</div>
+        <div class="vis-swatch vis-swatch--descanso">#CC311D<br>Descanso</div>
+        <div class="vis-swatch vis-swatch--abierta-bg">ABIERTA<br>estado</div>
+        <div class="vis-swatch vis-swatch--cerrada-bg">CERRADA<br>estado</div>
+        <div class="vis-swatch vis-swatch--sala">Verde sala<br>20% alfa</div>
+      </div>
+    </section>
+
+    <section class="fp-section">
+      <h2 class="fp-section-title">Degradados VIS</h2>
+      <div class="vis-gradient-pair">
+        <div class="vis-gradient-pair__radial"></div>
+        <div class="vis-gradient-pair__lineal"></div>
+        <div class="vis-gradient-pair__label">radial + lineal — degradado verde</div>
+      </div>
+    </section>
+
+    <section class="fp-section">
+      <h2 class="fp-section-title">Pills de estado de convocatoria</h2>
+      <div class="vis-estado-row">
+        <div class="vis-estado vis-estado--abierta">
+          <span class="vis-estado__dot"></span>
+          ABIERTA
+        </div>
+        <div class="vis-estado vis-estado--cerrada">
+          <span class="vis-estado__dot"></span>
+          CERRADA
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ======================================================
+         2. TARJETAS DE CONVOCATORIA
+    ======================================================= -->
+    <section class="fp-section">
+      <h2 class="fp-section-title">Tarjetas de convocatoria</h2>
+      <div class="vis-conv-row">
+
+        <!-- Participante — ABIERTA -->
+        <div class="vis-conv-col">
+          <div class="vis-conv-col__label">PARTICIPANTE / APLICANTE</div>
+          <div class="vis-conv-card">
+            <div class="vis-conv-card__header">
+              <div class="vis-conv-card__header-row">
+                <!-- bus-icon.svg inline (fill blanco sobre fondo verde) -->
+                <svg width="32" height="32" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M4.1 20.5V6.36321C4.1 5.23161 5.0184 4.1 6.15 4.1H34.85C35.9816 4.1 36.9 5.23161 36.9 6.36321V20.5H4.1ZM8.2 33.0132C7.0684 33.0132 6.15 32.0948 6.15 30.9632C6.15 29.8316 7.0684 28.9132 8.2 28.9132C9.3316 28.9132 10.25 29.8316 10.25 30.9632C10.25 32.0948 9.3316 33.0132 8.2 33.0132ZM32.8 33.0132C31.6684 33.0132 30.75 32.0948 30.75 30.9632C30.75 29.8316 31.6684 28.9132 32.8 28.9132C33.9316 28.9132 34.85 29.8316 34.85 30.9632C34.85 32.0948 33.9316 33.0132 32.8 33.0132ZM4.1 0C1.83475 0 0 2.05001 0 4.31321V20.7132V33.0132C0 35.2785 1.83475 37.1132 4.1 37.1132V39.1632C4.1 40.2948 5.0184 41 6.15 41H10.25C11.3816 41 12.3 40.2948 12.3 39.1632V36.9H28.7V39.1632C28.7 40.2948 29.6184 41 30.75 41H34.85C35.9816 41 36.9 40.2948 36.9 39.1632V37.1132C39.1652 37.1132 41 35.2785 41 33.0132V20.7132V4.31321C41 2.05001 39.1652 0 36.9 0H4.1Z" fill="white"/>
+                </svg>
+                <span class="vis-conv-card__title">Visitas Escolares FILEY</span>
+              </div>
+            </div>
+            <div class="vis-conv-card__body">
+              <div class="vis-estado vis-estado--abierta">
+                <span class="vis-estado__dot"></span>
+                ABIERTA
+              </div>
+              <p class="vis-conv-card__leyenda">
+                La Universidad Autónoma de Yucatán (UADY), a través de la Feria Internacional de la Lectura Yucatán (FILEY), invita a instituciones educativas a participar en la décimo cuarta edición.
+              </p>
+              <div class="vis-conv-card__fecha">
+                <!-- Vector.svg = ícono de calendario, fill negro sobre fondo blanco -->
+                <svg width="16" height="18" viewBox="0 0 19 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M15.629 2.37838H14.0968V0.891892C14.0968 0.65535 13.9999 0.428489 13.8275 0.261229C13.6551 0.0939698 13.4212 0 13.1774 0C12.9336 0 12.6997 0.0939698 12.5274 0.261229C12.3549 0.428489 12.2581 0.65535 12.2581 0.891892V2.37838H6.74194V0.891892C6.74194 0.65535 6.64507 0.428489 6.47266 0.261229C6.30025 0.0939698 6.06641 0 5.82258 0C5.57876 0 5.34491 0.0939698 5.1725 0.261229C5.00009 0.428489 4.90323 0.65535 4.90323 0.891892V2.37838H3.37097C2.47693 2.37838 1.61951 2.72292 0.987338 3.33622C0.355153 3.94951 0 4.78131 0 5.64865V18.7297C0 19.597 0.355153 20.4288 0.987338 21.0421C1.61951 21.6555 2.47693 22 3.37097 22H15.629C16.523 22 17.3805 21.6555 18.0126 21.0421C18.6449 20.4288 19 19.597 19 18.7297V5.64865C19 4.78131 18.6449 3.94951 18.0126 3.33622C17.3805 2.72292 16.523 2.37838 15.629 2.37838ZM3.37097 4.16216H4.90323V5.64865C4.90323 5.88519 5.00009 6.11205 5.1725 6.27931C5.34491 6.44657 5.57876 6.54054 5.82258 6.54054C6.06641 6.54054 6.30025 6.44657 6.47266 6.27931C6.64507 6.11205 6.74194 5.88519 6.74194 5.64865V4.16216H12.2581V5.64865C12.2581 5.88519 12.3549 6.11205 12.5274 6.27931C12.6997 6.44657 12.9336 6.54054 13.1774 6.54054C13.4212 6.54054 13.6551 6.44657 13.8275 6.27931C13.9999 6.11205 14.0968 5.88519 14.0968 5.64865V4.16216H15.629C16.0354 4.16216 16.4252 4.31878 16.7125 4.59755C16.9999 4.87632 17.1613 5.25441 17.1613 5.64865V8.91892H1.83871V5.64865C1.83871 5.25441 2.00015 4.87632 2.2875 4.59755C2.57486 4.31878 2.96459 4.16216 3.37097 4.16216ZM15.629 20.2162H3.37097C2.96459 20.2162 2.57486 20.0596 2.2875 19.7809C2.00015 19.5021 1.83871 19.1239 1.83871 18.7297V10.7027H17.1613V18.7297C17.1613 19.1239 16.9999 19.5021 16.7125 19.7809C16.4252 20.0596 16.0354 20.2162 15.629 20.2162Z" fill="black"/>
+                </svg>
+                Cierra el 31 de agosto del 2027
+              </div>
+              <button type="button" class="vis-conv-card__btn vis-conv-card__btn--participante">
+                Ver convocatoria
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin — CERRADA -->
+        <div class="vis-conv-col">
+          <div class="vis-conv-col__label">ADMIN</div>
+          <div class="vis-conv-card">
+            <div class="vis-conv-card__header">
+              <div class="vis-conv-card__header-row">
+                <svg width="32" height="32" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M4.1 20.5V6.36321C4.1 5.23161 5.0184 4.1 6.15 4.1H34.85C35.9816 4.1 36.9 5.23161 36.9 6.36321V20.5H4.1ZM8.2 33.0132C7.0684 33.0132 6.15 32.0948 6.15 30.9632C6.15 29.8316 7.0684 28.9132 8.2 28.9132C9.3316 28.9132 10.25 29.8316 10.25 30.9632C10.25 32.0948 9.3316 33.0132 8.2 33.0132ZM32.8 33.0132C31.6684 33.0132 30.75 32.0948 30.75 30.9632C30.75 29.8316 31.6684 28.9132 32.8 28.9132C33.9316 28.9132 34.85 29.8316 34.85 30.9632C34.85 32.0948 33.9316 33.0132 32.8 33.0132ZM4.1 0C1.83475 0 0 2.05001 0 4.31321V20.7132V33.0132C0 35.2785 1.83475 37.1132 4.1 37.1132V39.1632C4.1 40.2948 5.0184 41 6.15 41H10.25C11.3816 41 12.3 40.2948 12.3 39.1632V36.9H28.7V39.1632C28.7 40.2948 29.6184 41 30.75 41H34.85C35.9816 41 36.9 40.2948 36.9 39.1632V37.1132C39.1652 37.1132 41 35.2785 41 33.0132V20.7132V4.31321C41 2.05001 39.1652 0 36.9 0H4.1Z" fill="white"/>
+                </svg>
+                <span class="vis-conv-card__title">Visitas escolares FILEY</span>
+              </div>
+            </div>
+            <div class="vis-conv-card__body">
+              <div class="vis-estado vis-estado--cerrada">
+                <span class="vis-estado__dot"></span>
+                CERRADA
+              </div>
+              <p class="vis-conv-card__leyenda">
+                La Universidad Autónoma de Yucatán (UADY), a través de la Feria Internacional de la Lectura Yucatán (FILEY), invita a instituciones educativas a participar.
+              </p>
+              <div class="vis-conv-card__fecha">
+                <svg width="16" height="18" viewBox="0 0 19 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M15.629 2.37838H14.0968V0.891892C14.0968 0.65535 13.9999 0.428489 13.8275 0.261229C13.6551 0.0939698 13.4212 0 13.1774 0C12.9336 0 12.6997 0.0939698 12.5274 0.261229C12.3549 0.428489 12.2581 0.65535 12.2581 0.891892V2.37838H6.74194V0.891892C6.74194 0.65535 6.64507 0.428489 6.47266 0.261229C6.30025 0.0939698 6.06641 0 5.82258 0C5.57876 0 5.34491 0.0939698 5.1725 0.261229C5.00009 0.428489 4.90323 0.65535 4.90323 0.891892V2.37838H3.37097C2.47693 2.37838 1.61951 2.72292 0.987338 3.33622C0.355153 3.94951 0 4.78131 0 5.64865V18.7297C0 19.597 0.355153 20.4288 0.987338 21.0421C1.61951 21.6555 2.47693 22 3.37097 22H15.629C16.523 22 17.3805 21.6555 18.0126 21.0421C18.6449 20.4288 19 19.597 19 18.7297V5.64865C19 4.78131 18.6449 3.94951 18.0126 3.33622C17.3805 2.72292 16.523 2.37838 15.629 2.37838ZM3.37097 4.16216H4.90323V5.64865C4.90323 5.88519 5.00009 6.11205 5.1725 6.27931C5.34491 6.44657 5.57876 6.54054 5.82258 6.54054C6.06641 6.54054 6.30025 6.44657 6.47266 6.27931C6.64507 6.11205 6.74194 5.88519 6.74194 5.64865V4.16216H12.2581V5.64865C12.2581 5.88519 12.3549 6.11205 12.5274 6.27931C12.6997 6.44657 12.9336 6.54054 13.1774 6.54054C13.4212 6.54054 13.6551 6.44657 13.8275 6.27931C13.9999 6.11205 14.0968 5.88519 14.0968 5.64865V4.16216H15.629C16.0354 4.16216 16.4252 4.31878 16.7125 4.59755C16.9999 4.87632 17.1613 5.25441 17.1613 5.64865V8.91892H1.83871V5.64865C1.83871 5.25441 2.00015 4.87632 2.2875 4.59755C2.57486 4.31878 2.96459 4.16216 3.37097 4.16216ZM15.629 20.2162H3.37097C2.96459 20.2162 2.57486 20.0596 2.2875 19.7809C2.00015 19.5021 1.83871 19.1239 1.83871 18.7297V10.7027H17.1613V18.7297C17.1613 19.1239 16.9999 19.5021 16.7125 19.7809C16.4252 20.0596 16.0354 20.2162 15.629 20.2162Z" fill="black"/>
+                </svg>
+                Cerró el 31 de agosto del 2027
+              </div>
+              <button type="button" class="vis-conv-card__btn vis-conv-card__btn--admin">
+                Administrar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ======================================================
+         3. BANNER + BENTO (layout de dos columnas según Frame 185)
+         Izquierda: Banner CARD + Bentos 1, 2, 3
+         Derecha:   Bento 4 (CUPOS) — altura completa
+    ======================================================= -->
+    <section class="fp-section">
+      <h2 class="fp-section-title">Banner + paneles de información (Frame 185)</h2>
+
+      <div class="vis-bento-layout">
+
+        <!-- ── Columna izquierda ── -->
+        <div class="vis-bento-left">
+
+          <!-- Banner / CARD principal -->
+          <div class="vis-banner">
+            <div class="vis-banner__badge">
+              <span class="vis-banner__badge-dot"></span>
+              <span class="vis-banner__badge-label">CONVOCATORIA ABIERTA</span>
+            </div>
+            <h3 class="vis-banner__title">FILEY 2026 — VISITAS ESCOLARES</h3>
+            <p class="vis-banner__desc">
+              La Universidad Autónoma de Yucatán (UADY), a través de la Feria Internacional de la Lectura Yucatán (FILEY), invita a todas las instituciones educativas de Yucatán, la Península y otros estados del país a participar en la décimo cuarta edición de la FILEY.
+            </p>
+          </div>
+
+          <!-- BENTO 1 — Fechas clave -->
+          <div class="vis-bento">
+            <div class="vis-bento__header">
+              <div class="vis-bento__num">1</div>
+              <h3 class="vis-bento__title">FECHAS CLAVE</h3>
+            </div>
+            <div class="vis-bento__kv">
+              <span class="vis-bento__kv-label">Periodo de visita</span>
+              <span class="vis-bento__kv-value">14 al 22 de marzo de 2026</span>
+            </div>
+            <div class="vis-bento__kv">
+              <span class="vis-bento__kv-label">Apertura de convocatoria</span>
+              <span class="vis-bento__kv-value">01 de enero a las 15:00 h</span>
+            </div>
+            <div class="vis-bento__kv">
+              <span class="vis-bento__kv-label">Cierre de convocatoria</span>
+              <span class="vis-bento__kv-value">30 de enero a las 15:00 h</span>
+            </div>
+            <div class="vis-bento__kv">
+              <span class="vis-bento__kv-label">Resolución de propuestas</span>
+              <span class="vis-bento__kv-value">1 al 28 de febrero</span>
+            </div>
+          </div>
+
+          <!-- BENTO 2 — Requisitos generales -->
+          <div class="vis-bento">
+            <div class="vis-bento__header">
+              <div class="vis-bento__num">2</div>
+              <h3 class="vis-bento__title">REQUISITOS GENERALES</h3>
+            </div>
+            <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px;">
+              <li class="vis-bento__item">Para participar en las actividades de la FILEY, <strong>todas las escuelas deberán registrarse</strong>.</li>
+              <li class="vis-bento__item">Podrán participar tanto escuelas <strong>públicas</strong> como <strong>privadas</strong>.</li>
+              <li class="vis-bento__item">Cada escuela deberá designar a <strong>una persona responsable</strong> (director, docente, tutor, prefecto, etc.) que se encargue del registro y de acompañar al grupo durante la visita.</li>
+              <li class="vis-bento__item">Las instituciones participantes <strong>serán responsables de gestionar y asegurar su transporte</strong> de manera oportuna para asistir a la Feria según las actividades programadas.</li>
+            </ul>
+          </div>
+
+          <!-- BENTO 3 — Proceso de inscripción -->
+          <div class="vis-bento">
+            <div class="vis-bento__header">
+              <div class="vis-bento__num">3</div>
+              <h3 class="vis-bento__title">PROCESO DE INSCRIPCIÓN</h3>
+            </div>
+            <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px;">
+              <li class="vis-bento__item">El responsable de la visita deberá <strong>completar el formulario</strong> con los datos oficiales de la escuela.</li>
+              <li class="vis-bento__item">El representante deberá <strong>leer y aceptar el reglamento de conducta</strong> estipulado por la feria para la edición correspondiente antes de seguir con el proceso.</li>
+              <li class="vis-bento__item">El responsable <strong>asignará los talleres reservando los lugares</strong> de cada actividad a la que quiera inscribir a su o sus grupos.</li>
+              <li class="vis-bento__item">Al confirmar la reserva de lugares, el representante <strong>se compromete a asistir puntualmente</strong> a todas las actividades reservadas.</li>
+              <li class="vis-bento__item">Al finalizar el proceso <strong>se le enviará una carta de bienvenida</strong>, junto al reglamento de conducta de la feria.</li>
+            </ul>
+          </div>
+
+        </div><!-- /vis-bento-left -->
+
+        <!-- ── Columna derecha: CUPOS ── -->
+        <div class="vis-bento-right">
+          <div class="vis-bento vis-bento--cupos">
+            <div class="vis-bento__header">
+              <div class="vis-bento__num">4</div>
+              <h3 class="vis-bento__title">CUPOS DISPONIBLES</h3>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">14 de Marzo</span>
+                <span class="vis-cupo__count">225/450</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--magenta" style="width:50%"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">15 de Marzo</span>
+                <span class="vis-cupo__count">325/450</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--magenta" style="width:72%"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">16 de Marzo</span>
+                <span class="vis-cupo__nota">Salas libres disponibles</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--lleno"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">17 de Marzo</span>
+                <span class="vis-cupo__count">400/450</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--magenta" style="width:89%"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">18 de Marzo</span>
+                <span class="vis-cupo__nota">Salas libres disponibles</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--lleno"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">19 de Marzo</span>
+                <span class="vis-cupo__nota">Salas libres disponibles</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--lleno"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">20 de Marzo</span>
+                <span class="vis-cupo__count">265/450</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--magenta" style="width:59%"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">21 de Marzo</span>
+                <span class="vis-cupo__count">125/450</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--magenta" style="width:28%"></div>
+              </div>
+            </div>
+
+            <div class="vis-cupo">
+              <div class="vis-cupo__row">
+                <span class="vis-cupo__dia">22 de Marzo</span>
+                <span class="vis-cupo__count">325/450</span>
+              </div>
+              <div class="vis-cupo__bar-bg">
+                <div class="vis-cupo__bar-fill vis-cupo__bar-fill--magenta" style="width:72%"></div>
+              </div>
+            </div>
+
+          </div><!-- /vis-bento--cupos -->
+        </div><!-- /vis-bento-right -->
+
+      </div><!-- /vis-bento-layout -->
+    </section>
+
+
+    <!-- ======================================================
+         4. TABLA DE INSCRIPCIONES (REVISIÓN / EDICIÓN DE ITINERARIO)
+    ======================================================= -->
+    <section class="fp-section">
+      <h2 class="fp-section-title">Revisión / Edición de itinerario</h2>
+      <div class="vis-tabla-wrap">
+        <table class="vis-tabla">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Representante</th>
+              <th>Instituto</th>
+              <th>Turno</th>
+              <th>Sector</th>
+              <th>Nivel académico</th>
+              <th>Ubicación</th>
+              <th>Visitantes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Fila 1: expandida con detalles -->
+            <tr>
+              <td>VIS-2027-001</td>
+              <td>Isaac Alejandro Ortiz Zaldivar</td>
+              <td>Benito Juárez García</td>
+              <td>Matutino</td>
+              <td>Público</td>
+              <td>Primaria</td>
+              <td>Mérida, Yucatán</td>
+              <td>90</td>
+              <td>
+                <button type="button" style="background:none;border:none;color:var(--color-dorado-encabezado);font-weight:500;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                  Revisar ▾
+                </button>
+              </td>
+            </tr>
+            <!-- Detalle expandido de fila 1 -->
+            <tr class="vis-tabla__row-detail">
+              <td colspan="9">
+                <div class="vis-tabla-detail">
+                  <div class="vis-tabla-detail__inner">
+                    <!-- Ficha de datos -->
+                    <div class="vis-ficha">
+                      <p class="vis-ficha__section">Representante</p>
+                      <div class="vis-ficha__grid">
+                        <span class="vis-ficha__key">Nombre</span>
+                        <span class="vis-ficha__value">Isaac Alejandro Ortiz Zaldivar</span>
+                        <span class="vis-ficha__key">Cargo</span>
+                        <span class="vis-ficha__value">Prefecto</span>
+                        <span class="vis-ficha__key">Teléfono</span>
+                        <span class="vis-ficha__value">9994588510</span>
+                        <span class="vis-ficha__key">Correo</span>
+                        <span class="vis-ficha__value">prefecto112@instituto.ms</span>
+                      </div>
+                      <p class="vis-ficha__section" style="margin-top:10px">Instituto</p>
+                      <div class="vis-ficha__grid">
+                        <span class="vis-ficha__key">Director</span>
+                        <span class="vis-ficha__value">Marco Lopez Perez</span>
+                        <span class="vis-ficha__key">CCT</span>
+                        <span class="vis-ficha__value">31DPR0681L</span>
+                        <span class="vis-ficha__key">Dirección</span>
+                        <span class="vis-ficha__value">Calle 61 Núm. Ext. 287, Esperanza</span>
+                        <span class="vis-ficha__key">Correo institución</span>
+                        <span class="vis-ficha__value">N/A</span>
+                        <span class="vis-ficha__key">Teléfono institución</span>
+                        <span class="vis-ficha__value">N/A</span>
+                      </div>
+                    </div>
+                    <!-- Botón itinerario -->
+                    <div class="vis-itinerario-btn">
+                      <button type="button" class="vis-itinerario-btn__pill">
+                        <svg width="16" height="18" viewBox="0 0 19 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M15.629 2.37838H14.0968V0.891892C14.0968 0.65535 13.9999 0.428489 13.8275 0.261229C13.6551 0.0939698 13.4212 0 13.1774 0C12.9336 0 12.6997 0.0939698 12.5274 0.261229C12.3549 0.428489 12.2581 0.65535 12.2581 0.891892V2.37838H6.74194V0.891892C6.74194 0.65535 6.64507 0.428489 6.47266 0.261229C6.30025 0.0939698 6.06641 0 5.82258 0C5.57876 0 5.34491 0.0939698 5.1725 0.261229C5.00009 0.428489 4.90323 0.65535 4.90323 0.891892V2.37838H3.37097C2.47693 2.37838 1.61951 2.72292 0.987338 3.33622C0.355153 3.94951 0 4.78131 0 5.64865V18.7297C0 19.597 0.355153 20.4288 0.987338 21.0421C1.61951 21.6555 2.47693 22 3.37097 22H15.629C16.523 22 17.3805 21.6555 18.0126 21.0421C18.6449 20.4288 19 19.597 19 18.7297V5.64865C19 4.78131 18.6449 3.94951 18.0126 3.33622C17.3805 2.72292 16.523 2.37838 15.629 2.37838ZM3.37097 4.16216H4.90323V5.64865C4.90323 5.88519 5.00009 6.11205 5.1725 6.27931C5.34491 6.44657 5.57876 6.54054 5.82258 6.54054C6.06641 6.54054 6.30025 6.44657 6.47266 6.27931C6.64507 6.11205 6.74194 5.88519 6.74194 5.64865V4.16216H12.2581V5.64865C12.2581 5.88519 12.3549 6.11205 12.5274 6.27931C12.6997 6.44657 12.9336 6.54054 13.1774 6.54054C13.4212 6.54054 13.6551 6.44657 13.8275 6.27931C13.9999 6.11205 14.0968 5.88519 14.0968 5.64865V4.16216H15.629C16.0354 4.16216 16.4252 4.31878 16.7125 4.59755C16.9999 4.87632 17.1613 5.25441 17.1613 5.64865V8.91892H1.83871V5.64865C1.83871 5.25441 2.00015 4.87632 2.2875 4.59755C2.57486 4.31878 2.96459 4.16216 3.37097 4.16216ZM15.629 20.2162H3.37097C2.96459 20.2162 2.57486 20.0596 2.2875 19.7809C2.00015 19.5021 1.83871 19.1239 1.83871 18.7297V10.7027H17.1613V18.7297C17.1613 19.1239 16.9999 19.5021 16.7125 19.7809C16.4252 20.0596 16.0354 20.2162 15.629 20.2162Z" fill="white"/>
+                        </svg>
+                        Itinerario
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Grupos -->
+                  <div class="vis-grupos-row">
+                    <div class="vis-grupo-card">
+                      <div class="vis-grupo-card__header">Grupo 1</div>
+                      <div class="vis-grupo-card__body">
+                        <span>Grado: Sexto</span>
+                        <span>Visitantes: 35</span>
+                        <span>Responsable: Erick Matos Pantoja</span>
+                      </div>
+                    </div>
+                    <div class="vis-grupo-card">
+                      <div class="vis-grupo-card__header">Grupo 2</div>
+                      <div class="vis-grupo-card__body">
+                        <span>Grado: Cuarto</span>
+                        <span>Visitantes: 35</span>
+                        <span>Responsable: Juan Lopez Salvador</span>
+                      </div>
+                    </div>
+                    <div class="vis-grupo-card">
+                      <div class="vis-grupo-card__header">Grupo 3</div>
+                      <div class="vis-grupo-card__body">
+                        <span>Grado: Quinto</span>
+                        <span>Visitantes: 20</span>
+                        <span>Responsable: Enrique Segoviano Ruiz</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <!-- Fila 2: colapsada -->
+            <tr>
+              <td>VIS-2027-002</td>
+              <td>María Ruiz Arjona</td>
+              <td>Ermilo Abreu Gomez</td>
+              <td>Matutino</td>
+              <td>Público</td>
+              <td>Secundaria</td>
+              <td>Mérida, Yucatán</td>
+              <td>76</td>
+              <td>
+                <button type="button" style="background:none;border:none;color:var(--color-azul-texto);font-weight:500;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                  Revisar ▸
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- ======================================================
+         5. SELECCIÓN DE ACTIVIDADES (cabecera + horario)
+    ======================================================= -->
+    <section class="fp-section">
+      <!-- 10 salas (Ek Balam 1-6, Cine 1-2, Exhibición, Ludoteca). Sin franja de descanso. Turno dropdown alterna matutino/vespertino. Clic derecho en celda → popup selector de grupos. -->
+      <h2 class="fp-section-title">Selección de actividades por sala y horario</h2>
+
+      <!-- Cabecera de la vista -->
+      <div class="vis-sel-header">
+        <p class="vis-sel-header__instituto">Benito Juárez García</p>
+        <div class="vis-grupo-card" style="max-width:255px">
+          <div class="vis-grupo-card__header">Grupo 1</div>
+          <div class="vis-grupo-card__body">
+            <span>Grado: Sexto</span>
+            <span>Visitantes: 35</span>
+            <span>Responsable: Erick Matos Pantoja</span>
+            <span>Talleres reservados: 3</span>
+          </div>
+        </div>
+        <div class="vis-grupo-card" style="max-width:255px">
+          <div class="vis-grupo-card__header">Grupo 2</div>
+          <div class="vis-grupo-card__body">
+            <span>Grado: Cuarto</span>
+            <span>Visitantes: 35</span>
+            <span>Responsable: Juan Lopez Salvador</span>
+            <span>Talleres reservados: 3</span>
+          </div>
+        </div>
+        <div class="vis-grupo-card" style="max-width:255px">
+          <div class="vis-grupo-card__header">Grupo 3</div>
+          <div class="vis-grupo-card__body">
+            <span>Grado: Quinto</span>
+            <span>Visitantes: 20</span>
+            <span>Responsable: Enrique Segoviano Ruiz</span>
+            <span>Talleres reservados: 2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horario: header + grid -->
+      <div class="vis-horario-container">
+
+        <!-- Header: selector de TURNO (matutino/vespertino) + selector de día -->
+        <div class="vis-horario-header">
+          <div class="vis-turno-selector">
+            <span class="vis-turno-selector__label">Turno</span>
+            <select class="vis-turno-dropdown" id="fp-turno">
+              <option value="matutino">Matutino</option>
+              <option value="vespertino">Vespertino</option>
+            </select>
+          </div>
+          <div class="vis-dia-selector">
+            <button type="button" class="vis-dia-caret vis-dia-caret--prev" aria-label="Día anterior">
+              <span class="vis-dia-caret__icon">
+                <svg width="20" height="23" viewBox="0 0 26 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M0.999998 16.2926C-0.333335 15.5228 -0.333333 13.5983 1 12.8285L22.75 0.271127C24.0833 -0.498673 25.75 0.463579 25.75 2.00318V27.1179C25.75 28.6575 24.0833 29.6198 22.75 28.85L0.999998 16.2926Z" fill="#949494"/>
+                </svg>
+              </span>
+            </button>
+            <span class="vis-dia-selector__text">14 de Marzo</span>
+            <button type="button" class="vis-dia-caret vis-dia-caret--next" aria-label="Día siguiente">
+              <span class="vis-dia-caret__icon">
+                <svg width="20" height="23" viewBox="0 0 26 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M24.75 12.8285C26.0833 13.5983 26.0833 15.5228 24.75 16.2926L3 28.85C1.66666 29.6198 0 28.6575 0 27.1179V2.00318C0 0.463576 1.66667 -0.498672 3 0.271129L24.75 12.8285Z" fill="#C8D7E3"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Las 10 salas y sus bloques (matutino/vespertino, sin descanso) se
+             generan con el script del final de la página. -->
+        <div class="vis-horario-wrap" id="fp-horario-wrap"></div>
+
+      </div><!-- cierre vis-horario-container -->
+    </section>
+
+
+    <!-- ======================================================
+         6. ESTADOS DE CELDA DE TALLER (badges de grupo)
+    ======================================================= -->
+    <section class="fp-section">
+      <!-- Tarjeta modular: badges G1-G3 (esquina sup. derecha), nombre, cupos, píldora de nivel.
+           El nivel del taller lo elige el organizador — puede diferir del nivel del registro. -->
+      <h2 class="fp-section-title">Tarjeta modular de taller y tipos de bloque</h2>
+
+      <h3 style="margin:4px 0 10px;font-size:17px;color:#3f4a5a;text-align:center;">Píldoras de nivel educativo</h3>
+      <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:28px;">
+        <span id="fp-pill-demo" class="vis-nivel vis-nivel--primaria-alta" style="transition:opacity .25s;">Primaria Alta</span>
+        <span style="font-size:12px;color:#a0a8b2;">← cicla entre los 5 niveles</span>
+      </div>
+
+      <div class="vis-taller-estados">
+
+        <!-- Sin grupo -->
+        <div class="vis-taller-estado-item">
+          <div class="vis-horario-celda" style="flex:none;width:360px;">
+            <span class="vis-horario-celda__nombre">Taller de ilustración</span>
+            <div class="vis-horario-celda__meta"><span class="vis-horario-celda__cupos">Cupos disponibles: 35</span><span>Nivel Educativo: <span class="vis-nivel vis-nivel--primaria-alta">Primaria Alta</span></span></div>
+          </div>
+          <span class="vis-taller-estado-item__label">Sin grupo</span>
+        </div>
+
+        <!-- 1 grupo (G3) -->
+        <div class="vis-taller-estado-item">
+          <div class="vis-horario-celda" style="flex:none;width:360px;">
+            <span class="vis-horario-celda__nombre">Taller de ilustración</span>
+            <div class="vis-horario-celda__meta"><span class="vis-horario-celda__cupos">Cupos disponibles: 15</span><span>Nivel Educativo: <span class="vis-nivel vis-nivel--primaria-baja">Primaria - Baja</span></span></div>
+            <div class="vis-celda-badges"><span class="vis-grupo-badge">G3</span></div>
+          </div>
+          <span class="vis-taller-estado-item__label">1 grupo (G3)</span>
+        </div>
+
+        <!-- 3 grupos (G1 + G2 + G3) -->
+        <div class="vis-taller-estado-item">
+          <div class="vis-horario-celda" style="flex:none;width:360px;">
+            <span class="vis-horario-celda__nombre">Función de cine Juvenil</span>
+            <div class="vis-horario-celda__meta"><span class="vis-horario-celda__cupos">Cupos disponibles: 120</span><span>Nivel Educativo: <span class="vis-nivel vis-nivel--universidad">Universidad</span></span></div>
+            <div class="vis-celda-badges">
+              <span class="vis-grupo-badge">G1</span>
+              <span class="vis-grupo-badge">G2</span>
+              <span class="vis-grupo-badge">G3</span>
+            </div>
+          </div>
+          <span class="vis-taller-estado-item__label">Sala de cine · 3 grupos</span>
+        </div>
+
+        <!-- BLOQUE: sin taller programado -->
+        <div class="vis-taller-estado-item">
+          <div class="vis-horario-celda vis-horario-celda--sin-taller" style="flex:none;width:360px;height:85px;">
+            <span class="vis-bloque-label">Sin taller programado</span>
+          </div>
+          <span class="vis-taller-estado-item__label">Sin taller programado</span>
+        </div>
+
+        <!-- BLOQUE: cerrado -->
+        <div class="vis-taller-estado-item">
+          <div class="vis-horario-celda vis-horario-celda--cerrado" style="flex:none;width:360px;height:85px;">
+            <span class="vis-bloque-label">Cerrado</span>
+          </div>
+          <span class="vis-taller-estado-item__label">Cerrado</span>
+        </div>
+
+        <!-- BLOQUE: zona de acceso libre (badges, sin nivel ni cupo) -->
+        <div class="vis-taller-estado-item">
+          <div class="vis-horario-celda vis-horario-celda--libre" style="flex:none;width:360px;height:85px;">
+            <span class="vis-bloque-label">Zona de acceso libre</span>
+            <span class="vis-horario-celda__cupos">Cupo ilimitado</span>
+            <div class="vis-celda-badges"><span class="vis-grupo-badge">G1</span><span class="vis-grupo-badge">G2</span></div>
+          </div>
+          <span class="vis-taller-estado-item__label">Acceso libre · sin cupo</span>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ======================================================
+         7. CATÁLOGO DE TALLERES — ficha básica
+    ======================================================= -->
+    <section class="fp-section">
+      <!-- 5 tarjetas animadas, una por nivel educativo; cada una cicla sus 5 talleres (3 normales × 35 cupos + 2 cine × 120 cupos). Mismos datos que llenan el grid de horario. -->
+      <h2 class="fp-section-title">Catálogo de talleres — ficha básica</h2>
+      <div id="fp-catalogo" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"></div>
+    </section>
+
+    <!-- Tipografía: Open Sans sin webfont (fallback sistema). SVGs bus-icon y Vector (calendario) incrustados inline. CSS derivado de Figma VIS Visitantes. -->
+
+  </main>
+
+<script>
+/* Render del grid de horario (matutino + vespertino) para el showcase.
+   Datos de demostración; el selector de grupos (clic derecho) lo maneja el
+   script siguiente por delegación de eventos. */
+(function () {
+  var wrap = document.getElementById('fp-horario-wrap');
+  if (!wrap) return;
+  var GSIZE = { G1: 35, G2: 35, G3: 20 };
+  var COLW = 360;   /* ancho fijo de columna (debe coincidir con el CSS) */
+  var NIVEL = {
+    pa: ['Primaria Alta', 'vis-nivel--primaria-alta'],
+    pb: ['Primaria - Baja', 'vis-nivel--primaria-baja'],
+    se: ['Secundaria', 'vis-nivel--secundaria'],
+    pr: ['Preparatoria', 'vis-nivel--preparatoria'],
+    un: ['Universidad', 'vis-nivel--universidad']
+  };
+  function T(t, n, b) { return { k: 't', t: t, n: n, base: 35, b: b || '' }; }
+  function C(t, n) { return { k: 't', t: t, n: n, base: 120, b: '' }; }
+  var SIN = { k: 's' }, CER = { k: 'c' };
+  function L(sp, b) { return { k: 'l', sp: sp, b: b || '' }; }
+  var SALAS = ['Ek Balam - Sala 1', 'Ek Balam - Sala 2', 'Ek Balam - Sala 3', 'Ek Balam - Sala 4', 'Ek Balam - Sala 5', 'Ek Balam - Sala 6', 'Sala de cine 1', 'Sala de cine 2', 'Zona de exhibición', 'Ludoteca'];
+  var TIMES = { matutino: ['09:00 – 09:50', '10:00 – 10:50', '11:00 – 11:50', '12:00 – 12:50'], vespertino: ['15:00 – 15:50', '16:00 – 16:50', '17:00 – 17:50', '18:00 – 18:50'] };
+  var GRID = {
+    matutino: [
+      [T('Taller de Literatura Infantil', 'pa', 'G1'), T('Cuentacuentos maya', 'pa'), T('Taller de Literatura Juvenil', 'un'), T('Taller de ilustración', 'pb')],
+      [T('Taller de Literatura Infantil', 'pb'), T('Teatro de sombras', 'pb'), SIN, T('Debate y oratoria', 'pr')],
+      [T('Taller de Literatura Infantil', 'pa', 'G2'), T('Origami literario', 'pb'), T('Cuentacuentos maya', 'pa'), T('Taller de ilustración', 'pb')],
+      [T('Taller de Literatura Infantil', 'pa', 'G3'), SIN, T('Fotografía narrativa', 'pr'), T('Escritura creativa', 'un')],
+      [T('Taller de Literatura Juvenil', 'se'), T('Cine y ensayo', 'un'), T('Cómic e historieta', 'se'), T('Club de robótica', 'se')],
+      [T('Debate y oratoria', 'pr'), T('Taller de Literatura Infantil', 'pb'), T('Origami literario', 'pb'), SIN],
+      [C('Función de cine Infantil', 'pa'), C('Cortometrajes animados', 'pb'), C('Función de cine Infantil', 'pa'), C('Función de cine Juvenil', 'pr')],
+      [C('Función de cine Juvenil', 'se'), C('Cineclub preparatoria', 'pr'), C('Matiné de cuentos', 'pb'), C('Función de cine Juvenil', 'un')],
+      [CER, L(3, 'G1 G2 G3')],
+      [L(4)]
+    ],
+    vespertino: [
+      [T('Taller de Literatura Infantil', 'pa', 'G1'), T('Cuentacuentos maya', 'pa'), T('Debate y oratoria', 'pr'), T('Escritura creativa', 'un')],
+      [T('Taller de ilustración', 'pb'), T('Cómic e historieta', 'se'), T('Fotografía narrativa', 'pr'), T('Debate y oratoria', 'pr')],
+      [T('Taller de Literatura Infantil', 'pa', 'G2'), T('Cine y ensayo', 'un'), T('Club de robótica', 'se'), T('Escritura creativa', 'un')],
+      [T('Cuentacuentos maya', 'pa', 'G3'), T('Cine y ensayo', 'un'), T('Cómic e historieta', 'se'), SIN],
+      [T('Taller de ilustración', 'pa'), T('Club de robótica', 'se'), T('Escritura creativa', 'un'), SIN],
+      [T('Teatro de sombras', 'pb'), T('Fotografía narrativa', 'pr'), SIN, T('Debate y oratoria', 'pr')],
+      [C('Función de cine Infantil', 'pb'), C('Función de cine Juvenil', 'se'), CER, CER],
+      [C('Matiné de cuentos', 'pb'), C('Documental joven', 'se'), CER, CER],
+      [CER, L(3, 'G1 G2 G3')],
+      [L(4)]
+    ]
+  };
+  function badges(s) { var g = (s || '').match(/G\d/g); if (!g) return ''; return '<div class="vis-celda-badges">' + g.map(function (x) { return '<span class="vis-grupo-badge">' + x + '</span>'; }).join('') + '</div>'; }
+  function sum(s) { var g = (s || '').match(/G\d/g) || [], t = 0; g.forEach(function (x) { t += GSIZE[x] || 0; }); return t; }
+  function cell(c) {
+    if (c.k === 's') return '<div class="vis-horario-celda vis-horario-celda--sin-taller"><span class="vis-bloque-label">Sin taller programado</span></div>';
+    if (c.k === 'c') return '<div class="vis-horario-celda vis-horario-celda--cerrado"><span class="vis-bloque-label">Cerrado</span></div>';
+    if (c.k === 'l') return '<div class="vis-horario-celda vis-horario-celda--libre" style="flex:0 0 ' + (c.sp * COLW) + 'px"><span class="vis-bloque-label">Zona de acceso libre</span><span class="vis-horario-celda__cupos">Cupo ilimitado</span>' + badges(c.b) + '</div>';
+    var nv = NIVEL[c.n], rem = Math.max(c.base - sum(c.b), 0);
+    return '<div class="vis-horario-celda">' +
+      '<span class="vis-horario-celda__nombre">' + c.t + '</span>' +
+      '<div class="vis-horario-celda__meta"><span class="vis-horario-celda__cupos">Cupos disponibles: ' + rem + '</span>' +
+      '<span>Nivel Educativo: <span class="vis-nivel ' + nv[1] + '">' + nv[0] + '</span></span></div>' +
+      badges(c.b) + '</div>';
+  }
+  function area(turno, active) {
+    var head = '<div class="vis-horario-tiempos"><div class="vis-horario-tiempo vis-horario-tiempo--sala">Sala</div>' +
+      TIMES[turno].map(function (t) { return '<div class="vis-horario-tiempo">' + t + '</div>'; }).join('') + '</div>';
+    var rows = GRID[turno].map(function (cells, i) {
+      return '<div class="vis-horario-fila"><div class="vis-horario-celda vis-horario-celda--sala-label">' + SALAS[i] + '</div>' + cells.map(cell).join('') + '</div>';
+    }).join('');
+    return '<div class="vis-horario-area' + (active ? ' is-active' : '') + '" data-turno="' + turno + '">' + head + rows + '</div>';
+  }
+  wrap.innerHTML = area('matutino', true) + area('vespertino', false);
+  var sel = document.getElementById('fp-turno');
+  if (sel) sel.addEventListener('change', function () {
+    wrap.querySelectorAll('.vis-horario-area').forEach(function (a) {
+      a.classList.toggle('is-active', a.getAttribute('data-turno') === sel.value);
+    });
+  });
+}());
+</script>
+
+<script>
+(function () {
+  /* ── Popup flotante único ── */
+  var popup = document.createElement('div');
+  popup.className = 'vis-grupo-selector';
+  popup.style.cssText = 'display:none;position:fixed;z-index:9999;';
+  popup.innerHTML =
+    '<div class="vis-grupo-selector__item" data-group="G1"><span class="vis-radio"></span> Grupo 1</div>' +
+    '<div class="vis-grupo-selector__item" data-group="G2"><span class="vis-radio"></span> Grupo 2</div>' +
+    '<div class="vis-grupo-selector__item" data-group="G3"><span class="vis-radio"></span> Grupo 3</div>' +
+    '<div class="vis-grupo-selector__item"><button type="button" class="vis-todos-btn">Todos los grupos</button></div>';
+  document.body.appendChild(popup);
+
+  var currentCell = null;
+
+  function getActive(cell) {
+    return new Set(
+      Array.from(cell.querySelectorAll('.vis-grupo-badge')).map(function (b) {
+        return b.textContent.trim();
+      })
+    );
+  }
+
+  function renderBadges(cell, active) {
+    var container = cell.querySelector('.vis-celda-badges');
+    if (active.size === 0) {
+      if (container) container.remove();
+      return;
+    }
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'vis-celda-badges';
+      cell.appendChild(container);
+    }
+    container.innerHTML = ['G1', 'G2', 'G3']
+      .filter(function (g) { return active.has(g); })
+      .map(function (g) { return '<span class="vis-grupo-badge">' + g + '</span>'; })
+      .join('');
+  }
+
+  function syncRadios(cell) {
+    var active = getActive(cell);
+    popup.querySelectorAll('[data-group]').forEach(function (item) {
+      var radio = item.querySelector('.vis-radio');
+      var on = active.has(item.getAttribute('data-group'));
+      radio.classList.toggle('vis-radio--selected', on);
+    });
+  }
+
+  /* Celdas que NO aceptan grupos: etiqueta de sala y los bloques Cerrado /
+     Sin taller programado. La zona de acceso libre SÍ acepta badges. */
+  var NO_ASIGNABLE = ['vis-horario-celda--sala-label',
+                      'vis-horario-celda--cerrado', 'vis-horario-celda--sin-taller'];
+
+  /* Abrir con clic derecho en cualquier celda de taller */
+  document.addEventListener('contextmenu', function (e) {
+    var cell = e.target.closest('.vis-horario-celda');
+    if (!cell || NO_ASIGNABLE.some(function (c) { return cell.classList.contains(c); })) return;
+    e.preventDefault();
+    currentCell = cell;
+    syncRadios(cell);
+    popup.style.display = 'flex';
+    /* Posicionar cerca del cursor sin salirse de la ventana */
+    var pw = popup.offsetWidth || 220;
+    var ph = popup.offsetHeight || 210;
+    popup.style.left = Math.min(e.clientX, window.innerWidth  - pw - 8) + 'px';
+    popup.style.top  = Math.min(e.clientY, window.innerHeight - ph - 8) + 'px';
+  });
+
+  /* Interacción dentro del popup */
+  popup.addEventListener('click', function (e) {
+    if (!currentCell) return;
+
+    /* Toggle de grupo individual */
+    var item = e.target.closest('[data-group]');
+    if (item) {
+      var g = item.getAttribute('data-group');
+      var active = getActive(currentCell);
+      if (active.has(g)) { active.delete(g); } else { active.add(g); }
+      renderBadges(currentCell, active);
+      syncRadios(currentCell);
+      return;
+    }
+
+    /* Botón "Todos los grupos" */
+    if (e.target.closest('.vis-todos-btn')) {
+      renderBadges(currentCell, new Set(['G1', 'G2', 'G3']));
+      syncRadios(currentCell);
+    }
+  });
+
+  /* Cerrar al hacer clic fuera del popup */
+  document.addEventListener('click', function (e) {
+    if (!popup.contains(e.target)) {
+      popup.style.display = 'none';
+      currentCell = null;
+    }
+  });
+
+  /* Cerrar con Escape */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      popup.style.display = 'none';
+      currentCell = null;
+    }
+  });
+}());
+</script>
+
+<script>
+/* Pill animada: cicla entre los 5 niveles educativos */
+(function () {
+  var pill = document.getElementById('fp-pill-demo');
+  if (!pill) return;
+  var VARS = [
+    ['vis-nivel--primaria-alta', 'Primaria Alta'],
+    ['vis-nivel--primaria-baja', 'Primaria - Baja'],
+    ['vis-nivel--secundaria',    'Secundaria'],
+    ['vis-nivel--preparatoria',  'Preparatoria'],
+    ['vis-nivel--universidad',   'Universidad']
+  ];
+  var i = 0;
+  setInterval(function () {
+    pill.style.opacity = '0';
+    setTimeout(function () {
+      i = (i + 1) % VARS.length;
+      pill.className = 'vis-nivel ' + VARS[i][0];
+      pill.textContent = VARS[i][1];
+      pill.style.opacity = '1';
+    }, 260);
+  }, 1800);
+}());
+</script>
+
+<script>
+/* Catálogo animado: 5 tarjetas (una por nivel), cada una cicla entre sus 5 talleres */
+(function () {
+  var wrap = document.getElementById('fp-catalogo');
+  if (!wrap) return;
+  var CATALOG = [
+    { cls: 'vis-nivel--primaria-alta', label: 'Primaria Alta', talleres: [
+      { t: 'Taller de Literatura Infantil', q: 35 },
+      { t: 'Cuentacuentos maya',            q: 35 },
+      { t: 'Taller de ilustración',         q: 35 },
+      { t: 'Función de cine Infantil',      q: 120 },
+      { t: 'Cortometrajes animados',        q: 120 }
+    ]},
+    { cls: 'vis-nivel--primaria-baja', label: 'Primaria - Baja', talleres: [
+      { t: 'Taller de Literatura Infantil', q: 35 },
+      { t: 'Teatro de sombras',             q: 35 },
+      { t: 'Origami literario',             q: 35 },
+      { t: 'Función de cine Infantil',      q: 120 },
+      { t: 'Matiné de cuentos',             q: 120 }
+    ]},
+    { cls: 'vis-nivel--secundaria', label: 'Secundaria', talleres: [
+      { t: 'Taller de Literatura Juvenil',  q: 35 },
+      { t: 'Cómic e historieta',            q: 35 },
+      { t: 'Club de robótica',              q: 35 },
+      { t: 'Función de cine Juvenil',       q: 120 },
+      { t: 'Documental joven',              q: 120 }
+    ]},
+    { cls: 'vis-nivel--preparatoria', label: 'Preparatoria', talleres: [
+      { t: 'Taller de Literatura Juvenil',  q: 35 },
+      { t: 'Debate y oratoria',             q: 35 },
+      { t: 'Fotografía narrativa',          q: 35 },
+      { t: 'Función de cine Juvenil',       q: 120 },
+      { t: 'Cineclub preparatoria',         q: 120 }
+    ]},
+    { cls: 'vis-nivel--universidad', label: 'Universidad', talleres: [
+      { t: 'Taller de Literatura Juvenil',  q: 35 },
+      { t: 'Escritura creativa',            q: 35 },
+      { t: 'Cine y ensayo',                 q: 35 },
+      { t: 'Función de cine Juvenil',       q: 120 },
+      { t: 'Muestra de cine universitario', q: 120 }
+    ]}
+  ];
+
+  function html(nivel, idx) {
+    var t = nivel.talleres[idx];
+    return '<span class="vis-horario-celda__nombre">' + t.t + '</span>' +
+      '<div class="vis-horario-celda__meta">' +
+      '<span class="vis-horario-celda__cupos">Cupos disponibles: ' + t.q + '</span>' +
+      '<span>Nivel Educativo: <span class="vis-nivel ' + nivel.cls + '">' + nivel.label + '</span></span>' +
+      '</div>';
+  }
+
+  var state = CATALOG.map(function (nivel, ni) {
+    var el = document.createElement('div');
+    el.className = 'vis-horario-celda';
+    el.style.cssText = 'flex:none;width:360px;transition:opacity .25s;';
+    el.innerHTML = html(nivel, 0);
+    wrap.appendChild(el);
+    return { el: el, nivel: nivel, idx: 0 };
+  });
+
+  /* Todas las tarjetas cambian al mismo tiempo cada 4 segundos */
+  setInterval(function () {
+    state.forEach(function (s) {
+      s.el.style.opacity = '0';
+    });
+    setTimeout(function () {
+      state.forEach(function (s) {
+        s.idx = (s.idx + 1) % s.nivel.talleres.length;
+        s.el.innerHTML = html(s.nivel, s.idx);
+        s.el.style.opacity = '1';
+      });
+    }, 260);
+  }, 4000);
+}());
+</script>
+</body>
+</html>

@@ -177,6 +177,46 @@
       });
     });
 
+    /* Column index of a cell within its row (0 = sala label, 1..N = time slots). */
+    function colIndex(cell) {
+      var fila = cell.closest('.vis-horario-fila');
+      if (!fila) return -1;
+      return Array.prototype.indexOf.call(fila.children, cell);
+    }
+
+    /* True when group g already has a workshop reserved in the same time column
+       and the same turno area as cell (parallel-slot conflict).
+       Acceso libre cells are exempt on both ends. */
+    function hasSameTimeConflict(g, cell) {
+      if (cell.hasAttribute('data-libre')) return false;
+      var col = colIndex(cell);
+      if (col < 1) return false;
+      var area = cell.closest('.vis-horario-area');
+      if (!area) return false;
+      var conflict = false;
+      area.querySelectorAll('.vis-horario-fila').forEach(function (fila) {
+        var c = fila.children[col];
+        if (!c || c === cell || !c.hasAttribute('data-taller') || c.hasAttribute('data-libre')) return;
+        if (assignedSet(c).has(g)) conflict = true;
+      });
+      return conflict;
+    }
+
+    /* Show a brief error line inside the popup. */
+    function showConflict(text) {
+      var el = popup.querySelector('.vis-conflict-msg');
+      if (!el) {
+        el = document.createElement('p');
+        el.className = 'vis-conflict-msg';
+        el.style.cssText = 'margin:4px 10px 0;font-size:12px;color:#b91c1c;';
+        popup.appendChild(el);
+      }
+      el.textContent = text;
+      el.style.display = 'block';
+      clearTimeout(el._timer);
+      el._timer = setTimeout(function () { el.style.display = 'none'; }, 2500);
+    }
+
     function assignedSet(cell) {
       var box = cell.querySelector('.vis-celda-badges');
       if (!box) return new Set();
@@ -269,6 +309,11 @@
         set.delete(g);
       } else {
         if (!isUnlimited(currentCell) && (assignedSum(currentCell) + GROUPS[g]) > base) { flash(currentCell); return; }
+        if (hasSameTimeConflict(g, currentCell)) {
+          flash(currentCell);
+          showConflict(g + ' ya tiene un taller reservado en este horario.');
+          return;
+        }
         set.add(g);
       }
       renderBadges(currentCell, set);
@@ -280,6 +325,8 @@
     function openPopup(cell, x, y) {
       currentCell = cell;
       syncRadios();
+      var conflictEl = popup.querySelector('.vis-conflict-msg');
+      if (conflictEl) conflictEl.style.display = 'none';
       popup.style.display = 'flex';
       var pw = popup.offsetWidth || 200, ph = popup.offsetHeight || 200;
       popup.style.left = Math.min(x, window.innerWidth - pw - 8) + 'px';
@@ -308,9 +355,12 @@
       if (e.target.closest('.vis-todos-btn')) {
         if (!currentCell) return;
         var base = parseInt(currentCell.getAttribute('data-base'), 10);
-        var all = GROUPS.G1 + GROUPS.G2 + GROUPS.G3;
-        if (!isUnlimited(currentCell) && all > base) { flash(currentCell); return; }
-        renderBadges(currentCell, new Set(ORDER));
+        var available = ORDER.filter(function (g) { return !hasSameTimeConflict(g, currentCell); });
+        var blocked = ORDER.filter(function (g) { return hasSameTimeConflict(g, currentCell); });
+        var totalAvail = available.reduce(function (s, g) { return s + (GROUPS[g] || 0); }, 0);
+        if (!isUnlimited(currentCell) && totalAvail > base) { flash(currentCell); return; }
+        if (blocked.length) showConflict(blocked.join(', ') + (blocked.length === 1 ? ' ya tiene' : ' ya tienen') + ' taller en este horario.');
+        renderBadges(currentCell, new Set(available));
         paintCupo(currentCell); syncRadios(); updateSummary();
       }
     });
@@ -348,12 +398,7 @@
       if (item) { item.remove(); refresh(); }
     });
 
-    var confirmar = document.getElementById('confirmar-btn');
-    if (confirmar) confirmar.addEventListener('click', function (e) {
-      e.preventDefault();
-      var note = document.getElementById('confirmado-note');
-      if (note) { note.style.display = 'flex'; note.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    });
+    /* confirmar-btn es un <a href="../REG/convocatorias.html"> — navega directamente. */
   }());
 
   /* =====================================================

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Acceso administrativo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · Admin —
+  <b>A1. Acceso</b> <span class="sep">›</span>
+  <a href="admin-otp.html">A2. Código</a> <span class="sep">›</span>
+  <a href="admin-convocatorias.html">A3. Módulos</a>
+  &nbsp;·&nbsp; <a href="index.html">Proponente ↗</a>
+</div></div>
+
+<div class="auth-wrap">
+  <div class="auth-hero" style="
+    background:
+      linear-gradient(160deg, var(--color-azul-institucional-enfoque), var(--color-azul-degradado-oscuro)),
+      radial-gradient(circle at 80% 10%, rgba(201,162,39,.35), transparent 45%);
+  ">
+    <div class="logo-lg"><span>FIL</span><span>EY</span></div>
+
+    <div style="
+      display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+      background: rgba(201,146,19,.18); border: 1.5px solid rgba(201,146,19,.50);
+      padding: 7px 16px; border-radius: 999px; margin-bottom: 10px;
+    ">
+      <span>🛡️</span>
+      <strong style="font-size: 13px; color: var(--color-dorado-encabezado); text-transform: uppercase; letter-spacing: 1px;">Acceso administrativo</strong>
+    </div>
+
+    <h2>Panel de administración<br>FILEY 2027</h2>
+    <p>Coordinación General de Contenidos. Revisa propuestas, gestiona convocatorias y supervisa el programa de actividades de la feria.</p>
+    <div class="pills">
+      <span>🗂️ Revisión de propuestas</span>
+      <span>📅 Armado del programa</span>
+      <span>🔑 Sin contraseña — código OTP</span>
+    </div>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-card">
+      <h3>Acceso de administrador</h3>
+      <p class="sub">Ingresa tu correo institucional. Te enviaremos un código de acceso de un solo uso.</p>
+
+      <form onsubmit="return false">
+        <div class="field">
+          <label>Correo institucional <span class="req">*</span></label>
+          <input type="email" placeholder="usuario@filey.org" value="hipolito@filey.org">
+        </div>
+
+        <a class="btn btn-gold btn-block btn-lg" href="admin-otp.html">Continuar →</a>
+      </form>
+
+      <div class="note note-info" style="margin-top: 22px">
+        <div class="ico">ℹ️</div>
+        <div>Las cuentas administrativas las crea el administrador general. Si no tienes acceso,
+          contacta a <strong>contenidos@filey.org</strong>.</div>
+      </div>
+
+      <div class="auth-foot">
+        ¿Eres proponente? <a href="index.html">Ir al acceso de proponentes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

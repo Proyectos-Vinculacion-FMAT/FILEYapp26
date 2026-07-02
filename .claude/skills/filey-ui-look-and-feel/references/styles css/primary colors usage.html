@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FILEY — Paleta primaria: estilos y usos</title>
+<link rel="stylesheet" href="primary colors usage.css">
+<style>
+  body {
+    margin: 0;
+    padding: 40px 0;
+    background: #eef1f6;
+    font-family: "Open Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  .page-note {
+    max-width: 1080px;
+    margin: 0 auto 16px;
+    padding: 0 4px;
+    font-size: 14px;
+    color: #6b7686;
+  }
+</style>
+</head>
+<body>
+
+  <p class="page-note">Frame de 1080×1920 (orientación vertical) — exportado desde Figma y corregido a CSS válido. Usa el scroll nativo de la página.</p>
+
+  <main class="fp-frame">
+
+    <h1 class="fp-title">Colores primarios</h1>
+    <p class="fp-subtitle">Identidad institucional FILEY — uso de la paleta</p>
+
+    <section class="fp-section">
+      <h2 class="fp-section-title">Paleta primaria</h2>
+      <div class="fp-swatch-grid">
+        <div class="fp-swatch fp-swatch--blanco">#FFFFFF</div>
+        <div class="fp-swatch fp-swatch--azul-link-enfoque">#C8D7E3</div>
+        <div class="fp-swatch fp-swatch--azul-institucional">#01457C</div>
+        <div class="fp-swatch fp-swatch--azul-texto">#00437C</div>
+        <div class="fp-swatch fp-swatch--azul-institucional-enfoque">#013763</div>
+        <div class="fp-swatch fp-swatch--azul-degradado-oscuro">#151A30</div>
+        <div class="fp-swatch fp-swatch--dorado-encabezado">#C99213</div>
+        <div class="fp-swatch fp-swatch--dorado-700">#B3810F</div>
+        <div class="fp-swatch fp-swatch--dorado-800">#9C700B</div>
+        <div class="fp-swatch fp-swatch--dorado-degradado-oscuro">#6E4D03</div>
+      </div>
+    </section>
+
+    <section class="fp-section">
+      <h2 class="fp-section-title">Colores de texto sobre fondo</h2>
+      <div class="fp-usage-grid">
+        <div class="fp-usage-card">
+          <div class="fp-usage-card__inner">
+            <div class="fp-usage-card__chips fp-usage-card__chips--azul">
+              <div class="fp-usage-card__chip fp-usage-card__chip--azul-institucional"></div>
+              <div class="fp-usage-card__chip fp-usage-card__chip--blanco"></div>
+            </div>
+            <div class="fp-usage-card__label fp-usage-card__label--fondo-azul">texto blanco · fondo azul</div>
+          </div>
+        </div>
+        <div class="fp-usage-card">
+          <div class="fp-usage-card__inner">
+            <div class="fp-usage-card__chips fp-usage-card__chips--dorado">
+              <div class="fp-usage-card__chip fp-usage-card__chip--dorado-encabezado"></div>
+              <div class="fp-usage-card__chip fp-usage-card__chip--blanco"></div>
+            </div>
+            <div class="fp-usage-card__label fp-usage-card__label--fondo-dorado">texto blanco · fondo dorado</div>
+          </div>
+        </div>
+        <div class="fp-usage-card">
+          <div class="fp-usage-card__inner">
+            <div class="fp-usage-card__chips fp-usage-card__chips--azul">
+              <div class="fp-usage-card__chip fp-usage-card__chip--blanco"></div>
+              <div class="fp-usage-card__chip fp-usage-card__chip--azul-texto"></div>
+            </div>
+            <div class="fp-usage-card__label fp-usage-card__label--texto-azul">texto azul · fondo blanco</div>
+          </div>
+        </div>
+        <div class="fp-usage-card">
+          <div class="fp-usage-card__inner">
+            <div class="fp-usage-card__chips fp-usage-card__chips--dorado">
+              <div class="fp-usage-card__chip fp-usage-card__chip--blanco"></div>
+              <div class="fp-usage-card__chip fp-usage-card__chip--dorado-encabezado"></div>
+            </div>
+            <div class="fp-usage-card__label fp-usage-card__label--texto-dorado">texto dorado · fondo blanco</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="fp-section">
+      <h2 class="fp-section-title">Degradados</h2>
+      <div class="fp-gradient-grid">
+        <div class="fp-gradient-card fp-gradient-card--azul">
+          <div class="fp-gradient-card__inner">
+            <div class="fp-gradient-card__gradients">
+              <div class="fp-gradient-card__radial"></div>
+              <div class="fp-gradient-card__linear"></div>
+            </div>
+            <div class="fp-gradient-card__label">degradados de azul</div>
+          </div>
+        </div>
+        <div class="fp-gradient-card fp-gradient-card--dorado">
+          <div class="fp-gradient-card__inner">
+            <div class="fp-gradient-card__gradients">
+              <div class="fp-gradient-card__radial"></div>
+              <div class="fp-gradient-card__linear"></div>
+            </div>
+            <div class="fp-gradient-card__label">degradados de dorado</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="fp-section">
+      <h2 class="fp-title-secondary">Ejemplo de uso</h2>
+      <div class="fp-group">
+        <h3 class="fp-group__title">Encabezado</h3>
+        <p class="fp-group__text">Texto de ejemplo explicativo descriptivo que puede servir en varios apartados con fondo blanco</p>
+        <p class="fp-group__hint">Los componentes de abajo no necesitan funcionar al hacer click: pasa el mouse sobre cada uno para ver su estado de enfoque.</p>
+
+        <button type="button" class="fp-interactive-heading">Encabezado interactuable</button>
+
+        <div class="fp-dropdown-row">
+          <button type="button" class="fp-dropdown">
+            Lista desplegable
+            <span class="fp-dropdown__caret"><svg viewBox="0 0 826 374" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M731.872 6.864 412 318.672 92.128 6.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L389.664 380.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z"/></svg></span>
+          </button>
+        </div>
+
+        <div class="fp-social-row">
+          <div class="fp-social-rail">
+            <button type="button" class="fp-social-btn" aria-label="Instagram"><span class="fp-icon">
+              <svg width="22" height="22" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.5 8.52539C21.0374 8.52548 24.6122 12.2378 24.6123 16.6377C24.6123 21.0376 20.8999 24.7499 16.5 24.75C12.1 24.75 8.3877 21.0377 8.3877 16.6377C8.3878 12.2378 11.9626 8.52539 16.5 8.52539ZM16.5 11.4131C13.6126 11.4131 11.2745 13.7503 11.2744 16.6377C11.2744 19.5252 13.6125 21.8633 16.5 21.8633C19.3874 21.8632 21.7246 19.5251 21.7246 16.6377C21.7245 13.7503 19.3874 11.4132 16.5 11.4131Z" fill="currentColor"/><path d="M25.1621 6.05078C26.2621 6.05078 27.0869 6.87559 27.0869 7.97559C27.0868 9.0755 26.2621 9.90039 25.1621 9.90039C24.0623 9.90029 23.2374 9.07544 23.2373 7.97559C23.2373 6.87565 24.0622 6.05088 25.1621 6.05078Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M23.0996 0C28.4276 0 32.7238 4.12947 32.8623 9.3877V22.9629C32.8623 28.4629 28.4619 32.8633 22.9619 32.8633H9.89941C4.39961 32.8631 1.11897e-05 28.4627 0 22.9629V9.90039C0 4.40046 4.39971 0.000108171 10.0371 0H23.0996ZM9.89941 3.16309C6.04961 3.16331 3.02441 6.32571 3.02441 10.0381V23.1006C3.02453 26.9503 6.18716 29.9754 9.89941 29.9756H22.9619C26.8118 29.9756 29.8368 26.813 29.8369 23.1006V10.0381C29.8369 6.18809 26.6744 3.16309 22.9619 3.16309H9.89941Z" fill="currentColor"/></svg>
+            </span></button>
+            <button type="button" class="fp-social-btn" aria-label="Twitter"><span class="fp-icon">
+              <svg width="24" height="20" viewBox="0 0 34 29" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M30.4596 7.07C30.473 7.37769 30.4798 7.68681 30.4798 7.9973C30.4798 17.4679 23.4765 28.3879 10.6725 28.3879C6.7407 28.3879 3.08085 27.2014 0 25.1679C0.545328 25.2344 1.09876 25.2684 1.66095 25.2684C4.92289 25.2684 7.92426 24.1227 10.3076 22.2001C7.26046 22.1426 4.68994 20.0704 3.80395 17.2233C4.22948 17.3072 4.66511 17.3522 5.11414 17.3522C5.74832 17.3522 6.36364 17.2642 6.94809 17.1006C3.76357 16.4421 1.36332 13.5459 1.36332 10.0736C1.36332 10.0432 1.36332 10.0134 1.36405 9.98355C2.30257 10.52 3.37576 10.8423 4.51755 10.8797C2.64928 9.59478 1.42056 7.4012 1.42056 4.91449C1.42056 3.60117 1.76322 2.37029 2.36307 1.31195C5.79673 5.64771 10.9256 8.50035 16.7116 8.79977C16.5931 8.27511 16.5311 7.7283 16.5311 7.16625C16.5311 3.20886 19.6483 0 23.4926 0C25.4963 0 27.3046 0.870488 28.5743 2.26283C30.1606 1.94195 31.6498 1.34524 32.9949 0.523906C32.4752 2.19769 31.3724 3.60179 29.9343 4.48889C31.3428 4.3156 32.6853 3.93032 33.9335 3.36062C33.0004 4.79739 31.8196 6.05944 30.4596 7.07Z" fill="currentColor"/></svg>
+            </span></button>
+            <button type="button" class="fp-social-btn" aria-label="YouTube"><span class="fp-icon">
+              <svg width="24" height="17" viewBox="0 0 36 25" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M34.6055 3.89426C34.4091 3.13742 34.0154 2.44627 33.4644 1.89145C32.9134 1.33663 32.2251 0.938004 31.4696 0.736317C26.8895 0.196137 22.2792 -0.0472877 17.6675 0.00756725C13.056 -0.0472877 8.44566 0.196137 3.86548 0.736317C3.11006 0.938004 2.4217 1.33663 1.87076 1.89145C1.31981 2.44627 0.926038 3.13742 0.729651 3.89426C0.22794 6.70754 -0.0159923 9.56079 0.000901431 12.4184C-0.0168315 15.2908 0.227101 18.1587 0.729651 20.9867C0.936219 21.7314 1.33451 22.4087 1.88479 22.9512C2.43504 23.4938 3.11801 23.8825 3.86548 24.0784C8.44566 24.6185 13.056 24.8621 17.6675 24.8071C22.2792 24.8621 26.8895 24.6185 31.4696 24.0784C32.2172 23.8825 32.9002 23.4938 33.4503 22.9512C34.0006 22.4087 34.399 21.7314 34.6055 20.9867C35.1081 18.1587 35.3519 15.2908 35.3342 12.4184C35.3512 9.56079 35.1072 6.70754 34.6055 3.89426ZM14.0459 17.6963V7.18465L23.2988 12.4184L14.0459 17.6742V17.6963Z" fill="currentColor"/></svg>
+            </span></button>
+            <button type="button" class="fp-social-btn" aria-label="Facebook"><span class="fp-icon">
+              <svg width="12" height="24" viewBox="0 0 18 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5588 8.55521C10.5588 8.92365 10.5588 10.1245 10.5588 11.8306H16.4245L15.7885 17.0595H10.5588C10.5588 25.1235 10.5588 35.9296 10.5588 35.9296H3.61708C3.61708 35.9296 3.61708 25.2665 3.61708 17.0595H0V11.8306H3.61708C3.61708 9.75692 3.61708 8.2824 3.61708 7.87185C3.61708 5.91575 3.46971 4.98763 4.30087 3.47183C5.13246 1.9561 7.47808 -0.0473797 11.535 0.000854636C15.593 0.0508468 17.3035 0.441222 17.3035 0.441222L16.4245 6.01398C16.4245 6.01398 13.8333 5.32977 12.5614 5.57361C11.2912 5.81753 10.5588 6.59996 10.5588 8.55521Z" fill="currentColor"/></svg>
+            </span></button>
+          </div>
+        </div>
+
+        <div class="fp-btn-row">
+          <button type="button" class="fp-btn">Botón</button>
+        </div>
+
+        <div class="fp-footer-demo">
+          <a href="#" class="fp-footer-link">Hipervínculo en pie de página</a>
+        </div>
+      </div>
+    </section>
+
+    <p class="fp-frame-footer">Tipografía: "Open Sans" (FILEY) — sin carga de webfont, con fallback a fuentes de sistema. Fuente del CSS: Figma → Copiar como código → CSS (todas las capas), corregido a CSS válido.</p>
+
+  </main>
+
+</body>
+</html>

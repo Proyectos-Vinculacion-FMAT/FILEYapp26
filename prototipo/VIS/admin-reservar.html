@@ -3,55 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FILEY 2027 — Reservar talleres</title>
+<title>FILEY 2027 — Admin · Reservar talleres</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="topbar">
+<header class="topbar is-admin">
   <div class="topbar-inner">
     <div class="brand">
       <div class="logo"><span>FIL</span><span>EY</span></div>
-      <div class="brand-text"><strong>FILEY 2027</strong><small>Visitas escolares</small></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Administración · VIS</small></div>
     </div>
     <nav class="topnav">
-      <a href="convocatoria-vis.html">Convocatoria</a>
-      <a href="mi-visita.html">Mi registro</a>
-      <div class="user-chip"><span class="avatar">IO</span> Isaac O.</div>
+      <a href="../REG/admin-convocatorias.html">Módulos ↖</a>
+      <a href="#">Configuración</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
     </nav>
   </div>
 </header>
 
 <div class="proto-bar"><div class="proto-bar-inner">
-  <span class="dot"></span> Prototipo FILEY 2027 · VIS —
-  <a href="../REG/index.html">1. Acceso</a> <span class="sep">›</span>
-  <a href="../REG/registro.html">2. Registro</a> <span class="sep">›</span>
-  <a href="../REG/otp.html">3. Código</a> <span class="sep">›</span>
-  <a href="../REG/convocatorias.html">4. Convocatorias</a> <span class="sep">›</span>
-  <a href="convocatoria-vis.html">5. Convocatoria VIS</a> <span class="sep">›</span>
-  <a href="formulario-vis.html">6. Mi escuela</a> <span class="sep">›</span>
-  <a href="confirmacion-vis.html">7. Confirmación</a> <span class="sep">›</span>
-  <a href="mi-visita.html">8. Mi registro</a> <span class="sep">›</span>
-  <b>9. Reservar talleres (CU-VIS-010/011/012)</b> <span class="sep">›</span>
-  <a href="itinerario.html">10. Itinerario</a>
-  &nbsp;·&nbsp; <a href="../REG/convocatorias.html">EVT ↗</a>
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="../REG/admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A2. Visitas escolares</a> <span class="sep">›</span>
+  <b>A2b. Reservar talleres (CU-VIS-010/011/012)</b> <span class="sep">›</span>
+  <a href="itinerario-admin.html">A3. Itinerario</a>
+  &nbsp;·&nbsp; <a href="../REG/index.html">Registrante ↗</a>
 </div></div>
 
 <main class="page page-wide">
   <div class="breadcrumb">
-    <a href="mi-visita.html">Mi registro</a> <span>›</span> VIS-2027-001 · Reservar talleres
+    <a href="admin-propuestas.html">Visitas escolares</a> <span>›</span>
+    Benito Juárez García · VIS-2027-001 <span>›</span> Reservar talleres
   </div>
 
   <div class="page-head">
-    <h1>Arma tu itinerario</h1>
-    <p>Elige actividades del catálogo y asigna qué grupo(s) asisten a cada una. El sistema valida que el
-       cupo restante cubra a los alumnos del grupo. <strong>Haz clic en una actividad</strong> para asignar grupos.</p>
+    <h1>Arma el itinerario — Vista de administrador</h1>
+    <p>Asigna actividades del catálogo a cada grupo de la escuela. El sistema valida que el cupo restante cubra a los alumnos del grupo. <strong>Haz clic en una actividad</strong> para asignar grupos.</p>
   </div>
 
   <div class="note note-green">
-    <div class="ico">🎚️</div>
-    <div>El catálogo muestra los talleres del nivel de tu propuesta (<strong>Primaria</strong>). El
-      <strong>turno</strong> y el <strong>día</strong> se eligen en la cabecera del calendario.</div>
+    <div class="ico">🧰</div>
+    <div>Modo administrador — puedes asignar talleres directamente en nombre de la escuela. El catálogo muestra actividades de nivel <strong>Primaria</strong>.</div>
   </div>
 
   <!-- Cabecera de selección: institución + grupos -->
@@ -66,7 +59,7 @@
     <div class="vis-grupo-card">
       <div class="vis-grupo-card__header">Grupo 2 — G2</div>
       <div class="vis-grupo-card__body">
-        <span>Grado: Cuarto</span><span>Visitantes: 35</span><span>Responsable: Juan López Salvador</span><span>Talleres reservados: 3</span>
+        <span>Grado: Cuarto</span><span>Visitantes: 35</span><span>Responsable: Juan López Salvador</span><span>Talleres reservados: 0</span>
       </div>
     </div>
     <div class="vis-grupo-card">
@@ -77,8 +70,7 @@
     </div>
   </div>
 
-  <!-- Grid de horario (header con turno + día; las salas y sus bloques
-       matutino/vespertino se generan en app.js) -->
+  <!-- Grid de horario -->
   <div class="vis-horario-container">
     <div class="vis-horario-header">
       <div class="vis-turno-selector">
@@ -100,21 +92,21 @@
   <!-- Barra de resumen -->
   <div class="vis-reserva-bar">
     <div class="txt">
-      <strong><span id="reserva-count">0</span> talleres en tu itinerario</strong>
+      <strong><span id="reserva-count">0</span> talleres en el itinerario</strong>
       <span id="reserva-detalle">Asigna grupos a las actividades para reservarlas.</span>
     </div>
-    <a class="btn btn-special btn-lg" href="itinerario.html">Ver / confirmar itinerario →</a>
+    <a class="btn btn-gold btn-lg" href="itinerario-admin.html">Ver / confirmar itinerario →</a>
   </div>
 
   <div class="note note-info" style="margin-top:20px">
     <div class="ico">💡</div>
-    <div>Grupos diferentes pueden coincidir en cualquier bloque horario. Sin embargo, <strong>un mismo grupo no puede reservar dos talleres en el mismo bloque</strong> (misma columna); la excepción son las actividades de <em>acceso libre</em>, que pueden combinarse con otro taller del mismo horario. Al confirmar, el sistema valida en tiempo real que los cupos no hayan sido tomados por otra escuela mientras armabas tu itinerario.</div>
+    <div>Grupos diferentes pueden coincidir en cualquier bloque horario. Sin embargo, <strong>un mismo grupo no puede reservar dos talleres en el mismo bloque</strong> (misma columna); la excepción son las actividades de <em>acceso libre</em>, que pueden combinarse con otro taller del mismo horario.</div>
   </div>
 </main>
 
 <footer class="footer"><div class="footer-inner">
   <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
-  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+  <div>Panel de administración · Visitas escolares</div>
 </div></footer>
 
 <script src="app.js"></script>

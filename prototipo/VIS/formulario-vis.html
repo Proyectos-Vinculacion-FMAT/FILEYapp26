@@ -16,7 +16,7 @@
     </div>
     <nav class="topnav">
       <a href="convocatoria-vis.html">Convocatoria</a>
-      <a href="mis-visitas.html">Mis visitas</a>
+      <a href="mi-visita.html">Mi registro</a>
       <div class="user-chip"><span class="avatar">IO</span> Isaac O.</div>
     </nav>
   </div>
@@ -31,7 +31,7 @@
   <a href="convocatoria-vis.html">5. Convocatoria VIS</a> <span class="sep">›</span>
   <b>6. Mi escuela (CU-VIS-001)</b> <span class="sep">›</span>
   <a href="confirmacion-vis.html">7. Confirmación</a> <span class="sep">›</span>
-  <a href="mis-visitas.html">8. Mis visitas</a> <span class="sep">›</span>
+  <a href="mi-visita.html">8. Mi registro</a> <span class="sep">›</span>
   <a href="reservar.html">9. Reservar</a> <span class="sep">›</span>
   <a href="itinerario.html">10. Itinerario</a>
   &nbsp;·&nbsp; <a href="../REG/convocatorias.html">EVT ↗</a>
@@ -148,12 +148,14 @@
         </div>
         <div class="grid-2">
           <div class="field">
-            <label>Teléfono de la institución <span class="opt">(opcional)</span></label>
-            <input type="tel" placeholder="999 000 0000">
+            <label>Teléfono de la institución <span class="req">*</span></label>
+            <input type="tel" placeholder="999 000 0000" value="999 312 4400" required
+              pattern="[0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4}"
+              title="Formato: 999 000 0000 (10 dígitos)">
           </div>
           <div class="field">
-            <label>Correo de la institución <span class="opt">(opcional)</span></label>
-            <input type="email" placeholder="contacto@institucion.mx">
+            <label>Correo de la institución <span class="req">*</span></label>
+            <input type="email" placeholder="contacto@institucion.mx" value="bjuarezgarcia@educ.yucatan.gob.mx" required>
           </div>
         </div>
       </div>
@@ -237,7 +239,7 @@
     <div class="card card-pad">
       <div class="form-actions" style="border-top:none; padding-top:0">
         <a class="btn btn-ghost spacer" href="convocatoria-vis.html">Cancelar</a>
-        <a class="btn btn-green btn-lg" href="confirmacion-vis.html">Enviar propuesta</a>
+        <a class="btn btn-primary btn-lg" href="confirmacion-vis.html">Enviar propuesta</a>
       </div>
     </div>
 
