@@ -11,6 +11,7 @@
   /* --- Tokens canónicos VIS (referenciados desde canonical set) --- */
   --color-azul-texto: #00437C;             /* alias explícito para uso VIS */
   --color-dorado-degradado-oscuro: #6E4D03; /* dorado profundo para bordes de degradado */
+  --vis-dia-btn-size: 21px;               /* altura de los botones prev/next día; ancho = size * 26/30 */
 
   /* --- Paleta VIS (verde convocatoria infantil/juvenil) --- */
   /* Usando tokens canónicos --color-verde-* directamente en CSS */
@@ -221,6 +222,7 @@
 }
 .vis-dia-btn:hover:not(:disabled) { color: var(--color-dorado-encabezado); }
 .vis-dia-btn:disabled { color: rgba(255,255,255,.25); cursor: not-allowed; }
+.vis-dia-btn svg { display: block; height: var(--vis-dia-btn-size); width: calc(var(--vis-dia-btn-size) * 26 / 30); }
 
 /* Grid: header blanco (Sala + bloques horarios). */
 .vis-horario-wrap { display: flex; overflow-x: auto; border: 3px solid var(--color-azul-degradado-oscuro); border-top: none; }
