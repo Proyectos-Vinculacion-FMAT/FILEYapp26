@@ -19,14 +19,23 @@ type Estado =
   `,
   styles: [`
     .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
       line-height: 1.4;
+    }
+    .badge::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
     }
   `]
 })
@@ -57,45 +66,45 @@ export class StatusBadgeComponent {
 
   bg = computed(() => {
     const colors: Record<string, string> = {
-      'pendiente': '#fff3cd',
-      'pendiente_validacion': '#fff3cd',
-      'aceptada': '#d4edda',
-      'Confirmada': '#d4edda',
-      'Pagada': '#cce5ff',
-      'rechazada': '#f8d7da',
-      'rechazado': '#f8d7da',
-      'Cancelada': '#f8d7da',
-      'cambios_solicitados': '#ffeaa7',
-      'Por confirmar': '#fff3cd',
-      'vencida': '#f8d7da',
-      'Disponible': '#d4edda',
-      'Reservado': '#fff3cd',
-      'Ocupado': '#cce5ff',
-      'validado': '#d4edda',
-      'desconocido': '#e2e3e5'
+      'pendiente': '#fdf6e3',
+      'pendiente_validacion': '#fdf6e3',
+      'aceptada': '#e7f6ee',
+      'Confirmada': '#e7f6ee',
+      'Pagada': '#e6f0fa',
+      'rechazada': '#fbeae8',
+      'rechazado': '#fbeae8',
+      'Cancelada': '#fbeae8',
+      'cambios_solicitados': '#fdf6e3',
+      'Por confirmar': '#fdf6e3',
+      'vencida': '#fbeae8',
+      'Disponible': '#e7f6ee',
+      'Reservado': '#fdf6e3',
+      'Ocupado': '#e6f0fa',
+      'validado': '#e7f6ee',
+      'desconocido': '#eef1f6'
     };
-    return colors[this.estado()] || '#e2e3e5';
+    return colors[this.estado()] || '#eef1f6';
   });
 
   fg = computed(() => {
     const colors: Record<string, string> = {
-      'pendiente': '#856404',
-      'pendiente_validacion': '#856404',
-      'aceptada': '#155724',
-      'Confirmada': '#155724',
-      'Pagada': '#004085',
-      'rechazada': '#721c24',
-      'rechazado': '#721c24',
-      'Cancelada': '#721c24',
-      'cambios_solicitados': '#7d6608',
-      'Por confirmar': '#856404',
-      'vencida': '#721c24',
-      'Disponible': '#155724',
-      'Reservado': '#856404',
-      'Ocupado': '#004085',
-      'validado': '#155724',
-      'desconocido': '#383d41'
+      'pendiente': '#b8860b',
+      'pendiente_validacion': '#b8860b',
+      'aceptada': '#1d8a4e',
+      'Confirmada': '#1d8a4e',
+      'Pagada': '#003b7a',
+      'rechazada': '#c0392b',
+      'rechazado': '#c0392b',
+      'Cancelada': '#c0392b',
+      'cambios_solicitados': '#b8860b',
+      'Por confirmar': '#b8860b',
+      'vencida': '#c0392b',
+      'Disponible': '#1d8a4e',
+      'Reservado': '#b8860b',
+      'Ocupado': '#003b7a',
+      'validado': '#1d8a4e',
+      'desconocido': '#6b7686'
     };
-    return colors[this.estado()] || '#383d41';
+    return colors[this.estado()] || '#6b7686';
   });
 }

@@ -66,9 +66,12 @@ export class ResetConfirmDialogComponent {
   ],
   template: `
     <mat-toolbar color="primary" class="navbar">
-      <span class="logo" (click)="irAInicio()">
-        <mat-icon>menu_book</mat-icon>
-        <span class="logo-text">FILEY</span>
+      <span class="brand" (click)="irAInicio()">
+        <span class="logo-box"><span>FIL</span><span>EY</span></span>
+        <span class="brand-text">
+          <strong>FILEY 2027</strong>
+          <small>Reservación de stands</small>
+        </span>
       </span>
 
       <span class="spacer"></span>
@@ -94,10 +97,10 @@ export class ResetConfirmDialogComponent {
         <span class="reset-label">Reiniciar</span>
       </button>
 
-      <button mat-button [matMenuTriggerFor]="menuRol" class="role-btn">
-        <mat-icon>{{ rolActual === 'usuario' ? 'person' : 'admin_panel_settings' }}</mat-icon>
+      <button mat-button [matMenuTriggerFor]="menuRol" class="role-btn user-chip">
+        <span class="avatar">{{ rolActual === 'usuario' ? 'US' : 'AD' }}</span>
         <span class="role-label">{{ rolActual === 'usuario' ? 'Usuario' : 'Administrador' }}</span>
-        <mat-icon>arrow_drop_down</mat-icon>
+        <mat-icon class="chev">arrow_drop_down</mat-icon>
       </button>
       <mat-menu #menuRol="matMenu">
         <button mat-menu-item (click)="cambiarRol('usuario')" [disabled]="rolActual === 'usuario'">
@@ -117,17 +120,46 @@ export class ResetConfirmDialogComponent {
       position: sticky;
       top: 0;
       z-index: 1000;
-      gap: 8px;
+      gap: 14px;
+      padding: 0 24px;
     }
-    .logo {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 18px;
     }
-    .logo-text { letter-spacing: 1px; }
+    .logo-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: .5px;
+      color: var(--filey-primary-dark);
+      box-shadow: var(--filey-shadow-sm);
+    }
+    .logo-box span:last-child { color: var(--filey-secondary); }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .brand-text strong {
+      font-size: 17px;
+      letter-spacing: .3px;
+      color: #fff;
+    }
+    .brand-text small {
+      font-size: 11.5px;
+      color: #f1e3b0;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
     .editorial-selector {
       display: flex;
       align-items: center;
@@ -152,15 +184,40 @@ export class ResetConfirmDialogComponent {
     .editorial-field ::ng-deep .mat-mdc-select-arrow {
       color: #fff !important;
     }
-    .role-btn {
+    .user-chip {
+      height: 42px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      padding: 0 10px 0 4px;
+      min-width: 0;
+      line-height: normal;
+    }
+    .user-chip:hover { background: rgba(255,255,255,.16); }
+    .user-chip ::ng-deep .mdc-button__label {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
     }
-    .role-label { margin: 0 4px; }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      border-radius: 50%;
+      background: var(--filey-secondary);
+      color: var(--filey-primary-dark);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .5px;
+    }
+    .role-label { font-size: 13.5px; white-space: nowrap; }
+    .chev { width: 20px; height: 20px; font-size: 20px; }
     .reset-btn {
-      margin-right: 4px;
       border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      color: #fff;
     }
     @media (max-width: 900px) {
       .editorial-field { width: 140px; }

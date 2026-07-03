@@ -20,9 +20,16 @@ import { ParametrosService } from '../../services/parametros.service';
         allow="autoplay"
       ></iframe>
       <div *ngIf="!ready()" class="splash">
-        <div class="splash-content">
-          <div class="spinner"></div>
-          <p>Cargando mapa del showfloor...</p>
+        <div class="splash-cover">
+          <span class="cover-logo"><span>FIL</span><span>EY</span></span>
+          <div class="cover-text">
+            <strong>FILEY 2027</strong>
+            <small>Mapa del showfloor</small>
+          </div>
+          <div class="cover-dots" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <p class="cover-caption">Cargando mapa del showfloor…</p>
         </div>
       </div>
     </div>
@@ -41,21 +48,72 @@ import { ParametrosService } from '../../services/parametros.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(26,26,26,0.95);
+      /* Fully opaque branded cover that hides the Godot boot logo underneath */
+      background:
+        linear-gradient(160deg, #003b7a 0%, #00254d 70%),
+        radial-gradient(circle at 80% 12%, rgba(201,162,39,.30), transparent 45%);
       z-index: 10;
-      transition: opacity 0.4s ease-out;
     }
-    .splash-content { text-align: center; color: #fff; }
-    .spinner {
-      border: 3px solid #444;
-      border-top-color: #3a7d44;
+    .splash-cover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: #fff;
+    }
+    .cover-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: .5px;
+      color: var(--filey-primary-dark);
+      box-shadow: var(--filey-shadow-md);
+      margin-bottom: 20px;
+    }
+    .cover-logo span:last-child { color: var(--filey-secondary); }
+    .cover-text strong {
+      display: block;
+      font-size: 22px;
+      letter-spacing: .3px;
+      color: #fff;
+    }
+    .cover-text small {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #f1e3b0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .cover-dots {
+      display: flex;
+      gap: 8px;
+      margin: 26px 0 10px;
+    }
+    .cover-dots span {
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
+      background: var(--filey-secondary);
+      animation: cover-pulse 1.2s ease-in-out infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .cover-dots span:nth-child(2) { animation-delay: .2s; }
+    .cover-dots span:nth-child(3) { animation-delay: .4s; }
+    .cover-caption {
+      margin: 0;
+      font-size: 13px;
+      color: #cfe0f3;
+    }
+    @keyframes cover-pulse {
+      0%, 100% { opacity: .3; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-4px); }
+    }
   `]
 })
 export class StandMapComponent implements OnInit, OnDestroy {
