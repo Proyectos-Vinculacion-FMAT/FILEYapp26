@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Acceso administrativo</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Vista del administrador —
+  <a href="admin-registro.html">Acceso</a> › <strong>Código</strong> › <a href="admin-modulos.html">Selección de módulo</a> › Panel
+  &nbsp;·&nbsp; <em>Demo: acceso admin por OTP (decisión de equipo, sustituye la contraseña de CU-REG-003)</em>
+</div></div>
+
+<div class="auth-wrap">
+  <div class="auth-hero">
+    <div class="logo-lg"><span>FIL</span><span>EY</span></div>
+    <h2>Acceso administrativo</h2>
+    <p>Te enviamos un código de un solo uso a tu correo institucional. Es válido por 15 minutos y
+       da acceso al panel de administración de FILEY.</p>
+    <div class="pills">
+      <span>🛡️ Panel de administración</span>
+      <span>⏱️ Válido 15 minutos</span>
+    </div>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-card">
+      <h3>Ingresa tu código</h3>
+      <p class="sub">Enviamos un código de 6 dígitos a <strong>hipolito@filey.org</strong></p>
+
+      <form onsubmit="return false">
+        <div class="otp-row">
+          <input maxlength="1" inputmode="numeric" value="7">
+          <input maxlength="1" inputmode="numeric" value="1">
+          <input maxlength="1" inputmode="numeric" value="3">
+          <input maxlength="1" inputmode="numeric" value="">
+          <input maxlength="1" inputmode="numeric" value="">
+          <input maxlength="1" inputmode="numeric" value="">
+        </div>
+        <div class="otp-meta">
+          <span>El código vence en <strong>14:47</strong></span>
+          <a href="#">Reenviar código</a>
+        </div>
+        <a class="btn btn-primary btn-block btn-lg" href="admin-modulos.html" style="margin-top:22px">Verificar y entrar</a>
+      </form>
+
+      <div class="note note-info" style="margin-top:22px">
+        <div class="ico">ℹ️</div>
+        <div>Las cuentas administrativas las da de alta el administrador general; no se
+          auto-registran. El acceso es por el mismo código OTP que usan los proponentes.</div>
+      </div>
+
+      <div class="auth-foot">
+        ¿No eres del comité? <a href="../aplicantes/index.html">Ir al acceso de proponentes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

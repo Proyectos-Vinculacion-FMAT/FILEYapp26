@@ -22,7 +22,7 @@ trazabilidad:
 
 ## Objetivo
 
-Permitir al Administrador eliminar una sala de un salón en el catálogo compartido.
+Permitir al Administrador eliminar una sala de un salón en el catálogo único global.
 
 ## Alcance
 
@@ -40,13 +40,13 @@ El Administrador elige eliminar una sala desde la pantalla de salas y salones (C
 
 ## Precondiciones
 
-- La sala existe dentro de un salón del catálogo compartido.
+- La sala existe dentro de un salón del catálogo único global.
 
 ## Postcondiciones
 
 ### En éxito
 
-- La sala deja de estar disponible en el catálogo compartido.
+- La sala deja de estar disponible en el catálogo único global.
 
 ### En fallo
 
@@ -64,7 +64,7 @@ El Administrador elige eliminar una sala desde la pantalla de salas y salones (C
 ### E1. Sala con actividades programadas
 
 1. La sala tiene actividades programadas (ver CU-PRG-002).
-2. El sistema rechaza la eliminación e informa al Administrador que debe reprogramar o quitar esas actividades primero (ver CU-PRG-004).
+2. El sistema rechaza la eliminación e informa al Administrador que debe reprogramar o eliminar la programación de esas actividades primero (ver CU-PRG-004).
 
 ### E2. Última sala del salón
 

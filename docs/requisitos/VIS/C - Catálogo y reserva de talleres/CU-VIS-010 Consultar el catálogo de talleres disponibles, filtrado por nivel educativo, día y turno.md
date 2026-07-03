@@ -24,6 +24,31 @@ trazabilidad:
 
 Permitir al Participante consultar el catálogo de talleres y actividades infantiles/juveniles disponibles, filtrando por nivel educativo, día y turno, para armar el itinerario de su visita escolar.
 
+> [!note] Filtro vs. visualización
+> El catálogo se **filtra** por nivel educativo, día y turno (matutino/vespertino), pero la **lista** muestra explícitamente, por cada taller/actividad, su **hora de inicio y fin**, su descripción y su lugar, para que la escuela detecte solapes y planee su itinerario. El turno es un criterio de filtrado, no la única información horaria mostrada. El catálogo solo incluye actividades **aptas para público infantil/juvenil** provenientes de propuestas **Aceptadas**, sin importar la sala donde se realicen (la sala determina su aforo, no su elegibilidad). Fuente: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>) ("los días y horarios en los que se llevarán a cabo, así como la descripción del evento").
+
+<!-- -->
+
+> [!warning] Precisión directa del cliente (2026-06-29) — el catálogo solo muestra horario final, nunca preliminar
+> `VIS` **solo consume un catálogo final**; no puede consumir de un horario preliminar. El
+> flujo real en `TAL` es: Elvira revisa y dictamina (CU-TAL-009) → programa en `PRG` → notifica
+> el preliminar a los talleristas → ajusta → cuando el horario queda **final**, esa actividad
+> se publica aquí. Mientras el horario de una actividad sea preliminar (recién programado,
+> pendiente de ajustes), esa actividad **no aparece** en este catálogo, aunque ya tenga sala y
+> bloque asignados en `PRG`. El mecanismo exacto para marcar un horario como "final" (¿una
+> acción explícita de Elvira/Hipólito, o derivado de que ya no haya rechazos/cambios
+> pendientes en CU-PRG-009?) queda **pendiente de definir** — ver "Pendientes" en
+> `CU-VIS Índice.md`.
+
+<!-- -->
+
+> [!note] Precisión interna (2026-06-29) — el catálogo no es exclusivo de `TAL`
+> El grueso del catálogo son **talleres de `TAL`** (Elvira), con aforo limitado por sala. Pero
+> `EVT` (Hipólito) puede, a su discreción, marcar **casos excepcionales** de su propio programa
+> como aptos para nivel infantil/juvenil para que también aparezcan aquí. Esos casos de `EVT`
+> **no tienen límite de cupo** (a diferencia de un taller normal), por lo que la validación de
+> cupo (CU-VIS-011) no aplica con normalidad sobre ellos — ver la nota en ese CU.
+
 ## Alcance
 
 Indicar el límite del sistema o subsistema al que aplica este caso de uso.

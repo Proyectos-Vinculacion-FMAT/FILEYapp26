@@ -66,10 +66,15 @@ prototipo/
 
 ---
 
-## Cómo ejecutar
+## Cómo ejecutar (onboarding)
+
+> `node_modules/`, `.angular/` (caché del compilador) y `dist/` (build) ya no se versionan
+> en el repo (ver `.gitignore` en la raíz) — hay que generarlos localmente la primera vez.
+
+Requisitos: [Node.js](https://nodejs.org/) 20+ y npm.
 
 ```bash
-cd prototipo
+cd prototipo/STD
 npm install
 npm start
 ```
@@ -82,7 +87,7 @@ Abrir [http://localhost:4200/](http://localhost:4200/) en el navegador.
 npm run build
 ```
 
-Los archivos se generan en `dist/prototipo/`.
+Los archivos se generan en `dist/prototipo/` (no se sube al repo).
 
 ---
 

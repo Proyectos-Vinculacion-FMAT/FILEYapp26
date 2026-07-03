@@ -20,10 +20,14 @@ trazabilidad:
 ---
 # CU-SAL-005 Editar una sala (aforo y disponibilidad)
 
-> [!question] Decisión pendiente — CRUD de bloques de horario
-> Este CU edita el aforo y la disponibilidad (días y horas) de la sala, pero no su CRUD de
-> **bloques de horario**: aún no se decide si esa CRUD vive en `SAL` o en `PRG` (ver D2 en la
-> [Junta 3 con Equipo de desarrollo](<../../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#d2--dominio-del-crud-de-bloques-de-horario-prg--sal>)).
+> [!success] D2 resuelta — la sala no tiene bloques de horario propios
+> Este CU edita el aforo y la disponibilidad (días y horas) de la sala, pero **no** un CRUD de
+> **bloques de horario**: la Junta 3 con organizadores FILEY resolvió que esa CRUD no existe en
+> ningún dominio (ver D2 en la
+> [Junta 3 con Equipo de desarrollo](<../../../soporte/meetings/resumenes/RSM - Junta 3 con Equipo de desarrollo.md#d2--dominio-del-crud-de-bloques-de-horario-prg--sal>)
+> y la aclaración en [RSM - Junta 3 con organizadores FILEY](<../../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>)). Una sala se crea **sin**
+> ningún horario relacionado; los bloques quedan hardcodeados por panel de programación (1:15
+> en Eventos, 1:00 en Talleres), no son un dato de la sala.
 
 ## Objetivo
 
@@ -31,7 +35,7 @@ Permitir al Administrador actualizar el nombre, el aforo y la disponibilidad (qu
 
 ## Alcance
 
-Aplica a salas existentes dentro de un salón. No incluye el CRUD de bloques de horario (ver decisión pendiente).
+Aplica a salas existentes dentro de un salón. No incluye bloques de horario: esos quedan hardcodeados por panel de programación, no son una propiedad de la sala (ver nota arriba).
 
 ## Actores
 
@@ -45,7 +49,7 @@ El Administrador elige editar una sala desde la pantalla de salas y salones (CU-
 
 ## Precondiciones
 
-- La sala existe dentro de un salón del catálogo compartido.
+- La sala existe dentro de un salón del catálogo único global.
 
 ## Postcondiciones
 

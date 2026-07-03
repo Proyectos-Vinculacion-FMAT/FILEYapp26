@@ -22,11 +22,11 @@ trazabilidad:
 
 ## Objetivo
 
-Permitir al Administrador dar de alta un salón en el catálogo compartido de espacios; al crearlo, el sistema genera automáticamente su primera sala.
+Permitir al Administrador dar de alta un salón en el catálogo único global de espacios; al crearlo, el sistema genera automáticamente su primera sala.
 
 ## Alcance
 
-Aplica al catálogo compartido de salas y salones, gestionado desde la pantalla única de CU-SAL-007. No aplica a stands.
+Aplica al catálogo único global de salas y salones, gestionado desde la pantalla única de CU-SAL-007. No aplica a stands.
 
 ## Actores
 
@@ -46,7 +46,7 @@ El Administrador solicita crear un salón desde la pantalla de salas y salones.
 
 ### En éxito
 
-- El salón queda creado en el catálogo compartido, con una sala generada automáticamente como primera sala.
+- El salón queda creado en el catálogo único global, con una sala generada automáticamente como primera sala.
 
 ### En fallo
 
@@ -58,7 +58,7 @@ El Administrador solicita crear un salón desde la pantalla de salas y salones.
 2. El Administrador captura los datos del salón (nombre).
 3. El sistema valida que los datos requeridos estén completos.
 4. El sistema crea el salón y genera automáticamente su primera sala.
-5. El sistema confirma la creación y la muestra en el catálogo compartido.
+5. El sistema confirma la creación y la muestra en el catálogo único global.
 
 ## Flujos de excepción
 

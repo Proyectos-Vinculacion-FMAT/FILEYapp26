@@ -22,7 +22,18 @@ trazabilidad:
 
 ## Objetivo
 
-Asegurar que el sistema impida reservar un taller cuyo cupo restante sea menor a la cantidad de visitantes que la institución representa, para no sobrepasar la capacidad de la actividad.
+Asegurar que el sistema impida asignar a un taller más visitantes de los que permite su cupo restante, validando la **cantidad que se asigna a ese taller** (no el total de la visita), de modo que un grupo grande pueda repartirse entre varias actividades sin sobrepasar la capacidad de ninguna.
+
+> [!note] Regla de negocio — restricción de la reserva (no un flujo)
+> Es una **restricción/propiedad de la reserva**, no un comportamiento ni un flujo. El grupo de una escuela **puede dividirse libremente** entre varias actividades (selección libre por asiento, resuelta en la Junta 3 con organizadores FILEY — ver [CU-VIS-012](<CU-VIS-012 Reservar uno o varios talleres del catálogo para armar el itinerario de la visita.md>)): la validación es por la cantidad asignada a *cada* taller contra su cupo restante, **no** por el total del grupo contra un solo taller. Sin esta corrección, una validación "grupo completo contra un solo taller" bloquearía todo taller pequeño (p. ej. Ek Balam, cupo 35) para cualquier grupo mayor a ese cupo. El único tope agregado es el de la visita completa: **máximo 105 alumnos por visita escolar** (ver [RSM - Junta 3 con organizadores FILEY](<../../../soporte/meetings/resumenes/RSM - Junta 3 con organizadores FILEY.md>)). Fuente original del patrón de reparto: [Software para agendar escuelas](<../../../soporte/extraido/Software para agendar escuelas.md>) ("Cupo lleno / No disponible" al agotarse).
+
+<!-- -->
+
+> [!note] Precisión interna (2026-06-29) — no aplica con normalidad a los casos excepcionales de `EVT`
+> Esta validación asume un **taller de `TAL`**, con aforo limitado por sala (CU-SAL-005). Los
+> casos excepcionales de `EVT` que Hipólito marca como aptos para infantil/juvenil (ver
+> CU-VIS-010) **no tienen límite de cupo**: para esos, el sistema no rechaza la reserva por
+> cantidad de visitantes — la restricción de esta CU solo rige sobre actividades de `TAL`.
 
 ## Alcance
 
