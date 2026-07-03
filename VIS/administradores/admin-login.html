@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Acceso administrativo</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — <b>Administrador</b> —
+  <b>A1. Acceso admin</b> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A2. Revisar propuestas</a> <span class="sep">›</span>
+  <a href="admin-visitas.html">A3. Visitas aceptadas</a> <span class="sep">›</span>
+  <a href="admin-escuela.html">A4. Registrar / editar escuela</a>
+  &nbsp;·&nbsp; <a href="../../REG/aplicantes/index.html">Registrante ↗</a>
+</div></div>
+
+<div class="auth-wrap">
+  <div class="auth-hero">
+    <div class="logo-lg"><span>FIL</span><span>EY</span></div>
+    <h2>Panel de administración</h2>
+    <p>Coordinación General de Contenidos. Revisa y dictamina propuestas de visita, consulta las
+       visitas aceptadas y gestiona las reservaciones de cada escuela.</p>
+    <div class="pills">
+      <span>🗂️ Revisión de propuestas</span>
+      <span>🚌 Visitas aceptadas</span>
+      <span>🔑 Acceso con contraseña</span>
+    </div>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-card">
+      <h3>Acceso administrativo</h3>
+      <p class="sub">Los usuarios administrativos entran con usuario y contraseña (CU-REG-003).</p>
+
+      <form onsubmit="return false">
+        <div class="field">
+          <label>Usuario <span class="req">*</span></label>
+          <input type="text" placeholder="usuario@filey.org" value="elvira@filey.org">
+        </div>
+        <div class="field">
+          <label>Contraseña <span class="req">*</span></label>
+          <input type="text" placeholder="••••••••" value="••••••••" style="letter-spacing:2px">
+        </div>
+        <a class="btn btn-primary btn-block btn-lg" href="admin-propuestas.html">Entrar al panel</a>
+      </form>
+
+      <div class="auth-foot">
+        ¿Eres una escuela? <a href="../../REG/aplicantes/index.html">Acceso del registrante</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

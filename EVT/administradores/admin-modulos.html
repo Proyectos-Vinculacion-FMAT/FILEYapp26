@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Panel de administración · Módulos</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="topbar admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Panel de administración</small></div>
+    </div>
+    <nav class="topnav">
+      <span class="chip-modulo">🛡️ Administrador general</span>
+      <div class="user-chip"><span class="avatar">HC</span> Hipólito C.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Vista del administrador · Paso posterior al acceso (OTP) —
+  <a href="../aplicantes/index.html">Acceso</a> › <a href="admin-otp.html">Código</a> › <strong>Selección de módulo</strong> › Panel
+  &nbsp;·&nbsp; <em>Demo: acceso admin por OTP (decisión de equipo, CU-REG-003 · CU-REG-006)</em>
+</div></div>
+
+<main class="page">
+  <div class="page-head">
+    <h1>Hola, Hipólito 👋</h1>
+    <p>Estos son los módulos que administras en FILEY 2027. Entra al panel del que quieras gestionar.</p>
+  </div>
+
+  <div class="conv-grid">
+
+    <!-- EVENTOS (habilitado) -->
+    <article class="conv-card">
+      <div class="conv-banner banner-eventos">
+        <span class="ico">🎤</span>
+        <h3>Actividades FILEY (Eventos)</h3>
+      </div>
+      <div class="conv-body">
+        <span class="badge badge-open">Tu panel</span>
+        <p>Revisa y dictamina propuestas, arma el programa (sala y horario), notifica resultados y configura la convocatoria.</p>
+        <div class="conv-dates">📅 Convocatoria abierta · cierra el 31 de agosto de 2027</div>
+      </div>
+      <div class="conv-foot">
+        <a class="btn btn-gold btn-block" href="admin-evt-propuestas.html">Entrar al panel</a>
+      </div>
+    </article>
+
+    <!-- INFANTIL / JUVENIL (deshabilitado en esta maqueta) -->
+    <article class="conv-card is-closed">
+      <div class="conv-banner banner-infantil">
+        <span class="ico">🎨</span>
+        <h3>Actividades Infantiles / Juveniles</h3>
+      </div>
+      <div class="conv-body">
+        <span class="badge badge-soon">Próximamente</span>
+        <p>Talleres, cuentacuentos y visitas escolares del programa infantil y juvenil.</p>
+        <div class="conv-dates">📅 Panel no incluido en esta versión del prototipo</div>
+      </div>
+      <div class="conv-foot">
+        <div class="closed-overlay">Disponible en una próxima versión</div>
+      </div>
+    </article>
+
+    <!-- STANDS (deshabilitado en esta maqueta) -->
+    <article class="conv-card is-closed">
+      <div class="conv-banner banner-stand">
+        <span class="ico">🏬</span>
+        <h3>Convocatoria de Stands</h3>
+      </div>
+      <div class="conv-body">
+        <span class="badge badge-soon">Próximamente</span>
+        <p>Renta de espacios y stands para editoriales, distribuidores y expositores comerciales.</p>
+        <div class="conv-dates">📅 Panel no incluido en esta versión del prototipo</div>
+      </div>
+      <div class="conv-foot">
+        <div class="closed-overlay">Disponible en una próxima versión</div>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="note note-info" style="margin-top:26px">
+    <div class="ico">ℹ️</div>
+    <div>En el sistema final, Hipólito como <strong>administrador general</strong> podría entrar a los tres
+      módulos. En esta primera maqueta solo está construido el <strong>panel de Eventos</strong>.</div>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+</body>
+</html>

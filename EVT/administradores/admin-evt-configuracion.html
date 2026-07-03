@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Panel Eventos · Configuración</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="topbar admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Panel de Eventos</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-modulos.html" class="chip-modulo">🎤 Eventos · cambiar módulo</a>
+      <div class="user-chip"><span class="avatar">HC</span> Hipólito C.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="admin-body">
+
+  <aside class="sidebar">
+    <div class="side-section">Programa general</div>
+    <nav class="side-nav">
+      <a class="side-link" href="admin-evt-propuestas.html"><span class="ico">📄</span> Propuestas</a>
+      <a class="side-link" href="admin-evt-notificaciones.html"><span class="ico">🔔</span> Notificaciones</a>
+      <a class="side-link" href="admin-evt-programa.html"><span class="ico">📅</span> Programa</a>
+      <a class="side-link" href="admin-evt-seguimiento.html"><span class="ico">📊</span> Seguimiento</a>
+      <a class="side-link active" href="admin-evt-configuracion.html"><span class="ico">⚙️</span> Configuración</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-toolbar">
+      <button class="menu-btn" title="Menú">☰</button>
+      <span class="crumb">Eventos · Configuración de la convocatoria</span>
+    </div>
+
+    <div class="admin-content">
+      <div class="page-head">
+        <h1>Configuración de la convocatoria</h1>
+        <p>Define las fechas clave y los cupos por categoría. Las fechas se muestran en el calendario;
+           al guardar, la convocatoria queda publicada para los proponentes.</p>
+      </div>
+
+      <div class="cal-wrap">
+
+        <!-- ===== Panel lateral: fechas clave + cupos ===== -->
+        <div class="cal-side">
+          <div class="cal-panel">
+            <h4>Fechas clave</h4>
+            <div class="date-list">
+              <div class="date-item">
+                <span class="swatch ev-apertura"></span>
+                <span class="lbl">Apertura</span>
+                <input type="date" value="2027-06-01">
+              </div>
+              <div class="date-item">
+                <span class="swatch ev-cierre"></span>
+                <span class="lbl">Cierre</span>
+                <input type="date" value="2027-08-31">
+              </div>
+              <div class="date-item">
+                <span class="swatch ev-notif"></span>
+                <span class="lbl">Notificación</span>
+                <input type="date" value="2027-09-15">
+              </div>
+              <div class="date-item">
+                <span class="swatch ev-ajustes"></span>
+                <span class="lbl">Límite de ajustes</span>
+                <input type="date" value="2027-09-22">
+              </div>
+              <div class="date-item">
+                <span class="swatch ev-asignacion"></span>
+                <span class="lbl">Asignación de horario</span>
+                <input type="date" value="2027-09-28">
+              </div>
+              <div class="date-item">
+                <span class="swatch ev-constancias"></span>
+                <span class="lbl">Constancias</span>
+                <input type="date" value="2027-11-30">
+              </div>
+            </div>
+          </div>
+
+          <div class="cal-panel">
+            <h4>Cupos por categoría</h4>
+            <div class="field">
+              <label>Literaria · UADY</label>
+              <input type="text" value="20">
+            </div>
+            <div class="field">
+              <label>Literaria · Externa</label>
+              <input type="text" value="30">
+            </div>
+            <div class="field">
+              <label>Académica · UADY</label>
+              <input type="text" value="15">
+            </div>
+            <div class="field">
+              <label>Académica · Externa</label>
+              <input type="text" value="25">
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Calendario estilo Outlook ===== -->
+        <div class="cal-main">
+          <div class="cal-toolbar">
+            <button class="cal-nav" title="Mes anterior">‹</button>
+            <button class="cal-nav" title="Mes siguiente">›</button>
+            <span class="month">Agosto 2027</span>
+            <span class="badge badge-open">Convocatoria abierta</span>
+          </div>
+          <div class="cal-grid">
+            <div class="dow">Lun</div><div class="dow">Mar</div><div class="dow">Mié</div>
+            <div class="dow">Jue</div><div class="dow">Vie</div><div class="dow">Sáb</div><div class="dow">Dom</div>
+
+            <!-- Semana 1 (agosto 2027 inicia en domingo) -->
+            <div class="cal-cell out"><span class="num">26</span></div>
+            <div class="cal-cell out"><span class="num">27</span></div>
+            <div class="cal-cell out"><span class="num">28</span></div>
+            <div class="cal-cell out"><span class="num">29</span></div>
+            <div class="cal-cell out"><span class="num">30</span></div>
+            <div class="cal-cell out"><span class="num">31</span></div>
+            <div class="cal-cell"><span class="num">1</span></div>
+
+            <!-- Semana 2 -->
+            <div class="cal-cell"><span class="num">2</span></div>
+            <div class="cal-cell"><span class="num">3</span></div>
+            <div class="cal-cell"><span class="num">4</span></div>
+            <div class="cal-cell"><span class="num">5</span></div>
+            <div class="cal-cell"><span class="num">6</span></div>
+            <div class="cal-cell"><span class="num">7</span></div>
+            <div class="cal-cell"><span class="num">8</span></div>
+
+            <!-- Semana 3 -->
+            <div class="cal-cell"><span class="num">9</span></div>
+            <div class="cal-cell"><span class="num">10</span></div>
+            <div class="cal-cell"><span class="num">11</span></div>
+            <div class="cal-cell"><span class="num">12</span></div>
+            <div class="cal-cell"><span class="num">13</span></div>
+            <div class="cal-cell"><span class="num">14</span></div>
+            <div class="cal-cell"><span class="num">15</span></div>
+
+            <!-- Semana 4 -->
+            <div class="cal-cell"><span class="num">16</span></div>
+            <div class="cal-cell"><span class="num">17</span></div>
+            <div class="cal-cell"><span class="num">18</span></div>
+            <div class="cal-cell"><span class="num">19</span></div>
+            <div class="cal-cell"><span class="num">20</span></div>
+            <div class="cal-cell"><span class="num">21</span></div>
+            <div class="cal-cell"><span class="num">22</span></div>
+
+            <!-- Semana 5 -->
+            <div class="cal-cell"><span class="num">23</span></div>
+            <div class="cal-cell"><span class="num">24</span></div>
+            <div class="cal-cell"><span class="num">25</span></div>
+            <div class="cal-cell"><span class="num">26</span></div>
+            <div class="cal-cell"><span class="num">27</span></div>
+            <div class="cal-cell"><span class="num">28</span></div>
+            <div class="cal-cell"><span class="num">29</span></div>
+
+            <!-- Semana 6 -->
+            <div class="cal-cell"><span class="num">30</span></div>
+            <div class="cal-cell today">
+              <span class="num">31</span>
+              <span class="cal-event ev-cierre">Cierre de convocatoria</span>
+            </div>
+            <div class="cal-cell out"><span class="num">1</span></div>
+            <div class="cal-cell out"><span class="num">2</span></div>
+            <div class="cal-cell out"><span class="num">3</span></div>
+            <div class="cal-cell out"><span class="num">4</span></div>
+            <div class="cal-cell out"><span class="num">5</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions" style="margin-top:24px">
+        <a class="btn btn-ghost" href="admin-evt-propuestas.html">Cancelar</a>
+        <a class="btn btn-primary" href="admin-evt-propuestas.html">Guardar y publicar convocatoria</a>
+      </div>
+
+      <div class="note note-warn" style="margin-top:20px">
+        <div class="ico">⚠️</div>
+        <div>Las fechas deben ir en orden: apertura ≤ cierre &lt; notificación ≤ ajustes ≤ asignación ≤ constancias.
+          Si ya hay propuestas recibidas, el sistema pedirá confirmación antes de cambiar los parámetros.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

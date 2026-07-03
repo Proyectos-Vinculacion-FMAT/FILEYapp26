@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Admin · Registrar escuela</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Administración · VIS</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="../../REG/administradores/admin-convocatorias.html">Módulos ↖</a>
+      <a href="#">Configuración</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="../../REG/administradores/admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A2. Visitas escolares</a> <span class="sep">›</span>
+  <b>A3. Registrar escuela (CU-VIS-016)</b>
+  &nbsp;·&nbsp; <a href="../../REG/aplicantes/index.html">Registrante ↗</a>
+</div></div>
+
+<main class="page page-narrow">
+  <div class="breadcrumb">
+    <a href="admin-propuestas.html">Visitas escolares</a> <span>›</span> Nueva escuela
+  </div>
+
+  <div class="page-head">
+    <h1>Registrar escuela manualmente</h1>
+    <p>Llena los datos de la institución y sus grupos. Al terminar podrás ir directamente al catálogo para asignar talleres.</p>
+  </div>
+
+  <form onsubmit="return false">
+
+    <!-- Datos de la institución -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">1</span>
+        <div><h3>Datos de la institución</h3><p>Información oficial de la escuela registrante</p></div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field"><label>Nombre de la institución</label><input type="text" placeholder="Nombre oficial de la escuela"></div>
+          <div class="field"><label>CCT</label><input type="text" placeholder="31DPR0000X"></div>
+        </div>
+        <div class="grid-3">
+          <div class="field"><label>Sector</label><div class="select-wrap"><select><option>Pública</option><option>Privada</option></select></div></div>
+          <div class="field"><label>Turno</label><div class="select-wrap"><select><option>Matutino</option><option>Vespertino</option></select></div></div>
+          <div class="field"><label>Nivel educativo</label><div class="select-wrap"><select><option>Preescolar</option><option>Primaria</option><option>Secundaria</option><option>Preparatoria</option><option>Universidad</option><option>Multigrado</option></select></div></div>
+        </div>
+        <div class="grid-3">
+          <div class="field"><label>Estado</label><div class="select-wrap"><select><option>Yucatán</option><option>Campeche</option><option>Quintana Roo</option></select></div></div>
+          <div class="field"><label>Municipio</label><div class="select-wrap"><select><option>Mérida</option><option>Tizimín</option><option>Cenotillo</option><option>Espita</option><option>Buctzotz</option><option>Otro…</option></select></div></div>
+          <div class="field"><label>Director(a)</label><input type="text" placeholder="Nombre del director(a)"></div>
+        </div>
+        <div class="field">
+          <label>Dirección</label>
+          <input type="text" placeholder="Calle, número, colonia">
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Teléfono de la institución</label><input type="tel" placeholder="999 000 0000"></div>
+          <div class="field"><label>Correo de la institución</label><input type="email" placeholder="contacto@institucion.mx"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Responsable -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">2</span>
+        <div><h3>Responsable de la visita</h3><p>Persona que acompañará al grupo durante la visita</p></div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field"><label>Nombre completo</label><input type="text" placeholder="Nombre del responsable"></div>
+          <div class="field"><label>Cargo</label><div class="select-wrap"><select><option>Director(a)</option><option>Docente</option><option>Prefecto(a)</option></select></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Teléfono</label><input type="tel" placeholder="999 000 0000"></div>
+          <div class="field"><label>Correo electrónico</label><input type="email" placeholder="responsable@institucion.mx"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grupos -->
+    <div class="card section-card">
+      <div class="section-head"><span class="num">3</span>
+        <div><h3>Grupos</h3><p>Hasta 3 grupos · máximo 35 alumnos por grupo · un representante obligatorio</p></div>
+      </div>
+      <div class="section-body">
+        <div id="grupos-list">
+          <div class="grupo-block" data-grupo>
+            <div class="grupo-block__head"><strong data-grupo-title>Grupo 1</strong><button type="button" class="grupo-remove" data-grupo-remove>Quitar</button></div>
+            <div class="grid-3">
+              <div class="field"><label>Grado</label><input type="text" placeholder="Ej. Sexto"></div>
+              <div class="field"><label>Alumnos</label><input type="number" min="1" max="35" class="grupo-cant" value="30"></div>
+              <div class="field"><label>Representante</label><input type="text" placeholder="Nombre del responsable del grupo"></div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="add-grupo">+ Agregar grupo</button>
+        <div class="total-box" id="total-box" style="margin-top:16px">
+          <span>Total de alumnos/visitantes</span>
+          <span><strong id="total-alumnos">30</strong> / 105 máximo</span>
+        </div>
+        <div class="note note-err" id="over-note" style="display:none; margin-top:12px">
+          <div class="ico">⚠️</div><div>Supera el máximo de 105 alumnos por propuesta.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card card-pad">
+      <div class="form-actions" style="border-top:none; padding-top:0">
+        <a class="btn btn-ghost spacer" href="admin-propuestas.html">Cancelar</a>
+        <a class="btn btn-gold btn-lg" href="admin-reservar.html">Registrar y reservar →</a>
+      </div>
+    </div>
+
+  </form>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Panel de administración · Visitas escolares</div>
+</div></footer>
+
+<script src="../app.js"></script>
+</body>
+</html>

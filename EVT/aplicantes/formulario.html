@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Enviar propuesta</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* Selector de tipo (específico de esta vista) */
+  .tipo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* Checkboxes estilo chip para selección múltiple */
+  .check-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .check-chip { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check-chip input[type="checkbox"] { display: none; }
+  .check-chip .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--gris-300); border-radius: 999px;
+    padding: 6px 14px; font-size: 14px; font-weight: 500;
+    color: var(--gris-700); background: var(--blanco);
+    transition: all .15s ease; cursor: pointer; user-select: none;
+  }
+  .check-chip input:checked + .chip {
+    border-color: var(--azul-600); background: var(--azul-050);
+    color: var(--azul-900); font-weight: 600;
+  }
+  .check-chip input:checked + .chip::before { content: "✓ "; font-size: 12px; }
+  .check-chip .chip:hover { border-color: var(--azul-400); background: var(--azul-050); }
+
+  .tipo-opt {
+    border: 1.5px solid var(--gris-300); background: var(--blanco);
+    border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;
+    text-align: center; font-family: inherit; font-size: 14px; font-weight: 600;
+    color: var(--gris-700); transition: all .15s ease;
+  }
+  .tipo-opt .em { display: block; font-size: 24px; margin-bottom: 8px; }
+  .tipo-opt:hover { border-color: var(--azul-600); background: var(--azul-050); }
+  .tipo-opt.is-active { border-color: var(--oro-600); background: var(--oro-050); color: var(--azul-900); box-shadow: 0 0 0 3px var(--oro-050); }
+  @media (max-width: 720px){ .tipo-grid { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Portal del proponente</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="../../REG/aplicantes/convocatorias.html">Convocatorias</a>
+      <a href="mis-propuestas.html">Mis propuestas</a>
+      <div class="user-chip"><span class="avatar">LR</span> Lectora R.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Paso 6 de 7 · Formulario de propuesta — los datos de participación van primero, antes de elegir el tipo
+</div></div>
+
+<main class="page page-narrow">
+  <div class="breadcrumb">
+    <a href="../../REG/aplicantes/convocatorias.html">Convocatorias</a> <span>›</span>
+    <a href="convocatoria-eventos.html">Actividades FILEY (Eventos)</a> <span>›</span> Enviar propuesta
+  </div>
+
+  <div class="page-head">
+    <h1>Registro de propuesta</h1>
+    <p>Convocatoria <strong>Actividades FILEY 2027 (Eventos)</strong> · Duración máxima por actividad: 50 minutos.</p>
+  </div>
+
+  <form onsubmit="return false">
+
+    <!-- SECCIÓN 1: Datos de participación (comunes a TODOS los tipos) -->
+    <div class="card section-card">
+      <div class="section-head">
+        <span class="num">1</span>
+        <div><h3>Datos de participación</h3><p>Comunes a cualquier tipo de actividad</p></div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field field-prefill">
+            <label>Nombre completo <span class="req">*</span></label>
+            <input type="text" value="Lectora Ramírez Pech" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+          <div class="field field-prefill">
+            <label>Correo electrónico <span class="req">*</span></label>
+            <input type="email" value="lectora@ejemplo.com" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field field-prefill">
+            <label>Número telefónico <span class="req">*</span></label>
+            <input type="tel" value="999 123 4567" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+          <div class="field">
+            <label>Dependencia o institución <span class="req">*</span></label>
+            <input type="text" placeholder="Institución u organización que representas">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Cargo <span class="opt">(opcional)</span></label>
+            <input type="text" placeholder="Tu cargo o rol">
+          </div>
+          <div class="field">
+            <label>Ciudad / Estado <span class="req">*</span></label>
+            <input type="text" placeholder="Ej. Mérida, Yucatán">
+          </div>
+        </div>
+        <div class="note note-info" style="margin:6px 0 0">
+          <div class="ico">ℹ️</div>
+          <div>Tu nombre, correo y teléfono se toman de tu cuenta. Solo completa los datos
+            de la institución y ubicación.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: Tipo de actividad -->
+    <div class="card section-card">
+      <div class="section-head">
+        <span class="num">2</span>
+        <div><h3>Tipo de actividad</h3><p>Selecciona uno. El formulario se adaptará a lo que elijas.</p></div>
+      </div>
+      <div class="section-body">
+        <div class="tipo-grid" id="tipo-grid">
+          <button type="button" class="tipo-opt" data-tipo="Conversatorio"><span class="em">💬</span>Conversatorio</button>
+          <button type="button" class="tipo-opt" data-tipo="Conferencia"><span class="em">🎓</span>Conferencia</button>
+          <button type="button" class="tipo-opt" data-tipo="Charla"><span class="em">🗣️</span>Charla</button>
+          <button type="button" class="tipo-opt" data-tipo="Mesa redonda"><span class="em">🪑</span>Mesa redonda</button>
+          <button type="button" class="tipo-opt" data-tipo="Presentación de libro"><span class="em">📕</span>Presentación de libro</button>
+          <button type="button" class="tipo-opt" data-tipo="Presentación de revista"><span class="em">📰</span>Presentación de revista</button>
+          <button type="button" class="tipo-opt" data-tipo="Lectura de obra"><span class="em">📖</span>Lectura de obra</button>
+          <button type="button" class="tipo-opt" data-tipo="Encuentro"><span class="em">🤝</span>Encuentro</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: Campos del tipo (dinámicos) -->
+    <div class="card section-card" id="section-campos" style="display:none">
+      <div class="section-head">
+        <span class="num">3</span>
+        <div><h3>Detalles de la actividad — <span id="tipo-elegido"></span></h3><p>Campos específicos del tipo seleccionado</p></div>
+      </div>
+      <div class="section-body" id="campos-tipo"></div>
+    </div>
+
+    <!-- Acciones (del PDF: Enviar / Crear nueva / Cerrar) -->
+    <div class="card card-pad">
+      <div class="form-actions" style="border-top:none; padding-top:0">
+        <a class="btn btn-ghost spacer" href="convocatoria-eventos.html">Cerrar</a>
+        <a class="btn btn-ghost" href="formulario.html">Guardar y crear otra solicitud</a>
+        <a class="btn btn-primary btn-lg" href="confirmacion.html">Enviar solicitud</a>
+      </div>
+    </div>
+
+  </form>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+<script src="../app.js"></script>
+</body>
+</html>

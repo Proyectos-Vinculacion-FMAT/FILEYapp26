@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Panel Eventos · Programar / Editar</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="topbar admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Panel de Eventos</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="admin-modulos.html" class="chip-modulo">🎤 Eventos · cambiar módulo</a>
+      <div class="user-chip"><span class="avatar">HC</span> Hipólito C.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="admin-body">
+
+  <aside class="sidebar">
+    <div class="side-section">Programa general</div>
+    <nav class="side-nav">
+      <a class="side-link" href="admin-evt-propuestas.html"><span class="ico">📄</span> Propuestas</a>
+      <a class="side-link" href="admin-evt-notificaciones.html"><span class="ico">🔔</span> Notificaciones</a>
+      <a class="side-link active" href="admin-evt-programa.html"><span class="ico">📅</span> Programa</a>
+      <a class="side-link" href="admin-evt-seguimiento.html"><span class="ico">📊</span> Seguimiento</a>
+      <a class="side-link" href="admin-evt-configuracion.html"><span class="ico">⚙️</span> Configuración</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-toolbar">
+      <button class="menu-btn" title="Menú">☰</button>
+      <span class="crumb"><a href="admin-evt-programa.html">Programa</a> › Programar EVE-2027-0042</span>
+    </div>
+
+    <div class="admin-content">
+      <div class="page-head">
+        <h1>Programar actividad</h1>
+        <p><strong>El mar que nos habita</strong> · Presentación de libro · Editorial La Nave ·
+          <span class="badge badge-accepted">Aceptada</span></p>
+      </div>
+
+      <div class="info-grid">
+        <!-- Formulario de asignación -->
+        <div>
+          <div class="section-card">
+            <div class="section-head"><span class="num">1</span><div><h3>Asignación de sala y horario</h3><p>Bloques fijos de 1:15 en el panel de Eventos</p></div></div>
+            <div class="section-body">
+              <div class="field">
+                <label>Fecha</label>
+                <input type="date" value="2027-11-14">
+              </div>
+              <div class="field">
+                <label>Sala / Salón</label>
+                <div class="select-wrap"><select>
+                  <option>Salón Chichén Itzá</option>
+                  <option>Salón Uxmal</option>
+                  <option>Auditorio Manuel Cepeda</option>
+                  <option>Sala de exhibición de Estados</option>
+                  <option>Biblioteca</option>
+                </select></div>
+              </div>
+              <div class="field">
+                <label>Bloque(s) de horario <span class="hint">— selecciona uno o varios consecutivos</span></label>
+                <div class="chips" style="margin-top:6px">
+                  <span class="chip">10:00–11:15</span>
+                  <span class="chip is-active">11:30–12:45</span>
+                  <span class="chip">13:00–14:15</span>
+                  <span class="chip">16:00–17:15</span>
+                  <span class="chip">17:30–18:45</span>
+                </div>
+              </div>
+
+              <div class="note note-warn" style="margin:16px 0 0">
+                <div class="ico">⚠️</div>
+                <div><strong>Alerta de empalme:</strong> el bloque 11:30–12:45 en el Salón Chichén Itzá ya tiene otra
+                  actividad (“Poesía joven del Mayab”). Puedes guardar de todos modos, pero deberás resolver el empalme
+                  antes de notificar al participante.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions" style="align-items:center;gap:14px">
+            <span class="hint" style="margin-right:auto">💾 Se guarda al instante — no hay botón de “guardar el programa” (guardado implícito).</span>
+            <a class="btn btn-ghost" href="admin-evt-programa.html">Volver a la lista</a>
+            <a class="btn btn-primary" href="admin-evt-horario.html">Ir al tablero</a>
+          </div>
+        </div>
+
+        <!-- Programaciones existentes de esta actividad -->
+        <div>
+          <div class="card card-pad">
+            <h3 style="margin:0 0 6px;color:var(--azul-900)">Programaciones de esta actividad</h3>
+            <p style="margin:0 0 16px;color:var(--gris-500);font-size:13.5px">Editar = mover a otra sala/bloque. Eliminar libera el espacio.</p>
+
+            <div class="date-list">
+              <div class="date-item" style="align-items:flex-start">
+                <span class="swatch ev-asignacion" style="margin-top:4px"></span>
+                <div class="lbl">
+                  <strong style="color:var(--azul-900)">14 nov · 11:30–12:45</strong><br>
+                  <small>Salón Chichén Itzá · <span class="badge badge-changes" style="font-size:10px">Sin notificar</span></small>
+                </div>
+                <button class="btn btn-ghost btn-row" onclick="document.getElementById('m-eliminar').hidden=false">Eliminar</button>
+              </div>
+            </div>
+
+            <div class="note note-info" style="margin:16px 0 0">
+              <div class="ico">ℹ️</div>
+              <div><strong>Editar</strong> una programación la mueve entre bloques o salas (no redimensiona);
+                al moverla, si ya se había notificado, se vuelve a habilitar su notificación de horario.
+                El guardado es inmediato.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: eliminar programación (CU-PRG-004) -->
+<div class="modal-back" id="m-eliminar" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3>Eliminar programación</h3><p>14 nov · 11:30–12:45 · Salón Chichén Itzá</p></div>
+    <div class="modal-body">
+      <div class="note note-warn" style="margin:0">
+        <div class="ico">⚠️</div>
+        <div>Se liberará la sala y el bloque para otra actividad. Como es la única programación de
+          <strong>“El mar que nos habita”</strong>, la actividad volverá a <strong>“Por programar”</strong>.
+          No se rechaza ni acepta la propuesta.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('m-eliminar').hidden=true">Cancelar</button>
+      <a class="btn btn-primary" href="admin-evt-programa.html">Eliminar programación</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.modal-back').forEach(function(b){
+    b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
+  });
+  document.querySelectorAll('.select-wrap').forEach(function(w){
+    var s = w.querySelector('select'); if(!s) return;
+    s.addEventListener('focus', function(){ w.classList.add('is-open'); });
+    s.addEventListener('change', function(){ w.classList.remove('is-open'); s.blur(); });
+    s.addEventListener('blur', function(){ w.classList.remove('is-open'); });
+  });
+</script>
+
+</body>
+</html>
