@@ -177,10 +177,10 @@
           <span class="ic">🧩</span>
           <div class="f">
             <label>Actividad</label>
-            <div class="select-wrap"><select style="width:100%">
+            <select style="width:100%">
               <option>El mar que nos habita — EVE-2027-0042 (Presentación de libro)</option>
               <option>Voces de la narrativa yucateca — EVE-2027-0031 (Conversatorio)</option>
-            </select></div>
+            </select>
           </div>
         </div>
         <div class="evt-row">
@@ -195,26 +195,30 @@
           <span class="ic">🕒</span>
           <div class="f">
             <label>Fecha y bloque (fijo de 1:15)</label>
-            <div class="big">Jue 14 nov 2027 · 11:30 – 12:45</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div class="big">Jue 14 nov 2027 · 11:30 – 12:45</div>
+              <button class="btn btn-ghost" style="white-space:nowrap" onclick="abrirProgramador()">🗓️ Programador</button>
+            </div>
             <div class="chips" style="margin-top:8px">
               <span class="chip">10:00–11:15</span>
               <span class="chip is-active">11:30–12:45</span>
               <span class="chip">13:00–14:15</span>
               <span class="chip">16:00–17:15</span>
             </div>
-            <small style="color:var(--gris-500);display:block;margin-top:6px">Si necesita más tiempo, marca también el siguiente bloque completo.</small>
+            <small style="color:var(--gris-500);display:block;margin-top:6px">Si necesita más tiempo, marca también el siguiente bloque completo.
+              <br>¿La actividad va <strong>más de una vez</strong> (otra fecha o sala)? Abre el <strong>Programador</strong> para repetirla sin duplicar su registro.</small>
           </div>
         </div>
         <div class="evt-row">
           <span class="ic">📍</span>
           <div class="f">
             <label>Salón / sala</label>
-            <div class="select-wrap"><select style="width:100%">
+            <select style="width:100%">
               <option>Salón Chichén Itzá</option>
               <option>Salón Uxmal</option>
               <option>Auditorio Manuel Cepeda</option>
               <option>Sala de exhibición de Estados</option>
-            </select></div>
+            </select>
           </div>
         </div>
         <div class="evt-row">
@@ -254,6 +258,106 @@
   </div>
 </div>
 
+<!-- Modal: Programador — repetir una actividad en varias fechas (asistente estilo Outlook) -->
+<div class="modal-back" id="m-programador" hidden>
+  <div class="modal modal-wide" style="max-width:1060px">
+    <div class="modal-head">
+      <h3>Programador · repetir la actividad en varias fechas</h3>
+      <p>Marca cada ocasión (día + bloque) en que se repite <strong>la misma actividad</strong>, sin duplicar su registro.
+        La rejilla sigue el mismo formato del horario que usa la Coordinación (bloques × días).</p>
+    </div>
+
+    <div class="evt-dialog" style="grid-template-columns:1fr 300px">
+
+      <!-- Izquierda: rejilla multi-día (formato del horario de Elvira) -->
+      <div class="evt-form" style="padding:16px 18px">
+        <div class="evt-row" style="border:none;padding:0 0 12px">
+          <span class="ic">🧩</span>
+          <div class="f">
+            <label>Actividad que se repite</label>
+            <div class="big">El mar que nos habita <span class="rep-badge">se repite</span></div>
+            <small style="color:var(--gris-500)">EVE-2027-0042 · Presentación de libro · Editorial La Nave</small>
+          </div>
+        </div>
+
+        <div class="sched">
+          <table>
+            <thead>
+              <tr>
+                <th class="time-col">Bloque</th>
+                <th>Jue 14 nov</th>
+                <th>Vie 15 nov</th>
+                <th>Sáb 16 nov</th>
+                <th>Dom 17 nov</th>
+                <th>Lun 18 nov</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="time-col">10:00<br>11:15</td>
+                <td class="slot"><div class="act" style="background:var(--gris-050);border-left-color:var(--gris-300);cursor:default"><strong>Conferencia inaugural</strong><small>ocupada por otra</small></div></td>
+                <td class="slot free" data-dia="Vie 15 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 17 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 18 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+              </tr>
+              <tr>
+                <td class="time-col">11:30<br>12:45</td>
+                <td class="slot is-pgm" data-dia="Jue 14 nov" data-bloque="11:30–12:45" data-sala="Salón Chichén Itzá" onclick="pgmToggle(this)"><div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)"><strong>✓ El mar que nos habita</strong><small>Salón Chichén Itzá</small></div></td>
+                <td class="slot free" data-dia="Vie 15 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 17 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 18 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+              </tr>
+              <tr>
+                <td class="time-col">13:00<br>14:15</td>
+                <td class="slot free" data-dia="Jue 14 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Vie 15 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot is-pgm" data-dia="Sáb 16 nov" data-bloque="13:00–14:15" data-sala="Salón Uxmal" onclick="pgmToggle(this)"><div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)"><strong>✓ El mar que nos habita</strong><small>Salón Uxmal</small></div></td>
+                <td class="slot free" data-dia="Dom 17 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 18 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+              </tr>
+              <tr>
+                <td class="time-col">16:00<br>17:15</td>
+                <td class="slot free" data-dia="Jue 14 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot"><div class="act" style="background:var(--gris-050);border-left-color:var(--gris-300);cursor:default"><strong>Taller de cómic</strong><small>ocupada por otra</small></div></td>
+                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 17 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 18 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+              </tr>
+              <tr>
+                <td class="time-col">17:30<br>18:45</td>
+                <td class="slot free" data-dia="Jue 14 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Vie 15 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 17 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 18 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--gris-500)">
+          <span>🟩 Esta actividad · 🟦 Ocupada por otra · celda vacía = libre (clic para agregar/quitar una ocasión)</span>
+        </div>
+      </div>
+
+      <!-- Derecha: ocasiones seleccionadas (como el panel de asistente de Outlook) -->
+      <div class="evt-preview">
+        <div class="pv-head"><span>Ocasiones de esta actividad (<span id="pgm-count">2</span>)</span></div>
+        <div id="pgm-list"></div>
+        <p class="pv-foot">Cada ocasión se programa, notifica y confirma por separado (CU-PRG-002 A1).
+          Quitar una no afecta a las demás.</p>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrar('m-programador')">Cancelar</button>
+      <a class="btn btn-gold" href="admin-evt-horario.html">Guardar <span id="pgm-count-b">2</span> ocasiones · se guarda solo</a>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: notificar horarios -->
 <div class="modal-back" id="m-notif" hidden>
   <div class="modal">
@@ -282,12 +386,63 @@
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
   });
-  document.querySelectorAll('.select-wrap').forEach(function(w){
-    var s = w.querySelector('select'); if(!s) return;
-    s.addEventListener('focus', function(){ w.classList.add('is-open'); });
-    s.addEventListener('change', function(){ w.classList.remove('is-open'); s.blur(); });
-    s.addEventListener('blur', function(){ w.classList.remove('is-open'); });
-  });
+
+  /* ===== Programador: repetir la MISMA actividad en varias fechas (CU-PRG-002 A1) ===== */
+  var ACT_REP = 'El mar que nos habita';
+
+  function abrirProgramador(){ cerrar('m-asignar'); abrir('m-programador'); pgmRender(); }
+
+  function pgmToggle(cell){
+    var dia = cell.getAttribute('data-dia');
+    var bloque = cell.getAttribute('data-bloque');
+    var sala = cell.getAttribute('data-sala') || 'Salón Chichén Itzá';
+    if(cell.classList.contains('is-pgm')){
+      cell.classList.remove('is-pgm');
+      cell.classList.add('free');
+      cell.innerHTML = '';
+    } else {
+      cell.classList.add('is-pgm');
+      cell.classList.remove('free');
+      cell.innerHTML = '<div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)">'+
+        '<strong>✓ '+ACT_REP+'</strong><small>'+sala+'</small></div>';
+    }
+    pgmRender();
+  }
+
+  function pgmQuitar(dia, bloque){
+    document.querySelectorAll('#m-programador .slot.is-pgm').forEach(function(c){
+      if(c.getAttribute('data-dia')===dia && c.getAttribute('data-bloque')===bloque){ pgmToggle(c); }
+    });
+  }
+
+  function pgmRender(){
+    var celdas = document.querySelectorAll('#m-programador .slot.is-pgm');
+    var list = document.getElementById('pgm-list');
+    if(!list) return;
+    if(celdas.length === 0){
+      list.innerHTML = '<small style="color:var(--gris-500)">Sin ocasiones. Haz clic en un bloque libre para agregar una.</small>';
+    } else {
+      var html = '';
+      celdas.forEach(function(c){
+        var dia = c.getAttribute('data-dia');
+        var bloque = c.getAttribute('data-bloque');
+        var sala = c.getAttribute('data-sala') || 'Salón Chichén Itzá';
+        html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;'+
+          'border:1px solid var(--gris-200);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:var(--blanco)">'+
+          '<div style="font-size:12.5px;color:var(--azul-900);line-height:1.35">'+
+          '<strong>📅 '+dia+'</strong><br><span style="color:var(--gris-600)">'+bloque+' · '+sala+'</span></div>'+
+          '<a href="#" title="Quitar esta ocasión" onclick="pgmQuitar(\''+dia+'\',\''+bloque+'\');return false" '+
+          'style="color:var(--err-600);font-weight:700;text-decoration:none">✕</a></div>';
+      });
+      list.innerHTML = html;
+    }
+    var n = celdas.length;
+    var c1 = document.getElementById('pgm-count'), c2 = document.getElementById('pgm-count-b');
+    if(c1) c1.textContent = n;
+    if(c2) c2.textContent = n;
+  }
+
+  pgmRender();
 </script>
 
 </body>
