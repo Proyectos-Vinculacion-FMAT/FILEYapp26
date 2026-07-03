@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main-isaac
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: false
 
       - uses: actions/upload-pages-artifact@v3
         with:
