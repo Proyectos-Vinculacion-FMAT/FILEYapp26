@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Talleres Preescolar (evidencia A2)</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .taller-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 24px; }
+  .taller-card { background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); box-shadow: var(--sombra-sm); overflow: hidden; }
+  .taller-card__head { background: var(--vis-nivel-preescolar); padding: 14px 18px; }
+  .taller-card__head h3 { margin: 0; font-size: 17px; font-weight: 700; color: var(--color-azul-institucional-enfoque); }
+  .taller-card__body { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .taller-card__row { display: flex; justify-content: space-between; font-size: 13.5px; }
+  .taller-card__label { color: var(--gris-500); }
+  .taller-card__value { font-weight: 600; color: var(--color-azul-texto); }
+  .taller-card__desc { font-size: 13.5px; color: var(--gris-700); line-height: 1.55; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Evidencia de diseño · VIS</small></div>
+    </div>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Archivo de evidencia — <b>A(2) Talleres de Preescolar</b> ·
+  No están en el catálogo activo; son ejemplos para demostrar la pill
+  <span class="vis-nivel vis-nivel--preescolar">Preescolar</span> y la lógica de nivel educativo.
+</div></div>
+
+<main class="page page-wide">
+  <div class="page-head">
+    <h1>Talleres de Preescolar — ejemplos</h1>
+    <p>Estos tres talleres ilustran cómo quedaría el nivel "Preescolar" en el catálogo.
+       El nivel se muestra con la píldora
+       <span class="vis-nivel vis-nivel--preescolar">Preescolar</span>
+       (token <code>--vis-nivel-preescolar</code>, clase <code>.vis-nivel--preescolar</code>).
+       Los talleres para Preescolar <strong>no están incluidos en la convocatoria FILEY 2027</strong>;
+       este archivo es evidencia de la acción A(2) del análisis de desalineación de CUs.</p>
+  </div>
+
+  <div class="note note-warn">
+    <div class="ico">📋</div>
+    <div>Este archivo <strong>no forma parte del flujo de usuario</strong>. Es un archivo de referencia
+      interno que el análisis de desalineación cita como evidencia de resolución de la acción A(2).</div>
+  </div>
+
+  <div class="taller-grid">
+
+    <!-- Taller 1 -->
+    <div class="taller-card">
+      <div class="taller-card__head">
+        <h3>Cuentos con titeres</h3>
+      </div>
+      <div class="taller-card__body">
+        <div class="taller-card__row">
+          <span class="taller-card__label">Nivel</span>
+          <span class="taller-card__value"><span class="vis-nivel vis-nivel--preescolar">Preescolar</span></span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Cupo</span>
+          <span class="taller-card__value">30 alumnos</span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Duración</span>
+          <span class="taller-card__value">50 minutos</span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Sala</span>
+          <span class="taller-card__value">Ludoteca</span>
+        </div>
+        <p class="taller-card__desc">Narración interactiva con títeres de guante. Los niños participan dando voz a los personajes y creando finales alternativos.</p>
+      </div>
+    </div>
+
+    <!-- Taller 2 -->
+    <div class="taller-card">
+      <div class="taller-card__head">
+        <h3>Música y rimas</h3>
+      </div>
+      <div class="taller-card__body">
+        <div class="taller-card__row">
+          <span class="taller-card__label">Nivel</span>
+          <span class="taller-card__value"><span class="vis-nivel vis-nivel--preescolar">Preescolar</span></span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Cupo</span>
+          <span class="taller-card__value">35 alumnos</span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Duración</span>
+          <span class="taller-card__value">50 minutos</span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Sala</span>
+          <span class="taller-card__value">Ek Balam - Sala 6</span>
+        </div>
+        <p class="taller-card__desc">Taller de rimas y canciones tradicionales mayas y mexicanas. Introduce el amor por la lectura a través del ritmo y la memoria auditiva.</p>
+      </div>
+    </div>
+
+    <!-- Taller 3 -->
+    <div class="taller-card">
+      <div class="taller-card__head">
+        <h3>Mi primer libro</h3>
+      </div>
+      <div class="taller-card__body">
+        <div class="taller-card__row">
+          <span class="taller-card__label">Nivel</span>
+          <span class="taller-card__value"><span class="vis-nivel vis-nivel--preescolar">Preescolar</span></span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Cupo</span>
+          <span class="taller-card__value">25 alumnos</span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Duración</span>
+          <span class="taller-card__value">50 minutos</span>
+        </div>
+        <div class="taller-card__row">
+          <span class="taller-card__label">Sala</span>
+          <span class="taller-card__value">Ek Balam - Sala 5</span>
+        </div>
+        <p class="taller-card__desc">Los niños crean un librito artesanal con ilustraciones propias y una historia dictada al facilitador. Se llevan su obra como recuerdo de la FILEY.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Archivo de evidencia · Acción A(2) · <code>prototipo/VIS/talleres-preescolar.html</code></div>
+</div></footer>
+
+</body>
+</html>

@@ -96,11 +96,13 @@
         <div class="grid-2">
           <div class="field">
             <label>Nombre de la institución <span class="req">*</span></label>
-            <input type="text" placeholder="Nombre oficial" value="Benito Juárez García">
+            <input type="text" placeholder="Nombre oficial" value="Benito Juárez García" data-vis-required>
+            <span class="field__err">Este campo es obligatorio</span>
           </div>
           <div class="field">
             <label>Clave de centro de trabajo (CCT) <span class="req">*</span></label>
-            <input type="text" placeholder="31DPR0000X" value="31DPR0681L">
+            <input type="text" placeholder="31DPR0000X" value="31DPR0681L" data-vis-required>
+            <span class="field__err">Este campo es obligatorio</span>
           </div>
         </div>
         <div class="grid-3">
@@ -114,7 +116,7 @@
           </div>
           <div class="field">
             <label>Nivel educativo <span class="req">*</span></label>
-            <div class="select-wrap"><select>
+            <div class="select-wrap"><select id="nivel-educativo">
               <option>Preescolar</option>
               <option selected>Primaria</option>
               <option>Secundaria</option>
@@ -139,23 +141,27 @@
           </div>
           <div class="field">
             <label>Nombre del director(a) <span class="req">*</span></label>
-            <input type="text" placeholder="Director(a) de la institución" value="Marco López Pérez">
+            <input type="text" placeholder="Director(a) de la institución" value="Marco López Pérez" data-vis-required>
+            <span class="field__err">Este campo es obligatorio</span>
           </div>
         </div>
         <div class="field">
           <label>Dirección <span class="req">*</span></label>
-          <input type="text" placeholder="Calle, número, colonia" value="Calle 61 Núm. Ext. 287, Esperanza">
+          <input type="text" placeholder="Calle, número, colonia" value="Calle 61 Núm. Ext. 287, Esperanza" data-vis-required>
+          <span class="field__err">Este campo es obligatorio</span>
         </div>
         <div class="grid-2">
           <div class="field">
             <label>Teléfono de la institución <span class="req">*</span></label>
-            <input type="tel" placeholder="999 000 0000" value="999 312 4400" required
+            <input type="tel" placeholder="999 000 0000" value="999 312 4400" data-vis-required
               pattern="[0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4}"
               title="Formato: 999 000 0000 (10 dígitos)">
+            <span class="field__err">Este campo es obligatorio</span>
           </div>
           <div class="field">
             <label>Correo de la institución <span class="req">*</span></label>
-            <input type="email" placeholder="contacto@institucion.mx" value="bjuarezgarcia@educ.yucatan.gob.mx" required>
+            <input type="email" placeholder="contacto@institucion.mx" value="bjuarezgarcia@educ.yucatan.gob.mx" data-vis-required>
+            <span class="field__err">Este campo es obligatorio</span>
           </div>
         </div>
       </div>
@@ -176,9 +182,9 @@
               <button type="button" class="grupo-remove" data-grupo-remove>Quitar</button>
             </div>
             <div class="grid-3">
-              <div class="field"><label>Grado <span class="req">*</span></label><input type="text" placeholder="Ej. Sexto" value="Sexto"></div>
-              <div class="field"><label>Alumnos <span class="req">*</span></label><input type="number" min="1" max="35" class="grupo-cant" value="35"></div>
-              <div class="field"><label>Representante del grupo <span class="req">*</span></label><input type="text" placeholder="Nombre del responsable" value="Erick Matos Pantoja"></div>
+              <div class="field" data-field-grado><label>Grado <span class="req">*</span></label><input type="text" placeholder="Ej. Sexto" value="Sexto" data-vis-required><span class="vis-grado-hint"></span><span class="field__err">Este campo es obligatorio</span></div>
+              <div class="field"><label>Alumnos <span class="req">*</span></label><input type="number" min="1" max="35" class="grupo-cant" value="35" data-vis-required><span class="field__err">Este campo es obligatorio</span></div>
+              <div class="field"><label>Representante del grupo <span class="req">*</span></label><input type="text" placeholder="Nombre del responsable" value="Erick Matos Pantoja" data-vis-required><span class="field__err">Este campo es obligatorio</span></div>
             </div>
           </div>
           <!-- Grupo 2 -->
@@ -188,9 +194,9 @@
               <button type="button" class="grupo-remove" data-grupo-remove>Quitar</button>
             </div>
             <div class="grid-3">
-              <div class="field"><label>Grado <span class="req">*</span></label><input type="text" placeholder="Ej. Cuarto" value="Cuarto"></div>
-              <div class="field"><label>Alumnos <span class="req">*</span></label><input type="number" min="1" max="35" class="grupo-cant" value="35"></div>
-              <div class="field"><label>Representante del grupo <span class="req">*</span></label><input type="text" placeholder="Nombre del responsable" value="Juan López Salvador"></div>
+              <div class="field" data-field-grado><label>Grado <span class="req">*</span></label><input type="text" placeholder="Ej. Cuarto" value="Cuarto" data-vis-required><span class="vis-grado-hint"></span><span class="field__err">Este campo es obligatorio</span></div>
+              <div class="field"><label>Alumnos <span class="req">*</span></label><input type="number" min="1" max="35" class="grupo-cant" value="35" data-vis-required><span class="field__err">Este campo es obligatorio</span></div>
+              <div class="field"><label>Representante del grupo <span class="req">*</span></label><input type="text" placeholder="Nombre del responsable" value="Juan López Salvador" data-vis-required><span class="field__err">Este campo es obligatorio</span></div>
             </div>
           </div>
           <!-- Grupo 3 -->
@@ -200,9 +206,9 @@
               <button type="button" class="grupo-remove" data-grupo-remove>Quitar</button>
             </div>
             <div class="grid-3">
-              <div class="field"><label>Grado <span class="req">*</span></label><input type="text" placeholder="Ej. Quinto" value="Quinto"></div>
-              <div class="field"><label>Alumnos <span class="req">*</span></label><input type="number" min="1" max="35" class="grupo-cant" value="20"></div>
-              <div class="field"><label>Representante del grupo <span class="req">*</span></label><input type="text" placeholder="Nombre del responsable" value="Enrique Segoviano Ruiz"></div>
+              <div class="field" data-field-grado><label>Grado <span class="req">*</span></label><input type="text" placeholder="Ej. Quinto" value="Quinto" data-vis-required><span class="vis-grado-hint"></span><span class="field__err">Este campo es obligatorio</span></div>
+              <div class="field"><label>Alumnos <span class="req">*</span></label><input type="number" min="1" max="35" class="grupo-cant" value="20" data-vis-required><span class="field__err">Este campo es obligatorio</span></div>
+              <div class="field"><label>Representante del grupo <span class="req">*</span></label><input type="text" placeholder="Nombre del responsable" value="Enrique Segoviano Ruiz" data-vis-required><span class="field__err">Este campo es obligatorio</span></div>
             </div>
           </div>
         </div>
@@ -239,7 +245,7 @@
     <div class="card card-pad">
       <div class="form-actions" style="border-top:none; padding-top:0">
         <a class="btn btn-ghost spacer" href="convocatoria-vis.html">Cancelar</a>
-        <a class="btn btn-primary btn-lg" href="confirmacion-vis.html">Enviar propuesta</a>
+        <button type="button" class="btn btn-primary btn-lg" data-vis-submit data-href="confirmacion-vis.html">Enviar propuesta</button>
       </div>
     </div>
 

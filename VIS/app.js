@@ -11,8 +11,12 @@
   var GROUPS = { G1: 35, G2: 35, G3: 20 };
   var ORDER = ['G1', 'G2', 'G3'];
 
+  /* A8: nivel asignado a cada grupo según el grado declarado (Sexto/Cuarto/Quinto → Primaria Alta). */
+  var GROUP_NIVEL = { G1: 'pa', G2: 'pa', G3: 'pa' };
+
   /* =====================================================
      1. Formulario de propuesta / edición: grupos dinámicos
+        + hint de sub-nivel Primaria (A1)
      ===================================================== */
   (function gruposForm() {
     var list = document.getElementById('grupos-list');
@@ -23,6 +27,38 @@
     var overNote = document.getElementById('over-note');
     var MAX_GRUPOS = 3;
     var MAX_TOTAL = 105;
+
+    /* A1: mapeo de nombre de grado → código de sub-nivel primaria. */
+    var GRADO_MAP = {
+      'primero': 'pb', '1ro': 'pb', '1': 'pb', '1°': 'pb',
+      'segundo': 'pb', '2do': 'pb', '2': 'pb', '2°': 'pb',
+      'tercero': 'pb', '3ro': 'pb', '3': 'pb', '3°': 'pb',
+      'cuarto':  'pa', '4to': 'pa', '4': 'pa', '4°': 'pa',
+      'quinto':  'pa', '5to': 'pa', '5': 'pa', '5°': 'pa',
+      'sexto':   'pa', '6to': 'pa', '6': 'pa', '6°': 'pa'
+    };
+
+    function getNivelEd() {
+      var sel = document.getElementById('nivel-educativo');
+      return sel ? sel.value : '';
+    }
+
+    function updateGradoHint(input) {
+      var field = input.closest('[data-field-grado]');
+      if (!field) return;
+      var hint = field.querySelector('.vis-grado-hint');
+      if (!hint) return;
+      var nivel = getNivelEd();
+      if (nivel !== 'Primaria') { hint.textContent = ''; hint.className = 'vis-grado-hint'; return; }
+      var cat = GRADO_MAP[input.value.trim().toLowerCase()];
+      if (!cat) { hint.textContent = ''; hint.className = 'vis-grado-hint'; return; }
+      hint.textContent = cat === 'pa' ? 'Primaria alta (4°–6°)' : 'Primaria baja (1°–3°)';
+      hint.className = 'vis-grado-hint vis-grado-hint--' + (cat === 'pa' ? 'alta' : 'baja');
+    }
+
+    function updateAllGradoHints() {
+      list.querySelectorAll('[data-field-grado] input[type="text"]').forEach(updateGradoHint);
+    }
 
     function blocks() { return Array.prototype.slice.call(list.querySelectorAll('[data-grupo]')); }
 
@@ -50,6 +86,7 @@
 
     list.addEventListener('input', function (e) {
       if (e.target.classList.contains('grupo-cant')) recompute();
+      if (e.target.closest('[data-field-grado]')) updateGradoHint(e.target);
     });
 
     list.addEventListener('click', function (e) {
@@ -58,6 +95,10 @@
       var block = rm.closest('[data-grupo]');
       if (block && blocks().length > 1) { block.remove(); recompute(); }
     });
+
+    /* Actualizar hints cuando cambia el nivel educativo de la escuela. */
+    var nivelSel = document.getElementById('nivel-educativo');
+    if (nivelSel) nivelSel.addEventListener('change', updateAllGradoHints);
 
     if (addBtn) addBtn.addEventListener('click', function () {
       var bs = blocks();
@@ -70,34 +111,47 @@
         '<div class="grupo-block__head"><strong data-grupo-title>Grupo ' + n + '</strong>' +
         '<button type="button" class="grupo-remove" data-grupo-remove>Quitar</button></div>' +
         '<div class="grid-3">' +
-        '<div class="field"><label>Grado</label><input type="text" placeholder="Ej. Tercero"></div>' +
-        '<div class="field"><label>Alumnos</label><input type="number" min="1" max="35" class="grupo-cant" value="30"></div>' +
-        '<div class="field"><label>Representante</label><input type="text" placeholder="Nombre del responsable"></div>' +
+        '<div class="field" data-field-grado>' +
+          '<label>Grado <span class="req">*</span></label>' +
+          '<input type="text" placeholder="Ej. Tercero" data-vis-required>' +
+          '<span class="vis-grado-hint"></span>' +
+          '<span class="field__err">Este campo es obligatorio</span>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Alumnos <span class="req">*</span></label>' +
+          '<input type="number" min="1" max="35" class="grupo-cant" value="30" data-vis-required>' +
+          '<span class="field__err">Este campo es obligatorio</span>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Representante del grupo <span class="req">*</span></label>' +
+          '<input type="text" placeholder="Nombre del responsable" data-vis-required>' +
+          '<span class="field__err">Este campo es obligatorio</span>' +
+        '</div>' +
         '</div>';
       list.appendChild(block);
       recompute();
     });
 
     recompute();
+    updateAllGradoHints();
   }());
 
   /* =====================================================
      2. Reservar talleres: cupo en vivo + selector de grupos
+        + validación de nivel educativo (A2, A8, A9)
      ===================================================== */
   (function reservar() {
     var grid = document.querySelector('.vis-horario-wrap');
     if (!grid) return;
 
-    /* ---- Catálogo y horario (datos de demostración) ----
-       Ficha básica de cada taller: título, cupo (35 normal · 120 sala de cine)
-       y nivel educativo. El nivel lo decide el organizador y puede diferir del
-       nivel de registro de la escuela. */
+    /* ---- Catálogo y horario (datos de demostración) ---- */
     var NIVEL = {
-      pa: { label: 'Primaria Alta',   cls: 'vis-nivel--primaria-alta' },
-      pb: { label: 'Primaria - Baja', cls: 'vis-nivel--primaria-baja' },
-      se: { label: 'Secundaria',      cls: 'vis-nivel--secundaria' },
-      pr: { label: 'Preparatoria',    cls: 'vis-nivel--preparatoria' },
-      un: { label: 'Universidad',     cls: 'vis-nivel--universidad' }
+      pe: { label: 'Preescolar',    cls: 'vis-nivel--preescolar' },    /* A2 */
+      pa: { label: 'Primaria Alta', cls: 'vis-nivel--primaria-alta' },
+      pb: { label: 'Primaria Baja', cls: 'vis-nivel--primaria-baja' },
+      se: { label: 'Secundaria',    cls: 'vis-nivel--secundaria' },
+      pr: { label: 'Preparatoria',  cls: 'vis-nivel--preparatoria' },
+      un: { label: 'Universidad',   cls: 'vis-nivel--universidad' }
     };
     function T(title, nivel, badges) { return { type: 't', title: title, nivel: nivel, base: 35, badges: badges || '' }; }
     function C(title, nivel) { return { type: 't', title: title, nivel: nivel, base: 120, badges: '' }; }
@@ -147,14 +201,14 @@
     function cellHTML(c) {
       if (c.type === 'sin') return '<div class="vis-horario-celda vis-horario-celda--sin-taller"><span class="vis-bloque-label">Sin taller programado</span></div>';
       if (c.type === 'cer') return '<div class="vis-horario-celda vis-horario-celda--cerrado"><span class="vis-bloque-label">Cerrado</span></div>';
-      /* Zona de acceso libre = unión de N bloques horarios → ancho = N × columna. */
       if (c.type === 'lib') return '<div class="vis-horario-celda vis-horario-celda--libre" data-taller="Zona de acceso libre" data-libre="1" style="flex:0 0 ' + (c.span * 360) + 'px">' +
         '<span class="vis-bloque-label">Zona de acceso libre</span><span class="vis-horario-celda__cupos">Cupo ilimitado</span>' + badgesHTML(c.badges) + '</div>';
       var n = NIVEL[c.nivel];
-      return '<div class="vis-horario-celda" data-taller="' + esc(c.title) + '" data-base="' + c.base + '">' +
+      /* A8: data-nivel almacena el código de nivel para validación en tryToggle. */
+      return '<div class="vis-horario-celda" data-taller="' + esc(c.title) + '" data-base="' + c.base + '" data-nivel="' + esc(c.nivel) + '">' +
         '<span class="vis-horario-celda__nombre">' + esc(c.title) + '</span>' +
         '<div class="vis-horario-celda__meta"><span class="vis-horario-celda__cupos"></span>' +
-        '<span>Nivel Educativo: <span class="vis-nivel ' + n.cls + '">' + n.label + '</span></span></div>' +
+        '<span>Nivel: <span class="vis-nivel ' + n.cls + '">' + n.label + '</span></span></div>' +
         badgesHTML(c.badges) + '</div>';
     }
     function areaHTML(turno, active) {
@@ -177,16 +231,12 @@
       });
     });
 
-    /* Column index of a cell within its row (0 = sala label, 1..N = time slots). */
     function colIndex(cell) {
       var fila = cell.closest('.vis-horario-fila');
       if (!fila) return -1;
       return Array.prototype.indexOf.call(fila.children, cell);
     }
 
-    /* True when group g already has a workshop reserved in the same time column
-       and the same turno area as cell (parallel-slot conflict).
-       Acceso libre cells are exempt on both ends. */
     function hasSameTimeConflict(g, cell) {
       if (cell.hasAttribute('data-libre')) return false;
       var col = colIndex(cell);
@@ -202,7 +252,6 @@
       return conflict;
     }
 
-    /* Show a brief error line inside the popup. */
     function showConflict(text) {
       var el = popup.querySelector('.vis-conflict-msg');
       if (!el) {
@@ -214,7 +263,7 @@
       el.textContent = text;
       el.style.display = 'block';
       clearTimeout(el._timer);
-      el._timer = setTimeout(function () { el.style.display = 'none'; }, 2500);
+      el._timer = setTimeout(function () { el.style.display = 'none'; }, 3000);
     }
 
     function assignedSet(cell) {
@@ -241,7 +290,7 @@
     }
 
     function paintCupo(cell) {
-      if (cell.hasAttribute('data-libre')) return;   /* Zona de acceso libre: sin cupo */
+      if (cell.hasAttribute('data-libre')) return;
       var base = parseInt(cell.getAttribute('data-base'), 10);
       var label = cell.querySelector('.vis-horario-celda__cupos');
       if (!label || isNaN(base)) return;
@@ -263,7 +312,6 @@
         : 'Cupo garantizado para tus grupos en ' + count + ' actividad(es).';
     }
 
-    /* Pinta cupos iniciales (respetando los badges precargados) */
     grid.querySelectorAll('.vis-horario-celda[data-taller]').forEach(paintCupo);
     updateSummary();
 
@@ -271,12 +319,14 @@
     var popup = document.createElement('div');
     popup.className = 'vis-grupo-selector';
     popup.style.cssText = 'position:fixed;z-index:9999;';
+    /* A9: el título y la nota dejan claro que se reserva el grupo completo. */
     popup.innerHTML =
-      '<p class="vis-grupo-selector__title">Asignar grupos</p>' +
-      '<div class="vis-grupo-selector__item" data-group="G1"><span class="vis-radio"></span> Grupo 1 · 35</div>' +
-      '<div class="vis-grupo-selector__item" data-group="G2"><span class="vis-radio"></span> Grupo 2 · 35</div>' +
-      '<div class="vis-grupo-selector__item" data-group="G3"><span class="vis-radio"></span> Grupo 3 · 20</div>' +
-      '<div class="vis-grupo-selector__item"><button type="button" class="vis-todos-btn">Todos los grupos</button></div>';
+      '<p class="vis-grupo-selector__title">Asignar grupo completo</p>' +
+      '<div class="vis-grupo-selector__item" data-group="G1"><span class="vis-radio"></span> Grupo 1 · 35 alumnos</div>' +
+      '<div class="vis-grupo-selector__item" data-group="G2"><span class="vis-radio"></span> Grupo 2 · 35 alumnos</div>' +
+      '<div class="vis-grupo-selector__item" data-group="G3"><span class="vis-radio"></span> Grupo 3 · 20 alumnos</div>' +
+      '<div class="vis-grupo-selector__item"><button type="button" class="vis-todos-btn">Todos los grupos</button></div>' +
+      '<p style="margin:6px 0 0;font-size:11px;color:var(--gris-500);line-height:1.4">Se reserva la totalidad de alumnos del grupo seleccionado.</p>';
     document.body.appendChild(popup);
 
     var currentCell = null;
@@ -295,10 +345,14 @@
       setTimeout(function () { cell.style.boxShadow = ''; }, 350);
     }
 
-    /* Sin límite de cupo: Zona de acceso libre (data-libre) o data-base = -1. */
     function isUnlimited(cell) {
       var base = parseInt(cell.getAttribute('data-base'), 10);
       return cell.hasAttribute('data-libre') || base === -1 || isNaN(base);
+    }
+
+    /* A8: categoría de nivel (pa/pb → 'primaria'; se/pr/un → su propio código). */
+    function nivelCategory(n) {
+      return (n === 'pa' || n === 'pb') ? 'primaria' : (n || '');
     }
 
     function tryToggle(g) {
@@ -313,6 +367,28 @@
           flash(currentCell);
           showConflict(g + ' ya tiene un taller reservado en este horario.');
           return;
+        }
+        /* A8: validación de nivel educativo. */
+        if (!currentCell.hasAttribute('data-libre')) {
+          var workshopNivel = currentCell.getAttribute('data-nivel');
+          var groupNivel = GROUP_NIVEL[g];
+          if (workshopNivel && groupNivel) {
+            var wCat = nivelCategory(workshopNivel);
+            var gCat = nivelCategory(groupNivel);
+            if (wCat && gCat && wCat !== gCat) {
+              /* Nivel de escuela distinto al del taller: bloquear. */
+              flash(currentCell);
+              var wLabel = NIVEL[workshopNivel] ? NIVEL[workshopNivel].label : workshopNivel;
+              showConflict('Nivel incompatible: este taller es de ' + wLabel + '.');
+              return;
+            }
+            if (workshopNivel !== groupNivel) {
+              /* Mismo nivel de escuela (Primaria) pero sub-nivel diferente: aviso sin bloqueo. */
+              var wsLabel = NIVEL[workshopNivel] ? NIVEL[workshopNivel].label : workshopNivel;
+              var grLabel = NIVEL[groupNivel] ? NIVEL[groupNivel].label : groupNivel;
+              showConflict('Aviso: taller de ' + wsLabel + '; el grupo es ' + grLabel + '.');
+            }
+          }
         }
         set.add(g);
       }
@@ -397,8 +473,6 @@
       var item = btn.closest('.vis-itin-item');
       if (item) { item.remove(); refresh(); }
     });
-
-    /* confirmar-btn es un <a href="../REG/convocatorias.html"> — navega directamente. */
   }());
 
   /* =====================================================
@@ -420,9 +494,6 @@
 
   /* =====================================================
      5. Select-wrap: gestión explícita de .is-open
-        No se usa :focus-within porque el navegador no lo
-        desactiva al seleccionar una opción (focus se
-        mantiene en el select tras el change).
      ===================================================== */
   document.querySelectorAll('.select-wrap').forEach(function (wrap) {
     var sel = wrap.querySelector('select');
@@ -434,5 +505,104 @@
     });
     sel.addEventListener('blur', function () { wrap.classList.remove('is-open'); });
   });
+
+  /* =====================================================
+     6. Validación de formulario de propuesta (A4)
+        — Bloquea el envío si hay campos obligatorios vacíos
+        y muestra mensajes de error en cada campo inválido.
+     ===================================================== */
+  (function formValidation() {
+    var btn = document.querySelector('[data-vis-submit]');
+    if (!btn) return;
+
+    function validate() {
+      var invalid = false;
+      document.querySelectorAll('[data-vis-required]').forEach(function (el) {
+        var field = el.closest('.field');
+        var empty = !String(el.value).trim();
+        if (field) field.classList.toggle('is-invalid', empty);
+        if (empty) invalid = true;
+      });
+      return !invalid;
+    }
+
+    btn.addEventListener('click', function () {
+      if (validate()) {
+        window.location.href = btn.getAttribute('data-href') || 'confirmacion-vis.html';
+      } else {
+        var first = document.querySelector('.field.is-invalid');
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+
+    /* Limpia el estado de error en cuanto el usuario escribe algo válido. */
+    document.addEventListener('input', function (e) {
+      if (e.target.hasAttribute('data-vis-required') && String(e.target.value).trim()) {
+        var field = e.target.closest('.field');
+        if (field) field.classList.remove('is-invalid');
+      }
+    });
+  }());
+
+  /* =====================================================
+     7. Admin: selector de taller para dar de baja (A10)
+        — Al hacer clic en "Quitar de un taller", se despliega
+        un panel con la lista de talleres activos de esa visita.
+     ===================================================== */
+  (function bajaTaller() {
+    document.addEventListener('click', function (e) {
+      /* Abrir panel al hacer clic en el botón de baja. */
+      var bajaBtn = e.target.closest('[data-baja-btn]');
+      if (bajaBtn) {
+        var detailCell = bajaBtn.closest('td');
+        if (!detailCell) return;
+        var panel = detailCell.querySelector('.vis-baja-panel');
+        if (!panel) return;
+        /* Cerrar cualquier otro panel abierto primero. */
+        document.querySelectorAll('.vis-baja-panel.is-open').forEach(function (p) {
+          if (p !== panel) p.classList.remove('is-open');
+        });
+        panel.classList.toggle('is-open');
+        return;
+      }
+
+      /* Confirmar baja: quitar la fila de la ficha y cerrar el panel. */
+      var confirmBtn = e.target.closest('[data-baja-confirm]');
+      if (confirmBtn) {
+        var panel = confirmBtn.closest('.vis-baja-panel');
+        if (!panel) return;
+        var checked = panel.querySelector('input[type="radio"]:checked');
+        if (!checked) {
+          checked = panel.querySelector('input[type="radio"]'); /* demo: usar el primero si no hay selección */
+        }
+        if (checked) {
+          var label = checked.closest('label');
+          /* Eliminar la entrada correspondiente de la ficha. */
+          var detailCell = panel.closest('td');
+          if (detailCell && label) {
+            var idx = Array.prototype.indexOf.call(panel.querySelectorAll('input[type="radio"]'), checked);
+            var kvValues = detailCell.querySelectorAll('.vis-ficha__value');
+            var kvKeys   = detailCell.querySelectorAll('.vis-ficha__key');
+            if (kvValues[idx] && kvKeys[idx]) {
+              kvValues[idx].closest('.vis-ficha__grid') &&
+                (kvValues[idx].parentElement === kvKeys[idx].parentElement) &&
+                kvValues[idx].remove();
+              kvKeys[idx].remove();
+            }
+            label.remove();
+          }
+        }
+        panel.classList.remove('is-open');
+        return;
+      }
+
+      /* Cancelar: solo cerrar el panel. */
+      var cancelBtn = e.target.closest('[data-baja-cancel]');
+      if (cancelBtn) {
+        var panel = cancelBtn.closest('.vis-baja-panel');
+        if (panel) panel.classList.remove('is-open');
+      }
+    });
+  }());
 
 }());

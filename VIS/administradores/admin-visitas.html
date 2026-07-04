@@ -90,8 +90,20 @@
                   </div>
                 </div>
                 <div class="vis-detail-actions">
-                  <a class="vis-itinerario-btn__pill" href="admin-escuela.html">✎ Editar reservaciones</a>
-                  <button type="button" class="btn btn-danger">✕ Quitar de un taller (baja)</button>
+                  <a class="vis-itinerario-btn__pill" href="admin-escuela-edit.html">✎ Editar reservaciones</a>
+                  <button type="button" class="btn btn-danger" data-baja-btn>✕ Quitar de un taller (baja)</button>
+                </div>
+              </div>
+              <div class="vis-baja-panel" data-baja-panel>
+                <p class="vis-baja-panel__title">¿Cuál taller deseas dar de baja?</p>
+                <div class="vis-baja-options">
+                  <label><input type="radio" name="baja-v1" value="1"> 14 mar · 9:00 · Sala 2 — Ciencia divertida (G1)</label>
+                  <label><input type="radio" name="baja-v1" value="2"> 14 mar · 10:00 · Sala 1 — Taller de ilustración (G3)</label>
+                  <label><input type="radio" name="baja-v1" value="3"> 14 mar · 12:00 · Sala 3 — Dibujo con luz (G1, G3)</label>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn-danger btn-sm" data-baja-confirm>Confirmar baja</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-baja-cancel>Cancelar</button>
                 </div>
               </div>
               <div class="vis-grupos-row">
@@ -129,8 +141,19 @@
                   </div>
                 </div>
                 <div class="vis-detail-actions">
-                  <a class="vis-itinerario-btn__pill" href="admin-escuela.html">✎ Editar reservaciones</a>
-                  <button type="button" class="btn btn-danger">✕ Quitar de un taller (baja)</button>
+                  <a class="vis-itinerario-btn__pill" href="admin-escuela-edit.html">✎ Editar reservaciones</a>
+                  <button type="button" class="btn btn-danger" data-baja-btn>✕ Quitar de un taller (baja)</button>
+                </div>
+              </div>
+              <div class="vis-baja-panel" data-baja-panel>
+                <p class="vis-baja-panel__title">¿Cuál taller deseas dar de baja?</p>
+                <div class="vis-baja-options">
+                  <label><input type="radio" name="baja-v8" value="1"> 17 mar · 11:00 · Gran Foro — Charla juvenil (G1, G2)</label>
+                  <label><input type="radio" name="baja-v8" value="2"> 17 mar · 15:00 · Sala 4 — Función de cine (G1, G2)</label>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn-danger btn-sm" data-baja-confirm>Confirmar baja</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-baja-cancel>Cancelar</button>
                 </div>
               </div>
               <div class="vis-grupos-row">
