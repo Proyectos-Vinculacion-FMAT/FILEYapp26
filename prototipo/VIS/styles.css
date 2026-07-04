@@ -1,0 +1,362 @@
+/* =========================================================
+   FILEY 2027 — Prototipo UI · VISITAS ESCOLARES (VIS)
+   Extiende common/styles-base.css con tokens y componentes
+   exclusivos de Visitas Escolares (verde infantil/juvenil,
+   paneles bento, cupos, tabla admin, grid de catálogo).
+   ========================================================= */
+
+@import '../common/styles-base.css';
+
+:root {
+  /* --- Tokens canónicos VIS (referenciados desde canonical set) --- */
+  --color-azul-texto: #00437C;             /* alias explícito para uso VIS */
+  --color-dorado-degradado-oscuro: #6E4D03; /* dorado profundo para bordes de degradado */
+  --vis-dia-btn-size: 16px;               /* altura de los botones prev/next día; ancho = size * 26/30 */
+
+  /* --- Paleta VIS (verde convocatoria infantil/juvenil) --- */
+  /* Usando tokens canónicos --color-verde-* directamente en CSS */
+  --vis-abierta-bg:   rgba(123, 186, 21, 0.5);
+  --vis-abierta-dot:  #174E00;
+  --vis-cerrada-bg:   rgba(151, 151, 151, 0.5);
+  --vis-cerrada-dot:  #535353;
+  --vis-grad-radial:  radial-gradient(50% 50% at 50% 50%, var(--color-verde-lima) 0%, var(--color-verde-degradado-oscuro) 100%);
+  --vis-grad-lineal:  linear-gradient(90deg, var(--color-verde-lima) 0%, var(--color-verde-degradado-oscuro) 100%);
+  --vis-grad-sala:    linear-gradient(90deg, rgba(153, 186, 21, 0.2) 0%, rgba(63, 78, 0, 0.2) 100%);
+  /* Cupos (barra de capacidad) — degradado magenta */
+  --vis-cupos-vacio:  #D9D9D9;
+  --vis-cupos-lleno:  #797979;
+  --vis-cupos-grad:   linear-gradient(78.51deg, var(--color-morado) 0.21%, var(--color-magenta-oscuro) 100.21%);
+  --vis-badge-bg:     linear-gradient(78.51deg, rgba(149, 95, 242, 0.5) 0.21%, rgba(112, 18, 76, 0.5) 100.21%);
+  --vis-descanso-bg:  rgba(204, 49, 29, 0.5);
+  /* Píldoras de nivel educativo del taller */
+  --vis-nivel-preescolar:   rgba(255, 170, 0, 0.55);
+  --vis-nivel-prim-alta:    rgba(149, 95, 242, 0.5);
+  --vis-nivel-prim-baja:    rgba(95, 169, 242, 0.5);
+  --vis-nivel-secundaria:   rgba(240, 95, 242, 0.5);
+  --vis-nivel-preparatoria: rgba(60, 147, 10, 0.5);
+  --vis-nivel-universidad:  rgba(228, 0, 57, 0.5);
+  --vis-cerrado-bg:    rgba(115, 25, 11, 0.5);
+  --vis-sin-taller-bg: rgba(26, 26, 26, 0.5);
+}
+
+/* Override: banner infantil usa tokens VIS */
+.banner-infantil { background: linear-gradient(135deg, var(--color-verde-lima), var(--color-verde-degradado-oscuro)); }
+
+/* Override: .btn-green con tokens VIS (más preciso que el valor base) */
+.btn-green { background: var(--color-verde-800); }
+.btn-green:hover, .btn-green:focus-visible { background: var(--color-verde-degradado-oscuro); }
+
+/* Hero verde para el flujo de visitas escolares */
+.auth-hero.is-vis {
+  background:
+    linear-gradient(160deg, var(--color-verde-700), var(--color-verde-degradado-oscuro)),
+    radial-gradient(circle at 80% 10%, rgba(201,162,39,.30), transparent 45%);
+}
+
+/* Numeral verde para secciones de la convocatoria de visitas */
+.section-card.is-vis > .section-head .num { background: var(--color-verde-700); }
+
+/* Botones adicionales VIS */
+.btn-danger { background: var(--err-050); color: var(--err-600); border: 1.5px solid #eecac5; }
+.btn-danger:hover { background: #f7dcd8; text-decoration: none; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+
+/* Notas adicionales VIS */
+.note-green { background: #f3f7e3; color: var(--color-verde-degradado-oscuro); border: 1px solid #dbe6ad; }
+.note-err   { background: var(--err-050); color: var(--err-600); border: 1px solid #eecac5; }
+
+/* =========================================================
+   BLOQUE VIS — componentes de Visitas Escolares
+   (adaptados de las referencias del skill filey-ui-look-and-feel:
+    "VIS usages and visuals - components.css", escalados a la app
+    y con tokens canónicos en vez de la paleta paralela --color-*).
+   ========================================================= */
+
+/* --- Pills de estado de convocatoria --- */
+.vis-estado {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 13px; border-radius: 999px;
+  font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
+}
+.vis-estado__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.vis-estado--abierta { background: var(--vis-abierta-bg); color: var(--vis-abierta-dot); }
+.vis-estado--abierta .vis-estado__dot { background: var(--vis-abierta-dot); }
+.vis-estado--cerrada { background: var(--vis-cerrada-bg); color: var(--vis-cerrada-dot); }
+.vis-estado--cerrada .vis-estado__dot { background: var(--vis-cerrada-dot); }
+
+/* --- Banner principal (verde convocatoria) --- */
+.vis-banner {
+  background: var(--vis-grad-lineal);
+  border-radius: var(--radio); padding: 26px 30px;
+  display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;
+  box-shadow: var(--sombra-md);
+}
+.vis-banner__badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 14px; border-radius: 999px;
+  background: var(--vis-badge-bg); border: 1px solid rgba(255,255,255,.35);
+  align-self: flex-start;
+}
+.vis-banner__badge-dot { width: 9px; height: 9px; background: #fff; border-radius: 50%; }
+.vis-banner__badge-label { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .5px; }
+.vis-banner__title { font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
+.vis-banner__desc { font-size: 15px; color: rgba(255,255,255,.92); line-height: 1.55; margin: 0; max-width: 70ch; }
+
+/* --- Layout bento (izquierda info + derecha cupos) — proporción igual a EVT info-grid --- */
+.vis-bento-layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+.vis-bento-left { display: flex; flex-direction: column; gap: 22px; }
+.vis-bento-right { display: flex; flex-direction: column; gap: 22px; }
+
+.vis-bento {
+  background: #fff; border: 1px solid var(--gris-200);
+  box-shadow: var(--sombra-sm); border-radius: var(--radio);
+  padding: 0; overflow: hidden;
+}
+.vis-bento__header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 24px; border-bottom: 1px solid var(--gris-200); background: var(--gris-050);
+}
+.vis-bento__num {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+  background: var(--color-verde-700); color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 14px;
+}
+.vis-bento__title { font-size: 16.5px; font-weight: 700; color: var(--color-azul-institucional-enfoque); margin: 0; text-transform: uppercase; letter-spacing: .3px; }
+.vis-bento__body { padding: 18px 24px; }
+.vis-bento__list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.vis-bento__item { font-size: 14px; line-height: 1.55; color: var(--gris-700); margin: 0; }
+
+/* KV row (Fechas clave) */
+.vis-bento__kv {
+  display: flex; justify-content: space-between; gap: 16px;
+  font-size: 14px; padding: 11px 0; border-bottom: 1px dashed var(--gris-200);
+}
+.vis-bento__kv:last-child { border-bottom: none; }
+.vis-bento__kv-label { color: var(--gris-700); }
+.vis-bento__kv-value { font-weight: 700; color: var(--color-azul-institucional-enfoque); text-align: right; }
+
+/* --- Cupos disponibles (barras magenta) --- */
+.vis-cupo { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px dashed var(--gris-200); }
+.vis-cupo:last-child { border-bottom: none; }
+.vis-cupo__row { display: flex; justify-content: space-between; align-items: flex-end; }
+.vis-cupo__dia { font-size: 14.5px; font-weight: 700; color: var(--color-azul-institucional-enfoque); }
+.vis-cupo__count { font-size: 13px; color: var(--gris-500); }
+.vis-cupo__nota { font-size: 12px; color: var(--gris-500); }
+.vis-cupo__bar-bg { height: 10px; border-radius: 999px; background: var(--vis-cupos-vacio); overflow: hidden; }
+.vis-cupo__bar-fill { height: 100%; border-radius: 999px; }
+.vis-cupo__bar-fill--magenta { background: var(--vis-cupos-grad); }
+.vis-cupo__bar-fill--lleno { background: var(--vis-cupos-lleno); width: 100%; }
+
+/* --- Tabla de administración (propuestas / visitas) --- */
+.vis-tabla-wrap { overflow-x: auto; background: #fff; border-radius: var(--radio); border: 1px solid var(--gris-200); box-shadow: var(--sombra-sm); }
+.vis-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vis-tabla thead th {
+  color: var(--color-dorado-encabezado); font-size: 12.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  text-align: left; padding: 14px 14px; white-space: nowrap; border-bottom: 2px solid var(--gris-200);
+}
+.vis-tabla tbody td { color: var(--color-azul-texto); padding: 13px 14px; vertical-align: middle; border-bottom: 1px solid var(--gris-200); }
+.vis-tabla tbody tr.vis-row:hover td { background: var(--azul-050); }
+.vis-tabla .folio { font-weight: 700; color: var(--color-azul-institucional); }
+.vis-tabla__toggle {
+  background: none; border: none; color: var(--color-azul-texto); font-weight: 700; font-size: 14px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+  transition: color 0.2s ease;
+}
+.vis-tabla__toggle:hover { color: var(--color-dorado-encabezado); text-decoration: none; }
+.vis-tabla__toggle-icon { display: inline-flex; align-items: center; }
+.vis-tabla__toggle-icon svg { display: block; width: 12px; height: 6px; transform: rotate(180deg); transition: transform 0.2s ease; }
+.vis-tabla__toggle.is-open { color: var(--color-dorado-encabezado); }
+.vis-tabla__toggle.is-open .vis-tabla__toggle-icon svg { transform: rotate(360deg); }
+.vis-tabla__row-detail { display: none; }
+.vis-tabla__row-detail.is-open { display: table-row; }
+.vis-tabla__row-detail > td { padding: 0 14px 14px; background: var(--gris-050); }
+
+.vis-tabla-detail { border: 1px solid var(--gris-200); border-radius: var(--radio-sm); padding: 16px; display: flex; flex-direction: column; gap: 14px; background: #fff; }
+.vis-tabla-detail__inner { display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch; }
+
+/* Ficha de datos (representante + instituto) */
+.vis-ficha { flex: 2 1 340px; background: var(--oro-050); border: 1px solid var(--oro-200); border-radius: var(--radio-sm); padding: 14px 16px; }
+.vis-ficha__section { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--color-azul-institucional-enfoque); margin: 0 0 8px; }
+.vis-ficha__grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 13.5px; }
+.vis-ficha__key { color: var(--gris-500); }
+.vis-ficha__value { color: var(--color-azul-texto); font-weight: 600; }
+
+/* Panel de acciones del detalle */
+.vis-detail-actions { flex: 1 1 200px; display: flex; flex-direction: column; gap: 10px; justify-content: center; padding: 6px; }
+
+/* Botón itinerario (pill azul) */
+.vis-itinerario-btn__pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 18px; background: var(--color-azul-institucional-enfoque); border-radius: 999px;
+  font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; border: none; font-family: inherit;
+  text-decoration: none;
+}
+.vis-itinerario-btn__pill:hover { background: var(--color-azul-degradado-oscuro); text-decoration: none; }
+
+/* --- Cartas de grupo --- */
+.vis-grupos-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.vis-grupo-card { border: 1px solid var(--oro-200); border-radius: var(--radio-sm); overflow: hidden; flex: 1 1 200px; min-width: 190px; max-width: 320px; }
+.vis-grupo-card__header { background: var(--color-dorado-encabezado); padding: 6px 12px; font-size: 15px; font-weight: 700; color: #fff; }
+.vis-grupo-card__body { background: #fff; padding: 10px 12px; font-size: 13px; color: var(--color-azul-texto); display: flex; flex-direction: column; gap: 4px; }
+
+/* --- Cabecera de selección de actividades --- */
+.vis-sel-header {
+  background: var(--color-azul-texto); border-bottom: 6px solid var(--color-dorado-encabezado);
+  border-radius: var(--radio) var(--radio) 0 0;
+  padding: 18px 22px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;
+}
+.vis-sel-header__instituto { font-size: 20px; font-weight: 800; color: #fff; flex: 0 0 100%; margin: 0 0 6px; }
+.vis-sel-header .vis-grupo-card { max-width: 240px; }
+
+/* --- Grid de horario / catálogo --- */
+.vis-horario-container { display: flex; flex-direction: column; border-radius: 0 0 var(--radio) var(--radio); overflow: hidden; box-shadow: var(--sombra-sm); background: #fff; }
+.vis-horario-header { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 12px 20px; background: var(--color-azul-institucional); flex-shrink: 0; }
+.vis-turno-selector { display: flex; align-items: center; gap: 12px; }
+.vis-turno-selector__label { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .06em; }
+.vis-turno-dropdown { min-width: 170px; padding: 8px 34px 8px 14px; background: #fff; color: var(--color-azul-texto); border: none; border-radius: var(--radio-sm); font-size: 14px; font-weight: 700; font-family: inherit; }
+.vis-dia-selector { display: flex; align-items: center; gap: 14px; }
+.vis-dia-selector__text { font-size: 24px; font-weight: 600; color: #fff; min-width: 150px; text-align: center; }
+.vis-dia-btn {
+  background: none; border: none; padding: 4px; display: flex; align-items: center;
+  color: rgba(255,255,255,.85); cursor: pointer; transition: color 0.15s ease;
+}
+.vis-dia-btn:hover:not(:disabled) { color: var(--color-dorado-encabezado); }
+.vis-dia-btn:disabled { color: rgba(255,255,255,.25); cursor: not-allowed; }
+.vis-dia-btn svg { display: block; height: var(--vis-dia-btn-size); width: calc(var(--vis-dia-btn-size) * 26 / 30); }
+
+/* Grid: header blanco (Sala + bloques horarios). */
+.vis-horario-wrap { display: flex; overflow-x: auto; border: 3px solid var(--color-azul-degradado-oscuro); border-top: none; }
+.vis-horario-area { display: none; flex-direction: column; width: max-content; }
+.vis-horario-area.is-active { display: flex; }
+.vis-horario-tiempos { display: flex; background: #fff; flex-shrink: 0; border-bottom: 2px solid var(--color-azul-degradado-oscuro); }
+.vis-horario-tiempo { flex: 0 0 360px; padding: 12px 8px; font-size: 13px; font-weight: 700; color: var(--color-azul-institucional-enfoque); text-align: center; border-right: 1px solid var(--gris-200); }
+.vis-horario-tiempo--sala { flex: 0 0 141px; }
+
+.vis-horario-fila { display: flex; height: 85px; border-top: 1px solid var(--gris-200); }
+.vis-horario-fila:first-of-type { border-top: none; }
+.vis-horario-celda {
+  flex: 0 0 360px; border-right: 1px solid rgba(0,0,0,.08);
+  display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 12px 16px;
+  background: var(--vis-grad-sala); position: relative; overflow: hidden; cursor: pointer;
+  transition: box-shadow .12s;
+}
+.vis-horario-celda:hover { box-shadow: inset 0 0 0 2px var(--color-verde-700); }
+.vis-horario-celda__nombre { font-size: 20px; font-weight: 500; color: var(--color-dorado-encabezado); line-height: 1.3; }
+.vis-horario-celda__meta { display: flex; align-items: center; flex-wrap: nowrap; white-space: nowrap; gap: 12px; font-size: 13px; color: var(--tinta); }
+.vis-horario-celda__cupos { color: var(--tinta); min-width: 130px; }
+.vis-nivel { display: inline-flex; align-items: center; justify-content: center; min-width: 100px; padding: 2px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--tinta); white-space: nowrap; background: var(--vis-nivel-prim-alta); }
+.vis-nivel--preescolar    { background: var(--vis-nivel-preescolar); }
+.vis-nivel--primaria-alta { background: var(--vis-nivel-prim-alta); }
+.vis-nivel--primaria-baja { background: var(--vis-nivel-prim-baja); }
+.vis-nivel--secundaria    { background: var(--vis-nivel-secundaria); }
+.vis-nivel--preparatoria  { background: var(--vis-nivel-preparatoria); }
+.vis-nivel--universidad   { background: var(--vis-nivel-universidad); }
+.vis-horario-celda--sala-label { flex: 0 0 141px; background: var(--color-azul-link-enfoque); border-right: 1px solid #9db3c4; color: var(--color-azul-institucional-enfoque); font-size: 13.5px; font-weight: 700; justify-content: center; align-items: center; text-align: center; cursor: default; }
+.vis-horario-celda--sala-label:hover { box-shadow: none; }
+.vis-horario-celda--llena { filter: grayscale(.35); }
+.vis-horario-celda--llena .vis-horario-celda__cupos { color: var(--err-600); font-weight: 700; }
+.vis-horario-celda--sin-taller, .vis-horario-celda--cerrado { align-items: center; justify-content: center; text-align: center; cursor: default; }
+.vis-horario-celda--sin-taller { background: var(--vis-sin-taller-bg); }
+.vis-horario-celda--cerrado    { background: var(--vis-cerrado-bg); }
+.vis-horario-celda--sin-taller:hover, .vis-horario-celda--cerrado:hover { box-shadow: none; }
+.vis-horario-celda--libre { align-items: center; justify-content: center; text-align: center; gap: 4px; }
+.vis-bloque-label { font-size: 14px; font-weight: 700; line-height: 1.2; color: #fff; }
+.vis-horario-celda--libre .vis-bloque-label { color: var(--color-dorado-encabezado); }
+.vis-horario-celda--libre .vis-horario-celda__cupos { font-size: 12px; color: var(--tinta); }
+
+/* Badges de grupo dentro de la celda */
+.vis-celda-badges { position: absolute; top: 3px; right: 3px; display: flex; flex-direction: row; z-index: 2; }
+.vis-celda-badges .vis-grupo-badge:not(:first-child) { margin-left: -9px; }
+.vis-grupo-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; background: var(--color-azul-institucional-enfoque);
+  border: 1.5px solid var(--color-dorado-encabezado); border-radius: 50%;
+  font-size: 10px; font-weight: 700; line-height: 1; color: #fff; flex-shrink: 0;
+}
+
+/* --- Selector de grupos (popup contextual flotante) --- */
+.vis-grupo-selector {
+  background: #fff; border: 1px solid var(--color-dorado-encabezado);
+  box-shadow: var(--sombra-lg); border-radius: var(--radio);
+  padding: 12px 16px; display: none; flex-direction: column; gap: 8px; min-width: 190px;
+}
+.vis-grupo-selector__title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gris-500); margin: 0 0 2px; }
+.vis-grupo-selector__item { display: flex; align-items: center; gap: 10px; padding-bottom: 7px; border-bottom: 1px solid var(--gris-100); font-size: 14px; font-weight: 600; color: var(--tinta); cursor: pointer; }
+.vis-grupo-selector__item:last-child { border-bottom: none; padding-bottom: 0; }
+.vis-radio { width: 18px; height: 18px; border-radius: 50%; background: var(--vis-cupos-vacio); position: relative; flex-shrink: 0; }
+.vis-radio::after { content: ''; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #9a9a9a; top: 4px; left: 4px; opacity: 0; }
+.vis-radio--selected::after { opacity: 1; background: var(--color-azul-texto); }
+.vis-todos-btn { width: 100%; padding: 8px 14px; background: var(--color-azul-institucional-enfoque); color: #fff; border: none; border-radius: var(--radio-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.vis-todos-btn:hover { background: var(--color-azul-degradado-oscuro); }
+
+/* --- Barra resumen de reserva (sticky) --- */
+.vis-reserva-bar {
+  position: sticky; bottom: 0; z-index: 10; margin-top: 22px;
+  background: var(--color-azul-degradado-oscuro); color: #fff; border-radius: var(--radio);
+  padding: 16px 22px; display: flex; align-items: center; gap: 18px; box-shadow: var(--sombra-lg);
+}
+.vis-reserva-bar .txt { flex: 1; }
+.vis-reserva-bar .txt strong { display: block; font-size: 16px; }
+.vis-reserva-bar .txt span { color: rgba(255,255,255,.78); font-size: 13px; }
+
+/* Chips de itinerario (vista de itinerario) */
+.vis-itin-list { display: flex; flex-direction: column; gap: 12px; }
+.vis-itin-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--gris-200); border-radius: var(--radio-sm); background: #fff; }
+.vis-itin-item__day { flex: 0 0 92px; font-size: 13px; font-weight: 700; color: var(--color-verde-degradado-oscuro); }
+.vis-itin-item__main { flex: 1; }
+.vis-itin-item__main strong { display: block; font-size: 15px; color: var(--color-azul-institucional-enfoque); }
+.vis-itin-item__main span { font-size: 13px; color: var(--gris-500); }
+.vis-itin-item__groups { display: flex; gap: 4px; }
+
+/* Numeralia (admin) */
+.vis-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+.vis-stat { background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); box-shadow: var(--sombra-sm); padding: 18px 20px; }
+.vis-stat strong { display: block; font-size: 28px; color: var(--color-azul-institucional-enfoque); line-height: 1; }
+.vis-stat span { font-size: 12.5px; color: var(--gris-500); text-transform: uppercase; letter-spacing: .5px; }
+
+/* Barra de filtros */
+.vis-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 20px; }
+.vis-filters .field { margin-bottom: 0; }
+.vis-filters .field select, .vis-filters .field input { min-width: 170px; }
+
+/* Bloque de grupo (formulario de propuesta / edición admin) */
+.grupo-block { border: 1px solid var(--gris-200); border-radius: var(--radio-sm); padding: 16px 18px; margin-bottom: 14px; background: var(--gris-050); }
+.grupo-block__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.grupo-block__head strong { color: var(--color-azul-institucional-enfoque); font-size: 14.5px; }
+.grupo-remove { background: none; border: none; color: var(--err-600); font-weight: 600; cursor: pointer; font-size: 13px; font-family: inherit; }
+.grupo-remove:hover { text-decoration: underline; }
+.total-box { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border-radius: var(--radio-sm); background: var(--azul-050); border: 1px solid var(--azul-100); font-size: 14px; margin-top: 4px; }
+.total-box strong { color: var(--color-azul-institucional-enfoque); font-size: 18px; }
+.total-box.over { background: var(--err-050); border-color: #eecac5; }
+.total-box.over strong { color: var(--err-600); }
+
+/* --- Hint de sub-nivel (Primaria baja / alta) junto al campo de Grado (A1) --- */
+.vis-grado-hint { font-size: 11.5px; font-weight: 600; margin-top: 5px; padding: 2px 9px; border-radius: 999px; display: inline-block; min-width: 0; }
+.vis-grado-hint:empty { display: none; }
+.vis-grado-hint--alta { background: var(--vis-nivel-prim-alta); color: var(--tinta); }
+.vis-grado-hint--baja { background: var(--vis-nivel-prim-baja); color: var(--tinta); }
+
+/* --- Validación de formulario (A4) --- */
+.field.is-invalid input,
+.field.is-invalid select,
+.field.is-invalid textarea { border-color: var(--err-600) !important; box-shadow: 0 0 0 2px rgba(185,28,28,.12); }
+.field__err { font-size: 12px; color: var(--err-600); margin-top: 4px; display: none; }
+.field.is-invalid .field__err { display: block; }
+
+/* --- Selector de baja de taller — panel inline en admin-visitas (A10) --- */
+.vis-baja-panel {
+  display: none; margin-top: 12px; background: var(--err-050);
+  border: 1px solid #eecac5; border-radius: var(--radio-sm); padding: 14px 16px;
+}
+.vis-baja-panel.is-open { display: block; }
+.vis-baja-panel__title { font-size: 13px; font-weight: 700; color: var(--err-600); margin: 0 0 10px; }
+.vis-baja-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.vis-baja-options label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--color-azul-texto); cursor: pointer; }
+.vis-baja-options input[type="radio"] { accent-color: var(--err-600); cursor: pointer; }
+
+/* ===================== Responsive (VIS additions) ===================== */
+@media (max-width: 920px) {
+  .vis-bento-layout { grid-template-columns: 1fr; }
+  .vis-stats { grid-template-columns: repeat(2, 1fr); }
+}

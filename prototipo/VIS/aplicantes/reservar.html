@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Reservar talleres</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Visitas escolares</small></div>
+    </div>
+    <nav class="topnav">
+      <a href="convocatoria-vis.html">Convocatoria</a>
+      <a href="mi-visita.html">Mi registro</a>
+      <div class="user-chip"><span class="avatar">IO</span> Isaac O.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS —
+  <a href="../../REG/aplicantes/index.html">1. Acceso</a> <span class="sep">›</span>
+  <a href="../../REG/aplicantes/registro.html">2. Registro</a> <span class="sep">›</span>
+  <a href="../../REG/aplicantes/otp.html">3. Código</a> <span class="sep">›</span>
+  <a href="../../REG/aplicantes/convocatorias.html">4. Convocatorias</a> <span class="sep">›</span>
+  <a href="convocatoria-vis.html">5. Convocatoria VIS</a> <span class="sep">›</span>
+  <a href="formulario-vis.html">6. Mi escuela</a> <span class="sep">›</span>
+  <a href="confirmacion-vis.html">7. Confirmación</a> <span class="sep">›</span>
+  <a href="mi-visita.html">8. Mi registro</a> <span class="sep">›</span>
+  <b>9. Reservar talleres (CU-VIS-010/011/012)</b> <span class="sep">›</span>
+  <a href="itinerario.html">10. Itinerario</a>
+  &nbsp;·&nbsp; <a href="../../REG/aplicantes/convocatorias.html">EVT ↗</a>
+</div></div>
+
+<main class="page page-wide">
+  <div class="breadcrumb">
+    <a href="mi-visita.html">Mi registro</a> <span>›</span> VIS-2027-001 · Reservar talleres
+  </div>
+
+  <div class="page-head">
+    <h1>Arma tu itinerario</h1>
+    <p>Elige actividades del catálogo y asigna qué grupo asiste a cada una.
+       <strong>Haz clic en una actividad</strong> para asignar grupos. Al seleccionar un grupo se reservan
+       <em>todos</em> sus alumnos; el sistema valida que los cupos disponibles cubran el total declarado
+       para ese grupo. La validación es por taller: cada grupo ocupa cupo de forma independiente.</p>
+  </div>
+
+  <div class="note note-green">
+    <div class="ico">🎚️</div>
+    <div>El catálogo muestra <strong>todos los talleres disponibles</strong>; la restricción de nivel educativo
+      opera <em>al reservar</em>: el sistema no permite asignar un grupo a un taller de nivel incompatible.
+      El <strong>turno</strong> y el <strong>día</strong> se eligen en la cabecera del calendario.</div>
+  </div>
+
+  <!-- Cabecera de selección: institución + grupos -->
+  <div class="vis-sel-header">
+    <p class="vis-sel-header__instituto">Benito Juárez García · Primaria</p>
+    <div class="vis-grupo-card">
+      <div class="vis-grupo-card__header">Grupo 1 — G1</div>
+      <div class="vis-grupo-card__body">
+        <span>Grado: Sexto</span><span>Visitantes: 35</span><span>Responsable: Erick Matos Pantoja</span><span>Talleres reservados: 3</span>
+      </div>
+    </div>
+    <div class="vis-grupo-card">
+      <div class="vis-grupo-card__header">Grupo 2 — G2</div>
+      <div class="vis-grupo-card__body">
+        <span>Grado: Cuarto</span><span>Visitantes: 35</span><span>Responsable: Juan López Salvador</span><span>Talleres reservados: 3</span>
+      </div>
+    </div>
+    <div class="vis-grupo-card">
+      <div class="vis-grupo-card__header">Grupo 3 — G3</div>
+      <div class="vis-grupo-card__body">
+        <span>Grado: Quinto</span><span>Visitantes: 20</span><span>Responsable: Enrique Segoviano Ruiz</span><span>Talleres reservados: 2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid de horario (header con turno + día; las salas y sus bloques
+       matutino/vespertino se generan en app.js) -->
+  <div class="vis-horario-container">
+    <div class="vis-horario-header">
+      <div class="vis-turno-selector">
+        <span class="vis-turno-selector__label">Turno</span>
+        <div class="select-wrap"><select class="vis-turno-dropdown" id="turno-select">
+          <option value="matutino">Matutino</option>
+          <option value="vespertino">Vespertino</option>
+        </select></div>
+      </div>
+      <div class="vis-dia-selector">
+        <button type="button" class="vis-dia-btn" aria-label="Día anterior" disabled><svg viewBox="0 0 26 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0.999998 16.2926C-0.333335 15.5228 -0.333333 13.5983 1 12.8285L22.75 0.271127C24.0833 -0.498673 25.75 0.463579 25.75 2.00318V27.1179C25.75 28.6575 24.0833 29.6198 22.75 28.85L0.999998 16.2926Z"/></svg></button>
+        <span class="vis-dia-selector__text">14 de marzo de 2028</span>
+        <button type="button" class="vis-dia-btn" aria-label="Día siguiente"><svg viewBox="0 0 26 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M24.75 12.8285C26.0833 13.5983 26.0833 15.5228 24.75 16.2926L3 28.85C1.66666 29.6198 0 28.6575 0 27.1179V2.00318C0 0.463576 1.66667 -0.498672 3 0.271129L24.75 12.8285Z"/></svg></button>
+      </div>
+    </div>
+    <div class="vis-horario-wrap" id="horario-wrap"><!-- app.js inyecta las áreas matutino + vespertino --></div>
+  </div>
+
+  <!-- Barra de resumen -->
+  <div class="vis-reserva-bar">
+    <div class="txt">
+      <strong><span id="reserva-count">0</span> talleres en tu itinerario</strong>
+      <span id="reserva-detalle">Asigna grupos a las actividades para reservarlas.</span>
+    </div>
+    <a class="btn btn-special btn-lg" href="itinerario.html">Ver / confirmar itinerario →</a>
+  </div>
+
+  <div class="note note-info" style="margin-top:20px">
+    <div class="ico">💡</div>
+    <div>
+      Grupos diferentes pueden coincidir en cualquier bloque horario. Sin embargo,
+      <strong>un mismo grupo no puede reservar dos talleres en el mismo bloque</strong> (misma columna);
+      la excepción son las actividades de <em>acceso libre</em>, que pueden combinarse con otro taller
+      del mismo horario.<br>
+      <strong>Granularidad del cupo:</strong> el cupo se descuenta por la cantidad de alumnos declarada
+      para el grupo asignado, no por el total de alumnos de la escuela. Cada grupo ocupa cupo de forma
+      independiente en cada taller.<br>
+      Al confirmar, el sistema valida en tiempo real que los cupos no hayan sido tomados por otra
+      escuela mientras armabas tu itinerario.
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+<script src="../app.js"></script>
+</body>
+</html>

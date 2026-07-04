@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Panel de administración</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><span>FIL</span><span>EY</span></div>
+      <div class="brand-text"><strong>FILEY 2027</strong><small>Panel de administración</small></div>
+    </div>
+    <nav class="topnav">
+      <div style="
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(201,146,19,.20); border: 1px solid rgba(201,146,19,.40);
+        padding: 5px 12px; border-radius: 999px;
+        font-size: 13px; color: var(--color-dorado-encabezado); font-weight: 700;
+      ">🛡️ Administrador general</div>
+      <div class="user-chip"><span class="avatar is-admin">HC</span> Hipólito C.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · Admin —
+  <a href="admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="admin-otp.html">A2. Código</a> <span class="sep">›</span>
+  <b>A3. Módulos</b>
+  &nbsp;·&nbsp; <a href="../aplicantes/index.html">Proponente ↗</a>
+</div></div>
+
+<main class="page">
+  <div class="page-head">
+    <h1>Bienvenido, Hipólito 👋</h1>
+    <p>Estos son los módulos de FILEY 2027 que administras. Entra al panel de cada convocatoria para revisar propuestas y gestionar el proceso.</p>
+  </div>
+
+  <div class="conv-grid">
+
+    <!-- STD — Stands -->
+    <article class="conv-card">
+      <div class="conv-banner banner-stand">
+        <span class="ico">🏬</span>
+        <h3>Convocatoria de Stands</h3>
+      </div>
+      <div class="conv-body">
+        <p>Renta de espacios y stands para editoriales, distribuidores y expositores comerciales.</p>
+        <div class="conv-dates">📅 Convocatoria abierta · cierra el 31 de agosto de 2027</div>
+      </div>
+      <div class="conv-foot">
+        <a class="btn btn-gold btn-block" href="../../STD/#/admin/aplicaciones">Entrar al panel →</a>
+      </div>
+    </article>
+
+    <!-- TAL — Actividades Infantiles / Juveniles (próximamente) -->
+    <article class="conv-card is-closed">
+      <div class="conv-banner banner-infantil">
+        <span class="ico">🎨</span>
+        <h3>Actividades Infantiles / Juveniles</h3>
+      </div>
+      <div class="conv-body">
+        <span class="badge badge-soon">Próximamente</span>
+        <p>Talleres, cuentacuentos y actividades del programa infantil y juvenil (TAL).</p>
+        <div class="conv-dates">📅 Panel en construcción</div>
+      </div>
+      <div class="conv-foot">
+        <div class="closed-overlay">Disponible en una próxima versión</div>
+      </div>
+    </article>
+
+    <!-- EVT — Actividades FILEY Eventos (activo) -->
+    <article class="conv-card">
+      <div class="conv-banner banner-eventos">
+        <span class="ico">🎤</span>
+        <h3>Actividades FILEY (Eventos)</h3>
+      </div>
+      <div class="conv-body">
+        <span class="badge badge-open">Panel activo</span>
+        <p>Revisa y dictamina propuestas de conversatorios, conferencias, charlas y presentaciones de libro.</p>
+        <div class="conv-dates">📅 Convocatoria abierta · cierra el 31 de agosto de 2027</div>
+      </div>
+      <div class="conv-foot">
+        <a class="btn btn-gold btn-block" href="../../EVT/administradores/admin-evt-propuestas.html">Entrar al panel →</a>
+      </div>
+    </article>
+
+    <!-- VIS — Visitas Escolares (activo) -->
+    <article class="conv-card">
+      <div class="conv-banner banner-visitas">
+        <span class="ico">🚌</span>
+        <h3>Visitas Escolares</h3>
+      </div>
+      <div class="conv-body">
+        <span class="badge badge-open">Panel activo</span>
+        <p>Revisa propuestas de visita escolar, acepta o solicita cambios, y supervisa las reservaciones de talleres.</p>
+        <div class="conv-dates">📅 Convocatoria abierta · cierra el 31 de agosto de 2027</div>
+      </div>
+      <div class="conv-foot">
+        <a class="btn btn-gold btn-block" href="../../VIS/administradores/admin-propuestas.html">Entrar al panel →</a>
+      </div>
+    </article>
+
+
+  </div>
+
+  <div class="note note-info" style="margin-top: 26px">
+    <div class="ico">ℹ️</div>
+    <div>Como <strong>administrador general</strong> tienes acceso a todos los módulos activos.
+      Los paneles de <em>Stands</em> y <em>Actividades Infantiles/Juveniles</em> estarán disponibles en versiones posteriores del prototipo.</div>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+</body>
+</html>
