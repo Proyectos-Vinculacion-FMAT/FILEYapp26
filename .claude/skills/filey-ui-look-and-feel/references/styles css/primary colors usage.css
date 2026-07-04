@@ -1,0 +1,496 @@
+/* =========================================================
+   FILEY — Paleta primaria: estilos y usos
+   -----------------------------------------------------------
+   Origen: Figma > Copiar/Pegar como > Copiar como código > CSS
+   (todas las capas). El export original no es CSS válido (son
+   declaraciones de propiedades sueltas, sin selectores ni
+   llaves, con "font-family: 'Inter'" genérico de Figma).
+   Este archivo corrige eso: selectores reales, sin errores de
+   sintaxis, tokens reutilizables en :root y tipografía
+   institucional FILEY en vez de la fuente por defecto de Figma.
+   Ver también: ../identidad-institucional.md
+   ========================================================= */
+
+:root {
+  /* Paleta primaria (swatches confirmados en identidad-institucional.md) */
+  --color-blanco: #FFFFFF;
+  --color-azul-link-enfoque: #C8D7E3;
+  --color-azul-institucional: #01457C;
+  --color-azul-texto: #00437C;
+  --color-azul-institucional-enfoque: #013763;
+  --color-azul-degradado-claro: #01497B;
+  --color-azul-degradado-oscuro: #151A30;
+  --color-dorado-encabezado: #C99213;
+  --color-dorado-700: #B3810F;
+  --color-dorado-800: #9C700B;
+  --color-dorado-degradado-oscuro: #6E4D03;
+  --color-negro: #000000;
+
+  /* Tipografía institucional: FILEY usa "Open Sans" (filey.org).
+     No se carga como webfont (el prototipo es intencionalmente
+     sin dependencias de red): se declara el nombre real y se
+     deja caer a fuentes de sistema si no está instalada. */
+  --font-filey: "Open Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-uady: "Roboto", "Helvetica Neue", Arial, sans-serif;
+
+  --radio-card: 13px;
+  --radio-btn: 16px;
+  --radio-pill: 30px;
+  --sombra-card: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+/* ===================== Frame contenedor (1080x1920) =====================
+   Ancho fijo de 1080px (tamaño del frame de Figma) con alto mínimo de
+   1920px. Sin overflow/scroll propio: la página ya tiene scroll nativo
+   del navegador, así que un scroll anidado dentro del frame solo
+   estorbaría la navegación (rueda del mouse capturada por el div). */
+.fp-frame {
+  position: relative;
+  width: 1080px;
+  min-height: 1920px;
+  margin: 0 auto;
+  background: var(--color-blanco);
+  font-family: var(--font-filey);
+  color: var(--color-negro);
+  box-shadow: var(--sombra-card);
+}
+
+.fp-title,
+.fp-title-secondary {
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 48px;
+  color: var(--color-negro);
+}
+
+.fp-title {
+  padding: 30px 0 10px;
+}
+
+.fp-title-secondary {
+  margin: 0 0 24px;
+}
+
+.fp-subtitle {
+  width: 100%;
+  padding: 0 0 30px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--color-azul-institucional);
+}
+
+.fp-section {
+  padding: 40px 60px;
+}
+
+.fp-section + .fp-section {
+  border-top: 1px solid var(--color-azul-link-enfoque);
+}
+
+.fp-section-title {
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 39px;
+  color: var(--color-dorado-encabezado);
+  margin: 0 0 24px;
+}
+
+/* ===================== Paleta primaria (swatches) =====================
+   inline-flex: el borde debe ajustarse al ancho real de los swatches
+   (10 × 87px), no al 100% del .fp-section (display:flex normal se
+   estira a todo el ancho del contenedor y deja un hueco vacío entre
+   el último swatch y el borde derecho del marco). */
+.fp-swatch-grid {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 1px solid var(--color-negro);
+}
+
+.fp-swatch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 87px;
+  height: 87px;
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.fp-swatch--blanco { background: var(--color-blanco); color: var(--color-negro); }
+.fp-swatch--azul-link-enfoque { background: var(--color-azul-link-enfoque); color: #404040; }
+.fp-swatch--azul-institucional { background: var(--color-azul-institucional); color: var(--color-blanco); }
+.fp-swatch--azul-texto { background: var(--color-azul-texto); color: var(--color-blanco); }
+.fp-swatch--azul-institucional-enfoque { background: var(--color-azul-institucional-enfoque); color: var(--color-blanco); }
+.fp-swatch--azul-degradado-oscuro { background: var(--color-azul-degradado-oscuro); color: var(--color-blanco); }
+.fp-swatch--dorado-encabezado { background: var(--color-dorado-encabezado); color: var(--color-blanco); }
+.fp-swatch--dorado-700 { background: var(--color-dorado-700); color: var(--color-blanco); }
+.fp-swatch--dorado-800 { background: var(--color-dorado-800); color: var(--color-blanco); }
+.fp-swatch--dorado-degradado-oscuro { background: var(--color-dorado-degradado-oscuro); color: var(--color-blanco); }
+
+/* ===================== Colores de texto sobre fondo ===================== */
+.fp-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+
+/* .fp-usage-card: celda de grid simple, sin estilo de tarjeta propio.
+   .fp-usage-card__inner: concentra junto, dentro del mismo div, los
+   colores (chips) y el texto con su fondo —
+   ( (color1|color2) (texto y fondo del texto) ) — separados 22px. */
+.fp-usage-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* La "chip card" (el bloque de los 2 colores) lleva su propio borde de
+   1px: azul oscuro del degradado si contiene un color azul, dorado
+   oscuro del degradado si contiene un color dorado. */
+.fp-usage-card__chips {
+  display: flex;
+  height: 110px;
+  border: 1px solid;
+  border-radius: var(--radio-card);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+}
+
+.fp-usage-card__chips--azul { border-color: var(--color-azul-degradado-oscuro); }
+.fp-usage-card__chips--dorado { border-color: var(--color-dorado-degradado-oscuro); }
+
+.fp-usage-card__chip {
+  flex: 1 1 0;
+}
+
+.fp-usage-card__chip--blanco { background: var(--color-blanco); }
+.fp-usage-card__chip--azul-institucional { background: var(--color-azul-institucional); }
+.fp-usage-card__chip--azul-texto { background: var(--color-azul-texto); }
+.fp-usage-card__chip--dorado-encabezado { background: var(--color-dorado-encabezado); }
+
+.fp-usage-card__label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 49px;
+  padding: 5px;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 27px;
+  text-align: center;
+}
+
+.fp-usage-card__label--fondo-azul { background: var(--color-azul-institucional); color: var(--color-blanco); }
+.fp-usage-card__label--fondo-dorado { background: var(--color-dorado-encabezado); color: var(--color-blanco); }
+.fp-usage-card__label--texto-azul { background: var(--color-blanco); color: var(--color-azul-texto); }
+.fp-usage-card__label--texto-dorado { background: var(--color-blanco); color: var(--color-dorado-encabezado); }
+
+/* ===================== Degradados ===================== */
+.fp-gradient-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+
+/* .fp-gradient-card: celda de grid simple. .fp-gradient-card__inner:
+   concentra junto, dentro del mismo div, el par de degradados y el
+   texto con su fondo — ( (radial|lineal) (texto y fondo del texto) ) —
+   separados 22px, igual que en las tarjetas de color de texto. */
+.fp-gradient-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* El par radial+lineal mantiene 4px de separación entre sí, pero ambos
+   quedan rodeados por un borde de 1px del color oscuro de su degradado
+   temático (azul o dorado). */
+.fp-gradient-card__gradients {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid;
+  border-radius: var(--radio-card);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+}
+
+.fp-gradient-card--azul .fp-gradient-card__gradients { border-color: var(--color-azul-degradado-oscuro); }
+.fp-gradient-card--dorado .fp-gradient-card__gradients { border-color: var(--color-dorado-degradado-oscuro); }
+
+.fp-gradient-card__radial {
+  height: 150px;
+}
+
+.fp-gradient-card__linear {
+  height: 110px;
+}
+
+.fp-gradient-card--azul .fp-gradient-card__radial {
+  background: radial-gradient(50% 132.3% at 50% 50%, var(--color-azul-degradado-claro) 0%, var(--color-azul-degradado-oscuro) 100%);
+}
+
+.fp-gradient-card--azul .fp-gradient-card__linear {
+  background: linear-gradient(90deg, var(--color-azul-degradado-claro) 0%, var(--color-azul-degradado-oscuro) 100%);
+}
+
+.fp-gradient-card--dorado .fp-gradient-card__radial {
+  background: radial-gradient(50% 132.3% at 50% 50%, var(--color-dorado-encabezado) 0%, var(--color-dorado-degradado-oscuro) 100%);
+}
+
+.fp-gradient-card--dorado .fp-gradient-card__linear {
+  background: linear-gradient(90deg, var(--color-dorado-encabezado) 0%, var(--color-dorado-degradado-oscuro) 100%);
+}
+
+.fp-gradient-card__label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 49px;
+  padding: 5px;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 27px;
+  color: var(--color-blanco);
+  text-align: center;
+}
+
+.fp-gradient-card--azul .fp-gradient-card__label { background: var(--color-azul-degradado-claro); }
+.fp-gradient-card--dorado .fp-gradient-card__label { background: var(--color-dorado-encabezado); }
+
+/* ===================== Agrupación (group box) ===================== */
+.fp-group {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 35px;
+  padding: 30px 25px;
+  border: 1px solid var(--color-negro);
+}
+
+.fp-group__title {
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.2;
+  color: var(--color-dorado-encabezado);
+  margin: 0;
+}
+
+.fp-group__text {
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--color-azul-texto);
+  text-align: center;
+  max-width: 813px;
+  margin: 0;
+}
+
+.fp-group__hint {
+  font-size: 18px;
+  line-height: 1.4;
+  color: #6b7686;
+  text-align: center;
+  margin: 0;
+}
+
+/* Los componentes de "Ejemplo de uso" no necesitan funcionar al click:
+   se muestran en una sola instancia y el estado "con enfoque" se
+   demuestra al pasar el mouse (:hover) sobre el elemento real, en vez
+   de duplicar cada componente como par sin-enfoque/con-enfoque. Solo
+   se reutiliza el color de "enfoque" del ejemplo original — sin
+   agregar un anillo/outline que no estaba en el diseño. */
+
+.fp-interactive-heading {
+  background: var(--color-blanco);
+  border: none;
+  padding: 8px 16px;
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.2;
+  color: var(--color-dorado-encabezado);
+  cursor: pointer;
+}
+
+/* La transición vive solo en :hover: así el cambio de color es suave
+   al entrar al hover, pero instantáneo al salir (sin transición de
+   "unhover"). */
+.fp-interactive-heading:hover {
+  background: var(--color-blanco);
+  color: var(--color-azul-institucional);
+  transition: color 0.2s ease-in-out;
+}
+
+/* ===================== Listas desplegables ===================== */
+.fp-dropdown-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 35px;
+}
+
+.fp-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--color-azul-texto);
+}
+
+.fp-dropdown:hover {
+  color: var(--color-dorado-encabezado);
+  transition: color 0.2s ease-in-out;
+}
+
+/* El color lo hereda de .fp-dropdown via currentColor; el hover está cubierto
+   por la transición de color en .fp-dropdown:hover. */
+.fp-dropdown__caret {
+  display: flex;
+  align-items: center;
+}
+
+.fp-dropdown__caret svg {
+  display: block;
+  width: 27px;
+  height: 14px;
+}
+
+/* ===================== Redes sociales (rail) ===================== */
+.fp-social-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 35px;
+  flex-wrap: wrap;
+}
+
+.fp-social-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 31px;
+  width: 118px;
+  padding: 31px 0;
+  background: var(--color-azul-institucional);
+  border-radius: 20px 0 0 20px;
+}
+
+.fp-social-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 61px;
+  height: 61px;
+  border: none;
+  border-radius: var(--radio-pill);
+  background: var(--color-blanco);
+  cursor: pointer;
+}
+
+.fp-social-btn:hover {
+  background: var(--color-dorado-encabezado);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Los logos se incrustan como <svg fill="currentColor"> inline en el HTML
+   (no como background/mask con url() externa): un mask-image hacia un
+   archivo .svg distinto falla por CORS al abrir el HTML como file://,
+   aunque esté en la misma carpeta. */
+.fp-social-btn .fp-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-azul-institucional);
+}
+
+.fp-social-btn:hover .fp-icon {
+  color: var(--color-blanco);
+  transition: color 0.2s ease-in-out;
+}
+
+/* ===================== Botones ===================== */
+.fp-btn-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 35px;
+}
+
+.fp-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 280px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: var(--radio-btn);
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--color-blanco);
+  background: var(--color-azul-institucional);
+  cursor: pointer;
+}
+
+.fp-btn:hover {
+  background: var(--color-azul-institucional-enfoque);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* ===================== Hipervínculos en pie de página ===================== */
+.fp-footer-demo {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.fp-footer-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--color-azul-institucional);
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--color-blanco);
+  text-decoration: none;
+}
+
+.fp-footer-link:hover {
+  color: var(--color-azul-link-enfoque);
+  transition: color 0.2s ease-in-out;
+}
+
+/* ===================== Pie del frame ===================== */
+.fp-frame-footer {
+  padding: 30px 60px 60px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #6b7686;
+}

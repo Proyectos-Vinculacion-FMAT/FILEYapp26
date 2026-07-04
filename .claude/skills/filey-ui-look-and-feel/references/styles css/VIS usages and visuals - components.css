@@ -1,0 +1,989 @@
+/* =========================================================
+   FILEY — VIS (Visitantes): componentes y usos
+   -----------------------------------------------------------
+   Origen: Figma > Copiar/Pegar como > Copiar como código > CSS
+   (vistas de prototipo VIS — Visitantes). El export original
+   no es CSS válido. Este archivo corrige eso: selectores
+   reales, sin errores de sintaxis, tokens VIS en :root y
+   tipografía institucional en vez de la fuente de Figma.
+   Depende de: primary colors usage.css (tokens fp- compartidos).
+   Ver también: ../identidad-institucional.md
+   ========================================================= */
+
+:root {
+  /* ---- Paleta VIS — verde convocatoria ---- */
+  --vis-verde-claro:  #99BA15;
+  --vis-verde-oscuro: #3F4E00;
+  --vis-verde-medio:  #839F10;
+
+  /* ---- Estados de convocatoria ---- */
+  --vis-abierta-bg:   rgba(123, 186, 21, 0.5);
+  --vis-abierta-dot:  #174E00;
+  --vis-cerrada-bg:   rgba(151, 151, 151, 0.5);
+  --vis-cerrada-dot:  #535353;
+
+  /* ---- Cupos (barra de capacidad) ---- */
+  --vis-cupos-vacio:   #D9D9D9;
+  --vis-cupos-lleno:   #797979;
+  --vis-cupos-gradient: linear-gradient(78.51deg, #955FF2 0.21%, #70124C 100.21%);
+
+  /* ---- Estado badge sobre banner (magenta) ---- */
+  --vis-badge-bg: linear-gradient(78.51deg, rgba(149, 95, 242, 0.5) 0.21%, rgba(112, 18, 76, 0.5) 100.21%);
+
+  /* ---- Descanso ---- */
+  --vis-descanso-bg: rgba(204, 49, 29, 0.5);
+
+  /* ---- Píldoras de nivel educativo — un color por nivel ----
+     El nivel del taller lo elige el organizador y no tiene por qué coincidir
+     con el del registro de la escuela (Primaria → Primaria Alta / Baja). */
+  --vis-nivel-prim-alta:    rgba(149, 95, 242, 0.5);  /* Primaria Alta — morado */
+  --vis-nivel-prim-baja:    rgba(95, 169, 242, 0.5);  /* Primaria - Baja — azul */
+  --vis-nivel-secundaria:   rgba(240, 95, 242, 0.5);  /* Secundaria — rosa */
+  --vis-nivel-preparatoria: rgba(60, 147, 10, 0.5);   /* Preparatoria — verde */
+  --vis-nivel-universidad:  rgba(228, 0, 57, 0.5);    /* Universidad — rojo */
+
+  /* ---- Bloques de celda especiales ---- */
+  --vis-cerrado-bg:     rgba(115, 25, 11, 0.5);   /* rojo oscuro: sala cerrada */
+  --vis-sin-taller-bg:  rgba(26, 26, 26, 0.5);    /* neutro oscuro: sin taller programado */
+
+  /* ---- Caret (assets/caret.svg) como data-URI para el dropdown de turno ---- */
+  --caret-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 826 374' fill='%2300437C'%3E%3Cpath d='M731.872 6.864 412 318.672 92.128 6.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L389.664 380.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z'/%3E%3C/svg%3E");
+
+  /* ---- Degradados de convocatoria ---- */
+  --vis-gradiente-radial: radial-gradient(50% 50% at 50% 50%, var(--vis-verde-claro) 0%, var(--vis-verde-oscuro) 100%);
+  --vis-gradiente-lineal: linear-gradient(90deg, var(--vis-verde-claro) 0%, var(--vis-verde-oscuro) 100%);
+  --vis-gradiente-sala:   linear-gradient(90deg, rgba(153, 186, 21, 0.2) 0%, rgba(63, 78, 0, 0.2) 100%);
+}
+
+/* ===================== Swatches VIS ===================== */
+.vis-swatch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.vis-swatch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+  padding: 4px;
+}
+
+.vis-swatch--verde-claro  { background: var(--vis-verde-claro);  color: #fff; }
+.vis-swatch--verde-oscuro { background: var(--vis-verde-oscuro); color: #fff; }
+.vis-swatch--verde-medio  { background: var(--vis-verde-medio);  color: #fff; }
+.vis-swatch--magenta      { background: linear-gradient(78.51deg, #955FF2 0.21%, #70124C 100.21%); color: #fff; }
+.vis-swatch--descanso     { background: rgba(204, 49, 29, 0.8);  color: #fff; }
+.vis-swatch--abierta-bg   { background: var(--vis-abierta-bg);   color: var(--vis-abierta-dot); }
+.vis-swatch--cerrada-bg   { background: var(--vis-cerrada-bg);   color: var(--vis-cerrada-dot); }
+.vis-swatch--sala         { background: var(--vis-gradiente-sala); color: var(--color-dorado-encabezado); }
+
+/* ===================== Degradados VIS ===================== */
+.vis-gradient-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--vis-verde-oscuro);
+  border-radius: var(--radio-card);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+  width: 440px;
+  margin: 0 auto;
+}
+
+.vis-gradient-pair__radial {
+  height: 140px;
+  background: var(--vis-gradiente-radial);
+}
+
+.vis-gradient-pair__lineal {
+  height: 90px;
+  background: var(--vis-gradiente-lineal);
+}
+
+.vis-gradient-pair__label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 44px;
+  font-weight: 700;
+  font-size: 20px;
+  background: var(--vis-verde-claro);
+  color: #fff;
+}
+
+/* ===================== Pills de estado ===================== */
+.vis-estado-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.vis-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 34px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.vis-estado__dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.vis-estado--abierta              { background: var(--vis-abierta-bg); color: var(--vis-abierta-dot); }
+.vis-estado--abierta .vis-estado__dot { background: var(--vis-abierta-dot); }
+.vis-estado--cerrada              { background: var(--vis-cerrada-bg); color: var(--vis-cerrada-dot); }
+.vis-estado--cerrada .vis-estado__dot { background: var(--vis-cerrada-dot); }
+
+/* ===================== Tarjeta de convocatoria ===================== */
+.vis-conv-row {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.vis-conv-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 340px;
+  min-width: 300px;
+  max-width: 440px;
+}
+
+.vis-conv-col__label {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-negro);
+  text-align: center;
+}
+
+/* La tarjeta en sí */
+.vis-conv-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  overflow: hidden;
+  filter: drop-shadow(0px 0px 8px rgba(0, 0, 0, 0.4));
+}
+
+/* Encabezado verde con icono + título */
+.vis-conv-card__header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  gap: 6px;
+  width: 100%;
+  min-height: 110px;
+  background: var(--vis-gradiente-radial);
+}
+
+.vis-conv-card__header-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 12px;
+  width: 100%;
+}
+
+.vis-conv-card__icon {
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.vis-conv-card__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+}
+
+/* Cuerpo blanco */
+.vis-conv-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px;
+  gap: 10px;
+  width: 100%;
+  background: #fff;
+}
+
+.vis-conv-card__body > * {
+  align-self: stretch;
+}
+
+.vis-conv-card__leyenda {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-negro);
+}
+
+.vis-conv-card__fecha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-negro);
+}
+
+.vis-conv-card__fecha-icon {
+  width: 16px;
+  height: 18px;
+  background: var(--color-negro);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.vis-conv-card__btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border-radius: 16px;
+  border: none;
+  font-family: var(--font-filey);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.vis-conv-card__btn--participante { background: var(--color-azul-institucional); }
+.vis-conv-card__btn--admin        { background: var(--color-dorado-encabezado); }
+
+/* ===================== Banner principal (CARD) ===================== */
+.vis-banner {
+  background: var(--vis-gradiente-lineal);
+  border-radius: 24px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vis-banner__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 40px;
+  background: var(--vis-badge-bg);
+  border: 1px solid rgba(200, 215, 227, 0.2);
+  align-self: flex-start;
+}
+
+.vis-banner__badge-dot {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.vis-banner__badge-label {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.vis-banner__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.vis-banner__desc {
+  font-size: 20px;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ===================== BENTO panel =====================
+   Layout: columna izquierda (banner + bentos 1-3) | derecha (cupos).
+   La columna derecha se estira para igualar la altura total de la izquierda. */
+.vis-bento-layout {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.vis-bento-left {
+  flex: 6 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vis-bento-right {
+  flex: 4 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* El panel de cupos crece para ocupar toda la altura de la columna */
+.vis-bento--cupos {
+  flex: 1;
+}
+
+.vis-bento {
+  background: #fff;
+  border: 1px solid var(--color-dorado-encabezado);
+  box-shadow: 0px 0px 8px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 24px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vis-bento__header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 14px;
+}
+
+.vis-bento__num {
+  width: 52px;
+  height: 52px;
+  background: var(--vis-verde-medio);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.vis-bento__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-negro);
+  margin: 0;
+}
+
+.vis-bento__item {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--color-negro);
+  margin: 0;
+}
+
+/* KV row (Fechas clave) */
+.vis-bento__kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 16px;
+  line-height: 1.4;
+  border-bottom: 1px solid var(--color-azul-link-enfoque);
+  padding-bottom: 8px;
+}
+
+.vis-bento__kv:last-child { border-bottom: none; }
+.vis-bento__kv-label { color: var(--color-negro); }
+.vis-bento__kv-value { font-weight: 700; color: var(--color-negro); text-align: right; }
+
+/* ===================== Cupos disponibles ===================== */
+.vis-cupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-azul-link-enfoque);
+}
+
+.vis-cupo:last-child { border-bottom: none; }
+
+.vis-cupo__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.vis-cupo__dia   { font-size: 20px; font-weight: 700; color: var(--color-negro); }
+.vis-cupo__count { font-size: 16px; font-weight: 400; color: var(--color-negro); }
+.vis-cupo__nota  { font-size: 14px; color: #707070; align-self: flex-end; }
+
+.vis-cupo__bar-bg {
+  height: 18px;
+  border-radius: 30px;
+  background: var(--vis-cupos-vacio);
+  overflow: hidden;
+}
+
+.vis-cupo__bar-fill {
+  height: 100%;
+  border-radius: 30px;
+}
+
+.vis-cupo__bar-fill--magenta { background: var(--vis-cupos-gradient); }
+.vis-cupo__bar-fill--lleno   { background: var(--vis-cupos-lleno); width: 100%; }
+
+/* ===================== Tabla de inscripciones ===================== */
+.vis-tabla-wrap {
+  overflow-x: auto;
+}
+
+.vis-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.vis-tabla th {
+  color: var(--color-dorado-encabezado);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+  padding: 6px 10px 12px;
+  white-space: nowrap;
+}
+
+.vis-tabla td {
+  color: var(--color-azul-texto);
+  font-size: 15px;
+  font-weight: 400;
+  padding: 6px 10px;
+  vertical-align: top;
+}
+
+.vis-tabla__row-detail td {
+  padding: 0 0 12px;
+}
+
+/* Panel de detalles expandido */
+.vis-tabla-detail {
+  border: 1px solid var(--color-azul-degradado-oscuro);
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vis-tabla-detail__inner {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Ficha de datos (representante + instituto) */
+.vis-ficha {
+  flex: 2 1 300px;
+  background: rgba(201, 146, 19, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  position: relative;
+}
+
+.vis-ficha__section {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-azul-institucional-enfoque);
+  margin: 0 0 6px;
+}
+
+.vis-ficha__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
+  font-size: 14px;
+}
+
+.vis-ficha__key   { color: var(--color-negro); }
+.vis-ficha__value { color: var(--color-azul-degradado-oscuro); }
+
+/* Botón itinerario */
+.vis-itinerario-btn {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 24px;
+  gap: 8px;
+}
+
+.vis-itinerario-btn__pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: var(--color-azul-institucional-enfoque);
+  border-radius: 32px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-filey);
+}
+
+/* Grupos expandidos */
+.vis-grupos-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ===================== Carta de grupo ===================== */
+.vis-grupo-card {
+  border: 1px solid var(--color-dorado-degradado-oscuro);
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 355px;
+}
+
+.vis-grupo-card__header {
+  background: var(--color-dorado-encabezado);
+  padding: 4px 10px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.vis-grupo-card__body {
+  background: #fff;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--color-azul-texto);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ===================== Selección de actividades: cabecera ===================== */
+.vis-sel-header {
+  background: var(--color-azul-texto);
+  border-bottom: 8px solid var(--color-dorado-encabezado);
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.vis-sel-header__instituto {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  flex: 0 0 100%;
+  margin: 0 0 8px;
+}
+
+/* Frame ensanchado para que la sección de horario use un área visible similar
+   a la del prototipo (~1540px). Content area = 1540 − 120px padding = 1420px;
+   el grid de 1640px scrollea ~220px (≈ 1/4 columna) dentro de vis-horario-wrap,
+   igual que en el prototipo. */
+.fp-frame { width: 1540px; }
+
+/* ===================== Horario de actividades (grid) =====================
+   Calendario de 10 salas (Ek Balam - Sala 1…6, Sala de cine 1-2, Zona de
+   exhibición, Ludoteca). Sin franja de descanso: el turno (matutino /
+   vespertino) intercambia el juego de bloques horarios (áreas). Columnas de
+   ancho FIJO para respetar el aspect ratio de las tarjetas (≈ 4.2125:1). */
+.vis-horario-wrap {
+  display: flex;
+  overflow-x: auto;
+  border: 3px solid var(--color-azul-degradado-oscuro);
+  border-top: none;
+}
+
+/* Solo se muestra el turno activo. El área toma el ancho intrínseco de sus
+   filas (etiqueta de sala + 4 columnas fijas). */
+.vis-horario-area {
+  display: none;
+  flex-direction: column;
+  width: max-content;
+}
+.vis-horario-area.is-active { display: flex; }
+
+/* ===================== Cabecera del horario (turno + día) ===================== */
+/* overflow: hidden igual que en el prototipo: fuerza que vis-horario-wrap
+   active su scroll-x en lugar de dejar que el contenedor crezca más allá
+   del frame y se corte sin scrollbar. */
+.vis-horario-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Turno ARRIBA del selector de día (columna centrada), como en la captura */
+.vis-horario-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: #01457C;
+  flex-shrink: 0;
+}
+
+/* Selector de turno */
+.vis-turno-selector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vis-turno-selector__label {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Dropdown de turno: <select> nativo con el caret de assets/caret.svg */
+.vis-turno-dropdown {
+  min-width: 200px;
+  padding: 8px 44px 8px 18px;
+  background: #fff var(--caret-svg) no-repeat right 16px center / 16px;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-filey);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-azul-texto);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.vis-dia-selector {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.vis-dia-selector__text {
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+  min-width: 150px;
+  text-align: center;
+}
+
+.vis-dia-caret {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.vis-dia-caret:hover { opacity: 0.75; }
+
+.vis-dia-caret__icon {
+  display: flex;
+  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.4));
+}
+
+/* Cabecera de horas: fondo blanco, "Sala" + bloques del turno */
+.vis-horario-tiempos {
+  display: flex;
+  background: #fff;
+  flex-shrink: 0;
+  border-bottom: 2px solid var(--color-azul-degradado-oscuro);
+}
+
+/* Columnas de ancho FIJO: 360px de actividad · 200px de etiqueta de sala.
+   Con la altura de fila (85px) da un aspect ratio de tarjeta ≈ 4.235:1. */
+.vis-horario-tiempo {
+  flex: 0 0 360px;
+  padding: 14px 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-azul-institucional-enfoque);
+  text-align: center;
+  border-right: 1px solid #d8dee6;
+}
+
+.vis-horario-tiempo--sala { flex: 0 0 130px; }
+
+/* Filas de talleres por sala (cada fila es una sala) — altura fija */
+.vis-horario-fila {
+  display: flex;
+  height: 85px;
+  border-top: 1px solid #ddd;
+}
+.vis-horario-fila:first-of-type { border-top: none; }
+
+.vis-horario-celda {
+  flex: 0 0 360px;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 16px;
+  background: var(--vis-gradiente-sala);
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow .12s;
+}
+.vis-horario-celda:hover { box-shadow: inset 0 0 0 2px var(--vis-verde-medio); }
+.vis-horario-celda--sin-taller:hover,
+.vis-horario-celda--cerrado:hover { box-shadow: none; }
+
+/* ---- Tarjeta de taller: nombre + meta (cupos + nivel) + badges ---- */
+.vis-horario-celda__nombre {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-dorado-encabezado);
+  line-height: 1.3;
+}
+
+.vis-horario-celda__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--color-negro);
+}
+
+.vis-horario-celda__cupos { color: var(--color-negro); min-width: 130px; }
+
+/* Píldoras de nivel educativo — un color por nivel.
+   OJO: el nivel del taller lo elige el organizador y NO tiene por qué coincidir
+   con el del registro (p.ej. "Primaria" → "Primaria Alta" o "Primaria Baja"). */
+.vis-nivel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  padding: 2px 12px;
+  border-radius: 30px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-negro);
+  white-space: nowrap;
+  background: var(--vis-nivel-prim-alta);
+}
+.vis-nivel--primaria-alta { background: var(--vis-nivel-prim-alta); }
+.vis-nivel--primaria-baja { background: var(--vis-nivel-prim-baja); }
+.vis-nivel--secundaria    { background: var(--vis-nivel-secundaria); }
+.vis-nivel--preparatoria  { background: var(--vis-nivel-preparatoria); }
+.vis-nivel--universidad   { background: var(--vis-nivel-universidad); }
+
+.vis-horario-celda--sala-label {
+  flex: 0 0 130px;
+  background: var(--color-azul-link-enfoque);
+  border-right: 1px solid #797979;
+  color: var(--color-azul-institucional-enfoque);
+  font-size: 13.5px;
+  font-weight: 700;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: default;
+}
+
+/* ---- Bloques de celda especiales (sin tarjeta de taller) ---- */
+.vis-horario-celda--sin-taller,
+.vis-horario-celda--cerrado {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: default;
+}
+.vis-horario-celda--sin-taller { background: var(--vis-sin-taller-bg); }
+.vis-horario-celda--cerrado    { background: var(--vis-cerrado-bg); }
+
+.vis-bloque-label {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+/* Zona de acceso libre: verde de sala, conserva el módulo de badges, pero NO
+   lleva nivel educativo ni límite de cupo. Puede abarcar varias columnas. */
+.vis-horario-celda--libre {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+.vis-horario-celda--libre .vis-bloque-label { color: var(--color-dorado-encabezado); }
+.vis-horario-celda--libre .vis-horario-celda__cupos { font-size: 14px; color: var(--color-negro); }
+
+/* ===================== Badges de grupo dentro de la celda de taller =====================
+   Los badges se posicionan en la esquina superior derecha (top: 1px; right: 0).
+   Se apilan de derecha a izquierda con un overlap de ~11px.
+   El orden en HTML es G1 → G2 → G3 (izquierda a derecha en el DOM,
+   G3 queda en el extremo derecho de la celda). */
+.vis-celda-badges {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  z-index: 2;
+}
+
+.vis-celda-badges .vis-grupo-badge:not(:first-child) {
+  margin-left: -10px;
+}
+
+/* Demo de estados de celda de taller */
+.vis-taller-estados {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.vis-taller-estado-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.vis-taller-estado-item__label {
+  font-size: 13px;
+  color: #6b7686;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-top: 8px;
+}
+
+/* ===================== Selector de grupos (popup contextual flotante) ===================== */
+/* El popup se crea vía JS y usa position:fixed inline — no necesita ancla relativa */
+.vis-grupo-selector {
+  background: #fff;
+  border: 1px solid var(--color-dorado-encabezado);
+  box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.4);
+  border-radius: 24px;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 200px;
+}
+
+.vis-todos-btn {
+  width: 100%;
+  padding: 7px 16px;
+  background: var(--color-azul-institucional-enfoque);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.vis-todos-btn:hover { opacity: 0.85; }
+
+.vis-grupo-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-azul-texto);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--color-negro);
+}
+
+.vis-grupo-selector__item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.vis-radio {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--vis-cupos-vacio);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.vis-radio::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #7C7C7C;
+  top: 4px;
+  left: 4px;
+}
+
+.vis-radio--selected::after { background: var(--color-azul-texto); }
+
+/* Badge de grupo (círculo azul oscuro) dentro de la celda de taller */
+.vis-grupo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--color-azul-institucional-enfoque);
+  border: 1px solid var(--color-dorado-encabezado);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #fff;
+  flex-shrink: 0;
+}
+
