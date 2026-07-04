@@ -2,7 +2,7 @@ name: Deploy Prototipo to GitHub Pages
 
 on:
   push:
-    branches: [main-isaac]
+    branches: [main]
     paths: [prototipo/**]
   workflow_dispatch:
 
@@ -25,4 +25,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./prototipo
           publish_branch: gh-pages
-          force_orphan: true
+          keep_files: true

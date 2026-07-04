@@ -60,13 +60,13 @@
               </div>
               <div class="field">
                 <label>Sala / Salón</label>
-                <div class="select-wrap"><select>
+                <select>
                   <option>Salón Chichén Itzá</option>
                   <option>Salón Uxmal</option>
                   <option>Auditorio Manuel Cepeda</option>
                   <option>Sala de exhibición de Estados</option>
                   <option>Biblioteca</option>
-                </select></div>
+                </select>
               </div>
               <div class="field">
                 <label>Bloque(s) de horario <span class="hint">— selecciona uno o varios consecutivos</span></label>
@@ -147,12 +147,6 @@
 <script>
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
-  });
-  document.querySelectorAll('.select-wrap').forEach(function(w){
-    var s = w.querySelector('select'); if(!s) return;
-    s.addEventListener('focus', function(){ w.classList.add('is-open'); });
-    s.addEventListener('change', function(){ w.classList.remove('is-open'); s.blur(); });
-    s.addEventListener('blur', function(){ w.classList.remove('is-open'); });
   });
 </script>
 

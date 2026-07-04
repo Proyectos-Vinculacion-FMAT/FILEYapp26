@@ -44,14 +44,17 @@
 
   <div class="page-head">
     <h1>Arma tu itinerario</h1>
-    <p>Elige actividades del catálogo y asigna qué grupo(s) asisten a cada una. El sistema valida que el
-       cupo restante cubra a los alumnos del grupo. <strong>Haz clic en una actividad</strong> para asignar grupos.</p>
+    <p>Elige actividades del catálogo y asigna qué grupo asiste a cada una.
+       <strong>Haz clic en una actividad</strong> para asignar grupos. Al seleccionar un grupo se reservan
+       <em>todos</em> sus alumnos; el sistema valida que los cupos disponibles cubran el total declarado
+       para ese grupo. La validación es por taller: cada grupo ocupa cupo de forma independiente.</p>
   </div>
 
   <div class="note note-green">
     <div class="ico">🎚️</div>
-    <div>El catálogo muestra los talleres del nivel de tu propuesta (<strong>Primaria</strong>). El
-      <strong>turno</strong> y el <strong>día</strong> se eligen en la cabecera del calendario.</div>
+    <div>El catálogo muestra <strong>todos los talleres disponibles</strong>; la restricción de nivel educativo
+      opera <em>al reservar</em>: el sistema no permite asignar un grupo a un taller de nivel incompatible.
+      El <strong>turno</strong> y el <strong>día</strong> se eligen en la cabecera del calendario.</div>
   </div>
 
   <!-- Cabecera de selección: institución + grupos -->
@@ -108,7 +111,17 @@
 
   <div class="note note-info" style="margin-top:20px">
     <div class="ico">💡</div>
-    <div>Grupos diferentes pueden coincidir en cualquier bloque horario. Sin embargo, <strong>un mismo grupo no puede reservar dos talleres en el mismo bloque</strong> (misma columna); la excepción son las actividades de <em>acceso libre</em>, que pueden combinarse con otro taller del mismo horario. Al confirmar, el sistema valida en tiempo real que los cupos no hayan sido tomados por otra escuela mientras armabas tu itinerario.</div>
+    <div>
+      Grupos diferentes pueden coincidir en cualquier bloque horario. Sin embargo,
+      <strong>un mismo grupo no puede reservar dos talleres en el mismo bloque</strong> (misma columna);
+      la excepción son las actividades de <em>acceso libre</em>, que pueden combinarse con otro taller
+      del mismo horario.<br>
+      <strong>Granularidad del cupo:</strong> el cupo se descuenta por la cantidad de alumnos declarada
+      para el grupo asignado, no por el total de alumnos de la escuela. Cada grupo ocupa cupo de forma
+      independiente en cada taller.<br>
+      Al confirmar, el sistema valida en tiempo real que los cupos no hayan sido tomados por otra
+      escuela mientras armabas tu itinerario.
+    </div>
   </div>
 </main>
 

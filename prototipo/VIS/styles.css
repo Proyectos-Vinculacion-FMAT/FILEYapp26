@@ -29,6 +29,7 @@
   --vis-badge-bg:     linear-gradient(78.51deg, rgba(149, 95, 242, 0.5) 0.21%, rgba(112, 18, 76, 0.5) 100.21%);
   --vis-descanso-bg:  rgba(204, 49, 29, 0.5);
   /* Píldoras de nivel educativo del taller */
+  --vis-nivel-preescolar:   rgba(255, 170, 0, 0.55);
   --vis-nivel-prim-alta:    rgba(149, 95, 242, 0.5);
   --vis-nivel-prim-baja:    rgba(95, 169, 242, 0.5);
   --vis-nivel-secundaria:   rgba(240, 95, 242, 0.5);
@@ -245,6 +246,7 @@
 .vis-horario-celda__meta { display: flex; align-items: center; flex-wrap: nowrap; white-space: nowrap; gap: 12px; font-size: 13px; color: var(--tinta); }
 .vis-horario-celda__cupos { color: var(--tinta); min-width: 130px; }
 .vis-nivel { display: inline-flex; align-items: center; justify-content: center; min-width: 100px; padding: 2px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--tinta); white-space: nowrap; background: var(--vis-nivel-prim-alta); }
+.vis-nivel--preescolar    { background: var(--vis-nivel-preescolar); }
 .vis-nivel--primaria-alta { background: var(--vis-nivel-prim-alta); }
 .vis-nivel--primaria-baja { background: var(--vis-nivel-prim-baja); }
 .vis-nivel--secundaria    { background: var(--vis-nivel-secundaria); }
@@ -328,6 +330,30 @@
 .total-box strong { color: var(--color-azul-institucional-enfoque); font-size: 18px; }
 .total-box.over { background: var(--err-050); border-color: #eecac5; }
 .total-box.over strong { color: var(--err-600); }
+
+/* --- Hint de sub-nivel (Primaria baja / alta) junto al campo de Grado (A1) --- */
+.vis-grado-hint { font-size: 11.5px; font-weight: 600; margin-top: 5px; padding: 2px 9px; border-radius: 999px; display: inline-block; min-width: 0; }
+.vis-grado-hint:empty { display: none; }
+.vis-grado-hint--alta { background: var(--vis-nivel-prim-alta); color: var(--tinta); }
+.vis-grado-hint--baja { background: var(--vis-nivel-prim-baja); color: var(--tinta); }
+
+/* --- Validación de formulario (A4) --- */
+.field.is-invalid input,
+.field.is-invalid select,
+.field.is-invalid textarea { border-color: var(--err-600) !important; box-shadow: 0 0 0 2px rgba(185,28,28,.12); }
+.field__err { font-size: 12px; color: var(--err-600); margin-top: 4px; display: none; }
+.field.is-invalid .field__err { display: block; }
+
+/* --- Selector de baja de taller — panel inline en admin-visitas (A10) --- */
+.vis-baja-panel {
+  display: none; margin-top: 12px; background: var(--err-050);
+  border: 1px solid #eecac5; border-radius: var(--radio-sm); padding: 14px 16px;
+}
+.vis-baja-panel.is-open { display: block; }
+.vis-baja-panel__title { font-size: 13px; font-weight: 700; color: var(--err-600); margin: 0 0 10px; }
+.vis-baja-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.vis-baja-options label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--color-azul-texto); cursor: pointer; }
+.vis-baja-options input[type="radio"] { accent-color: var(--err-600); cursor: pointer; }
 
 /* ===================== Responsive (VIS additions) ===================== */
 @media (max-width: 920px) {
