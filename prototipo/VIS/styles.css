@@ -344,7 +344,7 @@
 .field__err { font-size: 12px; color: var(--err-600); margin-top: 4px; display: none; }
 .field.is-invalid .field__err { display: block; }
 
-/* --- Selector de baja de taller — panel inline en admin-visitas (A10) --- */
+/* --- Selector de baja de taller — panel inline (CU-VIS-017) --- */
 .vis-baja-panel {
   display: none; margin-top: 12px; background: var(--err-050);
   border: 1px solid #eecac5; border-radius: var(--radio-sm); padding: 14px 16px;
