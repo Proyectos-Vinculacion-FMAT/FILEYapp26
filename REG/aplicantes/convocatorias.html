@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../../common/assets/filey-org-ico.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FILEY 2027 — Convocatorias</title>
 <link rel="stylesheet" href="../styles.css">
@@ -10,10 +11,10 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand">
-      <div class="logo"><span>FIL</span><span>EY</span></div>
-      <div class="brand-text"><strong>FILEY 2027</strong><small>Portal del proponente</small></div>
-    </div>
+    <a class="home" href="convocatorias.html">
+      <img class="logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <div class="brand-text"><strong>Edición 2027</strong><small>Portal del proponente</small></div>
+    </a>
     <nav class="topnav">
       <a href="convocatorias.html">Convocatorias</a>
       <a href="../../EVT/aplicantes/mis-propuestas.html">Mis propuestas</a>
@@ -24,12 +25,13 @@
 
 <div class="proto-bar"><div class="proto-bar-inner">
   <span class="dot"></span> Prototipo FILEY 2027 · REG —
-  <a href="index.html">1. Acceso</a> <span class="sep">›</span>
+  <a href="aplicantes-login.html">1. Acceso</a> <span class="sep">›</span>
   <a href="registro.html">2. Registro</a> <span class="sep">›</span>
   <a href="otp.html">3. Código</a> <span class="sep">›</span>
   <b>4. Convocatorias</b>
   &nbsp;·&nbsp; <a href="../../EVT/aplicantes/convocatoria-eventos.html">EVT ↗</a>
   &nbsp;·&nbsp; <a href="../../VIS/aplicantes/convocatoria-vis.html">VIS ↗</a>
+  &nbsp;·&nbsp; <a href="../../STD/">STD ↗</a>
 </div></div>
 
 <main class="page">
@@ -68,7 +70,9 @@
         <div class="conv-dates">📅 Cierra el 15 de agosto de 2027</div>
       </div>
       <div class="conv-foot">
-        <a class="btn btn-ghost btn-block" href="#">Ver convocatoria</a>
+        <a class="btn btn-ghost btn-block" href="#"
+           style="background:var(--azul-050);border-color:var(--azul-300);color:var(--azul-600);pointer-events:none;cursor:default"
+           aria-disabled="true" tabindex="-1">Próximamente</a>
       </div>
     </article>
 
@@ -83,8 +87,9 @@
         <p>Conversatorios, conferencias, charlas, mesas redondas, presentaciones de libro/revista y más.</p>
         <div class="conv-dates">📅 Cierra el 31 de agosto de 2027</div>
       </div>
-      <div class="conv-foot">
+      <div class="conv-foot" style="display:flex;flex-direction:column;gap:8px">
         <a class="btn btn-primary btn-block" href="../../EVT/aplicantes/convocatoria-eventos.html">Ver convocatoria</a>
+        <a class="btn btn-ghost btn-block" href="../../EVT/aplicantes/mis-propuestas.html">Ver mis propuestas →</a>
       </div>
     </article>
 

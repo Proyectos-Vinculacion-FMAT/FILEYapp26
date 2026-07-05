@@ -1,4 +1,4 @@
-# Flujo — Vista del Administrador (EVT) · v2
+﻿# Flujo — Vista del Administrador (EVT) · v2
 
 > Recorrido de pantallas y lógica de la **vista del administrador del módulo de Eventos**,
 > para construir el prototipo estático. Basado en los CU de `REG`, `EVT` y `PRG` en
@@ -152,7 +152,7 @@ la raíz; `administradores/admin.css` agrega el shell del panel (sidebar, chips,
 estilo Outlook, rejilla de horario).
 
 **Acceso:**
-1. `aplicantes/index.html` — se activó el enlace "Acceso administrativo" → OTP admin.
+1. `aplicantes/aplicantes-login.html` — se activó el enlace "Acceso administrativo" → OTP admin.
 2. `administradores/admin-otp.html` — OTP de admin (visual de `otp.html`, cintillo "demo"). **CU-REG-003**
 3. `administradores/admin-modulos.html` — selección de módulo, 3 tarjetas (solo Eventos entra). **CU-REG-006**
 
