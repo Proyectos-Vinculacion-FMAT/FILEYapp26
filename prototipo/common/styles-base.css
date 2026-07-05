@@ -107,17 +107,10 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 16px;
 }
-.brand { display: flex; align-items: center; gap: 12px; }
-.brand .logo {
-  width: 42px; height: 42px;
-  border-radius: 10px;
-  background: var(--color-blanco);
-  display: grid; place-items: center;
-  font-weight: 800; color: var(--color-azul-institucional);
-  letter-spacing: .5px; font-size: 15px;
-  box-shadow: var(--sombra-sm);
-}
-.brand .logo span:last-child { color: var(--color-dorado-encabezado); }
+.home { display: flex; align-items: center; gap: 12px; }
+a.home { text-decoration: none; color: inherit; cursor: pointer; }
+a.home:hover { opacity: 0.88; }
+.home .logo { height: 34px; width: auto; display: block; filter: brightness(0) invert(1); }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .brand-text strong { font-size: 17px; letter-spacing: .3px; }
 .brand-text small { font-size: 11.5px; color: rgba(255,255,255,.78); text-transform: uppercase; letter-spacing: 1.5px; }
@@ -171,12 +164,7 @@ a:hover { text-decoration: underline; }
   padding: 56px 56px;
   display: flex; flex-direction: column; justify-content: center;
 }
-.auth-hero .logo-lg {
-  width: 76px; height: 76px; border-radius: 16px; background: var(--color-blanco);
-  display: grid; place-items: center; font-weight: 800; font-size: 24px;
-  color: var(--color-azul-institucional); box-shadow: var(--sombra-md); margin-bottom: 26px;
-}
-.auth-hero .logo-lg span:last-child { color: var(--color-dorado-encabezado); }
+.auth-hero .logo-lg { height: 72px; width: auto; display: block; margin-bottom: 26px; filter: brightness(0) invert(1); }
 .auth-hero h2 { font-size: 34px; line-height: 1.15; margin: 0 0 14px; max-width: 13ch; }
 .auth-hero p { font-size: 16px; color: rgba(255,255,255,.78); max-width: 42ch; }
 .auth-hero .pills { margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
