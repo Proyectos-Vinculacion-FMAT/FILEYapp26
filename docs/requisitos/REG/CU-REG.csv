@@ -1,0 +1,11 @@
+ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
+Usuario externo,CU-REG-001,Registrar nueva cuenta de usuario externo,CREATE Persona,"Registration form (correo, nombre, teléfono)",Medium,X,,,,Dispara CU-REG-002; puerta de entrada de EVT/TAL/STD
+Usuario externo,CU-REG-002,Iniciar sesión como usuario externo (OTP por correo),CREATE SesionOTP / READ Persona,OTP entry view (correo → código),Medium,X,,,,Envío de correo (OTP); requerido antes de EVT/TAL/STD
+Usuario administrativo,CU-REG-003,Iniciar sesión como usuario administrativo (OTP por correo),CREATE SesionOTP / READ RolPermiso,OTP entry view (admin),Medium,X,,,,Acceso a los paneles de EVT/TAL/STD
+Cualquier usuario autenticado,CU-REG-004,Cerrar sesión,DELETE SesionOTP,Logout action,Low,X,,,,—
+Administrador general,CU-REG-005,Crear cuenta de usuario administrativo y asignar permisos de módulo,CREATE Persona / CREATE RolPermiso,Admin user form (asignar módulos),Medium,X,,,,Habilita los paneles de EVT/TAL/STD
+Usuario administrativo,CU-REG-006,Consultar los módulos administrables y entrar a un panel,READ RolPermiso <List>,Module launcher / dashboard,Low,X,,,,Entrada a los paneles de EVT/TAL/STD
+,,,,,,,,,,
+,,,,,High,0,,,,
+,,,,,Medium,4,,,,
+,,,,,Low,2,,,,

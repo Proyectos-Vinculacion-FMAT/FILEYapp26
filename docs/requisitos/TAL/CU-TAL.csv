@@ -1,0 +1,15 @@
+ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
+Administrador,CU-TAL-001,Configurar la convocatoria de actividades infantiles y juveniles,UPDATE ParametrosConvocatoriaTAL,Form view (fechas + modalidades),Medium,X,,,,SAL (ya no configura espacios propios)
+Tallerista,CU-TAL-002,Registro de los datos de la propuesta de actividad infantil/juvenil,CREATE PropuestaTaller,"Complex form (público meta, modalidad; sin adjuntos)",High,X,,,,REG; espejo de CU-EVT-002
+Tallerista,CU-TAL-003,Consultar mis propuestas y revisar su estado actual,READ PropuestaTaller <List>,List view + status modal,Low,X,,,,Espejo de CU-EVT-003
+Tallerista,CU-TAL-004,Editar una propuesta tras solicitud de cambios,UPDATE PropuestaTaller,Pre-filled form,Medium,X,,,,Espejo de CU-EVT-004
+Tallerista,CU-TAL-005,Descargar constancia de participación,READ Actividad → PDF,Download button + PDF,Medium,,,X,,Espejo de CU-EVT-005 (aquí constancia obligatoria)
+Administrador,CU-TAL-006,Generar la ficha PDF de una actividad,READ Actividad → PDF,Button + PDF render,Medium,,,X,,Espejo de CU-EVT-006
+Administrador,CU-TAL-007,"Consultar la lista de propuestas, filtrable",READ PropuestaTaller <List>,Filterable list view (con contadores por estado),Medium,,X,,,Espejo de CU-EVT-007 (absorbe el contador por estado)
+Administrador,CU-TAL-008,Revisar el detalle de una propuesta,READ PropuestaTaller,Detailed information view,Medium,,X,,,Espejo de CU-EVT-008
+Administrador,CU-TAL-009,Dictaminar una propuesta (aceptar / cambios / rechazar),UPDATE PropuestaTaller / CREATE Actividad,Button + modal form,Medium,,X,,,Espejo de CU-EVT-009; dispara PRG al aceptar
+Sistema,CU-TAL-010,Enviar notificaciones de resultado en lote (tentativo),CREATE NotificacionLoteTAL / UPDATE PropuestaTaller,Batch confirmation modal + email,Medium,,X,,,REG; espejo de CU-EVT-010 (sin evidencia directa aún)
+,,,,,,,,,,
+,,,,,High,1,,,,
+,,,,,Medium,8,,,,
+,,,,,Low,1,,,,
