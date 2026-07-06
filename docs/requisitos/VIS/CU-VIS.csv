@@ -1,0 +1,22 @@
+ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
+Aplicante,CU-VIS-001,Registrar la propuesta de visita escolar (datos de la escuela y del contacto),CREATE PropuestaVisita / CREATE Institución / CREATE Responsable / CREATE Grupo,"Formulario complejo (datos de escuela, contacto y grupos por nivel educativo)",High,X,,,,Espejo del alta de propuesta de CU-STD-001/CU-EVT-002/CU-TAL-002 (mismo patrón; campos propios de escuela)
+Aplicante,CU-VIS-002,Editar la propuesta dentro de la ventana de modificación,UPDATE PropuestaVisita,Formulario prellenado,Medium,X,,,,Espejo de CU-STD-002/CU-EVT-004/CU-TAL-004
+Aplicante,CU-VIS-003,Consultar mi propuesta y su estado,READ PropuestaVisita,Vista de estado + modal,Low,X,,,,Espejo de CU-STD-003/CU-EVT-003/CU-TAL-003
+Administrador,CU-VIS-004,"Consultar la lista de propuestas, filtrable",READ PropuestaVisita <List>,Vista de lista filtrable,Medium,,X,,,Espejo de CU-STD-004/CU-EVT-007/CU-TAL-007
+Administrador,CU-VIS-005,Revisar el detalle de una propuesta,READ PropuestaVisita / Institución / Responsable / Grupo,Vista de información detallada,Medium,,X,,,Espejo de CU-STD-005/CU-EVT-008/CU-TAL-008
+Administrador,CU-VIS-006,Aceptar una propuesta,UPDATE PropuestaVisita / CREATE Visita,Botón + modal de confirmación,Low,,X,,,"Parte ""aceptar"" del dictamen unificado de CU-STD-006/CU-EVT-009/CU-TAL-009 (aquí dividido en 3 CUs)"
+Administrador,CU-VIS-007,Solicitar cambios a una propuesta,UPDATE PropuestaVisita,Botón + modal form,Low,,X,,,Espejo de CU-STD-007
+Administrador,CU-VIS-008,Rechazar una propuesta,UPDATE PropuestaVisita,Botón + modal form,Low,,X,,,Parte 'rechazar' del dictamen de CU-EVT-009/CU-TAL-009
+Sistema,CU-VIS-009,Notificar el resultado de la propuesta al Aplicante,CREATE NotificacionUsuario / UPDATE PropuestaVisita,Notificación por correo,Low,,X,,,Espejo de CU-STD-008/CU-EVT-010/CU-TAL-010
+Participante,CU-VIS-010,"Consultar el catálogo de talleres disponibles, filtrado por nivel educativo, día y turno",READ Programación / Taller <List>,"Catálogo filtrable (nivel educativo, día, turno)",Medium,,,X,,Consume el programa final publicado en CU-PRG-010
+Sistema,CU-VIS-011,Validar que el cupo restante del taller cubra la cantidad de visitantes,READ ReservaTaller <count>,Validación en línea (sin vista propia),Medium,,,X,,Regla de negocio ligada a CU-VIS-012
+Participante,CU-VIS-012,Reservar uno o varios talleres del catálogo para armar el itinerario de la visita,CREATE ReservaTaller,Selector/carrito de talleres con validación de cupo,High,,,X,,Funcionalidad propia de VIS; sin espejo directo en otro dominio
+Participante,CU-VIS-013,"Consultar el itinerario armado de mi visita (talleres reservados, cupo garantizado)",READ ReservaTaller <List>,Vista de itinerario detallado,Medium,,,X,,—
+Participante,CU-VIS-014,Quitar un taller reservado del itinerario (liberar el cupo),DELETE ReservaTaller,Botón + confirmación,Low,,,X,,Simétrico a CU-VIS-012
+Administrador,CU-VIS-015,"Consultar la lista de visitas escolares aceptadas, filtrable",READ Visita <List>,Vista de lista filtrable + numeralia,Medium,,,X,,Espejo de CU-VIS-004 aplicado a Visita
+Administrador,CU-VIS-016,Ver el detalle de una visita escolar,READ Visita / ReservaTaller,Vista de información detallada,Medium,,,X,,Espejo de CU-VIS-005
+Administrador,CU-VIS-017,Quitar manualmente una visita de un taller,DELETE ReservaTaller,Botón + modal de confirmación,Low,,,,X,Baja administrativa; simétrico a CU-VIS-014
+,,,,,,,,,,
+,,,,,High,2,,,,
+,,,,,Medium,8,,,,
+,,,,,Low,7,,,,
