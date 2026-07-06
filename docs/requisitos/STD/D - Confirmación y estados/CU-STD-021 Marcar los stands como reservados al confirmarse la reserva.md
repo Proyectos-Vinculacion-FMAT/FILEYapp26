@@ -16,7 +16,7 @@ dependencias:
 
 ## Descripción
 
-El sistema bloquea automáticamente los espacios seleccionados por la editorial en el mapa, cambiándolos a estado `Reservado` en el mismo instante en que el usuario formaliza su carrito para crear la reserva, evitando sobreventas.
+El sistema bloquea automáticamente los espacios seleccionados por la editorial en el mapa, cambiándolos a estado `Reservado` en el mismo instante en que el aplicante formaliza su carrito para crear la reserva, evitando sobreventas.
 
 ## Actores
 
@@ -24,7 +24,7 @@ El sistema bloquea automáticamente los espacios seleccionados por la editorial 
 
 ## Precondiciones
 
-- El usuario finalizó satisfactoriamente la creación de su reserva (CU-STD-012).
+- El aplicante finalizó satisfactoriamente la creación de su reserva (CU-STD-012).
 
 ## Disparador
 
@@ -55,5 +55,5 @@ Creación exitosa de un registro en la entidad `Reserva` (con estado inicial `Po
 
 ## Reglas de negocio relacionadas
 
-- **RN-09:** El usuario no ve los stands reservados; se le muestran como "no disponibles".
+- **RN-09:** El aplicante no ve los stands reservados; se le muestran como "no disponibles".
 - **RN-10:** Estados de un stand: Disponible, Reservado, Ocupado.

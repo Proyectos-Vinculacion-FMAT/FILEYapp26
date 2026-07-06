@@ -20,22 +20,22 @@ La editorial visualiza el mapa del showfloor para identificar qué stands puede 
 
 ## Alcance
 
-Componente de Stands — módulo de Reserva. Vista del usuario. El usuario no distingue Reservado de Ocupado: ambos se presentan como "no disponible" (RN-09). El detalle de cada stand se cubre en CU-STD-010.
+Componente de Stands — módulo de Reserva. Vista del aplicante. El aplicante no distingue Reservado de Ocupado: ambos se presentan como "no disponible" (RN-09). El detalle de cada stand se cubre en CU-STD-010.
 
 ## Actores
 
 ### Actor principal
 
-- Usuario (editorial / entidad expositora)
+- Aplicante (editorial / entidad expositora)
 
 ## Disparador
 
-El usuario, ya habilitado para reservar, abre el mapa del showfloor.
+El aplicante, ya habilitado para reservar, abre el mapa del showfloor.
 
 ## Precondiciones
 
-- El usuario tiene sesión iniciada.
-- La editorial tiene una aplicación `aceptada` (habilitada para reservar, RN-16).
+- El aplicante tiene sesión iniciada.
+- La editorial tiene una solicitud `aceptada` (habilitada para reservar, RN-16).
 - El evento tiene un mapa de stands configurado.
 
 ## Postcondiciones
@@ -50,10 +50,10 @@ El usuario, ya habilitado para reservar, abre el mapa del showfloor.
 
 ## Flujo principal
 
-1. El usuario abre el mapa del showfloor.
+1. El aplicante abre el mapa del showfloor.
 2. El sistema muestra los stands del evento, indicando para cada uno si está **disponible** o **no disponible** (los estados Reservado y Ocupado se presentan como "no disponible", RN-09).
-3. El usuario navega el mapa (desplazamiento/zoom) para explorar los espacios.
-4. El usuario selecciona un stand disponible para consultar su detalle (CU-STD-010).
+3. El aplicante navega el mapa (desplazamiento/zoom) para explorar los espacios.
+4. El aplicante selecciona un stand disponible para consultar su detalle (CU-STD-010).
 
 ## Flujos alternos
 
@@ -62,10 +62,10 @@ El usuario, ya habilitado para reservar, abre el mapa del showfloor.
 
 ## Flujos de excepción
 
-### E1. El usuario no está habilitado para reservar
+### E1. El aplicante no está habilitado para reservar
 
-1. En el paso 1 el sistema detecta que la editorial no tiene una aplicación `aceptada` (RN-16).
-2. El sistema no muestra el mapa e informa que debe contar con una aplicación aceptada.
+1. En el paso 1 el sistema detecta que la editorial no tiene una solicitud `aceptada` (RN-16).
+2. El sistema no muestra el mapa e informa que debe contar con una solicitud aceptada.
 
 ### E2. El evento no tiene mapa configurado
 

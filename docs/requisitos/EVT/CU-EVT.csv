@@ -1,0 +1,17 @@
+ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
+Administrador,CU-EVT-001,Configurar la convocatoria,UPDATE ParametrosConvocatoria,Complex form view,High,X,,,,—
+Aplicante,CU-EVT-002,Registro de la propuesta de la actividad,CREATE Propuesta / CREATE PropuestaAdjunto,Complex form (campos dinámicos por tipo de actividad) w/ file uploading,High,X,,,,REG (identidad); espejo de CU-STD-001
+Aplicante,CU-EVT-003,Consultar mis propuestas y revisar su estado actual,READ Propuesta <List>,List view + status modal,Low,X,,,,Espejo de CU-STD-003
+Aplicante,CU-EVT-004,Editar una propuesta tras solicitud de cambios,UPDATE Propuesta,Pre-filled complex form,High,X,,,,Espejo de CU-STD-002
+Aplicante,CU-EVT-005,Descargar constancia de participación,READ Actividad → PDF,Download button + PDF,Medium,,,X,,—
+Administrador,CU-EVT-006,Generar la ficha PDF de una actividad individual,READ Actividad → PDF,Button + PDF render,Medium,,,X,,—
+Administrador,CU-EVT-007,"Consultar la lista de propuestas, filtrable",READ Propuesta <List>,Filterable list view,Medium,,X,,,Espejo de CU-STD-004
+Administrador,CU-EVT-008,Revisar el detalle de una propuesta,READ Propuesta / PropuestaAdjunto,Detailed information view,Medium,,X,,,Espejo de CU-STD-005
+Administrador,CU-EVT-009,Dictaminar una propuesta (aceptar / cambios / rechazar),UPDATE Propuesta / CREATE Actividad,Button + modal form (dictamen + categoría),High,,X,,,Espejo de CU-STD-006 y CU-STD-007; dispara PRG al aceptar
+Sistema,CU-EVT-010,Enviar notificaciones de resultado en lote,CREATE NotificacionLote / UPDATE Propuesta,Batch confirmation modal + email,Medium,,X,,,REG; espejo de CU-STD-008
+Administrador,CU-EVT-011,Visualizar el número de propuestas por estado,READ Propuesta <count>,Counter tiles / dashboard,Low,,X,,,—
+Administrador,CU-EVT-012,Marcar la recepción del ejemplar físico,UPDATE Propuesta (ejemplar_fisico_recibido),Toggle en lista/detalle,Low,,X,,,—
+,,,,,,,,,,
+,,,,,High,4,,,,
+,,,,,Medium,5,,,,
+,,,,,Low,3,,,,

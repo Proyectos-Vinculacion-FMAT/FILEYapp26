@@ -19,21 +19,21 @@ La editorial consulta el detalle de un stand disponible —dimensiones, superfic
 
 ## Alcance
 
-Componente de Stands — módulo de Reserva. Vista de detalle del usuario, abierta desde el mapa (CU-STD-009). El precio mostrado es el del stand individual; los descuentos aplican sobre el total de la reserva (CU-STD-012).
+Componente de Stands — módulo de Reserva. Vista de detalle del aplicante, abierta desde el mapa (CU-STD-009). El precio mostrado es el del stand individual; los descuentos aplican sobre el total de la reserva (CU-STD-012).
 
 ## Actores
 
 ### Actor principal
 
-- Usuario (editorial / entidad expositora)
+- Aplicante (editorial / entidad expositora)
 
 ## Disparador
 
-El usuario selecciona un stand disponible en el mapa.
+El aplicante selecciona un stand disponible en el mapa.
 
 ## Precondiciones
 
-- El usuario tiene sesión iniciada y está habilitado para reservar (RN-16).
+- El aplicante tiene sesión iniciada y está habilitado para reservar (RN-16).
 - El stand existe en el mapa del evento.
 
 ## Postcondiciones
@@ -48,10 +48,10 @@ El usuario selecciona un stand disponible en el mapa.
 
 ## Flujo principal
 
-1. El usuario selecciona un stand en el mapa.
+1. El aplicante selecciona un stand en el mapa.
 2. El sistema muestra la clave del stand, sus dimensiones (ancho y largo), su superficie en metros cuadrados y qué incluye (estructura, contactos, exhibidores, etc.).
 3. El sistema muestra el precio del stand, calculado como metros cuadrados × costo por m² (RN-01).
-4. Si el stand está disponible, el usuario lo agrega al carrito (CU-STD-011).
+4. Si el stand está disponible, el aplicante lo agrega al carrito (CU-STD-011).
 
 ## Flujos alternos
 

@@ -20,21 +20,21 @@ La editorial consulta el estado de su reserva —stands, montos, descuento y fec
 
 ## Alcance
 
-Componente de Stands — módulo de Reserva. Vista principal del usuario sobre su reserva ("Mi reserva"). Incluye el aviso de posible cancelación que se atiende en CU-STD-014.
+Componente de Stands — módulo de Reserva. Vista principal del aplicante sobre su reserva ("Mi reserva"). Incluye el aviso de posible cancelación que se atiende en CU-STD-014.
 
 ## Actores
 
 ### Actor principal
 
-- Usuario (editorial / entidad expositora)
+- Aplicante (editorial / entidad expositora)
 
 ## Disparador
 
-El usuario abre la vista de su reserva.
+El aplicante abre la vista de su reserva.
 
 ## Precondiciones
 
-- El usuario tiene sesión iniciada.
+- El aplicante tiene sesión iniciada.
 - La editorial tiene una reserva registrada.
 
 ## Postcondiciones
@@ -49,7 +49,7 @@ El usuario abre la vista de su reserva.
 
 ## Flujo principal
 
-1. El usuario abre la vista de su reserva.
+1. El aplicante abre la vista de su reserva.
 2. El sistema muestra los stands reservados (en mapa y/o lista), el estado de la reserva (`Por confirmar` / `Confirmada` / `Pagada` / `Cancelada`, RN-11) y el descuento aplicado.
 3. El sistema muestra el total con descuento, el monto abonado, el monto pendiente y el anticipo del 50% (RN-02).
 4. El sistema muestra las fechas clave: vencimiento del anticipo (30 días) y, en su caso, fecha de corte del pago total.
@@ -60,7 +60,7 @@ El usuario abre la vista de su reserva.
 ### A1. Reserva vencida con aviso de posible cancelación
 
 1. En el paso 2, la reserva está vencida sin haberse cubierto el anticipo del 50% (con abono parcial o sin abono).
-2. El sistema muestra un aviso de posible cancelación que el usuario puede atender (CU-STD-014).
+2. El sistema muestra un aviso de posible cancelación que el aplicante puede atender (CU-STD-014).
 3. El flujo continúa mostrando el resto de la información.
 
 ## Flujos de excepción

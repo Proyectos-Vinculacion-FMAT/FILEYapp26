@@ -9,51 +9,52 @@ fecha: 2026-06-18
 # Proceso de alto nivel — Stands (reserva, pago y confirmación)
 
 Diagrama del flujo de punta a punta para poner en contexto al equipo: desde que el
-usuario **aplica a expositor** hasta que su reserva queda **pagada al 100%**, incluyendo
+aplicante **aplica a expositor** hasta que su reserva queda **pagada al 100%**, incluyendo
 la rama de vencimiento (notificación y decisión del administrador).
 
-El color de cada nodo indica quién interviene: Usuario, Administrador, Sistema y estados
+El color de cada nodo indica quién interviene: Aplicante, Administrador, Sistema y estados
 finales. El detalle por paso vive en los casos de uso (`CU-STD Índice.md`).
 
 ```mermaid
 %% Proceso de alto nivel: Reserva, Pago y Confirmación de Stands — FILEY
 flowchart TD
-    A([Usuario aplica a expositor]) --> B{Admin revisa<br/>la aplicación}
-    B -->|Rechazada con motivo| C[/Notifica al usuario/]
-    C --> A2([Usuario edita y reenvía])
+    A([Aplicante aplica a expositor]) --> B{Admin revisa<br/>la solicitud}
+    B -->|Solicita cambios| C[/Notifica al aplicante/]
+    C --> A2([Aplicante edita y reenvía])
     A2 --> B
-    B -->|Aceptada| D[Usuario habilitado<br/>para reservar]
+    B -->|Rechaza| R([Solicitud invalidada])
+    B -->|Aceptada| D[Aplicante habilitado<br/>para reservar]
 
     D --> E[Visualiza el mapa<br/>y agrega stands al carrito]
     E --> F[Realiza la reserva<br/>Stands → Reservado]
     F --> G[Inicia plazo de 30 días<br/>para cubrir el 50%]
 
-    G --> H[Usuario registra pagos<br/>con comprobante]
+    G --> H[Aplicante registra pagos<br/>con comprobante]
     H --> I{Admin valida<br/>el abono}
     I -->|Rechaza| H
     I -->|Confirma abono| J{¿Se alcanzó<br/>el 50% en 30 días?}
 
     J -->|Sí| K[Reserva CONFIRMADA<br/>y bloqueada]
     K --> L[/Notifica: reserva confirmada/]
-    L --> M[Usuario sigue abonando<br/>hasta la fecha de corte]
+    L --> M[Aplicante sigue abonando<br/>hasta la fecha de corte]
     M --> N{¿Se alcanzó<br/>el 100%?}
     N -->|Aún no| M
     N -->|Sí| O[Reserva PAGADA]
     O --> P[/Notifica: reserva pagada/]
     P --> Q([Fin])
 
-    J -->|No, venció el plazo<br/>con o sin abono| U[/Notifica al admin y al usuario:<br/>posible cancelación/]
+    J -->|No, venció el plazo<br/>con o sin abono| U[/Notifica al admin y al aplicante:<br/>posible cancelación/]
     U --> V{Admin decide}
     V -->|Prorroga: nueva fecha| M
     V -->|Cancela| W([Reserva CANCELADA])
 
-    classDef usuario fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+    classDef aplicante fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
     classDef admin fill:#fef3c7,stroke:#d97706,color:#7c2d12;
     classDef sistema fill:#dcfce7,stroke:#16a34a,color:#14532d;
     classDef fin fill:#f3f4f6,stroke:#6b7280,color:#111827;
 
-    class A,A2,E,F,H,M usuario;
+    class A,A2,E,F,H,M aplicante;
     class B,I,V admin;
     class C,D,G,J,K,L,N,O,P,U sistema;
-    class Q,W,fin fin;
+    class Q,R,W,fin fin;
 ```

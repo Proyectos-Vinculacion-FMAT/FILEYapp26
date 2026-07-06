@@ -25,15 +25,15 @@ Componente de Stands — módulo de Reserva. El carrito es una **selección de t
 
 ### Actor principal
 
-- Usuario (editorial / entidad expositora)
+- Aplicante (editorial / entidad expositora)
 
 ## Disparador
 
-El usuario agrega un stand al carrito desde su detalle (CU-STD-010), o abre su carrito para gestionarlo.
+El aplicante agrega un stand al carrito desde su detalle (CU-STD-010), o abre su carrito para gestionarlo.
 
 ## Precondiciones
 
-- El usuario tiene sesión iniciada y está habilitado para reservar (RN-16).
+- El aplicante tiene sesión iniciada y está habilitado para reservar (RN-16).
 - La editorial no tiene una reserva activa (se permite una sola reserva por editorial; agregar más stands a una reserva existente se considera ampliación, fuera de alcance).
 
 ## Postcondiciones
@@ -48,17 +48,17 @@ El usuario agrega un stand al carrito desde su detalle (CU-STD-010), o abre su c
 
 ## Flujo principal
 
-1. El usuario agrega un stand disponible al carrito.
+1. El aplicante agrega un stand disponible al carrito.
 2. El sistema incorpora el stand y recalcula el subtotal estimado (suma de m² × costo por m² de cada stand, RN-01).
-3. El usuario puede quitar stands o seguir agregando.
+3. El aplicante puede quitar stands o seguir agregando.
 4. El sistema mantiene actualizada la lista de stands y el subtotal.
-5. Cuando el usuario está conforme, continúa a formalizar la reserva (CU-STD-012).
+5. Cuando el aplicante está conforme, continúa a formalizar la reserva (CU-STD-012).
 
 ## Flujos alternos
 
 ### A1. Quitar un stand del carrito
 
-1. En el paso 3 el usuario quita un stand de su selección.
+1. En el paso 3 el aplicante quita un stand de su selección.
 2. El sistema actualiza la lista y recalcula el subtotal, y el flujo continúa en el paso 4.
 
 ## Flujos de excepción
@@ -66,7 +66,7 @@ El usuario agrega un stand al carrito desde su detalle (CU-STD-010), o abre su c
 ### E1. El stand dejó de estar disponible
 
 1. Al agregar un stand (paso 1) o al revisar el carrito, el stand ya fue reservado por otra editorial y aparece como no disponible (RN-09).
-2. El sistema impide agregarlo —o lo marca como no disponible si ya estaba en el carrito— e informa al usuario para que ajuste su selección.
+2. El sistema impide agregarlo —o lo marca como no disponible si ya estaba en el carrito— e informa al aplicante para que ajuste su selección.
 
 ## Datos relevantes
 
@@ -79,4 +79,4 @@ El usuario agrega un stand al carrito desde su detalle (CU-STD-010), o abre su c
 - Carrito con la lista de stands y el subtotal estimado.
 
 > [!note] Supuesto de diseño
-> El carrito se modela como una selección temporal del usuario, sin persistencia comprometida entre sesiones ni apartado de stands. Confirmar con el equipo si debe persistir.
+> El carrito se modela como una selección temporal del aplicante, sin persistencia comprometida entre sesiones ni apartado de stands. Confirmar con el equipo si debe persistir.

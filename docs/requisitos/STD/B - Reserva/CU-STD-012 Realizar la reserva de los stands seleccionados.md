@@ -30,15 +30,15 @@ Componente de Stands — módulo de Reserva. Es el punto en que los stands se pr
 
 ### Actor principal
 
-- Usuario (editorial / entidad expositora)
+- Aplicante (editorial / entidad expositora)
 
 ## Disparador
 
-El usuario decide formalizar la reserva desde su carrito (CU-STD-011).
+El aplicante decide formalizar la reserva desde su carrito (CU-STD-011).
 
 ## Precondiciones
 
-- El usuario tiene sesión iniciada y está habilitado para reservar (RN-16).
+- El aplicante tiene sesión iniciada y está habilitado para reservar (RN-16).
 - El carrito tiene al menos un stand.
 - La editorial no tiene una reserva activa (una reserva por editorial).
 
@@ -57,14 +57,14 @@ El usuario decide formalizar la reserva desde su carrito (CU-STD-011).
 
 ## Flujo principal
 
-1. El usuario solicita formalizar la reserva.
+1. El aplicante solicita formalizar la reserva.
 2. El sistema muestra el resumen: stands seleccionados, total y descuento aplicable, anticipo del 50% sobre el total con descuento (RN-02) y plazo de 30 días (RN-03).
 3. El sistema calcula el total considerando el descuento del 10% por pronto pago (RN-04), y muestra una nota con el **tiempo restante** para conservar ese descuento y el **monto que aplicará** una vez vencida la fecha de pronto pago.
-4. El usuario confirma la reserva.
+4. El aplicante confirma la reserva.
 5. El sistema valida que todos los stands del carrito sigan disponibles.
 6. El sistema crea la reserva en estado `Por confirmar`, genera una línea por stand con los snapshots de m² y precio (RN-01), marca los stands como Reservado (CU-STD-021) e inicia el plazo de 30 días (RN-03).
 7. El sistema registra el descuento aplicado y calcula el anticipo del 50% (RN-02).
-8. El sistema confirma la reserva al usuario y lo dirige a las instrucciones de pago (CU-STD-015).
+8. El sistema confirma la reserva al aplicante y lo dirige a las instrucciones de pago (CU-STD-015).
 
 ## Flujos alternos
 
@@ -76,7 +76,7 @@ El usuario decide formalizar la reserva desde su carrito (CU-STD-011).
 
 1. En el paso 5 el sistema detecta que algún stand del carrito ya fue reservado por otra editorial.
 2. El sistema no crea la reserva, informa cuáles stands ya no están disponibles y los retira de la selección.
-3. El usuario ajusta su carrito y reintenta desde el paso 1 (primero en confirmar gana).
+3. El aplicante ajusta su carrito y reintenta desde el paso 1 (primero en confirmar gana).
 
 ### E2. Carrito vacío
 
