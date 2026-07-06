@@ -128,7 +128,7 @@ flowchart TD
 
 | Severidad | Archivo | Situación |
 | --------- | ------- | --------- |
-| ✅ Resuelto | `EVT/index.html` → `selector-rol.html` | Renombrado a nombre descriptivo. Actualizado admin-link → REG/admin-login. |
+| ✅ Resuelto | `EVT/index.html` → `selector-rol.html` (eliminado) | Renombrado a nombre descriptivo y luego eliminado: sin referencias entrantes, absorbido por el acceso de REG/aplicantes y REG/administradores. |
 | ✅ Resuelto | `EVT/aplicantes/index.html` → `acceso-evt.html` | Renombrado. Auth-foot admin → REG/admin-login. Proto-bar marca atajo de prototipo. |
 | ✅ Resuelto | `REG/aplicantes/index.html` → `aplicantes-login.html` | Renombrado. 37 HTML y 6 md actualizados. |
 | ✅ Resuelto | Proto-bar en panel EVT | Todos los 9 archivos del panel tienen proto-bar A1→A2→A3…A7 (todas las secciones siempre visibles; sección activa en `<b>`). CU incluidos en la sección activa. |
