@@ -82,16 +82,16 @@
 
       <!-- Filtros -->
       <div class="toolbar-row">
-        <div class="chips">
-          <span class="chip is-active">Todas <span class="count">42</span></span>
-          <span class="chip">Pendientes <span class="count">14</span></span>
-          <span class="chip">Cambios solicitados <span class="count">4</span></span>
-          <span class="chip">Aceptadas <span class="count">19</span></span>
-          <span class="chip">Rechazadas <span class="count">5</span></span>
+        <div class="chips" id="filtros">
+          <span class="chip is-active" data-filter="todas">Todas <span class="count">42</span></span>
+          <span class="chip" data-filter="pendiente">Pendientes <span class="count">14</span></span>
+          <span class="chip" data-filter="cambios">Cambios solicitados <span class="count">4</span></span>
+          <span class="chip" data-filter="aceptada">Aceptadas <span class="count">19</span></span>
+          <span class="chip" data-filter="rechazada">Rechazadas <span class="count">5</span></span>
         </div>
         <div class="searchbox">
           <span class="ico">🔍</span>
-          <input type="text" placeholder="Buscar por folio, proponente o título…">
+          <input type="text" id="buscar" placeholder="Buscar por folio, proponente o título…">
         </div>
       </div>
 
@@ -104,17 +104,17 @@
               <th>Tipo</th><th>Categoría</th><th>Estado</th><th></th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
+          <tbody id="tbody-propuestas">
+            <tr id="row-emqnh" data-estado="pendiente">
               <td class="folio">EVE-2027-0042</td>
               <td>El mar que nos habita</td>
               <td>Editorial La Nave</td>
               <td>Presentación de libro</td>
               <td>Literaria · Externo</td>
-              <td><span class="badge badge-pending">Pendiente</span></td>
-              <td><a class="btn btn-primary btn-row" href="admin-evt-detalle-propuesta.html">Revisar</a></td>
+              <td data-cell="estado"><span class="badge badge-pending">Pendiente</span></td>
+              <td data-cell="accion"><a class="btn btn-primary btn-row" href="admin-evt-detalle-propuesta.html">Revisar</a></td>
             </tr>
-            <tr>
+            <tr data-estado="aceptada">
               <td class="folio">EVE-2027-0031</td>
               <td>Voces de la narrativa yucateca</td>
               <td>Ana Rivas Pool</td>
@@ -123,7 +123,7 @@
               <td><span class="badge badge-accepted">Aceptada</span></td>
               <td><a class="btn btn-gold btn-row" href="admin-evt-programar.html">Programar</a></td>
             </tr>
-            <tr>
+            <tr data-estado="cambios">
               <td class="folio">EVE-2027-0025</td>
               <td>Lengua maya y tecnología</td>
               <td>Dr. Uriel Canché (UADY)</td>
@@ -132,7 +132,7 @@
               <td><span class="badge badge-changes">Cambios solicitados</span></td>
               <td><a class="btn btn-primary btn-row" href="admin-evt-detalle-propuesta.html">Revisar</a></td>
             </tr>
-            <tr>
+            <tr data-estado="aceptada">
               <td class="folio">EVE-2027-0022</td>
               <td>Taller de encuadernación artesanal</td>
               <td>Colectivo Papel &amp; Tinta</td>
@@ -141,7 +141,7 @@
               <td><span class="badge badge-accepted">Aceptada</span></td>
               <td><span class="link-arrow">✓ Programada</span></td>
             </tr>
-            <tr>
+            <tr data-estado="rechazada">
               <td class="folio">EVE-2027-0018</td>
               <td>Cómo publicar tu primer libro</td>
               <td>Mariana Us Chi</td>
@@ -150,7 +150,7 @@
               <td><span class="badge badge-rejected">Rechazada</span></td>
               <td><a class="link-arrow" href="admin-evt-detalle-rechazada.html">Ver detalle →</a></td>
             </tr>
-            <tr>
+            <tr data-estado="pendiente">
               <td class="folio">EVE-2027-0009</td>
               <td>Mesa redonda: literatura y frontera</td>
               <td>Casa Editorial del Sureste</td>
@@ -172,10 +172,47 @@
   </div>
 </div>
 
+<script src="../demo.js"></script>
 <script>
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
   });
+
+  // ---- Estado de la demo: refleja la aceptación de "El mar que nos habita" ----
+  (function(){
+    var s = window.FileyDemo.get();
+    var row = document.getElementById('row-emqnh');
+    if (s.emqnhEstado === 'aceptada') {
+      row.setAttribute('data-estado', 'aceptada');
+      row.querySelector('[data-cell="estado"]').innerHTML = '<span class="badge badge-accepted">Aceptada</span>';
+      row.querySelector('[data-cell="accion"]').innerHTML =
+        '<a class="btn btn-gold btn-row" href="admin-evt-horario.html">Programar</a>';
+    }
+  })();
+
+  // ---- Filtros por estado (chips) ----
+  var chips = document.querySelectorAll('#filtros .chip');
+  var rows = document.querySelectorAll('#tbody-propuestas tr');
+  var buscar = document.getElementById('buscar');
+
+  function aplicar(){
+    var filtro = document.querySelector('#filtros .chip.is-active').getAttribute('data-filter');
+    var q = (buscar.value || '').trim().toLowerCase();
+    rows.forEach(function(r){
+      var okEstado = (filtro === 'todas') || (r.getAttribute('data-estado') === filtro);
+      var okTexto = !q || r.textContent.toLowerCase().indexOf(q) !== -1;
+      r.style.display = (okEstado && okTexto) ? '' : 'none';
+    });
+  }
+
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.remove('is-active'); });
+      c.classList.add('is-active');
+      aplicar();
+    });
+  });
+  buscar.addEventListener('input', aplicar);
 </script>
 
 </body>
