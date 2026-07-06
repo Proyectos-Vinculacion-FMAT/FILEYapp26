@@ -12,17 +12,11 @@ prototipo/EVT/
   │                            calendario, rejilla de horario, tablero híbrido)
   app.js                   ← campos dinámicos del formulario de propuesta
   aplicantes/              ← flujo del proponente externo
-    acceso-evt.html        ← acceso (atajo de prototipo; flujo real: REG/aplicantes/aplicantes-login.html)
-    registro.html          ← crear cuenta (atajo de prototipo; flujo real: REG/aplicantes/)
-    otp.html               ← código OTP (atajo de prototipo; flujo real: REG/aplicantes/)
     convocatoria-eventos.html ← info convocatoria — entrada real desde REG/aplicantes/convocatorias.html
     formulario.html        ← formulario de propuesta (campos dinámicos por tipo)
     confirmacion.html      ← confirmación con folio
     mis-propuestas.html    ← seguimiento de propuestas enviadas
   administradores/         ← panel del administrador
-    admin-registro.html    ← acceso admin (atajo de prototipo; flujo real: REG/administradores/)
-    admin-otp.html         ← código OTP admin (atajo de prototipo)
-    admin-modulos.html     ← selección de módulo EVT (atajo de prototipo)
     admin-evt-propuestas.html     ← dashboard: tabla filtrable + tarjetas resumen
     admin-evt-detalle-propuesta.html ← detalle + dictamen (Aceptar / Solicitar cambios / Rechazar)
     admin-evt-detalle-rechazada.html ← detalle solo lectura — propuesta rechazada
@@ -36,12 +30,12 @@ prototipo/EVT/
 
 ## Cómo verlo
 
-- **Proponente (flujo real):** abre `../../REG/aplicantes/aplicantes-login.html` y navega hasta
+- **Proponente:** abre `../../REG/aplicantes/aplicantes-login.html` y navega hasta
   la convocatoria de Eventos; o entra directo en `aplicantes/convocatoria-eventos.html`.
-- **Proponente (atajo):** abre `aplicantes/acceso-evt.html`.
-- **Administrador (flujo real):** llega desde `REG/administradores/admin-convocatorias.html`.
-- **Administrador (atajo):** abre `administradores/admin-registro.html`.
+- **Administrador:** llega desde `REG/administradores/admin-convocatorias.html`, o entra
+  directo en `administradores/admin-evt-propuestas.html`.
 - Navega con los botones o con la barra de prototipo superior.
+- El acceso, registro y OTP viven únicamente en `REG` (no se duplican por dominio).
 
 ## Diagrama de flujo
 
@@ -49,20 +43,14 @@ prototipo/EVT/
 flowchart TD
     subgraph EVT_PART["EVT — Proponente"]
         direction TB
-        EP_A["acceso-evt.html\nAcceso (atajo)"] -->|nuevo| EP2["registro.html\nCrear cuenta"]
-        EP_A -->|conocido| EP3["otp.html\nOTP"]
-        EP2 --> EP3
-        EP3 --> EP4["convocatoria-eventos.html\nInfo convocatoria"]
-        EP4 --> EP5["formulario.html\nPropuesta de actividad"]
+        EP4["convocatoria-eventos.html\nInfo convocatoria"] --> EP5["formulario.html\nPropuesta de actividad"]
         EP5 --> EP6["confirmacion.html\nFolio asignado"]
         EP6 --> EP7["mis-propuestas.html\nSeguimiento"]
     end
 
     subgraph EVT_ADMIN["EVT — Administrador"]
         direction TB
-        EA1["admin-registro.html\nAcceso (atajo)"] --> EA2["admin-otp.html\nOTP (atajo)"]
-        EA2 --> EA3["admin-modulos.html\nMódulos (atajo)"]
-        EA3 --> EA4["admin-evt-propuestas.html\nDashboard propuestas"]
+        EA4["admin-evt-propuestas.html\nDashboard propuestas"]
         EA4 --> EA5["admin-evt-detalle-propuesta.html\nDetalle + dictamen"]
         EA5 -->|rechazada| EA6["admin-evt-detalle-rechazada.html\nSolo lectura"]
         EA4 --> EA7["admin-evt-horario.html\nTablero programación"]
@@ -78,10 +66,6 @@ flowchart TD
 
     style EA4 fill:#e6f0fa,stroke:#01457C
     style EA7 fill:#e6f0fa,stroke:#01457C
-    style EP_A fill:#fdf6e3,stroke:#b8860b
-    style EA1 fill:#fdf6e3,stroke:#b8860b
-    style EA2 fill:#fdf6e3,stroke:#b8860b
-    style EA3 fill:#fdf6e3,stroke:#b8860b
 ```
 
 ## Mapa de pantallas y flujo

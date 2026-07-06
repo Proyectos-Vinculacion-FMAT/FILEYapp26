@@ -43,7 +43,6 @@ flowchart TD
     EVIDENCIA["VIS/talleres-preescolar.html\n⚠ ISLA — evidencia interna,\nnadie apunta aquí"]
 
     subgraph VIS_A["VIS · Administrador  (VIS/administradores/)"]
-        VA_LOG["admin-login.html\natajo de prototipo"]
         VA_PROP["admin-propuestas.html\nhub principal"]
         VA_ESC["admin-escuela.html\nA3a — alta manual"]
         VA_EDIT["admin-escuela-edit.html\nA3d — editar datos"]
@@ -52,7 +51,6 @@ flowchart TD
     end
 
     REG_A --> VA_PROP
-    VA_LOG --> VA_PROP
 
     VA_PROP --> VA_ESC
     VA_PROP --> VA_EDIT
@@ -74,8 +72,6 @@ flowchart TD
     class VA_PROP hub
 ```
 
-**`admin-login.html`:** es un atajo de prototipo para navegar VIS directamente; el flujo real siempre llega vía `REG/administradores/admin-convocatorias.html`.
-
 ---
 
 ## Hallazgos
@@ -83,7 +79,7 @@ flowchart TD
 | Severidad | Archivo | Problema |
 | --------- | ------- | -------- |
 | 🔴 Isla | `VIS/talleres-preescolar.html` | Ningún archivo del prototipo apunta a él. Sin salidas de navegación. Es un archivo de evidencia interna (Acción A2 del análisis de desalineación). |
-| ℹ️ Nota | `VIS/administradores/admin-login.html` | Atajo de prototipo: proto-bar muestra A1 (activo) + A2. Módulos + A3/A3a/A3b como links. El flujo real siempre entra vía `REG/administradores/admin-convocatorias.html → admin-propuestas.html`. |
+| ✅ Resuelto | `VIS/administradores/admin-login.html` (eliminado) | Atajo de prototipo sin referencias entrantes reales; el flujo real siempre entra vía `REG/administradores/admin-convocatorias.html → admin-propuestas.html`. |
 | ℹ️ Nota | `VIS/aplicantes/itinerario.html` | Al confirmar, redirige a `REG/aplicantes/convocatorias.html` (sale de VIS al hub compartido). Esperado. |
 | ℹ️ Nota | `VIS/aplicantes/mi-visita.html` | Accesible desde `REG/aplicantes/convocatorias.html` (tarjeta de la convocatoria VIS) y desde topnav en formulario/confirmacion — no solo desde el flujo secuencial. |
 
@@ -110,7 +106,6 @@ flowchart TD
 | # | Pantalla | Archivo | CU |
 | - | -------- | ------- | -- |
 | A1–A2 | Acceso + módulos | *(ver REG — Administrador)* | — |
-| — | Acceso directo VIS (atajo prototipo) | `administradores/admin-login.html` | CU-REG-003 |
 | A3 | Propuestas — lista + dictamen inline | `administradores/admin-propuestas.html` | CU-VIS-004–009 / 015–017 |
 | A3a | Alta manual de escuela | `administradores/admin-escuela.html` | CU-VIS-016 |
 | A3b | Reservar talleres (por la escuela) | `administradores/admin-reservar.html` | CU-VIS-010 / 011 / 012 |

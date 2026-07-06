@@ -2,19 +2,12 @@
 
 ## Diagrama — Proponente (aplicantes/)
 
-> El flujo real entra por REG. Los pasos 1–4 (acceso, registro, OTP, convocatorias) ocurren en REG.
-> Los atajos de prototipo (`acceso-evt.html`, `registro.html`, `otp.html`) permiten navegar EVT directamente.
+> El acceso, registro y OTP viven únicamente en `REG` — no se duplican por dominio. El flujo
+> real entra siempre por `REG/aplicantes/convocatorias.html`.
 
 ```mermaid
 flowchart TD
-    REG_IDX["REG/aplicantes/aplicantes-login.html"]
     REG_CONV["REG/aplicantes/\nconvocatorias.html"]
-
-    subgraph EVT_ATAJOS["Atajos de prototipo EVT"]
-        EP_ACC["aplicantes/acceso-evt.html\natajo de prototipo"]
-        EP_REG["aplicantes/registro.html\natajo de prototipo"]
-        EP_OTP["aplicantes/otp.html\natajo de prototipo"]
-    end
 
     subgraph EVT_P["EVT · Proponente  (EVT/aplicantes/)"]
         EP_CONV["convocatoria-eventos.html"]
@@ -23,13 +16,7 @@ flowchart TD
         EP_MIS["mis-propuestas.html"]
     end
 
-    REG_IDX --> EP_ACC
     REG_CONV --> EP_CONV
-
-    EP_ACC -->|correo nuevo| EP_REG
-    EP_ACC -->|correo conocido| EP_OTP
-    EP_REG --> EP_OTP
-    EP_OTP --> REG_CONV
 
     EP_CONV --> EP_FORM
     EP_FORM -->|enviar| EP_CONF
@@ -38,10 +25,8 @@ flowchart TD
     EP_CONF -.->|otra propuesta| EP_FORM
     EP_MIS -.->|nueva propuesta| EP_CONV
 
-    classDef shortcut fill:#fdf6e3,stroke:#b8860b,color:#6e4d03
     classDef ext fill:#f0f4ff,stroke:#6b7686,color:#3f4a5a
-    class EP_ACC,EP_REG,EP_OTP shortcut
-    class REG_IDX,REG_CONV ext
+    class REG_CONV ext
 ```
 
 ---
@@ -50,19 +35,14 @@ flowchart TD
 
 > El sidebar conecta: propuestas ↔ notificaciones ↔ programa ↔ seguimiento ↔ configuracion (malla completa — flechas grises).
 > `admin-evt-horario.html` no está en el sidebar; se accede desde programa o programar.
-> Atajos de prototipo (amarillo): EVT/administradores/{admin-registro, admin-otp, admin-modulos} permiten navegar el panel sin pasar por REG.
+> El acceso, OTP y selección de módulo viven únicamente en `REG` — no se duplican por dominio.
 
 ```mermaid
 flowchart TD
-    REG_ALOG["REG/administradores/admin-login.html"]
     REG_AMOD["REG/administradores/admin-convocatorias.html"]
     STD_A["STD/#/admin/aplicaciones"]
 
     subgraph EVT_A["EVT · Administrador  (EVT/administradores/)"]
-        EA_REG["admin-registro.html\natajo de prototipo"]
-        EA_OTP["admin-otp.html\natajo de prototipo"]
-        EA_MOD["admin-modulos.html\natajo de prototipo"]
-
         subgraph PANEL["Panel EVT"]
             EA_PROP["admin-evt-propuestas.html"]
             EA_DET["admin-evt-detalle-propuesta.html"]
@@ -76,13 +56,8 @@ flowchart TD
         end
     end
 
-    REG_ALOG --> EA_REG
     REG_AMOD --> EA_PROP
-
-    EA_REG --> EA_OTP
-    EA_OTP --> EA_MOD
-    EA_MOD --> EA_PROP
-    EA_MOD --> STD_A
+    REG_AMOD --> STD_A
 
     EA_PROP --> EA_DET
     EA_PROP --> EA_PGR
@@ -113,10 +88,8 @@ flowchart TD
     EA_PRG --- EA_CFG
     EA_SEG --- EA_CFG
 
-    classDef shortcut fill:#fdf6e3,stroke:#b8860b,color:#6e4d03
     classDef ext fill:#f0f4ff,stroke:#6b7686,color:#3f4a5a
-    class EA_REG,EA_OTP,EA_MOD shortcut
-    class REG_ALOG,REG_AMOD,STD_A ext
+    class REG_AMOD,STD_A ext
 ```
 
 **Líneas sin flecha (`---`):** sidebar de navegación lateral — todos los nodos enlazados en ambas direcciones.
@@ -129,11 +102,11 @@ flowchart TD
 | Severidad | Archivo | Situación |
 | --------- | ------- | --------- |
 | ✅ Resuelto | `EVT/index.html` → `selector-rol.html` (eliminado) | Renombrado a nombre descriptivo y luego eliminado: sin referencias entrantes, absorbido por el acceso de REG/aplicantes y REG/administradores. |
-| ✅ Resuelto | `EVT/aplicantes/index.html` → `acceso-evt.html` | Renombrado. Auth-foot admin → REG/admin-login. Proto-bar marca atajo de prototipo. |
+| ✅ Resuelto | `EVT/aplicantes/index.html` → `acceso-evt.html` (eliminado) | Renombrado y luego eliminado junto con `registro.html`/`otp.html`: ciclo cerrado sin referencias entrantes reales, absorbido por REG/aplicantes. |
 | ✅ Resuelto | `REG/aplicantes/index.html` → `aplicantes-login.html` | Renombrado. 37 HTML y 6 md actualizados. |
 | ✅ Resuelto | Proto-bar en panel EVT | Todos los 9 archivos del panel tienen proto-bar A1→A2→A3…A7 (todas las secciones siempre visibles; sección activa en `<b>`). CU incluidos en la sección activa. |
 | ✅ Resuelto | Topbar panel EVT | Topbar muestra solo "Configuración". El escape hacia REG está en la proto-bar como "Módulos ↗". |
-| ℹ️ Atajo prototipo | `admin-registro.html`, `admin-otp.html`, `admin-modulos.html` | Permiten navegar el panel sin pasar por REG. Auth-foot corregido → REG/aplicantes/aplicantes-login.html. |
+| ✅ Resuelto | `admin-registro.html`, `admin-otp.html`, `admin-modulos.html` (eliminados) | Ciclo cerrado sin referencias entrantes reales (el flujo real de REG salta directo a `admin-evt-propuestas.html`); acceso, OTP y selección de módulo ya viven solo en REG. |
 | ℹ️ Sin sidebar | `admin-evt-horario.html` | No aparece en el sidebar del panel. Se accede desde `admin-evt-programa.html` (chip tab) o `admin-evt-programar.html` (botón). |
 
 ---
@@ -145,9 +118,6 @@ flowchart TD
 | # | Pantalla | Archivo | CU |
 | - | -------- | ------- | -- |
 | 1–4 | Acceso + convocatorias | *(ver REG — Participante)* | — |
-| — | Acceso EVT (atajo prototipo) | `aplicantes/acceso-evt.html` | — |
-| — | Registro (atajo prototipo) | `aplicantes/registro.html` | — |
-| — | Código OTP (atajo prototipo) | `aplicantes/otp.html` | — |
 | 5 | Info convocatoria Eventos | `aplicantes/convocatoria-eventos.html` | CU-EVE-001 |
 | 6 | Formulario de propuesta | `aplicantes/formulario.html` | CU-EVE-002 / 003 |
 | 7 | Confirmación con folio | `aplicantes/confirmacion.html` | CU-EVE-002 |
@@ -158,9 +128,6 @@ flowchart TD
 | # | Pantalla | Archivo | CU |
 | - | -------- | ------- | -- |
 | A1–A2 | Acceso + módulos | *(ver REG — Administrador)* | — |
-| — | Acceso admin (atajo prototipo) | `administradores/admin-registro.html` | — |
-| — | OTP admin (atajo prototipo) | `administradores/admin-otp.html` | — |
-| — | Módulos EVT (atajo prototipo) | `administradores/admin-modulos.html` | — |
 | A3 | Propuestas — lista y dictamen | `administradores/admin-evt-propuestas.html` | CU-EVT-007 / 011 |
 | A3a | Detalle de propuesta + dictamen | `administradores/admin-evt-detalle-propuesta.html` | CU-EVT-008 / 009 / 012 |
 | A3b | Detalle propuesta rechazada (lectura) | `administradores/admin-evt-detalle-rechazada.html` | CU-EVT-008 |
