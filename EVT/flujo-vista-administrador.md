@@ -37,11 +37,17 @@ PANEL ADMIN EVT (con sidebar)
 
 ## Pantallas de acceso (reusadas del proponente, con etiqueta "demo")
 
+> **Nota posterior:** esta tabla describe el plan original, cuando EVT tenía su propio ciclo de
+> acceso/OTP/selección de módulo duplicado (`admin-registro.html`, `admin-otp.html`,
+> `admin-modulos.html`). Esos archivos se eliminaron: no tenían referencias entrantes reales
+> (el flujo de REG salta directo a `admin-evt-propuestas.html`) y duplicaban funciones que ya
+> vive únicamente en `REG`.
+
 | # | Pantalla | Qué cambia respecto al proponente | CU |
 |---|----------|-----------------------------------|----|
-| 1 | `index.html` | Se activa el enlace **"¿Eres parte del comité organizador? Acceso administrativo"** (hoy `href="#"`) para que lleve al OTP admin | — |
-| 2 | `otp.html` (variante admin) | Mismo código de 6 dígitos, 15 min. Cintillo: *"Demo: acceso admin por OTP — decisión de equipo, sustituye la contraseña de CU-REG-003"* | CU-REG-003 (ya en OTP) |
-| 3 | **Selección de módulo** | Nueva. Reusa el diseño de tarjetas de `convocatorias.html`, pero las 3 tarjetas entran al **panel admin**; solo Eventos es navegable | **CU-REG-006** |
+| 1 | *(acceso — ver REG/administradores)* | Se activa el enlace **"¿Eres parte del comité organizador? Acceso administrativo"** para que lleve al OTP admin | — |
+| 2 | *(OTP admin — ver REG/administradores)* | Mismo código de 6 dígitos, 15 min. Cintillo: *"Demo: acceso admin por OTP — decisión de equipo, sustituye la contraseña de CU-REG-003"* | CU-REG-003 (ya en OTP) |
+| 3 | **Selección de módulo** | Reusa el diseño de tarjetas de `convocatorias.html`, pero las 3 tarjetas entran al **panel admin**; solo Eventos es navegable | **CU-REG-006** |
 
 > El administrador **no** captura nombre/teléfono: su cuenta la provisiona el administrador
 > general (CU-REG-005), no se auto-registra. Por eso no hay `registro.html` en este flujo.
@@ -152,10 +158,11 @@ la raíz para ambas carpetas, incluyendo el shell del panel admin (sidebar, chip
 estilo Outlook, rejilla de horario) — se descartó el `admin.css` propio de esta subcarpeta para
 cumplir la política de un solo CSS por dominio.
 
-**Acceso:**
-1. `aplicantes/aplicantes-login.html` — se activó el enlace "Acceso administrativo" → OTP admin.
-2. `administradores/admin-otp.html` — OTP de admin (visual de `otp.html`, cintillo "demo"). **CU-REG-003**
-3. `administradores/admin-modulos.html` — selección de módulo, 3 tarjetas (solo Eventos entra). **CU-REG-006**
+**Acceso** *(ver REG/administradores — `admin-otp.html` y `admin-modulos.html` propios de EVT se
+eliminaron: duplicaban sin uso real el acceso, OTP y selección de módulo de REG)*:
+1. `REG/aplicantes/aplicantes-login.html` — se activó el enlace "Acceso administrativo" → OTP admin.
+2. OTP de admin. **CU-REG-003**
+3. Selección de módulo, 3 tarjetas (solo Eventos entra). **CU-REG-006**
 
 **Panel admin EVT (sidebar: Propuestas · Programa/Horario · Notificaciones · Seguimiento · Configuración):**
 4. `administradores/admin-evt-propuestas.html` — dashboard: tarjetas resumen + tabla filtrable;

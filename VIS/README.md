@@ -19,7 +19,6 @@ prototipo/VIS/
     reservar.html          ← catálogo de talleres
     itinerario.html        ← ver / confirmar itinerario
   administradores/         ← panel del administrador VIS
-    admin-login.html       ← acceso directo VIS (atajo de prototipo; flujo real via REG)
     admin-propuestas.html  ← panel principal: lista propuestas + dictamen expandible
     admin-escuela.html     ← registrar escuela manualmente (A3a)
     admin-escuela-edit.html ← editar datos / grupos de una escuela (A3d)
@@ -31,9 +30,10 @@ prototipo/VIS/
 
 - **Escuela (participante):** abre `../../REG/aplicantes/aplicantes-login.html` y navega hasta
   la convocatoria de Visitas Escolares; o entra directo en `aplicantes/convocatoria-vis.html`.
-- **Administrador:** abre `administradores/admin-login.html` (acceso directo al panel VIS)
-  o llega desde `REG/administradores/admin-convocatorias.html`.
+- **Administrador:** llega desde `REG/administradores/admin-convocatorias.html`, o entra
+  directo en `administradores/admin-propuestas.html`.
 - Navega con los botones o con la barra de prototipo superior.
+- El acceso, OTP y selección de módulo viven únicamente en `REG` (no se duplican por dominio).
 
 ## Diagrama de flujo
 
@@ -50,7 +50,7 @@ flowchart TD
 
     subgraph VIS_ADMIN["VIS — Administrador"]
         direction TB
-        VA1["admin-login.html\nAcceso directo"] --> VA2["admin-propuestas.html\nPanel principal"]
+        VA2["admin-propuestas.html\nPanel principal"]
         VA2 -->|dictamen inline| VA2
         VA2 --> VA3["admin-escuela.html\nA3a — Alta manual"]
         VA2 --> VA4["admin-escuela-edit.html\nA3d — Editar datos"]
@@ -85,9 +85,6 @@ Ver [mapas/VIS.md](../mapas/VIS.md)
   fila — no hay una ruta de navegación separada para el dictamen en esta maqueta.
 - **Admin puede reservar en nombre de la escuela:** `admin-reservar.html` replica el catálogo
   del participante pero con topbar de administración.
-- **`admin-login.html` es un atajo de prototipo:** el flujo real de acceso admin siempre
-  comienza en REG. Esta pantalla existe para navegar el prototipo VIS directamente sin
-  recorrer REG completo.
 
 ## Brechas conocidas
 
