@@ -148,8 +148,9 @@ que menciona el índice de `PRG`. Aquí:
 
 El prototipo se dividió en dos carpetas dentro de `prototipo/EVT/`: `aplicantes/` (flujo del
 proponente, ya existente) y `administradores/` (esta vista). `styles.css` queda compartido en
-la raíz; `administradores/admin.css` agrega el shell del panel (sidebar, chips, calendario
-estilo Outlook, rejilla de horario).
+la raíz para ambas carpetas, incluyendo el shell del panel admin (sidebar, chips, calendario
+estilo Outlook, rejilla de horario) — se descartó el `admin.css` propio de esta subcarpeta para
+cumplir la política de un solo CSS por dominio.
 
 **Acceso:**
 1. `aplicantes/aplicantes-login.html` — se activó el enlace "Acceso administrativo" → OTP admin.

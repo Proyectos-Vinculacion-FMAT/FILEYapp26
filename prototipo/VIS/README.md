@@ -105,7 +105,7 @@ implementación, pero quedan fuera del alcance de esta maqueta por decisión de 
   cambios / Rechazar) con campos de texto
 - **CU-VIS-009** — Notificación al aplicante tras el dictamen
 
-Ver análisis detallado en `docs/notas/analisis-de-desalineacion-con-CUs.md`.
+Ver análisis detallado en `docs/soporte/notas/analisis-de-desalineacion-con-CUs.md`.
 
 ## Pendientes (en scope, no implementados aún)
 
