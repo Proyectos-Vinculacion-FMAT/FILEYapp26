@@ -7,7 +7,6 @@ No guarda ni envía datos; los botones navegan entre pantallas para simular el r
 
 ```text
 prototipo/EVT/
-  selector-rol.html        ← selector de rol (atajo de prototipo; redirige a acceso-evt.html)
   styles.css               ← CSS único del dominio (extiende ../common/styles-base.css;
   │                            incluye shell del panel admin: sidebar, chips, modales,
   │                            calendario, rejilla de horario, tablero híbrido)
