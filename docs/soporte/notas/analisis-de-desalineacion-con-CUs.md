@@ -16,8 +16,9 @@ el cliente:
   que puede confundir en la validación.
 - 🟢 **Baja / sin brecha** — alineado o la diferencia es solo de wording en datos
   de ejemplo.
-- ⚫ **No considerado** — el CU o la brecha ya no aplica por decisión de diseño
-  posterior a la redacción del CU.
+- ⚫ **No considerado** — fuera del scope inicial por decisión de diseño posterior a la
+  redacción del CU. Se conserva en la documentación para trazabilidad y cálculo final
+  de esfuerzo de implementación.
 
 > [!note] Naturaleza del prototipo
 > El prototipo es un **mockup estático**: ninguna pantalla tiene lógica de negocio
@@ -88,11 +89,10 @@ impacto transversal sobre varias brechas:
 
 ### CU-VIS-002 — Editar la propuesta ↔ prototipo
 
-**Estado: ⚫ Eliminado por decisión de diseño.**
+**Estado: ⚫ No considerado para el scope inicial.**
 
 Se decidió que el representante **no puede editar** su registro ni datos de grupos,
-ni espontáneamente ni por solicitud del administrador. La pantalla de edición para
-el aplicante no se implementará. El administrador es el único que puede modificar
+ni espontáneamente ni por solicitud del administrador. La pantalla de edición para el aplicante no forma parte del scope inicial. El administrador es el único que puede modificar
 datos, y lo hace directamente desde el panel de administración.
 
 ---
@@ -121,7 +121,7 @@ como tablero de solo-lectura es el comportamiento correcto.
 
 ### CU-VIS-004 — Consultar lista de propuestas ↔ `admin-propuestas.html`
 
-**Estado: ⚫ Eliminado / Reformulado por decisión de diseño.**
+**Estado: ⚫ No considerado para el scope inicial — reformulado como vista general sin dictamen.**
 
 Al no existir dictamen, no hay "propuestas pendientes de revisión" como categoría
 separada. Todos los registros de visita escolar están en un único estado operativo
@@ -154,17 +154,17 @@ que su efecto está claro (comunicación posterior por correo al representante).
 
 ### CU-VIS-006, 007, 008 — Aceptar / Solicitar cambios / Rechazar ↔ prototipo
 
-**Estado: ⚫ Eliminados por decisión de diseño.**
+**Estado: ⚫ No considerados para el scope inicial.**
 
-El flujo de dictamen completo (aceptar, solicitar cambios, rechazar) queda
-eliminado. No se implementarán estas pantallas. El administrador gestiona los
+El flujo de dictamen completo (aceptar, solicitar cambios, rechazar) no forma
+parte del scope inicial. El administrador gestiona los
 registros directamente sin un paso de aprobación formal.
 
 ---
 
 ### CU-VIS-009 — Notificar el resultado ↔ prototipo
 
-**Estado: ⚫ Eliminado en su forma original.**
+**Estado: ⚫ No considerado para el scope inicial en su forma original.**
 
 Al no existir dictamen, no hay resultado automático que notificar. La comunicación
 del administrador con el representante (sobre cambios en datos, grupos o
@@ -176,24 +176,24 @@ final (`itinerario.html`).
 
 ---
 
-### CU-VIS-015 — Lista de visitas aceptadas ↔ `admin-visitas.html`
+### CU-VIS-015 — Lista de visitas aceptadas ↔ `admin-propuestas.html`
 
 **Estado: 🟢 Bien cubierto (ahora equivalente a lista general de registros).**
 
 Con la eliminación del dictamen, "visitas aceptadas" pasa a significar
-simplemente "registros existentes". `admin-visitas.html` cubre correctamente
-esta vista con filtros por escuela, taller y día, y la numeralia de totales.
+simplemente "registros existentes". `admin-propuestas.html` cubre correctamente
+esta vista con filtros por escuela, nivel educativo y día, y la numeralia de totales.
 
 ---
 
-### CU-VIS-016 — Ver el detalle de una visita ↔ `admin-visitas.html` y `admin-escuela.html`
+### CU-VIS-016 — Ver el detalle de una visita ↔ `admin-propuestas.html` y `admin-escuela.html`
 
 **Estado: 🟡 Media (problema de rotulación en proto-bar):**
 
 `admin-escuela.html` está rotulado como "CU-VIS-016" pero su contenido es un
 formulario de alta manual por el administrador, no la vista de detalle de una
 visita existente. El detalle real lo cubre el panel expandible de
-`admin-visitas.html`.
+`admin-propuestas.html`.
 
 **Acción necesaria:** corregir el rótulo del proto-bar de `admin-escuela.html`
 (alta manual por admin, CU sin número asignado aún) y de `admin-escuela-edit.html`
@@ -201,13 +201,15 @@ visita existente. El detalle real lo cubre el panel expandible de
 
 ---
 
-### CU-VIS-017 — Quitar manualmente una visita de un taller ↔ `admin-visitas.html`
+### CU-VIS-017 — Quitar manualmente una visita de un taller ↔ `admin-propuestas.html`
 
-**Estado: 🟡 Media (la acción existe pero falta el selector de taller específico):**
+**Estado: 🟡 Media (granularidad de taller individual no implementada; la cancelación opera a nivel de grupo):**
 
-El botón "✕ Quitar de un taller (baja)" existe, pero con múltiples reservaciones
-activas no queda claro cuál taller se quita. Falta un selector intermedio (modal
-o lista) que muestre los talleres activos de esa visita antes de confirmar la baja.
+`admin-propuestas.html` expone botones "✕ Cancelar reservaciones G1/G2/G3" (por
+grupo completo) y "✕ Cancelar todas las reservaciones" (global). No existe un
+selector de taller específico: la granularidad mínima es el grupo completo, no
+un taller individual. CU-VIS-017 exige liberar un taller concreto sin afectar
+los demás del mismo grupo — esa granularidad no está implementada en el prototipo.
 
 ---
 
@@ -292,14 +294,14 @@ pero es un matiz menor para el mockup.
 | `reservar.html` | A(7) Corregir nota que dice que el catálogo filtra por nivel — no filtra, la restricción opera al reservar | CU-VIS-010 | 🟡 | [✅ Resuelto](#e6) |
 | `reservar.html` | A(8) Verificar si la validación de nivel al asignar un grupo a un taller está en `app.js` o es solo conceptual | CU-VIS-010 | 🟡 | [✅ Resuelto](#e7) |
 | `reservar.html` | A(9) Documentar la granularidad de validación de cupo: es por cantidad asignada al taller, no el total del grupo | CU-VIS-011 | 🟡 | [✅ Resuelto](#e8) |
-| `admin-visitas.html` | A(10) Agregar selector de taller específico (modal o lista) antes de confirmar la baja de una reservación | CU-VIS-017 | 🟡 | [✅ Resuelto](#e9) |
+| `admin-propuestas.html` | A(10) Selector de taller específico eliminado con `admin-visitas.html`; cancelación opera a nivel de grupo — granularidad de taller individual pendiente | CU-VIS-017 | 🟡 | [⚠️ Cambio de enfoque](#e9) |
 | `admin-escuela.html` | A(11) Corregir rótulo de proto-bar: esta pantalla es alta manual por admin, no CU-VIS-016 | CU-VIS-016 | 🟡 | [✅ Resuelto](#e10) |
 | `admin-escuela-edit.html` | A(12) Corregir rótulo de proto-bar: esta pantalla es edición de datos por admin (CU-VIS-016/017) | CU-VIS-016 | 🟡 | [✅ Resuelto](#e11) |
 | `mis-visitas.html` | A(13) Eliminar — redundante con `mi-visita.html`; solo existe una propuesta por representante | — | 🟡 | [✅ Resuelto](#e12) |
 | `itinerario.html` | A(14) Homogeneizar quitar-por-grupo con `mi-visita.html` (opcional) | CU-VIS-014 | 🟢 | ⏳ Pendiente (opcional) |
 | `reservar.html` | A(15) Confirmar con el cliente la regla "un grupo no puede reservar dos talleres en el mismo bloque" | CU-VIS-012 | 🟢 | ⏳ Pendiente cliente |
 | `itinerario.html` | Alineado | CU-VIS-013 | 🟢 | 🟢 Alineado |
-| `admin-visitas.html` | Alineado — ahora equivale a lista general de registros | CU-VIS-015 | 🟢 | 🟢 Alineado |
+| `admin-propuestas.html` | Alineado — ahora equivale a lista general de registros | CU-VIS-015 | 🟢 | 🟢 Alineado |
 | — | Sin acción — eliminados por decisión de diseño (sin edición ni dictamen) | CU-VIS-002, 006, 007, 008, 009 | ⚫ | ⚫ No considerado |
 | — | Sin acción — reformulado: vista única de registros sin estados de dictamen | CU-VIS-004 | ⚫ | ⚫ No considerado |
 
@@ -314,97 +316,102 @@ Los enlaces de archivo abren el recurso en la línea indicada.
 
 **A(1)** — Hint de sub-nivel Primaria baja/alta junto al campo Grado
 
-- [`app.js` · 15](../../prototipo/VIS/app.js#L15) — declaración de `GROUP_NIVEL`
-- [`app.js` · 32–41](../../prototipo/VIS/app.js#L32-L41) — `GRADO_MAP` (mapeo nombre de grado → código pa/pb)
-- [`app.js` · 46–57](../../prototipo/VIS/app.js#L46-L57) — función `updateGradoHint`
-- [`app.js` · 60](../../prototipo/VIS/app.js#L60) — `updateAllGradoHints` (re-pinta al cambiar nivel educativo)
-- [`app.js` · 89](../../prototipo/VIS/app.js#L89) — listener en campo Grado
-- [`formulario-vis.html` · 119](../../prototipo/VIS/aplicantes/formulario-vis.html#L119) — `id="nivel-educativo"` en el select de nivel
-- [`formulario-vis.html` · 185](../../prototipo/VIS/aplicantes/formulario-vis.html#L185) — Grupo 1: `data-field-grado` y `.vis-grado-hint`
-- [`formulario-vis.html` · 197](../../prototipo/VIS/aplicantes/formulario-vis.html#L197) — Grupo 2: `data-field-grado` y `.vis-grado-hint`
-- [`formulario-vis.html` · 209](../../prototipo/VIS/aplicantes/formulario-vis.html#L209) — Grupo 3: `data-field-grado` y `.vis-grado-hint`
-- [`styles.css` · 335–338](../../prototipo/VIS/styles.css#L335-L338) — estilos `.vis-grado-hint`, `--alta`, `--baja`
+- [`app.js` · 15](</prototipo/VIS/app.js#L15>) — declaración de `GROUP_NIVEL`
+- [`app.js` · 31–39](</prototipo/VIS/app.js#L31-L39>) — `GRADO_MAP` (mapeo nombre de grado → código pa/pb)
+- [`app.js` · 46–57](</prototipo/VIS/app.js#L46-L57>) — función `updateGradoHint`
+- [`app.js` · 59–61](</prototipo/VIS/app.js#L59-L61>) — `updateAllGradoHints` (re-pinta al cambiar nivel educativo)
+- [`app.js` · 89](</prototipo/VIS/app.js#L89>) — listener en campo Grado
+- [`formulario-vis.html` · 119](</prototipo/VIS/aplicantes/formulario-vis.html#L119>) — `id="nivel-educativo"` en el select de nivel
+- [`formulario-vis.html` · 185](</prototipo/VIS/aplicantes/formulario-vis.html#L185>) — Grupo 1: `data-field-grado` y `.vis-grado-hint`
+- [`formulario-vis.html` · 197](</prototipo/VIS/aplicantes/formulario-vis.html#L197>) — Grupo 2: `data-field-grado` y `.vis-grado-hint`
+- [`formulario-vis.html` · 209](</prototipo/VIS/aplicantes/formulario-vis.html#L209>) — Grupo 3: `data-field-grado` y `.vis-grado-hint`
+- [`styles.css` · 335–338](</prototipo/VIS/styles.css#L335-L338>) — estilos `.vis-grado-hint`, `--alta`, `--baja`
 
 ### E(2)
 
 **A(2)** — Preescolar conservado; pill de nivel añadida; talleres de ejemplo creados
 
-- [`styles.css` · 32](../../prototipo/VIS/styles.css#L32) — token `--vis-nivel-preescolar`
-- [`styles.css` · 249](../../prototipo/VIS/styles.css#L249) — clase `.vis-nivel--preescolar`
-- [`app.js` · 149](../../prototipo/VIS/app.js#L149) — entrada `pe: { label: 'Preescolar', cls: 'vis-nivel--preescolar' }` en `NIVEL`
-- [`talleres-preescolar.html` · 1–(fin)](../../prototipo/VIS/talleres-preescolar.html) — archivo de evidencia con 3 talleres de ejemplo
+- [`styles.css` · 32](</prototipo/VIS/styles.css#L32>) — token `--vis-nivel-preescolar`
+- [`styles.css` · 249](</prototipo/VIS/styles.css#L249>) — clase `.vis-nivel--preescolar`
+- [`app.js` · 149](</prototipo/VIS/app.js#L149>) — entrada `pe: { label: 'Preescolar', cls: 'vis-nivel--preescolar' }` en `NIVEL`
+- [`talleres-preescolar.html` · 1–(fin)](</prototipo/VIS/talleres-preescolar.html>) — archivo de evidencia con 3 talleres de ejemplo
 
 ### E(3)
 
 **A(3)** — "Cansahcab" agregado a las listas de municipios
 
-- [`formulario-vis.html` · 139](../../prototipo/VIS/aplicantes/formulario-vis.html#L139) — opción en formulario del aplicante
-- [`admin-escuela.html` · 63](../../prototipo/VIS/administradores/admin-escuela.html#L63) — opción en formulario de alta manual por admin
+- [`formulario-vis.html` · 139](</prototipo/VIS/aplicantes/formulario-vis.html#L139>) — opción en formulario del aplicante
+- [`admin-escuela.html` · 63](</prototipo/VIS/administradores/admin-escuela.html#L63>) — opción en formulario de alta manual por admin
 
 ### E(4)
 
 **A(4)** — Validación de frontend: errores visibles + bloqueo del botón Enviar
 
-- [`formulario-vis.html` · 99](../../prototipo/VIS/aplicantes/formulario-vis.html#L99) — `data-vis-required` en nombre de institución
-- [`formulario-vis.html` · 104](../../prototipo/VIS/aplicantes/formulario-vis.html#L104) — `data-vis-required` en CCT
-- [`formulario-vis.html` · 144](../../prototipo/VIS/aplicantes/formulario-vis.html#L144) — `data-vis-required` en nombre del director
-- [`formulario-vis.html` · 150](../../prototipo/VIS/aplicantes/formulario-vis.html#L150) — `data-vis-required` en dirección
-- [`formulario-vis.html` · 156](../../prototipo/VIS/aplicantes/formulario-vis.html#L156) — `data-vis-required` en teléfono
-- [`formulario-vis.html` · 163](../../prototipo/VIS/aplicantes/formulario-vis.html#L163) — `data-vis-required` en correo
-- [`formulario-vis.html` · 185–211](../../prototipo/VIS/aplicantes/formulario-vis.html#L185-L211) — `data-vis-required` en campos de cada grupo (Grado, Alumnos, Representante)
-- [`formulario-vis.html` · 248](../../prototipo/VIS/aplicantes/formulario-vis.html#L248) — botón cambiado a `<button data-vis-submit data-href="...">` (ya no es `<a>`)
-- [`app.js` · 514–546](../../prototipo/VIS/app.js#L514-L546) — sección `formValidation`: valida, muestra `.is-invalid`, hace scroll al primer campo vacío
-- [`styles.css` · 341–345](../../prototipo/VIS/styles.css#L341-L345) — estilos `.field.is-invalid` y `.field__err`
+- [`formulario-vis.html` · 99](</prototipo/VIS/aplicantes/formulario-vis.html#L99>) — `data-vis-required` en nombre de institución
+- [`formulario-vis.html` · 104](</prototipo/VIS/aplicantes/formulario-vis.html#L104>) — `data-vis-required` en CCT
+- [`formulario-vis.html` · 144](</prototipo/VIS/aplicantes/formulario-vis.html#L144>) — `data-vis-required` en nombre del director
+- [`formulario-vis.html` · 150](</prototipo/VIS/aplicantes/formulario-vis.html#L150>) — `data-vis-required` en dirección
+- [`formulario-vis.html` · 156](</prototipo/VIS/aplicantes/formulario-vis.html#L156>) — `data-vis-required` en teléfono
+- [`formulario-vis.html` · 163](</prototipo/VIS/aplicantes/formulario-vis.html#L163>) — `data-vis-required` en correo
+- [`formulario-vis.html` · 185–211](</prototipo/VIS/aplicantes/formulario-vis.html#L185-L211>) — `data-vis-required` en campos de cada grupo (Grado, Alumnos, Representante)
+- [`formulario-vis.html` · 248](</prototipo/VIS/aplicantes/formulario-vis.html#L248>) — botón cambiado a `<button data-vis-submit data-href="...">` (ya no es `<a>`)
+- [`app.js` · 514–546](</prototipo/VIS/app.js#L514-L546>) — sección `formValidation`: valida, muestra `.is-invalid`, hace scroll al primer campo vacío
+- [`styles.css` · 341–345](</prototipo/VIS/styles.css#L341-L345>) — estilos `.field.is-invalid` y `.field__err`
 
 ### E(5)
 
 **A(5)** — Aviso de re-reserva en `mi-visita.html`
 
-- [`mi-visita.html` · 165–170](../../prototipo/VIS/aplicantes/mi-visita.html#L165-L170) — nota `note-warn` antes del botón "Editar itinerario en el catálogo"
+- [`mi-visita.html` · 165–170](</prototipo/VIS/aplicantes/mi-visita.html#L165-L170>) — nota `note-warn` antes del botón "Editar itinerario en el catálogo"
 
 ### E(6)
 
 **A(7)** — Nota verde corregida en `reservar.html`
 
-- [`reservar.html` · 53–58](../../prototipo/VIS/aplicantes/reservar.html#L53-L58) — texto corregido: catálogo muestra todos los talleres; restricción de nivel opera al reservar
+- [`reservar.html` · 53–58](</prototipo/VIS/aplicantes/reservar.html#L53-L58>) — texto corregido: catálogo muestra todos los talleres; restricción de nivel opera al reservar
 
 ### E(7)
 
 **A(8)** — Validación de nivel educativo implementada en `app.js`
 
-- [`app.js` · 15](../../prototipo/VIS/app.js#L15) — `GROUP_NIVEL`: código de nivel asignado a cada grupo (`G1/G2/G3 → 'pa'`)
-- [`app.js` · 207–212](../../prototipo/VIS/app.js#L207-L212) — `data-nivel` añadido a cada celda de taller en `cellHTML`
-- [`app.js` · 354–357](../../prototipo/VIS/app.js#L354-L357) — función `nivelCategory` (pa/pb → 'primaria'; se/pr/un → su código)
-- [`app.js` · 370–391](../../prototipo/VIS/app.js#L370-L391) — bloqueo cross-level y aviso sub-nivel en `tryToggle`
+- [`app.js` · 15](</prototipo/VIS/app.js#L15>) — `GROUP_NIVEL`: código de nivel asignado a cada grupo (`G1/G2/G3 → 'pa'`)
+- [`app.js` · 207–212](</prototipo/VIS/app.js#L207-L212>) — `data-nivel` añadido a cada celda de taller en `cellHTML`
+- [`app.js` · 354–357](</prototipo/VIS/app.js#L354-L357>) — función `nivelCategory` (pa/pb → 'primaria'; se/pr/un → su código)
+- [`app.js` · 370–391](</prototipo/VIS/app.js#L370-L391>) — bloqueo cross-level y aviso sub-nivel en `tryToggle`
 
 ### E(8)
 
 **A(9)** — Granularidad de cupo documentada en `reservar.html` y `app.js`
 
-- [`reservar.html` · 45–51](../../prototipo/VIS/aplicantes/reservar.html#L45-L51) — descripción de página actualizada: cupo por grupo, todo el grupo o nada
-- [`reservar.html` · 112–124](../../prototipo/VIS/aplicantes/reservar.html#L112-L124) — nota informativa: granularidad del cupo explicada
-- [`app.js` · 321–330](../../prototipo/VIS/app.js#L321-L330) — popup renombrado "Asignar grupo completo" con nota de alumnos totales por grupo
+- [`reservar.html` · 45–51](</prototipo/VIS/aplicantes/reservar.html#L45-L51>) — descripción de página actualizada: cupo por grupo, todo el grupo o nada
+- [`reservar.html` · 112–124](</prototipo/VIS/aplicantes/reservar.html#L112-L124>) — nota informativa: granularidad del cupo explicada
+- [`app.js` · 321–330](</prototipo/VIS/app.js#L321-L330) — popup renombrado "Asignar grupo completo" con nota de alumnos totales por grupo
 
 ### E(9)
 
-**A(10)** — Panel selector de taller para baja en `admin-visitas.html`
+**A(10)** — Cancelación por grupo en `admin-propuestas.html` (reemplaza selector de taller específico)
 
-- [`admin-visitas.html` · 97–108](../../prototipo/VIS/administradores/admin-visitas.html#L97-L108) — `.vis-baja-panel` con opciones de talleres para VIS-2027-001
-- [`admin-visitas.html` · 148–159](../../prototipo/VIS/administradores/admin-visitas.html#L148-L159) — `.vis-baja-panel` con opciones de talleres para VIS-2027-008
-- [`app.js` · 552–602](../../prototipo/VIS/app.js#L552-L602) — sección `bajaTaller`: apertura, confirmación y cancelación del panel
-- [`styles.css` · 348–358](../../prototipo/VIS/styles.css#L348-L358) — estilos `.vis-baja-panel`, `.vis-baja-options`
+> **Nota:** `admin-visitas.html` fue eliminado. El markup `.vis-baja-panel` que
+> implementaba el selector de taller ya no existe en ningún HTML. El enfoque
+> actual opera por grupo completo, no por taller individual. `bajaTaller()` en
+> `app.js` y `.vis-baja-panel` en `styles.css` son ahora código muerto.
+
+- [`admin-propuestas.html` · 121–125](</prototipo/VIS/administradores/admin-propuestas.html#L121-L125>) — panel de acciones del detalle: Editar itinerario, Cancelar todas las reservaciones, Editar datos
+- [`admin-propuestas.html` · 127–152](</prototipo/VIS/administradores/admin-propuestas.html#L127-L152>) — cards de grupo con botones "✕ Cancelar reservaciones G1/G2/G3"
+- [`app.js` · 552–606](</prototipo/VIS/app.js#L552-L606>) — `bajaTaller()`: código muerto; ningún HTML tiene `[data-baja-btn]` ni `.vis-baja-panel`
+- [`styles.css` · 347–356](</prototipo/VIS/styles.css#L347-L356>) — estilos `.vis-baja-panel` / `.vis-baja-options` (código muerto)
 
 ### E(10)
 
 **A(11)** — Proto-bar de `admin-escuela.html` corregido
 
-- [`admin-escuela.html` · 25–32](../../prototipo/VIS/administradores/admin-escuela.html#L25-L32) — paso renombrado "A4. Alta manual de escuela (admin)"
+- [`admin-escuela.html` · 25–32](</prototipo/VIS/administradores/admin-escuela.html#L25-L32>) — paso renombrado "A4. Alta manual de escuela (admin)"
 
 ### E(11)
 
 **A(12)** — Proto-bar de `admin-escuela-edit.html` corregido
 
-- [`admin-escuela-edit.html` · 25–33](../../prototipo/VIS/administradores/admin-escuela-edit.html#L25-L33) — paso renombrado "A4. Editar datos de escuela (CU-VIS-016/017)"
+- [`admin-escuela-edit.html` · 25–33](</prototipo/VIS/administradores/admin-escuela-edit.html#L25-L33>) — paso renombrado "A4. Editar datos de escuela (CU-VIS-016/017)"
 
 ### E(12)
 

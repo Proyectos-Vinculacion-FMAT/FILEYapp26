@@ -477,6 +477,6 @@ sin invención. Añadir una mini-guía:
 | M7 — Documentar divergencia de tokens en admin.css | Medio: evita propagar nombres incorrectos                     | Mínimo (tabla)             | 🟡         |
 | M8 — Guía para nuevo dominio                       | Bajo a corto plazo; alto cuando llegue TAL                    | Bajo                       | 🟢         |
 
-[Alta]: <>
-[Media]: <>
-[Baja]: <>
+[Alta]:<analisis-ajuste-de-skills.md>
+[Media]:<analisis-ajuste-de-skills.md>
+[Baja]:<analisis-ajuste-de-skills.md>
