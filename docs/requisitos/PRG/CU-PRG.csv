@@ -1,0 +1,13 @@
+ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
+Administrador,CU-PRG-001,Consultar lista de actividades de mi panel,READ Actividad <List>,"Listado de EVT/TAL, con botón dinámico Revisar/Programar",Medium,X,,,,Vive dentro del mismo listado de CU-EVT-007/CU-TAL-007; no es pantalla aparte
+Administrador,CU-PRG-002,Asignar una programación a una actividad,CREATE Programación,Modal/drawer: selector de sala + bloque de horario,High,X,,,,Absorbe los antiguos CU-PRG-005 (repetir actividad) y CU-PRG-007 (validar disponibilidad de sala); dispara el catálogo de CU-VIS-010
+Administrador,CU-PRG-003,Editar una programación de una actividad,UPDATE Programación,Modal form (mover sala/horario),Medium,X,,,,Variante reducida de CU-PRG-002
+Administrador,CU-PRG-004,Eliminar una programación de una actividad,DELETE Programación,Botón + modal de confirmación,Low,X,,,,Simétrico a CU-PRG-002/CU-PRG-003
+Administrador,CU-PRG-008,"Notificar al Participante su fecha, sala y horario asignados (segunda notificación)",CREATE Notificación,Botón individual/masivo + correo,Medium,,X,,,"Espejo de CU-EVT-010/CU-TAL-010/CU-VIS-009 (segunda notificación, no resultado de dictamen)"
+Participante,CU-PRG-009,El Participante confirma su asistencia o incomparecencia al horario asignado,CREATE RespuestaProgramación,Vista de confirmación (aceptar/rechazar + motivo),Medium,,X,,,Notificaciones por panel (D3); sin bandeja transversal
+Todos,CU-PRG-010,Consultar el programa publicado mediante su URL estática,READ Programación <List>,Vista pública estática (por salón/sala),Medium,,,X,,Unifica el antiguo CU-PRG-012; alimenta el catálogo de CU-VIS-010
+Administrador,CU-PRG-011,Exportar el programa a Excel o Word para uso interno,READ Programación → Excel/Word,Botón de exportación,Medium,,,X,,—
+,,,,,,,,,,
+,,,,,High,1,,,,
+,,,,,Medium,6,,,,
+,,,,,Low,1,,,,
