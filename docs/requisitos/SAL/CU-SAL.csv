@@ -1,0 +1,12 @@
+ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
+Administrador,CU-SAL-001,Crear un salón (se genera su primera sala automáticamente),CREATE Salón / CREATE Sala,Modal dentro de la pantalla única (CU-SAL-007),Medium,X,,,,Catálogo único global; consumido por EVT/TAL al programar (vía PRG)
+Administrador,CU-SAL-002,Editar los datos de un salón,UPDATE Salón,Modal dentro de la pantalla única (CU-SAL-007),Low,X,,,,—
+Administrador,CU-SAL-003,Eliminar un salón,DELETE Salón (cascada a sus Salas),Modal de confirmación dentro de CU-SAL-007,Medium,X,,,,Valida contra Programación de PRG: ninguna de sus salas puede tener actividades programadas
+Administrador,CU-SAL-004,Agregar una sala (subdivisión) a un salón,CREATE Sala,Modal dentro de la pantalla única (CU-SAL-007),Low,X,,,,—
+Administrador,CU-SAL-005,Editar una sala (aforo y disponibilidad),UPDATE Sala,Modal dentro de la pantalla única (CU-SAL-007),Low,X,,,,Aforo consumido por VIS al validar cupo (CU-VIS-011)
+Administrador,CU-SAL-006,Eliminar una sala,DELETE Sala,Modal de confirmación dentro de CU-SAL-007,Medium,X,,,,"Valida contra Programación de PRG (sin actividades programadas); no aplica a la última sala de un salón"
+Administrador,CU-SAL-007,Consultar el catálogo único global de salas y salones,READ Salón / Sala <List>,"Pantalla única: hospeda inline todo el CRUD de salones y salas (CU-SAL-001…006), sin redirigir",Medium,X,,,,"Absorbe la antigua CU-SAL-008 (detalle de sala); catálogo global consumido por EVT/TAL (vía PRG, asignar sala) y por VIS (aforo)"
+,,,,,,,,,,
+,,,,,High,0,,,,
+,,,,,Medium,4,,,,
+,,,,,Low,3,,,,

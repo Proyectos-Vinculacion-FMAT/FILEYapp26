@@ -1,13 +1,25 @@
 ACTOR,ID,Título,Backend actions,Frontend Views,Complexity,Agosto,Septiembre,Octubre,Noviembre,Comparte con
-Administrador,CU-PRG-001,Consultar lista de actividades de mi panel,READ Actividad <List>,"Listado de EVT/TAL, con botón dinámico Revisar/Programar",Medium,X,,,,Vive dentro del mismo listado de CU-EVT-007/CU-TAL-007; no es pantalla aparte
-Administrador,CU-PRG-002,Asignar una programación a una actividad,CREATE Programación,Modal/drawer: selector de sala + bloque de horario,High,X,,,,Absorbe los antiguos CU-PRG-005 (repetir actividad) y CU-PRG-007 (validar disponibilidad de sala); dispara el catálogo de CU-VIS-010
-Administrador,CU-PRG-003,Editar una programación de una actividad,UPDATE Programación,Modal form (mover sala/horario),Medium,X,,,,Variante reducida de CU-PRG-002
-Administrador,CU-PRG-004,Eliminar una programación de una actividad,DELETE Programación,Botón + modal de confirmación,Low,X,,,,Simétrico a CU-PRG-002/CU-PRG-003
-Administrador,CU-PRG-008,"Notificar al Participante su fecha, sala y horario asignados (segunda notificación)",CREATE Notificación,Botón individual/masivo + correo,Medium,,X,,,"Espejo de CU-EVT-010/CU-TAL-010/CU-VIS-009 (segunda notificación, no resultado de dictamen)"
+,,,,,,,,,,
+,,Embebido en el panel de EVT (Hipólito) — ya maquetado,,,,,,,,
+Administrador,CU-PRG-001,Consultar lista de actividades de mi panel,READ Actividad <List>,"Vive dentro del mismo listado de CU-EVT-007 (admin-evt-propuestas.html); no es pantalla aparte",Medium,,X,,,No es CU propio de EVT: Actividad es la Propuesta Aceptada de EVT/TAL (ver Modelo de datos - Programación 2.1)
+Administrador,CU-PRG-002,Asignar una programación a una actividad,CREATE Programación,"Modal/drawer disparado por el botón ""Programar"" que reemplaza a ""Revisar"" tras CU-EVT-009",High,,X,,,Absorbe los antiguos CU-PRG-005/007; usa el catálogo de Sala de SAL (CU-SAL-007); bloque hardcodeado 1:15 en este panel
+Administrador,CU-PRG-003,Editar una programación de una actividad,UPDATE Programación,Modal form (mover sala/horario),Medium,,X,,,Variante reducida de CU-PRG-002
+Administrador,CU-PRG-004,Eliminar una programación de una actividad,DELETE Programación,Botón + modal de confirmación,Low,,X,,,Simétrico a CU-PRG-002/CU-PRG-003
+Administrador,CU-PRG-008,"Notificar al Participante su fecha, sala y horario asignados (segunda notificación)",CREATE Notificación,Botón individual/masivo + correo,Medium,,X,,,"Espejo de CU-EVT-010/CU-TAL-010 (segunda notificación, no resultado de dictamen)"
 Participante,CU-PRG-009,El Participante confirma su asistencia o incomparecencia al horario asignado,CREATE RespuestaProgramación,Vista de confirmación (aceptar/rechazar + motivo),Medium,,X,,,Notificaciones por panel (D3); sin bandeja transversal
 Todos,CU-PRG-010,Consultar el programa publicado mediante su URL estática,READ Programación <List>,Vista pública estática (por salón/sala),Medium,,,X,,Unifica el antiguo CU-PRG-012; alimenta el catálogo de CU-VIS-010
 Administrador,CU-PRG-011,Exportar el programa a Excel o Word para uso interno,READ Programación → Excel/Word,Botón de exportación,Medium,,,X,,—
 ,,,,,,,,,,
+,,Segunda pasada: adaptación para el panel de TAL (Elvira) — pendiente de maquetar,,,,,,,,
+Administrador,CU-PRG-001 (TAL),Consultar lista de actividades de mi panel — vista Talleres,READ Actividad <List>,Vive dentro del listado de CU-TAL-007; reutiliza el esqueleto de EVT,Low,,,X,,Mismo CU que arriba; solo cambia el panel (dominio_origen = TAL)
+Administrador,CU-PRG-002 (TAL),Asignar una programación a una actividad — vista Talleres,CREATE Programación,"Modal disparado tras CU-TAL-009; requiere sub-salas (SAL) y selector ""repetir N ocasiones""",Medium,,,X,,Diferencias reales de parámetro: bloque 1:00 (no 1:15); permite repetir actividad (CU-PRG-002 A1); sala se subdivide en sub-salas
+Administrador,CU-PRG-003 (TAL),Editar una programación de una actividad — vista Talleres,UPDATE Programación,Modal form (mover sala/horario),Low,,,X,,Reutiliza el modal de CU-PRG-003 parametrizado por panel
+Administrador,CU-PRG-004 (TAL),Eliminar una programación de una actividad — vista Talleres,DELETE Programación,Botón + modal de confirmación,Low,,,X,,Reutiliza el modal de CU-PRG-004
+Administrador,CU-PRG-008 (TAL),Notificar al Participante (segunda notificación) — vista Talleres,CREATE Notificación,Botón individual/masivo + correo,Low,,,,X,Reutiliza el mecanismo de CU-PRG-008
+Participante,CU-PRG-009 (TAL),El Participante confirma su asistencia — vista Talleres,CREATE RespuestaProgramación,Vista de confirmación (aceptar/rechazar + motivo),Low,,,,X,Reutiliza el mecanismo de CU-PRG-009
+Todos,CU-PRG-010 (TAL),Consultar el programa publicado — vista Talleres,READ Programación <List>,Vista pública estática (por salón/sala; agrupación por sub-salas),Low,,,,X,"Alimenta CU-VIS-010 para el catálogo de talleres (dependencia real, no solo espejo)"
+Administrador,CU-PRG-011 (TAL),Exportar el programa a Excel o Word — vista Talleres,READ Programación → Excel/Word,Botón de exportación,Low,,,,X,Reutiliza el mecanismo de CU-PRG-011
+,,,,,,,,,,
 ,,,,,High,1,,,,
-,,,,,Medium,6,,,,
-,,,,,Low,1,,,,
+,,,,,Medium,7,,,,
+,,,,,Low,8,,,,
