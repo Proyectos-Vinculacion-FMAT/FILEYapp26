@@ -82,9 +82,9 @@
         </div>
         <div style="display:flex;gap:10px;align-items:center">
           <label style="font-size:13.5px;color:var(--gris-700);display:flex;align-items:center;gap:7px">
-            <input type="checkbox" checked> Incluir todas
+            <input type="checkbox" id="chk-todas" checked> Incluir todas
           </label>
-          <button class="btn btn-primary" onclick="document.getElementById('m-enviar').hidden=false">Enviar lote (11)</button>
+          <button class="btn btn-primary" id="btn-lote">Enviar lote (<span id="lote-n">5</span>)</button>
         </div>
       </div>
 
@@ -95,28 +95,28 @@
           </thead>
           <tbody>
             <tr>
-              <td><input type="checkbox" checked></td>
+              <td><input type="checkbox" class="chk-fila" checked></td>
               <td class="folio">EVE-2027-0042</td><td>El mar que nos habita</td><td>Editorial La Nave</td>
               <td><span class="badge badge-accepted">Aceptada</span></td><td>—</td>
             </tr>
             <tr>
-              <td><input type="checkbox" checked></td>
+              <td><input type="checkbox" class="chk-fila" checked></td>
               <td class="folio">EVE-2027-0022</td><td>Encuadernación artesanal</td><td>Papel &amp; Tinta</td>
               <td><span class="badge badge-accepted">Aceptada</span></td><td>—</td>
             </tr>
             <tr>
-              <td><input type="checkbox" checked></td>
+              <td><input type="checkbox" class="chk-fila" checked></td>
               <td class="folio">EVE-2027-0025</td><td>Lengua maya y tecnología</td><td>Dr. Uriel Canché</td>
               <td><span class="badge badge-changes">Cambios solicitados</span></td>
               <td>Precisar duración y agregar semblanza</td>
             </tr>
             <tr>
-              <td><input type="checkbox" checked></td>
+              <td><input type="checkbox" class="chk-fila" checked></td>
               <td class="folio">EVE-2027-0018</td><td>Cómo publicar tu primer libro</td><td>Mariana Us Chi</td>
               <td><span class="badge badge-rejected">Rechazada</span></td><td>No corresponde al perfil de la convocatoria</td>
             </tr>
             <tr>
-              <td><input type="checkbox" checked></td>
+              <td><input type="checkbox" class="chk-fila" checked></td>
               <td class="folio">EVE-2027-0007</td><td>Antología de cuento breve</td><td>Ediciones Sureste</td>
               <td><span class="badge badge-accepted">Aceptada</span> <span class="badge badge-changes" style="font-size:10px">Actualización</span></td>
               <td>Dictamen cambiado tras aviso previo</td>
@@ -138,7 +138,7 @@
 <!-- Modal confirmación de envío -->
 <div class="modal-back" id="m-enviar" hidden>
   <div class="modal">
-    <div class="modal-head"><h3>Enviar lote de resultados</h3><p>Se enviarán 11 correos con el resultado de cada propuesta.</p></div>
+    <div class="modal-head"><h3>Enviar lote de resultados</h3><p>Se enviarán <strong id="modal-lote-n">5</strong> correos con el resultado de cada propuesta.</p></div>
     <div class="modal-body">
       <div class="note note-info" style="margin:0">
         <div class="ico">✉️</div>
@@ -148,15 +148,57 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="document.getElementById('m-enviar').hidden=true">Cancelar</button>
-      <a class="btn btn-primary" href="admin-evt-notificaciones.html">Confirmar y enviar</a>
+      <button class="btn btn-primary" id="btn-confirmar-lote">Confirmar y enviar</button>
     </div>
   </div>
 </div>
 
+<script src="../demo.js"></script>
 <script>
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
   });
+
+  // ---- Selección de lote (seleccionar todas / deseleccionar / contador) ----
+  var maestro = document.getElementById('chk-todas');
+  var filas = Array.prototype.slice.call(document.querySelectorAll('.chk-fila'));
+  var btnLote = document.getElementById('btn-lote');
+  var loteN = document.getElementById('lote-n');
+  var modalN = document.getElementById('modal-lote-n');
+
+  function seleccionadas(){ return filas.filter(function(c){ return c.checked; }).length; }
+
+  function refrescar(){
+    var n = seleccionadas();
+    loteN.textContent = n;
+    if (modalN) modalN.textContent = n;
+    btnLote.disabled = n === 0;
+    btnLote.style.opacity = n === 0 ? .5 : 1;
+    btnLote.style.pointerEvents = n === 0 ? 'none' : 'auto';
+    // estado del maestro: marcado / vacío / indeterminado
+    maestro.checked = n === filas.length;
+    maestro.indeterminate = n > 0 && n < filas.length;
+  }
+
+  maestro.addEventListener('change', function(){
+    filas.forEach(function(c){ c.checked = maestro.checked; });
+    refrescar();
+  });
+  filas.forEach(function(c){ c.addEventListener('change', refrescar); });
+
+  btnLote.addEventListener('click', function(){
+    if (seleccionadas() === 0) return;
+    document.getElementById('m-enviar').hidden = false;
+  });
+
+  document.getElementById('btn-confirmar-lote').addEventListener('click', function(){
+    var n = seleccionadas();
+    window.FileyDemo.set({ loteNotificado: true });
+    document.getElementById('m-enviar').hidden = true;
+    window.FileyDemo.toast(n + ' resultado(s) notificado(s) por correo.', 'ok');
+  });
+
+  refrescar();
 </script>
 
 </body>

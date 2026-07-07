@@ -132,6 +132,58 @@ const TIPOS = {
   ].join("")
 };
 
+// ---- Prellenado del ejemplo de la demo -------------------------------------
+// Rellena los campos de "Presentación de libro" con los datos de
+// "El mar que nos habita" (Editorial La Nave) para la presentación.
+function setText(field, v) {
+  const i = field.querySelector('input[type="text"]');
+  if (i) i.value = v;
+}
+function setMultiFirst(field, v) {
+  const i = field.querySelector(".multi-input input");
+  if (i) i.value = v;
+}
+function setSelect(field, txt) {
+  const s = field.querySelector("select");
+  if (!s) return;
+  [...s.options].forEach(o => { if (o.textContent.trim() === txt) s.value = o.value || o.textContent; });
+}
+function setRadioSi(field) {
+  const r = field.querySelector('input[type="radio"]');
+  if (r) r.checked = true;
+}
+
+function prefillLibro(container) {
+  container.querySelectorAll(".field").forEach(field => {
+    const lab = (field.querySelector("label") || {}).textContent || "";
+    if (/Título de la actividad/.test(lab)) setText(field, "El mar que nos habita");
+    else if (/Título de la publicación/.test(lab)) setText(field, "El mar que nos habita");
+    else if (/^\s*Organiza/.test(lab)) setText(field, "Editorial La Nave");
+    else if (/El proponente es/.test(lab)) setSelect(field, "Editor/a");
+    else if (/igual a la portada/.test(lab)) setMultiFirst(field, "Renata Solís");
+    else if (/autor participará/.test(lab)) setRadioSi(field);
+    else if (/Moderador/.test(lab)) setMultiFirst(field, "Jorge Cauich");
+    else if (/^\s*Editorial/.test(lab)) setText(field, "Editorial La Nave");
+    else if (/constancia/.test(lab)) setRadioSi(field);
+    else if (/Público al que va dirigido/.test(lab)) {
+      const chip = [...field.querySelectorAll(".check-chip")]
+        .find(c => /Público en general/.test(c.textContent));
+      if (chip) chip.querySelector('input[type="checkbox"]').checked = true;
+    }
+    else if (/Comentarios/.test(lab)) {
+      const t = field.querySelector("textarea");
+      if (t) t.value = "La autora, Renata Solís, estará presente para la lectura de fragmentos y la firma de ejemplares.";
+    }
+  });
+  // Marca los adjuntos como cargados (demostrativo)
+  container.querySelectorAll(".file-mock").forEach(fm => {
+    fm.style.borderColor = "var(--ok-600)";
+    fm.style.background = "var(--ok-050)";
+    const small = fm.querySelector("small");
+    if (small) small.innerHTML = "✓ Adjuntado";
+  });
+}
+
 // ---- Render ----------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("tipo-grid");
@@ -140,16 +192,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const heading = document.getElementById("tipo-elegido");
   if (!grid) return;
 
-  grid.addEventListener("click", (e) => {
-    const btn = e.target.closest(".tipo-opt");
-    if (!btn) return;
+  function render(tipo, opts) {
     grid.querySelectorAll(".tipo-opt").forEach(b => b.classList.remove("is-active"));
-    btn.classList.add("is-active");
-    const tipo = btn.dataset.tipo;
+    const btn = grid.querySelector('.tipo-opt[data-tipo="' + tipo + '"]');
+    if (btn) btn.classList.add("is-active");
     _rid = 0;
     container.innerHTML = TIPOS[tipo] ? TIPOS[tipo]() : "";
     if (heading) heading.textContent = tipo;
     section.style.display = "block";
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (tipo === "Presentación de libro") prefillLibro(container);
+    if (opts && opts.scroll) section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  grid.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tipo-opt");
+    if (!btn) return;
+    render(btn.dataset.tipo, { scroll: true });
   });
+
+  // Para la demo: arranca con el ejemplo "El mar que nos habita" ya prellenado.
+  render("Presentación de libro", { scroll: false });
 });

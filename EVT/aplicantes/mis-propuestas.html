@@ -17,7 +17,7 @@
     </a>
     <nav class="topnav">
       <a href="mis-propuestas.html">Mis propuestas</a>
-      <div class="user-chip"><span class="avatar">LR</span> Lectora R.</div>
+      <div class="user-chip"><span class="avatar">LP</span> Laura P.</div>
     </nav>
   </div>
 </header>
@@ -46,22 +46,16 @@
       <thead>
         <tr><th>Folio</th><th>Tipo</th><th>Título</th><th>Categoría</th><th>Estado</th><th></th></tr>
       </thead>
-      <tbody>
+      <tbody id="tbody-propuestas">
+        <!-- La fila "El mar que nos habita" (EVE-2027-0042) se inserta aquí por JS
+             cuando el proponente envía su propuesta (guion de la demo). -->
         <tr>
-          <td class="folio">EVE-2027-0042</td>
+          <td class="folio">EVE-2027-0031</td>
           <td>Conversatorio</td>
           <td>Voces de la narrativa yucateca</td>
           <td>Literaria · Externo</td>
           <td><span class="badge badge-pending">Pendiente</span></td>
-          <td><a href="#">Ver detalle</a></td>
-        </tr>
-        <tr>
-          <td class="folio">EVE-2027-0031</td>
-          <td>Presentación de libro</td>
-          <td>El mar que nos habita</td>
-          <td>Literaria · Externo</td>
-          <td><span class="badge badge-accepted">Aceptada</span></td>
-          <td><a href="#">Ver detalle</a></td>
+          <td><a href="#" class="row-act" data-prop="voces">Ver detalle</a></td>
         </tr>
         <tr>
           <td class="folio">EVE-2027-0025</td>
@@ -69,7 +63,7 @@
           <td>Lengua maya y tecnología</td>
           <td>Académica · Externo</td>
           <td><span class="badge badge-changes">Cambios solicitados</span></td>
-          <td><a href="#">Editar y reenviar</a></td>
+          <td><a href="#" class="row-act" data-prop="lengua">Editar y reenviar</a></td>
         </tr>
         <tr>
           <td class="folio">EVE-2027-0018</td>
@@ -77,7 +71,7 @@
           <td>Cómo publicar tu primer libro</td>
           <td>—</td>
           <td><span class="badge badge-rejected">Rechazada</span></td>
-          <td><a href="#">Ver motivo</a></td>
+          <td><a href="#" class="row-act" data-prop="publicar">Ver motivo</a></td>
         </tr>
       </tbody>
     </table>
@@ -87,6 +81,240 @@
     <a class="btn btn-primary" href="convocatoria-eventos.html">+ Enviar nueva propuesta</a>
   </div>
 </main>
+
+<style>
+  tr.row-nueva td { animation: filaEntra 1.6s ease; }
+  @keyframes filaEntra {
+    0%   { background: var(--oro-050); }
+    100% { background: transparent; }
+  }
+  .pill-nueva {
+    display:inline-block; margin-left:8px; font-size:10.5px; font-weight:700;
+    color:var(--color-azul-institucional); background:var(--oro-050);
+    border:1px solid var(--oro-200); border-radius:999px; padding:1px 8px; vertical-align:middle;
+  }
+  /* Detalle dentro de los modales */
+  .prop-dl { margin:0; display:grid; gap:0; }
+  .prop-dl > div { display:flex; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px solid var(--gris-200); }
+  .prop-dl > div:last-child { border-bottom:none; }
+  .prop-dl dt { margin:0; color:var(--gris-500); font-size:13.5px; }
+  .prop-dl dd { margin:0; color:var(--gris-700); font-size:13.5px; font-weight:600; text-align:right; }
+  .prop-field { margin:14px 0 0; }
+  .prop-field label { display:block; font-size:13px; color:var(--gris-700); margin-bottom:6px; font-weight:600; }
+  .prop-field input, .prop-field textarea {
+    width:100%; font-family:inherit; font-size:14px; padding:10px 12px;
+    border:1.5px solid var(--gris-300); border-radius:8px; color:var(--gris-700); box-sizing:border-box;
+  }
+  .prop-field textarea { min-height:80px; resize:vertical; }
+</style>
+
+<!-- Modal genérico de propuesta (detalle / horario / motivo / editar) -->
+<div class="modal-back" id="m-prop" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3 id="mp-title">—</h3><p id="mp-sub">—</p></div>
+    <div class="modal-body" id="mp-body"></div>
+    <div class="modal-foot" id="mp-foot"></div>
+  </div>
+</div>
+
+<script src="../demo.js"></script>
+<script>
+  var estado = window.FileyDemo.get();
+
+  // ---------- Fila dinámica: El mar que nos habita (según el guion) ----------
+  (function () {
+    if (!estado.emqnhEnviada) return; // aún no se ha creado la propuesta
+
+    var aceptada = estado.emqnhEstado === "aceptada";
+    var programada = estado.emqnhProgramada;
+    var badge = aceptada
+      ? '<span class="badge badge-accepted">Aceptada</span>'
+      : '<span class="badge badge-pending">Pendiente</span>';
+    var accion = programada
+      ? '<a href="#" class="row-act" data-prop="emqnh-horario">Ver horario</a>'
+      : '<a href="#" class="row-act" data-prop="emqnh">Ver detalle</a>';
+
+    var tr = document.createElement("tr");
+    tr.className = "row-nueva";
+    tr.innerHTML =
+      '<td class="folio">EVE-2027-0042</td>' +
+      '<td>Presentación de libro</td>' +
+      '<td>El mar que nos habita<span class="pill-nueva">nueva</span></td>' +
+      '<td>Literaria · Externo</td>' +
+      '<td>' + badge + '</td>' +
+      '<td>' + accion + '</td>';
+
+    var tbody = document.getElementById("tbody-propuestas");
+    tbody.insertBefore(tr, tbody.firstElementChild);
+
+    window.FileyDemo.toast(
+      aceptada
+        ? '“El mar que nos habita” fue <strong>aceptada</strong> por la Coordinación.'
+        : 'Tu propuesta “El mar que nos habita” quedó registrada como <strong>Pendiente</strong>.',
+      aceptada ? "ok" : "info"
+    );
+  })();
+
+  // ---------- Contenido de los modales ----------
+  function dl(pares) {
+    return '<dl class="prop-dl">' + pares.map(function (p) {
+      return '<div><dt>' + p[0] + '</dt><dd>' + p[1] + '</dd></div>';
+    }).join('') + '</dl>';
+  }
+  var btnCerrar = '<button class="btn btn-ghost" onclick="cerrarProp()">Cerrar</button>';
+
+  function contenido(key) {
+    switch (key) {
+
+      case "emqnh-horario": {
+        var h = estado.emqnhHorario || {};
+        return {
+          title: "El mar que nos habita — horario asignado",
+          sub: "Folio EVE-2027-0042 · Presentación de libro",
+          body:
+            '<div class="note note-info" style="margin:0 0 16px"><div class="ico">📅</div>' +
+            '<div>Tu actividad ya fue <strong>programada</strong> por la Coordinación. ' +
+            'Recibirás la confirmación oficial por correo.</div></div>' +
+            dl([
+              ["Fecha", h.dia || "Marzo de 2028"],
+              ["Sala", h.sala || "Salón por confirmar"],
+              ["Horario", h.hora || "Bloque por confirmar"],
+              ["Duración", "50 minutos"],
+              ["Estado", '<span class="badge badge-accepted">Programada</span>']
+            ]),
+          foot: btnCerrar
+        };
+      }
+
+      case "emqnh":
+        return {
+          title: "El mar que nos habita",
+          sub: "Folio EVE-2027-0042 · Presentación de libro",
+          body:
+            dl([
+              ["Proponente", "Editorial La Nave"],
+              ["Categoría", "Literaria · Externo"],
+              ["Participantes", "Renata Solís (autora) · Jorge Cauich (moderador)"],
+              ["Enviada", "12 de agosto de 2027"],
+              ["Estado", (estado.emqnhEstado === "aceptada"
+                ? '<span class="badge badge-accepted">Aceptada</span>'
+                : '<span class="badge badge-pending">Pendiente</span>')]
+            ]) +
+            '<div class="note note-info" style="margin:16px 0 0"><div class="ico">⏳</div>' +
+            '<div>Tu propuesta está en revisión por el comité. Te notificaremos el resultado por correo.</div></div>',
+          foot: btnCerrar
+        };
+
+      case "voces":
+        return {
+          title: "Voces de la narrativa yucateca",
+          sub: "Folio EVE-2027-0031 · Conversatorio",
+          body:
+            dl([
+              ["Proponente", "Ana Rivas Pool"],
+              ["Categoría", "Literaria · Externo"],
+              ["Enviada", "9 de agosto de 2027"],
+              ["Estado", '<span class="badge badge-pending">Pendiente</span>']
+            ]) +
+            '<div class="note note-info" style="margin:16px 0 0"><div class="ico">⏳</div>' +
+            '<div>En revisión por el comité. Aún no hay resultado.</div></div>',
+          foot: btnCerrar
+        };
+
+      case "lengua-pend":
+        return {
+          title: "Lengua maya y tecnología",
+          sub: "Folio EVE-2027-0025 · Conferencia",
+          body:
+            dl([
+              ["Proponente", "Dr. Uriel Canché (UADY)"],
+              ["Categoría", "Académica · Externo"],
+              ["Reenviada", "1 de octubre de 2027"],
+              ["Estado", '<span class="badge badge-pending">Pendiente</span>']
+            ]) +
+            '<div class="note note-info" style="margin:16px 0 0"><div class="ico">⏳</div>' +
+            '<div>Reenviaste la propuesta con los cambios solicitados. Está de nuevo en revisión.</div></div>',
+          foot: btnCerrar
+        };
+
+      case "lengua":
+        return {
+          title: "Editar y reenviar propuesta",
+          sub: "Folio EVE-2027-0025 · Lengua maya y tecnología",
+          body:
+            '<div class="note note-warn" style="margin:0 0 16px"><div class="ico">✎</div>' +
+            '<div><strong>Cambios solicitados por el comité:</strong> precisar la duración de la actividad ' +
+            'y agregar la semblanza del ponente en PDF.</div></div>' +
+            '<div class="prop-field"><label>Título de la actividad</label>' +
+            '<input type="text" value="Lengua maya y tecnología"></div>' +
+            '<div class="prop-field"><label>Duración estimada</label>' +
+            '<input type="text" placeholder="Ej. 50 minutos"></div>' +
+            '<div class="prop-field"><label>Comentario para el comité</label>' +
+            '<textarea placeholder="Describe brevemente los ajustes realizados…"></textarea></div>',
+          foot: btnCerrar +
+            '<button class="btn btn-primary" onclick="reenviar()">Reenviar propuesta</button>'
+        };
+
+      case "publicar":
+        return {
+          title: "Motivo del rechazo",
+          sub: "Folio EVE-2027-0018 · Cómo publicar tu primer libro",
+          body:
+            '<div class="note" style="margin:0;background:var(--err-050);color:var(--err-600);border:1px solid var(--err-050)"><div class="ico">✕</div>' +
+            '<div><strong>Propuesta rechazada.</strong> No corresponde al perfil de la convocatoria ' +
+            'de Actividades FILEY (Eventos): el contenido es un taller práctico de autoedición, ' +
+            'que se atiende en otra convocatoria.</div></div>' +
+            dl([
+              ["Proponente", "Mariana Us Chi"],
+              ["Dictaminada", "30 de septiembre de 2027"],
+              ["Estado", '<span class="badge badge-rejected">Rechazada</span>']
+            ]),
+          foot: btnCerrar
+        };
+
+      default:
+        return { title: "Propuesta", sub: "", body: "Sin información.", foot: btnCerrar };
+    }
+  }
+
+  // ---------- Abrir / cerrar ----------
+  function abrirProp(key) {
+    var c = contenido(key);
+    document.getElementById("mp-title").textContent = c.title;
+    document.getElementById("mp-sub").textContent = c.sub;
+    document.getElementById("mp-body").innerHTML = c.body;
+    document.getElementById("mp-foot").innerHTML = c.foot;
+    document.getElementById("m-prop").hidden = false;
+  }
+  window.cerrarProp = function () { document.getElementById("m-prop").hidden = true; };
+
+  // Reenvío de la propuesta con cambios solicitados
+  window.reenviar = function () {
+    var link = document.querySelector('.row-act[data-prop="lengua"]');
+    if (link) {
+      var fila = link.closest("tr");
+      fila.querySelector(".badge").outerHTML = '<span class="badge badge-pending">Pendiente</span>';
+      link.textContent = "Ver detalle";
+      link.setAttribute("data-prop", "lengua-pend"); // ahora se ve como pendiente en revisión
+    }
+    window.cerrarProp();
+    window.FileyDemo.toast("Propuesta reenviada con los cambios. Queda <strong>Pendiente</strong> de revisión.", "ok");
+  };
+
+  // Delegación: cualquier enlace .row-act abre su modal
+  document.getElementById("tbody-propuestas").addEventListener("click", function (e) {
+    var a = e.target.closest(".row-act");
+    if (!a) return;
+    e.preventDefault();
+    abrirProp(a.getAttribute("data-prop"));
+  });
+
+  // Cerrar al hacer clic fuera del cuadro
+  document.getElementById("m-prop").addEventListener("click", function (e) {
+    if (e.target === this) window.cerrarProp();
+  });
+</script>
+
 
 <footer class="footer"><div class="footer-inner">
   <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>

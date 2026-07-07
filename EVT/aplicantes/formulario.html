@@ -50,7 +50,7 @@
     </a>
     <nav class="topnav">
       <a href="mis-propuestas.html">Mis propuestas</a>
-      <div class="user-chip"><span class="avatar">LR</span> Lectora R.</div>
+      <div class="user-chip"><span class="avatar">LP</span> Laura P.</div>
     </nav>
   </div>
 </header>
@@ -90,34 +90,34 @@
         <div class="grid-2">
           <div class="field field-prefill">
             <label>Nombre completo <span class="req">*</span></label>
-            <input type="text" value="Lectora Ramírez Pech" readonly>
+            <input type="text" value="Laura Peniche Uc" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
           <div class="field field-prefill">
             <label>Correo electrónico <span class="req">*</span></label>
-            <input type="email" value="lectora@ejemplo.com" readonly>
+            <input type="email" value="contacto@editoriallanave.mx" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
         </div>
         <div class="grid-2">
           <div class="field field-prefill">
             <label>Número telefónico <span class="req">*</span></label>
-            <input type="tel" value="999 123 4567" readonly>
+            <input type="tel" value="999 456 7890" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
           <div class="field">
             <label>Dependencia o institución <span class="req">*</span></label>
-            <input type="text" placeholder="Institución u organización que representas">
+            <input type="text" value="Editorial La Nave">
           </div>
         </div>
         <div class="grid-2">
           <div class="field">
             <label>Cargo <span class="opt">(opcional)</span></label>
-            <input type="text" placeholder="Tu cargo o rol">
+            <input type="text" value="Coordinadora editorial">
           </div>
           <div class="field">
             <label>Ciudad / Estado <span class="req">*</span></label>
-            <input type="text" placeholder="Ej. Mérida, Yucatán">
+            <input type="text" value="Mérida, Yucatán">
           </div>
         </div>
         <div class="note note-info" style="margin:6px 0 0">
@@ -162,7 +162,7 @@
       <div class="form-actions" style="border-top:none; padding-top:0">
         <a class="btn btn-ghost spacer" href="convocatoria-eventos.html">Cerrar</a>
         <a class="btn btn-ghost" href="formulario.html">Guardar y crear otra solicitud</a>
-        <a class="btn btn-primary btn-lg" href="confirmacion.html">Enviar solicitud</a>
+        <button type="button" class="btn btn-primary btn-lg" id="btn-enviar">Enviar solicitud</button>
       </div>
     </div>
 
@@ -174,6 +174,21 @@
   <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
 </div></footer>
 
+<script src="../demo.js"></script>
 <script src="../app.js"></script>
+<script>
+  // Envío real (demo): registra la propuesta y sigue a la confirmación.
+  document.getElementById("btn-enviar").addEventListener("click", function () {
+    var grid = document.getElementById("tipo-grid");
+    var elegido = grid && grid.querySelector(".tipo-opt.is-active");
+    if (!elegido) {
+      window.FileyDemo.toast("Elige primero el tipo de actividad.", "warn");
+      grid.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    window.FileyDemo.enviarPropuesta();
+    window.location.href = "confirmacion.html";
+  });
+</script>
 </body>
 </html>
