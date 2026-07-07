@@ -382,7 +382,7 @@
 
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="cerrar('m-programador')">Cancelar</button>
-      <a class="btn btn-gold" href="admin-evt-horario.html">Guardar <span id="pgm-count-b">2</span> ocasiones · se guarda solo</a>
+      <button class="btn btn-gold" type="button" onclick="guardarOcasiones()">Guardar <span id="pgm-count-b">2</span> ocasiones · se guarda solo</button>
     </div>
   </div>
 </div>
@@ -577,6 +577,69 @@
     var c1 = document.getElementById('pgm-count'), c2 = document.getElementById('pgm-count-b');
     if(c1) c1.textContent = n;
     if(c2) c2.textContent = n;
+  }
+
+  // Día que se ve actualmente en el tablero principal.
+  var DIA_TABLERO = 'Jue 14 nov';
+
+  // Localiza la celda del tablero principal por hora de inicio (fila) y salón (columna).
+  function boardSlot(startTime, sala){
+    var rows = document.querySelectorAll('.prg-layout .sched tbody tr');
+    var ths = document.querySelectorAll('.prg-layout .sched thead th');
+    for(var i=0; i<rows.length; i++){
+      var tc = rows[i].querySelector('.time-col');
+      if(!tc) continue;
+      var start = tc.innerHTML.split(/<br\s*\/?>/i)[0].trim();
+      if(start !== startTime) continue;
+      var cells = rows[i].children;
+      for(var c=1; c<cells.length; c++){ // 0 = columna de horario
+        if(ths[c] && ths[c].textContent.trim() === sala) return cells[c];
+      }
+    }
+    return null;
+  }
+
+  // "Guardar N ocasiones": deja la actividad visible en el tablero para que se vea registrada.
+  function guardarOcasiones(){
+    var celdas = document.querySelectorAll('#m-programador .slot.is-pgm');
+    var n = celdas.length;
+    var colocadasHoy = 0;
+
+    Array.prototype.forEach.call(celdas, function(c){
+      if(c.getAttribute('data-dia') !== DIA_TABLERO) return; // solo el día visible del tablero
+      var bloque = c.getAttribute('data-bloque') || '';
+      var start = bloque.split('–')[0].trim();
+      var sala = c.getAttribute('data-sala') || 'Salón Chichén Itzá';
+      var slot = boardSlot(start, sala);
+      if(!slot) return;
+
+      var yaEsta = Array.prototype.some.call(slot.querySelectorAll('.act'), function(a){
+        return (a.getAttribute('data-titulo') || '') === ACT_REP;
+      });
+      if(yaEsta) return;
+
+      var ocupado = slot.querySelectorAll('.act').length > 0;
+      slot.classList.remove('free');
+      if(ocupado){ slot.style.display = 'flex'; slot.style.flexDirection = 'column'; slot.style.gap = '4px'; }
+      var act = crearActividad(ACT_REP, 'EVE-2027-0042 · Presentación de libro', true);
+      if(ocupado) act.classList.add('clash'); // cae en el bloque con empalme
+      slot.appendChild(act);
+      colocadasHoy++;
+    });
+
+    // Ya está programada: quítala del riel "Por programar".
+    var railItem = document.querySelector('.prg-layout .rail-item[data-emqnh="1"]');
+    if(railItem){ railItem.parentNode.removeChild(railItem); actualizarRailCount(-1); }
+
+    if(window.FileyDemo && window.FileyDemo.programar){
+      window.FileyDemo.programar({ colocada: true, sala: 'Varias salas', hora: n + ' ocasiones', dia: 'nov 2027' });
+    }
+
+    cerrar('m-programador');
+
+    var msg = '“' + ACT_REP + '” guardada en ' + n + ' ocasión' + (n === 1 ? '' : 'es') + '.';
+    if(colocadasHoy > 0) msg += ' Ya aparece en el tablero (Jue 14 nov).';
+    if(window.FileyDemo && window.FileyDemo.toast) window.FileyDemo.toast(msg, 'ok');
   }
 
   pgmRender();

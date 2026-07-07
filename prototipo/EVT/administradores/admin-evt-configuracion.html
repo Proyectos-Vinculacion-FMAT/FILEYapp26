@@ -6,6 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FILEY 2027 — Panel Eventos · Configuración</title>
 <link rel="stylesheet" href="../styles.css">
+<style>
+  /* Bandas de las ventanas de la convocatoria dentro del calendario */
+  .cal-cell.rng-recepcion { background: var(--ok-050); }
+  .cal-cell.rng-revision  { background: var(--azul-050); }
+  .cal-cell.rng-ajustes   { background: var(--warn-050); }
+  .cal-cell.out { background: transparent !important; }
+  .cal-cell.is-key { box-shadow: inset 0 0 0 2px var(--color-azul-institucional); }
+  .cal-event { margin-top: 4px; }
+  .cal-event + .cal-event { margin-top: 3px; }
+  /* Botón "Cierre" (ir al mes de cierre) */
+  .cal-nav.cal-today { width: auto; padding: 0 12px; font-size: 12.5px; font-weight: 700; }
+  /* Leyenda de bandas */
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 18px;
+    border-top: 1px solid var(--gris-200); font-size: 12.5px; color: var(--gris-600); }
+  .cal-legend .lg-item { display: flex; align-items: center; gap: 7px; }
+  .cal-legend .lg-band { width: 18px; height: 12px; border-radius: 3px; border: 1px solid var(--gris-200); flex: 0 0 auto; }
+</style>
 </head>
 <body>
 
@@ -53,8 +70,9 @@
     <div class="admin-content">
       <div class="page-head">
         <h1>Configuración de la convocatoria</h1>
-        <p>Define las fechas clave y los cupos por categoría. Las fechas se muestran en el calendario;
-           al guardar, la convocatoria queda publicada para los proponentes.</p>
+        <p>Define las fechas clave y los cupos por categoría. Cada fecha se refleja en el calendario
+           —usa las flechas <b>‹ ›</b> para navegar entre meses y ver apertura, cierre, notificación,
+           ventana de ajustes y asignación. Al guardar, la convocatoria queda publicada para los proponentes.</p>
       </div>
 
       <div class="cal-wrap">
@@ -67,32 +85,32 @@
               <div class="date-item">
                 <span class="swatch ev-apertura"></span>
                 <span class="lbl">Apertura</span>
-                <input type="date" value="2027-06-01">
+                <input type="date" id="kAp" value="2027-07-01">
               </div>
               <div class="date-item">
                 <span class="swatch ev-cierre"></span>
                 <span class="lbl">Cierre</span>
-                <input type="date" value="2027-08-31">
+                <input type="date" id="kCi" value="2027-08-31">
               </div>
               <div class="date-item">
                 <span class="swatch ev-notif"></span>
                 <span class="lbl">Notificación</span>
-                <input type="date" value="2027-09-15">
+                <input type="date" id="kNo" value="2027-09-30">
               </div>
               <div class="date-item">
                 <span class="swatch ev-ajustes"></span>
                 <span class="lbl">Límite de ajustes</span>
-                <input type="date" value="2027-09-22">
+                <input type="date" id="kAj" value="2027-10-15">
               </div>
               <div class="date-item">
                 <span class="swatch ev-asignacion"></span>
                 <span class="lbl">Asignación de horario</span>
-                <input type="date" value="2027-09-28">
+                <input type="date" id="kAs" value="2027-10-22">
               </div>
               <div class="date-item">
                 <span class="swatch ev-constancias"></span>
                 <span class="lbl">Constancias</span>
-                <input type="date" value="2027-11-30">
+                <input type="date" id="kCo" value="2027-11-30">
               </div>
             </div>
           </div>
@@ -118,74 +136,24 @@
           </div>
         </div>
 
-        <!-- ===== Calendario estilo Outlook ===== -->
+        <!-- ===== Calendario estilo Outlook (navegable) ===== -->
         <div class="cal-main">
           <div class="cal-toolbar">
-            <button class="cal-nav" title="Mes anterior">‹</button>
-            <button class="cal-nav" title="Mes siguiente">›</button>
-            <span class="month">Agosto 2027</span>
-            <span class="badge badge-open">Convocatoria abierta</span>
+            <button class="cal-nav" id="calPrev" title="Mes anterior">‹</button>
+            <button class="cal-nav" id="calNext" title="Mes siguiente">›</button>
+            <span class="month" id="calMonth">Agosto 2027</span>
+            <button class="cal-nav cal-today" id="calHoy" title="Ir al cierre">Cierre</button>
+            <span class="badge badge-open" id="calBadge">Convocatoria abierta</span>
           </div>
-          <div class="cal-grid">
+          <div class="cal-grid" id="calGrid">
             <div class="dow">Lun</div><div class="dow">Mar</div><div class="dow">Mié</div>
             <div class="dow">Jue</div><div class="dow">Vie</div><div class="dow">Sáb</div><div class="dow">Dom</div>
-
-            <!-- Semana 1 (agosto 2027 inicia en domingo) -->
-            <div class="cal-cell out"><span class="num">26</span></div>
-            <div class="cal-cell out"><span class="num">27</span></div>
-            <div class="cal-cell out"><span class="num">28</span></div>
-            <div class="cal-cell out"><span class="num">29</span></div>
-            <div class="cal-cell out"><span class="num">30</span></div>
-            <div class="cal-cell out"><span class="num">31</span></div>
-            <div class="cal-cell"><span class="num">1</span></div>
-
-            <!-- Semana 2 -->
-            <div class="cal-cell"><span class="num">2</span></div>
-            <div class="cal-cell"><span class="num">3</span></div>
-            <div class="cal-cell"><span class="num">4</span></div>
-            <div class="cal-cell"><span class="num">5</span></div>
-            <div class="cal-cell"><span class="num">6</span></div>
-            <div class="cal-cell"><span class="num">7</span></div>
-            <div class="cal-cell"><span class="num">8</span></div>
-
-            <!-- Semana 3 -->
-            <div class="cal-cell"><span class="num">9</span></div>
-            <div class="cal-cell"><span class="num">10</span></div>
-            <div class="cal-cell"><span class="num">11</span></div>
-            <div class="cal-cell"><span class="num">12</span></div>
-            <div class="cal-cell"><span class="num">13</span></div>
-            <div class="cal-cell"><span class="num">14</span></div>
-            <div class="cal-cell"><span class="num">15</span></div>
-
-            <!-- Semana 4 -->
-            <div class="cal-cell"><span class="num">16</span></div>
-            <div class="cal-cell"><span class="num">17</span></div>
-            <div class="cal-cell"><span class="num">18</span></div>
-            <div class="cal-cell"><span class="num">19</span></div>
-            <div class="cal-cell"><span class="num">20</span></div>
-            <div class="cal-cell"><span class="num">21</span></div>
-            <div class="cal-cell"><span class="num">22</span></div>
-
-            <!-- Semana 5 -->
-            <div class="cal-cell"><span class="num">23</span></div>
-            <div class="cal-cell"><span class="num">24</span></div>
-            <div class="cal-cell"><span class="num">25</span></div>
-            <div class="cal-cell"><span class="num">26</span></div>
-            <div class="cal-cell"><span class="num">27</span></div>
-            <div class="cal-cell"><span class="num">28</span></div>
-            <div class="cal-cell"><span class="num">29</span></div>
-
-            <!-- Semana 6 -->
-            <div class="cal-cell"><span class="num">30</span></div>
-            <div class="cal-cell today">
-              <span class="num">31</span>
-              <span class="cal-event ev-cierre">Cierre de convocatoria</span>
-            </div>
-            <div class="cal-cell out"><span class="num">1</span></div>
-            <div class="cal-cell out"><span class="num">2</span></div>
-            <div class="cal-cell out"><span class="num">3</span></div>
-            <div class="cal-cell out"><span class="num">4</span></div>
-            <div class="cal-cell out"><span class="num">5</span></div>
+            <!-- Los días se generan por JS a partir de las fechas clave -->
+          </div>
+          <div class="cal-legend">
+            <span class="lg-item"><i class="lg-band" style="background:var(--ok-050)"></i> Recepción de propuestas</span>
+            <span class="lg-item"><i class="lg-band" style="background:var(--azul-050)"></i> Revisión y dictamen</span>
+            <span class="lg-item"><i class="lg-band" style="background:var(--warn-050)"></i> Ventana de ajustes</span>
           </div>
         </div>
       </div>
@@ -203,6 +171,124 @@
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+               'Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Hitos: leen su valor del input correspondiente (edítalos y el calendario se actualiza)
+  var KEYS = [
+    { id:'kAp', cls:'ev-apertura',    label:'Apertura de convocatoria' },
+    { id:'kCi', cls:'ev-cierre',      label:'Cierre de recepción' },
+    { id:'kNo', cls:'ev-notif',       label:'Notificación de resultados' },
+    { id:'kAj', cls:'ev-ajustes',     label:'Límite de ajustes' },
+    { id:'kAs', cls:'ev-asignacion',  label:'Asignación de horario' },
+    { id:'kCo', cls:'ev-constancias', label:'Entrega de constancias' }
+  ];
+
+  var grid  = document.getElementById('calGrid');
+  var label = document.getElementById('calMonth');
+  var badge = document.getElementById('calBadge');
+
+  // Vista inicial: mes de cierre
+  var curY = 2027, curM = 7; // Agosto = índice 7
+
+  function val(id){ var el = document.getElementById(id); return el ? el.value : ''; }
+  function pad(n){ return (n<10?'0':'') + n; }
+  function iso(y,m,d){ return y + '-' + pad(m+1) + '-' + pad(d); }
+  function addDays(isoStr, n){
+    var p = isoStr.split('-');
+    var dt = new Date(+p[0], +p[1]-1, +p[2] + n);
+    return iso(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  }
+
+  function buildModel(){
+    var events = {}, ranges = [];
+    KEYS.forEach(function(k){
+      var v = val(k.id);
+      if(v){ (events[v] = events[v] || []).push({ cls:k.cls, label:k.label }); }
+    });
+    var ap = val('kAp'), ci = val('kCi'), no = val('kNo'), aj = val('kAj');
+    if(ap && ci) ranges.push({ start:ap, end:ci, cls:'rng-recepcion' });          // recepción
+    if(ci && no) ranges.push({ start:addDays(ci,1), end:no, cls:'rng-revision' });  // revisión/dictamen
+    if(no && aj) ranges.push({ start:addDays(no,1), end:aj, cls:'rng-ajustes' });   // ventana de ajustes
+    return { events:events, ranges:ranges, ap:ap, ci:ci };
+  }
+
+  function render(){
+    var model = buildModel();
+    label.textContent = MESES[curM] + ' ' + curY;
+
+    // Badge según el mes mostrado vs. apertura/cierre
+    var mStart = iso(curY, curM, 1);
+    var mEnd   = iso(curY, curM, new Date(curY, curM+1, 0).getDate());
+    var bcls, btxt;
+    if(model.ci && mStart > model.ci){ bcls='badge-closed'; btxt='Convocatoria cerrada'; }
+    else if(model.ap && mEnd < model.ap){ bcls='badge-soon'; btxt='Convocatoria próxima'; }
+    else { bcls='badge-open'; btxt='Convocatoria abierta'; }
+    badge.className = 'badge ' + bcls;
+    badge.textContent = btxt;
+
+    // Limpia días previos (conserva los encabezados .dow)
+    Array.prototype.slice.call(grid.querySelectorAll('.cal-cell')).forEach(function(c){ c.remove(); });
+
+    var startIdx = (new Date(curY, curM, 1).getDay() + 6) % 7; // Lunes primero
+    for(var i=0; i<42; i++){
+      var dt = new Date(curY, curM, 1 - startIdx + i);
+      var y = dt.getFullYear(), m = dt.getMonth(), d = dt.getDate();
+      var key = iso(y, m, d);
+      var inMonth = (m === curM);
+
+      var cell = document.createElement('div');
+      cell.className = 'cal-cell' + (inMonth ? '' : ' out');
+
+      if(inMonth){
+        model.ranges.forEach(function(r){
+          if(key >= r.start && key <= r.end) cell.classList.add(r.cls);
+        });
+      }
+
+      var num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = d;
+      cell.appendChild(num);
+
+      if(inMonth && model.events[key]){
+        cell.classList.add('is-key');
+        model.events[key].forEach(function(e){
+          var s = document.createElement('span');
+          s.className = 'cal-event ' + e.cls;
+          s.textContent = e.label;
+          cell.appendChild(s);
+        });
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  function step(delta){
+    curM += delta;
+    if(curM < 0){ curM = 11; curY--; }
+    else if(curM > 11){ curM = 0; curY++; }
+    render();
+  }
+
+  document.getElementById('calPrev').addEventListener('click', function(){ step(-1); });
+  document.getElementById('calNext').addEventListener('click', function(){ step(1); });
+  document.getElementById('calHoy').addEventListener('click', function(){
+    var ci = val('kCi');
+    if(ci){ var p = ci.split('-'); curY = +p[0]; curM = +p[1]-1; render(); }
+  });
+  // Editar cualquier fecha clave vuelve a dibujar el calendario
+  KEYS.forEach(function(k){
+    var el = document.getElementById(k.id);
+    if(el) el.addEventListener('change', render);
+  });
+
+  render();
+})();
+</script>
 
 </body>
 </html>
