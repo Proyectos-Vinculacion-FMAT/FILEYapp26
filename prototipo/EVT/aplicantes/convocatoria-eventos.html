@@ -6,6 +6,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FILEY 2027 — Convocatoria de Eventos</title>
 <link rel="stylesheet" href="../styles.css">
+<style>
+  /* Estado de cada fecha clave (debajo de la fecha) */
+  .dl-dates dd { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  .fecha-estado {
+    font-size:11px; font-weight:700; letter-spacing:.2px; line-height:1;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .fecha-estado.is-curso { background:var(--ok-050);   color:var(--ok-600); }
+  .fecha-estado.is-pend  { background:var(--azul-100); color:var(--azul-600); }
+  .fecha-estado.is-fin   { background:var(--err-050);  color:var(--err-600); }
+  .fecha-leyenda {
+    display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; padding-top:12px;
+    border-top:1px solid var(--gris-200); font-size:12px; color:var(--gris-500);
+  }
+  .fecha-leyenda span { display:inline-flex; align-items:center; gap:6px; }
+  .fecha-leyenda .lg { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .fecha-leyenda .lg-curso { background:var(--ok-600); }
+  .fecha-leyenda .lg-pend  { background:var(--azul-600); }
+  .fecha-leyenda .lg-fin   { background:var(--err-600); }
+
+  /* Cupos: solo ocupados, sin barra ni máximo */
+  .cupo-count {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:11px 0; border-bottom:1px solid var(--gris-200);
+  }
+  .cupo-count:last-child { border-bottom:none; }
+  .cupo-count strong { font-size:14px; color:var(--color-azul-institucional); }
+  .cupo-count .ocup { font-size:13px; color:var(--gris-500); white-space:nowrap; }
+  .cupo-count .ocup b {
+    display:inline-block; min-width:24px; text-align:center; margin-right:4px;
+    font-size:14px; color:var(--azul-600); background:var(--azul-050);
+    border-radius:6px; padding:2px 7px;
+  }
+</style>
 </head>
 <body>
 
@@ -57,13 +91,18 @@
         <div class="section-head"><span class="num">1</span><div><h3>Fechas clave</h3><p>Calendario oficial de la convocatoria</p></div></div>
         <div class="section-body">
           <dl class="dl-dates">
-            <div class="row"><dt><span class="dot"></span> Apertura de la convocatoria</dt><dd>1 de julio de 2027</dd></div>
-            <div class="row"><dt><span class="dot"></span> Cierre de recepción de propuestas</dt><dd>31 de agosto de 2027</dd></div>
-            <div class="row"><dt><span class="dot"></span> Notificación de resultados</dt><dd>30 de septiembre de 2027</dd></div>
-            <div class="row"><dt><span class="dot"></span> Asignación de salas y horarios</dt><dd>Octubre de 2027</dd></div>
-            <div class="row"><dt><span class="dot"></span> Ventana de ajustes</dt><dd>1 – 15 de octubre de 2027</dd></div>
-            <div class="row"><dt><span class="dot"></span> Realización de la feria</dt><dd>Marzo de 2028</dd></div>
+            <div class="row"><dt><span class="dot"></span> Apertura de la convocatoria</dt><dd>1 de julio de 2027<span class="fecha-estado is-fin">Finalizó</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Cierre de recepción de propuestas</dt><dd>31 de agosto de 2027<span class="fecha-estado is-curso">En curso</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Notificación de resultados</dt><dd>30 de septiembre de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Asignación de salas y horarios</dt><dd>Octubre de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Ventana de ajustes</dt><dd>1 – 15 de octubre de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Realización de la feria</dt><dd>Marzo de 2028<span class="fecha-estado is-pend">Pendiente</span></dd></div>
           </dl>
+          <div class="fecha-leyenda">
+            <span><i class="lg lg-curso"></i> En curso</span>
+            <span><i class="lg lg-pend"></i> Pendiente</span>
+            <span><i class="lg lg-fin"></i> Finalizó</span>
+          </div>
         </div>
       </div>
 
@@ -103,24 +142,24 @@
     <!-- Columna lateral: cupos -->
     <aside>
       <div class="card section-card">
-        <div class="section-head"><span class="num">4</span><div><h3>Cupos por categoría</h3><p>Espacios disponibles</p></div></div>
+        <div class="section-head"><span class="num">4</span><div><h3>Cupos por categoría</h3><p>Espacios ocupados (sin límite de cupo)</p></div></div>
         <div class="section-body">
           <div class="cupos">
-            <div class="cupo">
-              <div class="top"><strong>Literaria · Externo</strong><span>32 / 60</span></div>
-              <div class="bar"><i style="width:53%"></i></div>
+            <div class="cupo-count">
+              <strong>Literaria · Externo</strong>
+              <span class="ocup"><b>32</b> ocupados</span>
             </div>
-            <div class="cupo">
-              <div class="top"><strong>Literaria · UADY</strong><span>18 / 40</span></div>
-              <div class="bar"><i style="width:45%"></i></div>
+            <div class="cupo-count">
+              <strong>Literaria · UADY</strong>
+              <span class="ocup"><b>18</b> ocupados</span>
             </div>
-            <div class="cupo">
-              <div class="top"><strong>Académica · Externo</strong><span>27 / 50</span></div>
-              <div class="bar"><i style="width:54%"></i></div>
+            <div class="cupo-count">
+              <strong>Académica · Externo</strong>
+              <span class="ocup"><b>27</b> ocupados</span>
             </div>
-            <div class="cupo full">
-              <div class="top"><strong>Académica · UADY</strong><span>30 / 30 · lleno</span></div>
-              <div class="bar"><i style="width:100%"></i></div>
+            <div class="cupo-count">
+              <strong>Académica · UADY</strong>
+              <span class="ocup"><b>30</b> ocupados</span>
             </div>
           </div>
           <div class="note note-gold" style="margin:18px 0 0">
