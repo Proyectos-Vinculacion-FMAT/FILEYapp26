@@ -94,10 +94,10 @@
       <div class="toolbar-row">
         <div class="chips">
           <button class="cal-nav" title="Día anterior">‹</button>
-          <span class="chip is-active">Jueves 14 nov 2027</span>
+          <span class="chip is-active">Jueves 9 mar 2028</span>
           <button class="cal-nav" title="Día siguiente">›</button>
         </div>
-        <button class="btn btn-primary" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
+        <button class="btn btn-primary" id="btn-notif" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
       </div>
 
       <!-- Layout: riel "por programar" + rejilla -->
@@ -158,13 +158,13 @@
                 <td class="time-col">13:00<br>14:15</td>
                 <td class="slot free" onclick="abrir('m-asignar')"></td>
                 <td class="slot free" onclick="abrir('m-asignar')"></td>
-                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>Lengua maya y tecnología</strong><small>Conferencia · notificada ✓</small></div></td>
+                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>Traducción y lenguas del Mayab</strong><small>Conferencia · notificada ✓</small></div></td>
                 <td class="slot free" onclick="abrir('m-asignar')"></td>
               </tr>
               <tr>
                 <td class="time-col">16:00<br>17:15</td>
                 <td class="slot free" onclick="abrir('m-asignar')"></td>
-                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>Encuadernación artesanal</strong><small>Taller · sin notificar</small></div></td>
+                <td class="slot"><div class="act" onclick="abrir('m-asignar')"><strong>El oficio de la encuadernación</strong><small>Conversatorio · sin notificar</small></div></td>
                 <td class="slot free" onclick="abrir('m-asignar')"></td>
                 <td class="slot free" onclick="abrir('m-asignar')"></td>
               </tr>
@@ -206,7 +206,7 @@
           <span class="ic">🧩</span>
           <div class="f">
             <label>Actividad</label>
-            <select style="width:100%">
+            <select id="asig-act" style="width:100%">
               <option>El mar que nos habita — EVE-2027-0042 (Presentación de libro)</option>
               <option>Voces de la narrativa yucateca — EVE-2027-0031 (Conversatorio)</option>
             </select>
@@ -216,8 +216,8 @@
           <span class="ic">👥</span>
           <div class="f">
             <label>Proponente / participantes</label>
-            <div class="big">Editorial La Nave</div>
-            <small style="color:var(--gris-500)">Renata Solís (autora) · Jorge Cauich (moderador)</small>
+            <div class="big" id="asig-prop">Editorial La Nave</div>
+            <small style="color:var(--gris-500)" id="asig-part">Renata Solís (autora) · Jorge Cauich (moderador)</small>
           </div>
         </div>
         <div class="evt-row">
@@ -225,14 +225,15 @@
           <div class="f">
             <label>Fecha y bloque (fijo de 1:15)</label>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-              <div class="big">Jue 14 nov 2027 · 11:30 – 12:45</div>
+              <div class="big" id="asig-big">Jue 9 mar 2028 · 11:30 – 12:45</div>
               <button class="btn btn-ghost" style="white-space:nowrap" onclick="abrirProgramador()">🗓️ Programador</button>
             </div>
-            <div class="chips" style="margin-top:8px">
+            <div class="chips" id="asig-chips" style="margin-top:8px">
               <span class="chip">10:00–11:15</span>
               <span class="chip is-active">11:30–12:45</span>
               <span class="chip">13:00–14:15</span>
               <span class="chip">16:00–17:15</span>
+              <span class="chip">17:30–18:45</span>
             </div>
             <small style="color:var(--gris-500);display:block;margin-top:6px">Si necesita más tiempo, marca también el siguiente bloque completo.
               <br>¿La actividad va <strong>más de una vez</strong> (otra fecha o sala)? Abre el <strong>Programador</strong> para repetirla sin duplicar su registro.</small>
@@ -242,20 +243,12 @@
           <span class="ic">📍</span>
           <div class="f">
             <label>Salón / sala</label>
-            <select style="width:100%">
+            <select id="asig-sala" style="width:100%">
               <option>Salón Chichén Itzá</option>
-              <option>Salón Uxmal</option>
-              <option>Auditorio Manuel Cepeda</option>
-              <option>Sala de exhibición de Estados</option>
+              <option selected>Salón Uxmal</option>
+              <option>Auditorio M. Cepeda</option>
+              <option>Sala de Estados</option>
             </select>
-          </div>
-        </div>
-        <div class="evt-row">
-          <span class="ic">⚠️</span>
-          <div class="f">
-            <label>Aviso de empalme</label>
-            <small style="color:var(--err-600)">El bloque 11:30–12:45 en Chichén Itzá ya está ocupado (“Poesía joven del Mayab” y
-              “Antología del Mayab”). Puedes colocarla igual, pero deberás resolver el empalme antes de notificar.</small>
           </div>
         </div>
       </div>
@@ -263,18 +256,17 @@
       <!-- Derecha: mini-calendario de día con el bloque ubicado (verde, como Outlook) -->
       <div class="evt-preview">
         <div class="pv-head">
-          <span>Jue, 14 nov 2027</span>
+          <span>Jue, 9 mar 2028</span>
           <span class="nav"><button title="Día anterior">‹</button><button title="Día siguiente">›</button></span>
         </div>
-        <div class="day-mini">
-          <div class="drow"><div class="dh">10:00</div><div class="dcell taken"><div class="mini-act">Conferencia inaugural</div></div></div>
-          <div class="drow"><div class="dh">11:30</div><div class="dcell taken">
-            <div class="mini-act" style="margin-bottom:4px">Poesía joven · Antología (empalme)</div>
-            <div class="ev-block"><span class="grab-dot top"></span>11:30 – 12:45 · El mar que nos habita<span class="grab-dot bot"></span></div>
+        <div class="day-mini" id="asig-mini">
+          <div class="drow"><div class="dh">10:00</div><div class="dcell" data-start="10:00"></div></div>
+          <div class="drow"><div class="dh">11:30</div><div class="dcell" data-start="11:30">
+            <div class="ev-block" id="asig-block"><span class="grab-dot top"></span><span id="asig-block-txt">11:30 – 12:45 · El mar que nos habita</span><span class="grab-dot bot"></span></div>
           </div></div>
-          <div class="drow"><div class="dh">13:00</div><div class="dcell"></div></div>
-          <div class="drow"><div class="dh">16:00</div><div class="dcell"></div></div>
-          <div class="drow"><div class="dh">17:30</div><div class="dcell"></div></div>
+          <div class="drow"><div class="dh">13:00</div><div class="dcell" data-start="13:00"></div></div>
+          <div class="drow"><div class="dh">16:00</div><div class="dcell" data-start="16:00"></div></div>
+          <div class="drow"><div class="dh">17:30</div><div class="dcell" data-start="17:30"></div></div>
         </div>
         <p class="pv-foot">🖱️ En la app real arrastras/estiras el bloque verde como en Outlook.
           Aquí el bloque es <strong>fijo de 1:15</strong>: para más tiempo, ocupa el siguiente.</p>
@@ -282,7 +274,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="cerrar('m-asignar')">Cancelar</button>
-      <a class="btn btn-gold" href="admin-evt-horario.html">Colocar en el programa · se guarda solo</a>
+      <button class="btn btn-gold" type="button" onclick="colocarDesdeModal()">Colocar en el programa · se guarda solo</button>
     </div>
   </div>
 </div>
@@ -314,53 +306,53 @@
             <thead>
               <tr>
                 <th class="time-col">Bloque</th>
-                <th>Jue 14 nov</th>
-                <th>Vie 15 nov</th>
-                <th>Sáb 16 nov</th>
-                <th>Dom 17 nov</th>
-                <th>Lun 18 nov</th>
+                <th>Jue 9 mar</th>
+                <th>Vie 10 mar</th>
+                <th>Sáb 11 mar</th>
+                <th>Dom 12 mar</th>
+                <th>Lun 13 mar</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td class="time-col">10:00<br>11:15</td>
                 <td class="slot"><div class="act" style="background:var(--gris-050);border-left-color:var(--gris-300);cursor:default"><strong>Conferencia inaugural</strong><small>ocupada por otra</small></div></td>
-                <td class="slot free" data-dia="Vie 15 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Dom 17 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Lun 18 nov" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Vie 10 mar" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Sáb 11 mar" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 12 mar" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 13 mar" data-bloque="10:00–11:15" onclick="pgmToggle(this)"></td>
               </tr>
               <tr>
                 <td class="time-col">11:30<br>12:45</td>
-                <td class="slot is-pgm" data-dia="Jue 14 nov" data-bloque="11:30–12:45" data-sala="Salón Chichén Itzá" onclick="pgmToggle(this)"><div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)"><strong>✓ El mar que nos habita</strong><small>Salón Chichén Itzá</small></div></td>
-                <td class="slot free" data-dia="Vie 15 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Dom 17 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Lun 18 nov" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot is-pgm" data-dia="Jue 9 mar" data-bloque="11:30–12:45" data-sala="Salón Chichén Itzá" onclick="pgmToggle(this)"><div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)"><strong>✓ El mar que nos habita</strong><small>Salón Chichén Itzá</small></div></td>
+                <td class="slot free" data-dia="Vie 10 mar" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Sáb 11 mar" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 12 mar" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 13 mar" data-bloque="11:30–12:45" onclick="pgmToggle(this)"></td>
               </tr>
               <tr>
                 <td class="time-col">13:00<br>14:15</td>
-                <td class="slot free" data-dia="Jue 14 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Vie 15 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
-                <td class="slot is-pgm" data-dia="Sáb 16 nov" data-bloque="13:00–14:15" data-sala="Salón Uxmal" onclick="pgmToggle(this)"><div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)"><strong>✓ El mar que nos habita</strong><small>Salón Uxmal</small></div></td>
-                <td class="slot free" data-dia="Dom 17 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Lun 18 nov" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Jue 9 mar" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Vie 10 mar" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot is-pgm" data-dia="Sáb 11 mar" data-bloque="13:00–14:15" data-sala="Salón Uxmal" onclick="pgmToggle(this)"><div class="act" style="background:#e7f6ec;border-left-color:var(--ok-600)"><strong>✓ El mar que nos habita</strong><small>Salón Uxmal</small></div></td>
+                <td class="slot free" data-dia="Dom 12 mar" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 13 mar" data-bloque="13:00–14:15" onclick="pgmToggle(this)"></td>
               </tr>
               <tr>
                 <td class="time-col">16:00<br>17:15</td>
-                <td class="slot free" data-dia="Jue 14 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
-                <td class="slot"><div class="act" style="background:var(--gris-050);border-left-color:var(--gris-300);cursor:default"><strong>Taller de cómic</strong><small>ocupada por otra</small></div></td>
-                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Dom 17 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Lun 18 nov" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Jue 9 mar" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot"><div class="act" style="background:var(--gris-050);border-left-color:var(--gris-300);cursor:default"><strong>Novela gráfica del Mayab</strong><small>ocupada por otra</small></div></td>
+                <td class="slot free" data-dia="Sáb 11 mar" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 12 mar" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 13 mar" data-bloque="16:00–17:15" onclick="pgmToggle(this)"></td>
               </tr>
               <tr>
                 <td class="time-col">17:30<br>18:45</td>
-                <td class="slot free" data-dia="Jue 14 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Vie 15 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Sáb 16 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Dom 17 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
-                <td class="slot free" data-dia="Lun 18 nov" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Jue 9 mar" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Vie 10 mar" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Sáb 11 mar" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Dom 12 mar" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
+                <td class="slot free" data-dia="Lun 13 mar" data-bloque="17:30–18:45" onclick="pgmToggle(this)"></td>
               </tr>
             </tbody>
           </table>
@@ -498,7 +490,8 @@
       var sala = ths[idx] ? ths[idx].textContent.trim() : '';
       var colHora = fila.querySelector('.time-col');
       var hora = colHora ? colHora.innerHTML.replace(/<br\s*\/?>/i, '–').trim() : '';
-      window.FileyDemo.programar({ colocada: true, sala: sala, hora: hora, dia: 'Marzo de 2028' });
+      window.FileyDemo.programar({ colocada: true, sala: sala, hora: hora, dia: 'Jueves 9 de marzo de 2028' });
+      setNotifCount(4); // ya hay una programada más con horario sin notificar
       window.FileyDemo.toast('“El mar que nos habita” quedó programada: ' + sala + ' · ' + hora + '.', 'ok');
     } else {
       window.FileyDemo.toast('“' + titulo + '” colocada en el bloque.', 'ok');
@@ -523,6 +516,125 @@
     s.addEventListener('dragleave', slotDragLeave);
     s.addEventListener('drop', slotDrop);
   });
+
+  /* ===== Contador del botón "Notificar horarios" ===== */
+  function setNotifCount(n){
+    var b = document.getElementById('btn-notif');
+    if(b) b.innerHTML = '🔔 Notificar horarios (' + n + ')';
+  }
+
+  /* ===== Modal de asignación: selección de bloque + colocar en el tablero ===== */
+  function bloqueSel(){
+    var c = document.querySelector('#asig-chips .chip.is-active');
+    return c ? c.textContent.trim() : '11:30–12:45';
+  }
+  function actividadSel(){
+    var sel = document.getElementById('asig-act');
+    var txt = sel.options[sel.selectedIndex].textContent;
+    var partes = txt.split(' — ');
+    var titulo = partes[0].trim();
+    var resto = partes[1] || '';
+    var folio = resto.split(' (')[0].trim();
+    var tipo = (resto.match(/\(([^)]+)\)/) || [null, ''])[1];
+    return { titulo: titulo, meta: folio + ' · ' + tipo, emqnh: folio === 'EVE-2027-0042' };
+  }
+  // Sincroniza fecha, proponente y el bloque verde del mini-día con lo elegido.
+  function refrescarAsig(){
+    var b = bloqueSel();
+    var a = actividadSel();
+    var big = document.getElementById('asig-big');
+    if(big) big.textContent = 'Jue 9 mar 2028 · ' + b.replace('–', ' – ');
+    var txt = document.getElementById('asig-block-txt');
+    if(txt) txt.textContent = b.replace('–', ' – ') + ' · ' + a.titulo;
+    var block = document.getElementById('asig-block');
+    var cell = document.querySelector('#asig-mini .dcell[data-start="' + b.split('–')[0].trim() + '"]');
+    if(block && cell && block.parentNode !== cell) cell.appendChild(block);
+    var prop = document.getElementById('asig-prop'), part = document.getElementById('asig-part');
+    if(prop && part){
+      if(a.emqnh){
+        prop.textContent = 'Editorial La Nave';
+        part.textContent = 'Renata Solís (autora) · Jorge Cauich (moderador)';
+      } else {
+        prop.textContent = 'Ana Rivas Pool';
+        part.textContent = 'Conversatorio · Literaria · Externo';
+      }
+    }
+  }
+  document.getElementById('asig-chips').addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if(!chip) return;
+    this.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('is-active'); });
+    chip.classList.add('is-active');
+    refrescarAsig();
+  });
+  document.getElementById('asig-act').addEventListener('change', refrescarAsig);
+
+  // Al hacer clic en un bloque LIBRE del tablero, el asistente abre ya con esa sala y hora.
+  document.querySelectorAll('.prg-layout .sched tbody td.slot').forEach(function(td){
+    td.addEventListener('click', function(){
+      if(!td.classList.contains('free')) return;
+      var fila = td.closest('tr');
+      var idx = Array.prototype.indexOf.call(fila.children, td);
+      var ths = document.querySelectorAll('.prg-layout .sched thead th');
+      var sala = ths[idx] ? ths[idx].textContent.trim() : '';
+      var tc = fila.querySelector('.time-col');
+      var start = tc ? tc.innerHTML.split(/<br\s*\/?>/i)[0].trim() : '';
+      var sel = document.getElementById('asig-sala');
+      if(sel && sala){
+        Array.prototype.forEach.call(sel.options, function(o){ o.selected = (o.textContent.trim() === sala); });
+      }
+      document.querySelectorAll('#asig-chips .chip').forEach(function(c){
+        c.classList.toggle('is-active', c.textContent.trim().indexOf(start) === 0);
+      });
+      refrescarAsig();
+    }, true); // fase de captura: se ejecuta antes de que el onclick abra el modal
+  });
+
+  // Coloca una actividad en la celda (sala × bloque) del tablero y la quita del riel.
+  function colocarEnTablero(titulo, meta, emqnh, sala, bloque, opts){
+    var start = (bloque || '').split('–')[0].trim();
+    var slot = boardSlot(start, sala);
+    if(!slot) return false;
+    var yaEsta = Array.prototype.some.call(slot.querySelectorAll('.act'), function(a){
+      return (a.getAttribute('data-titulo') || '') === titulo;
+    });
+    if(!yaEsta){
+      var ocupado = slot.querySelectorAll('.act').length > 0;
+      if(ocupado && !(opts && opts.permitirOcupado)) return 'ocupado';
+      slot.classList.remove('free');
+      if(ocupado){ slot.style.display = 'flex'; slot.style.flexDirection = 'column'; slot.style.gap = '4px'; }
+      slot.appendChild(crearActividad(titulo, meta, emqnh));
+    }
+    document.querySelectorAll('.prg-layout .rail-item').forEach(function(r){
+      if((r.getAttribute('data-titulo') || '') === titulo){
+        r.parentNode.removeChild(r);
+        actualizarRailCount(-1);
+      }
+    });
+    return true;
+  }
+
+  // Botón "Colocar en el programa": la actividad queda de verdad en el tablero.
+  function colocarDesdeModal(){
+    var a = actividadSel();
+    var sala = document.getElementById('asig-sala').value;
+    var bloque = bloqueSel();
+    var r = colocarEnTablero(a.titulo, a.meta, a.emqnh, sala, bloque);
+    if(r === 'ocupado'){
+      window.FileyDemo.toast('Ese bloque ya está ocupado en ' + sala + '. Elige un bloque libre.', 'warn');
+      return;
+    }
+    if(!r){
+      window.FileyDemo.toast('No se encontró ese bloque en el tablero.', 'warn');
+      return;
+    }
+    cerrar('m-asignar');
+    if(a.emqnh){
+      window.FileyDemo.programar({ colocada: true, sala: sala, hora: bloque, dia: 'Jueves 9 de marzo de 2028' });
+      setNotifCount(4); // ya hay una programada más con horario sin notificar
+    }
+    window.FileyDemo.toast('“' + a.titulo + '” quedó programada: ' + sala + ' · ' + bloque + '. Guardado al instante.', 'ok');
+  }
 
   /* ===== Programador: repetir la MISMA actividad en varias fechas (CU-PRG-002 A1) ===== */
   var ACT_REP = 'El mar que nos habita';
@@ -580,7 +692,7 @@
   }
 
   // Día que se ve actualmente en el tablero principal.
-  var DIA_TABLERO = 'Jue 14 nov';
+  var DIA_TABLERO = 'Jue 9 mar';
 
   // Localiza la celda del tablero principal por hora de inicio (fila) y salón (columna).
   function boardSlot(startTime, sala){
@@ -632,17 +744,34 @@
     if(railItem){ railItem.parentNode.removeChild(railItem); actualizarRailCount(-1); }
 
     if(window.FileyDemo && window.FileyDemo.programar){
-      window.FileyDemo.programar({ colocada: true, sala: 'Varias salas', hora: n + ' ocasiones', dia: 'nov 2027' });
+      window.FileyDemo.programar({ colocada: true, sala: 'Varias salas', hora: n + ' ocasiones', dia: 'mar 2028' });
+      setNotifCount(4); // ya hay una programada más con horario sin notificar
     }
 
     cerrar('m-programador');
 
     var msg = '“' + ACT_REP + '” guardada en ' + n + ' ocasión' + (n === 1 ? '' : 'es') + '.';
-    if(colocadasHoy > 0) msg += ' Ya aparece en el tablero (Jue 14 nov).';
+    if(colocadasHoy > 0) msg += ' Ya aparece en el tablero (Jue 9 mar).';
     if(window.FileyDemo && window.FileyDemo.toast) window.FileyDemo.toast(msg, 'ok');
   }
 
   pgmRender();
+  refrescarAsig();
+
+  /* ===== Estado de la demo: si "El mar que nos habita" ya se programó, se refleja al volver ===== */
+  (function(){
+    var s = window.FileyDemo.get();
+    if(!s.emqnhProgramada) return;
+    setNotifCount(4);
+    var h = s.emqnhHorario || {};
+    if(h.sala && h.hora && h.sala !== 'Varias salas'){
+      colocarEnTablero('El mar que nos habita', 'EVE-2027-0042 · Presentación de libro', true, h.sala, h.hora, { permitirOcupado: true });
+    } else {
+      // Programada con el Programador (varias ocasiones): solo sale del riel.
+      var r = document.querySelector('.prg-layout .rail-item[data-emqnh="1"]');
+      if(r){ r.parentNode.removeChild(r); actualizarRailCount(-1); }
+    }
+  })();
 </script>
 
 </body>

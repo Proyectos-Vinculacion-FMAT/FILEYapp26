@@ -157,6 +157,10 @@
                 <div>Propuesta <strong>aceptada</strong>. Ya está lista para programar en
                   <a href="admin-evt-programa.html">Programa</a>.</div>
               </div>
+              <button class="btn btn-ghost btn-block" style="margin-top:12px" id="btn-editar-info">✎ Editar información del formulario</button>
+              <button class="btn btn-primary btn-block" style="margin-top:12px;display:none" id="btn-guardar-info">💾 Guardar cambios</button>
+              <p style="margin:8px 0 0;color:var(--gris-500);font-size:12.5px">Aunque la propuesta ya esté aceptada, puedes
+                consultar y corregir lo que capturó el proponente.</p>
             </div>
 
             <hr style="border:none;border-top:1px solid var(--gris-200);margin:20px 0">
@@ -267,6 +271,36 @@
   }
 
   if (s.emqnhEstado === 'aceptada') pintarAceptada();
+
+  // Editar la información capturada por el proponente (disponible aun aceptada)
+  var btnEditar = document.getElementById('btn-editar-info');
+  var btnGuardar = document.getElementById('btn-guardar-info');
+
+  btnEditar.addEventListener('click', function(){
+    // Desbloquea los campos y los marca para volver a bloquearlos al guardar.
+    document.querySelectorAll('.admin-content input[readonly], .admin-content textarea[readonly]').forEach(function(el){
+      el.removeAttribute('readonly');
+      el.setAttribute('data-editando', 'readonly');
+    });
+    document.querySelectorAll('.admin-content input[disabled]').forEach(function(el){
+      el.removeAttribute('disabled');
+      el.setAttribute('data-editando', 'disabled');
+    });
+    btnEditar.style.display = 'none';
+    btnGuardar.style.display = '';
+    window.FileyDemo.toast('Edición habilitada: corrige los campos y da “Guardar cambios”.', 'info');
+  });
+
+  btnGuardar.addEventListener('click', function(){
+    // Vuelve a dejar el formulario en solo lectura.
+    document.querySelectorAll('.admin-content [data-editando]').forEach(function(el){
+      el.setAttribute(el.getAttribute('data-editando'), '');
+      el.removeAttribute('data-editando');
+    });
+    btnGuardar.style.display = 'none';
+    btnEditar.style.display = '';
+    window.FileyDemo.toast('Cambios guardados. La información de la propuesta quedó actualizada.', 'ok');
+  });
 
   // Persistencia del control de ejemplar recibido
   var chk = document.getElementById('chk-ejemplar');
