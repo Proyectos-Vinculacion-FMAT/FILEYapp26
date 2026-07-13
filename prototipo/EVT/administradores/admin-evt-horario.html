@@ -490,8 +490,16 @@
     }
 
     if (emqnh){
-      window.FileyDemo.programar({ colocada: true });
-      window.FileyDemo.toast('“El mar que nos habita” quedó programada en el bloque.', 'ok');
+      // Captura la sala (columna) y el bloque horario (fila) reales del tablero.
+      var fila = slot.closest('tr');
+      var celdas = Array.prototype.slice.call(fila.children);
+      var idx = celdas.indexOf(slot);
+      var ths = document.querySelectorAll('.sched thead th');
+      var sala = ths[idx] ? ths[idx].textContent.trim() : '';
+      var colHora = fila.querySelector('.time-col');
+      var hora = colHora ? colHora.innerHTML.replace(/<br\s*\/?>/i, '–').trim() : '';
+      window.FileyDemo.programar({ colocada: true, sala: sala, hora: hora, dia: 'Marzo de 2028' });
+      window.FileyDemo.toast('“El mar que nos habita” quedó programada: ' + sala + ' · ' + hora + '.', 'ok');
     } else {
       window.FileyDemo.toast('“' + titulo + '” colocada en el bloque.', 'ok');
     }
