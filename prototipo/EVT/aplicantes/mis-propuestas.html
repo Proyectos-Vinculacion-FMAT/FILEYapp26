@@ -17,7 +17,7 @@
     </a>
     <nav class="topnav">
       <a href="mis-propuestas.html">Mis propuestas</a>
-      <div class="user-chip"><span class="avatar">LR</span> Lectora R.</div>
+      <div class="user-chip"><span class="avatar">LP</span> Laura P.</div>
     </nav>
   </div>
 </header>
@@ -46,21 +46,15 @@
       <thead>
         <tr><th>Folio</th><th>Tipo</th><th>Título</th><th>Categoría</th><th>Estado</th><th></th></tr>
       </thead>
-      <tbody>
+      <tbody id="tbody-propuestas">
+        <!-- La fila "El mar que nos habita" (EVE-2027-0042) se inserta aquí por JS
+             cuando el proponente envía su propuesta (guion de la demo). -->
         <tr>
-          <td class="folio">EVE-2027-0042</td>
+          <td class="folio">EVE-2027-0031</td>
           <td>Conversatorio</td>
           <td>Voces de la narrativa yucateca</td>
           <td>Literaria · Externo</td>
           <td><span class="badge badge-pending">Pendiente</span></td>
-          <td><a href="#">Ver detalle</a></td>
-        </tr>
-        <tr>
-          <td class="folio">EVE-2027-0031</td>
-          <td>Presentación de libro</td>
-          <td>El mar que nos habita</td>
-          <td>Literaria · Externo</td>
-          <td><span class="badge badge-accepted">Aceptada</span></td>
           <td><a href="#">Ver detalle</a></td>
         </tr>
         <tr>
@@ -87,6 +81,56 @@
     <a class="btn btn-primary" href="convocatoria-eventos.html">+ Enviar nueva propuesta</a>
   </div>
 </main>
+
+<style>
+  tr.row-nueva td { animation: filaEntra 1.6s ease; }
+  @keyframes filaEntra {
+    0%   { background: var(--oro-050); }
+    100% { background: transparent; }
+  }
+  .pill-nueva {
+    display:inline-block; margin-left:8px; font-size:10.5px; font-weight:700;
+    color:var(--color-azul-institucional); background:var(--oro-050);
+    border:1px solid var(--oro-200); border-radius:999px; padding:1px 8px; vertical-align:middle;
+  }
+</style>
+
+<script src="../demo.js"></script>
+<script>
+  (function () {
+    var s = window.FileyDemo.get();
+    if (!s.emqnhEnviada) return; // aún no se ha enviado en el guion
+
+    var aceptada = s.emqnhEstado === "aceptada";
+    var badge = aceptada
+      ? '<span class="badge badge-accepted">Aceptada</span>'
+      : '<span class="badge badge-pending">Pendiente</span>';
+    var nota = s.emqnhProgramada
+      ? '<a href="#">Ver horario</a>'
+      : '<a href="#">Ver detalle</a>';
+
+    var tr = document.createElement("tr");
+    tr.className = "row-nueva";
+    tr.innerHTML =
+      '<td class="folio">EVE-2027-0042</td>' +
+      '<td>Presentación de libro</td>' +
+      '<td>El mar que nos habita<span class="pill-nueva">nueva</span></td>' +
+      '<td>Literaria · Externo</td>' +
+      '<td>' + badge + '</td>' +
+      '<td>' + nota + '</td>';
+
+    var tbody = document.getElementById("tbody-propuestas");
+    tbody.insertBefore(tr, tbody.firstElementChild);
+
+    window.FileyDemo.toast(
+      aceptada
+        ? '“El mar que nos habita” fue <strong>aceptada</strong> por la Coordinación.'
+        : 'Tu propuesta “El mar que nos habita” quedó registrada como <strong>Pendiente</strong>.',
+      aceptada ? "ok" : "info"
+    );
+  })();
+</script>
+
 
 <footer class="footer"><div class="footer-inner">
   <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>

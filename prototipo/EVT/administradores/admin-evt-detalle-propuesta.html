@@ -59,7 +59,7 @@
       <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
         <div>
           <h1>El mar que nos habita</h1>
-          <p>Folio <strong>EVE-2027-0042</strong> · Presentación de libro · <span class="badge badge-pending">Pendiente</span></p>
+          <p>Folio <strong>EVE-2027-0042</strong> · Presentación de libro · <span class="badge badge-pending" id="estado-badge">Pendiente</span></p>
         </div>
         <a class="btn btn-ghost" href="admin-evt-propuestas.html">← Volver a la lista</a>
       </div>
@@ -146,10 +146,17 @@
           <div class="card card-pad" style="position:sticky;top:82px">
             <h3 style="margin:0 0 6px;color:var(--azul-900)">Dictamen</h3>
             <p style="margin:0 0 18px;color:var(--gris-500);font-size:13.5px">Resuelve la propuesta. La decisión queda registrada.</p>
-            <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:10px" id="dictamen-botones">
               <button class="btn btn-primary btn-block" onclick="abrir('m-aceptar')">✓ Aceptar</button>
               <button class="btn btn-gold btn-block" onclick="abrir('m-cambios')">✎ Solicitar cambios</button>
               <button class="btn btn-ghost btn-block" onclick="abrir('m-rechazar')">✕ Rechazar</button>
+            </div>
+            <div id="dictamen-hecho" style="display:none">
+              <div class="note note-gold" style="margin:0">
+                <div class="ico">✓</div>
+                <div>Propuesta <strong>aceptada</strong>. Ya está lista para programar en
+                  <a href="admin-evt-programa.html">Programa</a>.</div>
+              </div>
             </div>
 
             <hr style="border:none;border-top:1px solid var(--gris-200);margin:20px 0">
@@ -157,7 +164,7 @@
             <!-- Ejemplar físico ACTIVO (CU-EVT-012) -->
             <h4 style="margin:0 0 10px;color:var(--azul-900);font-size:14.5px">📚 Ejemplar físico</h4>
             <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--gris-700);cursor:pointer">
-              <input type="checkbox" style="margin-top:3px">
+              <input type="checkbox" id="chk-ejemplar" style="margin-top:3px">
               <span>Marcar ejemplar como <strong>recibido</strong> en oficinas de FILEY</span>
             </label>
             <div class="note note-gold" style="margin:12px 0 0">
@@ -201,7 +208,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="cerrar('m-aceptar')">Cancelar</button>
-      <a class="btn btn-primary" href="admin-evt-propuestas.html">Confirmar aceptación</a>
+      <button class="btn btn-primary" id="btn-confirmar-aceptar">Confirmar aceptación</button>
     </div>
   </div>
 </div>
@@ -240,11 +247,42 @@
   </div>
 </div>
 
+<script src="../demo.js"></script>
 <script>
   function abrir(id){ document.getElementById(id).hidden = false; }
   function cerrar(id){ document.getElementById(id).hidden = true; }
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
+  });
+
+  // ---- Estado de la demo (El mar que nos habita) ----
+  var s = window.FileyDemo.get();
+
+  function pintarAceptada(){
+    var badge = document.getElementById('estado-badge');
+    badge.textContent = 'Aceptada';
+    badge.className = 'badge badge-accepted';
+    document.getElementById('dictamen-botones').style.display = 'none';
+    document.getElementById('dictamen-hecho').style.display = 'block';
+  }
+
+  if (s.emqnhEstado === 'aceptada') pintarAceptada();
+
+  // Persistencia del control de ejemplar recibido
+  var chk = document.getElementById('chk-ejemplar');
+  chk.checked = !!s.ejemplarRecibido;
+  chk.addEventListener('change', function(){
+    window.FileyDemo.set({ ejemplarRecibido: chk.checked });
+    window.FileyDemo.toast(chk.checked ? 'Ejemplar marcado como recibido.' : 'Ejemplar marcado como pendiente.', 'info');
+  });
+
+  // Confirmar aceptación: cambia el estado y vuelve a la lista
+  document.getElementById('btn-confirmar-aceptar').addEventListener('click', function(){
+    window.FileyDemo.aceptarPropuesta();
+    cerrar('m-aceptar');
+    pintarAceptada();
+    window.FileyDemo.toast('Propuesta aceptada. Ya puede programarse.', 'ok');
+    setTimeout(function(){ window.location.href = 'admin-evt-propuestas.html'; }, 900);
   });
 </script>
 

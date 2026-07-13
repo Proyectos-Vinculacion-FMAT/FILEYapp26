@@ -6,6 +6,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FILEY 2027 — Panel Eventos · Tablero de programación</title>
 <link rel="stylesheet" href="../styles.css">
+<style>
+  /* Arrastrar y soltar en el tablero */
+  .rail-item[draggable="true"], .sched .act[draggable="true"] { cursor: grab; }
+  .rail-item.dragging, .sched .act.dragging { opacity: .45; }
+  .sched .slot.drop-ok {
+    background: var(--ok-050) !important;
+    box-shadow: inset 0 0 0 2px var(--ok-600);
+  }
+  .sched .slot.drop-ok::after { content: none !important; }
+  .sched .act.recien-colocada { animation: actEntra 1.4s ease; }
+  @keyframes actEntra {
+    0% { box-shadow: 0 0 0 3px var(--ok-050); background: var(--ok-050); }
+    100% { box-shadow: none; }
+  }
+</style>
 </head>
 <body>
 
@@ -62,11 +77,11 @@
           cada salón es una columna y los bloques fijos de 1:15 son las filas.</p>
       </div>
 
-      <!-- Banner: aclaración de maqueta (clic-para-colocar vs arrastrar) -->
+      <!-- Banner: cómo colocar (arrastrar o clic) -->
       <div class="mock-banner">
         <span class="ico">🖱️</span>
-        <div>En la <strong>aplicación real se arrastra</strong> la actividad desde el panel izquierdo hasta el bloque.
-          En esta <strong>maqueta se hace clic</strong>: primero la actividad, luego el bloque libre (o directo en el bloque).</div>
+        <div><strong>Arrastra</strong> una actividad del panel izquierdo hasta un bloque libre y suéltala: queda programada ahí.
+          También puedes <strong>arrastrar entre bloques</strong> para reubicarla, o hacer <strong>clic</strong> en un bloque para abrir el asistente.</div>
       </div>
 
       <!-- Pestañas: lista / tablero (activo) -->
@@ -90,18 +105,18 @@
 
         <!-- Riel lateral: actividades aceptadas sin sala/horario -->
         <aside class="rail">
-          <h3>Por programar <span class="count" style="font-size:12px;color:var(--gris-500)">(12)</span></h3>
-          <p class="hint">Aceptadas sin sala/horario. En la app se arrastran a un bloque; aquí, clic para seleccionar.</p>
+          <h3>Por programar <span class="count" id="rail-count" style="font-size:12px;color:var(--gris-500)">(12)</span></h3>
+          <p class="hint">Aceptadas sin sala/horario. <strong>Arrástralas</strong> a un bloque libre de la rejilla.</p>
 
-          <div class="rail-item" onclick="seleccionar(this)">
+          <div class="rail-item" draggable="true" data-titulo="Voces de la narrativa yucateca" data-meta="EVE-2027-0031 · Conversatorio" onclick="seleccionar(this)">
             <span class="grip">⠿</span>
             <div class="r-body"><strong>Voces de la narrativa yucateca</strong><small>EVE-2027-0031 · Conversatorio</small></div>
           </div>
-          <div class="rail-item" onclick="seleccionar(this)">
+          <div class="rail-item" draggable="true" data-titulo="El mar que nos habita" data-meta="EVE-2027-0042 · Presentación de libro" data-emqnh="1" onclick="seleccionar(this)">
             <span class="grip">⠿</span>
             <div class="r-body"><strong>El mar que nos habita</strong><small>EVE-2027-0042 · Presentación de libro</small></div>
           </div>
-          <div class="rail-item" onclick="seleccionar(this)">
+          <div class="rail-item" draggable="true" data-titulo="Mesa redonda: literatura y frontera" data-meta="EVE-2027-0009 · Mesa redonda" onclick="seleccionar(this)">
             <span class="grip">⠿</span>
             <div class="r-body"><strong>Mesa redonda: literatura y frontera</strong><small>EVE-2027-0009 · Mesa redonda</small></div>
           </div>
@@ -390,6 +405,7 @@
   </div>
 </div>
 
+<script src="../demo.js"></script>
 <script>
   function abrir(id){ document.getElementById(id).hidden = false; }
   function cerrar(id){ document.getElementById(id).hidden = true; }
@@ -399,6 +415,105 @@
   }
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
+  });
+
+  /* ===== Arrastrar y soltar: colocar/reubicar actividades en la rejilla ===== */
+  var dragged = null;
+
+  function actualizarRailCount(delta){
+    var el = document.getElementById('rail-count');
+    if (!el) return;
+    var m = (el.textContent.match(/\d+/) || [12])[0];
+    var n = Math.max(0, parseInt(m, 10) + delta);
+    el.textContent = '(' + n + ')';
+  }
+
+  function onDragStart(e){
+    dragged = e.currentTarget;
+    dragged.classList.add('dragging');
+    if (e.dataTransfer){
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', dragged.getAttribute('data-titulo') || ''); } catch(_){}
+    }
+  }
+  function onDragEnd(){
+    if (dragged) dragged.classList.remove('dragging');
+    dragged = null;
+    document.querySelectorAll('.slot.drop-ok').forEach(function(s){ s.classList.remove('drop-ok'); });
+  }
+
+  function crearActividad(titulo, meta, emqnh){
+    var act = document.createElement('div');
+    act.className = 'act recien-colocada';
+    act.setAttribute('draggable', 'true');
+    act.setAttribute('data-titulo', titulo);
+    act.setAttribute('data-meta', meta);
+    if (emqnh) act.setAttribute('data-emqnh', '1');
+    act.innerHTML = '<strong>' + titulo + '</strong><small>' + meta + ' · sin notificar</small>';
+    act.addEventListener('click', function(){ abrir('m-asignar'); });
+    wireArrastrable(act);
+    return act;
+  }
+
+  function slotDragOver(e){
+    var slot = e.currentTarget;
+    if (!slot.classList.contains('free') || !dragged) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    slot.classList.add('drop-ok');
+  }
+  function slotDragLeave(e){ e.currentTarget.classList.remove('drop-ok'); }
+
+  function slotDrop(e){
+    var slot = e.currentTarget;
+    if (!slot.classList.contains('free') || !dragged) return;
+    e.preventDefault();
+
+    var titulo = dragged.getAttribute('data-titulo');
+    var meta = dragged.getAttribute('data-meta') || '';
+    var emqnh = dragged.getAttribute('data-emqnh') === '1';
+    var desdeRiel = dragged.classList.contains('rail-item');
+    var slotOrigen = desdeRiel ? null : dragged.closest('.slot');
+
+    slot.classList.remove('drop-ok', 'free');
+    slot.appendChild(crearActividad(titulo, meta, emqnh));
+
+    if (desdeRiel){
+      dragged.parentNode.removeChild(dragged);
+      actualizarRailCount(-1);
+    } else if (slotOrigen){
+      dragged.parentNode.removeChild(dragged);
+      if (slotOrigen.querySelectorAll('.act').length === 0){
+        slotOrigen.classList.add('free');
+        slotOrigen.innerHTML = '';
+      }
+    }
+
+    if (emqnh){
+      window.FileyDemo.programar({ colocada: true });
+      window.FileyDemo.toast('“El mar que nos habita” quedó programada en el bloque.', 'ok');
+    } else {
+      window.FileyDemo.toast('“' + titulo + '” colocada en el bloque.', 'ok');
+    }
+
+    onDragEnd();
+  }
+
+  function wireArrastrable(el){
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragend', onDragEnd);
+  }
+
+  // Inicializa arrastre solo en el tablero principal (no en el modal Programador).
+  document.querySelectorAll('.prg-layout .rail-item').forEach(wireArrastrable);
+  document.querySelectorAll('.prg-layout .sched .act').forEach(function(a){
+    a.setAttribute('draggable', 'true');
+    wireArrastrable(a);
+  });
+  document.querySelectorAll('.prg-layout .sched .slot').forEach(function(s){
+    s.addEventListener('dragover', slotDragOver);
+    s.addEventListener('dragleave', slotDragLeave);
+    s.addEventListener('drop', slotDrop);
   });
 
   /* ===== Programador: repetir la MISMA actividad en varias fechas (CU-PRG-002 A1) ===== */
