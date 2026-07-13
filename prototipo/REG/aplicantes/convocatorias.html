@@ -105,8 +105,7 @@
         <div class="conv-dates">📅 Cierra el 31 de agosto de 2027</div>
       </div>
       <div class="conv-foot" style="display:flex;flex-direction:column;gap:8px">
-        <a class="btn btn-primary btn-block" href="../../VIS/aplicantes/convocatoria-vis.html">Ver convocatoria</a>
-        <a class="btn btn-ghost btn-block" href="../../VIS/aplicantes/mi-visita.html">Revisar mi registro →</a>
+        <a class="btn btn-primary btn-block" href="../../VIS/aplicantes/convocatoria-vis.html" data-vis-conv-toggle>Ver convocatoria</a>
       </div>
     </article>
 
@@ -124,5 +123,21 @@
   <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
 </div></footer>
 
+<script src="../../common/db.js"></script>
+<script>
+  // Tarjeta de Visitas Escolares: antes del primer registro guardado, "Ver convocatoria";
+  // en cuanto existe el registro del aplicante, cambia a "Revisar mi registro".
+  if (window.FileyDB) {
+    FileyDB.ready().then(function () {
+      var btn = document.querySelector('[data-vis-conv-toggle]');
+      if (!btn) return;
+      if (FileyDB.getEscuela(FileyDB.APLICANTE_ID)) {
+        btn.textContent = 'Revisar mi registro →';
+        btn.href = '../../VIS/aplicantes/mi-visita.html';
+        btn.classList.replace('btn-primary', 'btn-ghost');
+      }
+    });
+  }
+</script>
 </body>
 </html>

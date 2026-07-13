@@ -7,7 +7,7 @@
 <title>FILEY 2027 — Admin · Registrar escuela</title>
 <link rel="stylesheet" href="../styles.css">
 </head>
-<body>
+<body data-vis-page="form" data-vis-form="alta">
 
 <header class="topbar is-admin">
   <div class="topbar-inner">
@@ -51,26 +51,26 @@
       </div>
       <div class="section-body">
         <div class="grid-2">
-          <div class="field"><label>Nombre de la institución</label><input type="text" placeholder="Nombre oficial de la escuela"></div>
-          <div class="field"><label>CCT</label><input type="text" placeholder="31DPR0000X"></div>
+          <div class="field"><label>Nombre de la institución</label><input type="text" placeholder="Nombre oficial de la escuela" data-f="nombre"></div>
+          <div class="field"><label>CCT</label><input type="text" placeholder="31DPR0000X" data-f="cct"></div>
         </div>
         <div class="grid-3">
-          <div class="field"><label>Sector</label><div class="select-wrap"><select><option>Pública</option><option>Privada</option></select></div></div>
-          <div class="field"><label>Turno</label><div class="select-wrap"><select><option>Matutino</option><option>Vespertino</option></select></div></div>
-          <div class="field"><label>Nivel educativo</label><div class="select-wrap"><select><option>Preescolar</option><option>Primaria</option><option>Secundaria</option><option>Preparatoria</option><option>Universidad</option><option>Multigrado</option></select></div></div>
+          <div class="field"><label>Sector</label><div class="select-wrap"><select data-f="sector"><option>Pública</option><option>Privada</option></select></div></div>
+          <div class="field"><label>Turno</label><div class="select-wrap"><select data-f="turno"><option>Matutino</option><option>Vespertino</option></select></div></div>
+          <div class="field"><label>Nivel educativo</label><div class="select-wrap"><select data-f="nivel_educativo"><option>Preescolar</option><option>Primaria</option><option>Secundaria</option><option>Preparatoria</option><option>Universidad</option><option>Multigrado</option></select></div></div>
         </div>
         <div class="grid-3">
-          <div class="field"><label>Estado</label><div class="select-wrap"><select><option>Yucatán</option><option>Campeche</option><option>Quintana Roo</option></select></div></div>
-          <div class="field"><label>Municipio</label><div class="select-wrap"><select><option>Mérida</option><option>Tizimín</option><option>Cenotillo</option><option>Espita</option><option>Buctzotz</option><option>Cansahcab</option><option>Otro…</option></select></div></div>
-          <div class="field"><label>Director(a)</label><input type="text" placeholder="Nombre del director(a)"></div>
+          <div class="field"><label>Estado</label><div class="select-wrap"><select data-f="estado"><option>Yucatán</option><option>Campeche</option><option>Quintana Roo</option></select></div></div>
+          <div class="field"><label>Municipio</label><div class="select-wrap"><select data-f="municipio"><option>Mérida</option><option>Tizimín</option><option>Cenotillo</option><option>Espita</option><option>Buctzotz</option><option>Cansahcab</option><option>Otro…</option></select></div></div>
+          <div class="field"><label>Director(a)</label><input type="text" placeholder="Nombre del director(a)" data-f="nombre_director"></div>
         </div>
         <div class="field">
           <label>Dirección</label>
-          <input type="text" placeholder="Calle, número, colonia">
+          <input type="text" placeholder="Calle, número, colonia" data-f="direccion">
         </div>
         <div class="grid-2">
-          <div class="field"><label>Teléfono de la institución</label><input type="tel" placeholder="999 000 0000"></div>
-          <div class="field"><label>Correo de la institución</label><input type="email" placeholder="contacto@institucion.mx"></div>
+          <div class="field"><label>Teléfono de la institución</label><input type="tel" placeholder="999 000 0000" data-f="telefono"></div>
+          <div class="field"><label>Correo de la institución</label><input type="email" placeholder="contacto@institucion.mx" data-f="correo"></div>
         </div>
       </div>
     </div>
@@ -82,12 +82,12 @@
       </div>
       <div class="section-body">
         <div class="grid-2">
-          <div class="field"><label>Nombre completo</label><input type="text" placeholder="Nombre del responsable"></div>
-          <div class="field"><label>Cargo</label><div class="select-wrap"><select><option>Director(a)</option><option>Docente</option><option>Prefecto(a)</option></select></div></div>
+          <div class="field"><label>Nombre completo</label><input type="text" placeholder="Nombre del responsable" data-f="r_nombre"></div>
+          <div class="field"><label>Cargo</label><div class="select-wrap"><select data-f="r_cargo"><option>Director(a)</option><option>Docente</option><option>Prefecto(a)</option></select></div></div>
         </div>
         <div class="grid-2">
-          <div class="field"><label>Teléfono</label><input type="tel" placeholder="999 000 0000"></div>
-          <div class="field"><label>Correo electrónico</label><input type="email" placeholder="responsable@institucion.mx"></div>
+          <div class="field"><label>Teléfono</label><input type="tel" placeholder="999 000 0000" data-f="r_telefono"></div>
+          <div class="field"><label>Correo electrónico</label><input type="email" placeholder="responsable@institucion.mx" data-f="r_correo"></div>
         </div>
       </div>
     </div>
@@ -99,14 +99,7 @@
       </div>
       <div class="section-body">
         <div id="grupos-list">
-          <div class="grupo-block" data-grupo>
-            <div class="grupo-block__head"><strong data-grupo-title>Grupo 1</strong><button type="button" class="grupo-remove" data-grupo-remove>Quitar</button></div>
-            <div class="grid-3">
-              <div class="field"><label>Grado</label><input type="text" placeholder="Ej. Sexto"></div>
-              <div class="field"><label>Alumnos</label><input type="number" min="1" max="35" class="grupo-cant" value="30"></div>
-              <div class="field"><label>Representante</label><input type="text" placeholder="Nombre del responsable del grupo"></div>
-            </div>
-          </div>
+          <!-- app.js inicia con un grupo vacío; el grado es un select según el nivel. -->
         </div>
         <button type="button" class="btn btn-ghost btn-sm" id="add-grupo">+ Agregar grupo</button>
         <div class="total-box" id="total-box" style="margin-top:16px">
@@ -123,7 +116,7 @@
     <div class="card card-pad">
       <div class="form-actions" style="border-top:none; padding-top:0">
         <a class="btn btn-ghost spacer" href="admin-propuestas.html">Cancelar</a>
-        <a class="btn btn-gold btn-lg" href="admin-reservar.html">Registrar y reservar →</a>
+        <a class="btn btn-gold btn-lg" href="admin-reservar.html" data-vis-save="reservar">Registrar y reservar →</a>
       </div>
     </div>
 
@@ -135,6 +128,7 @@
   <div>Panel de administración · Visitas escolares</div>
 </div></footer>
 
+<script src="../../common/db.js"></script>
 <script src="../app.js"></script>
 </body>
 </html>

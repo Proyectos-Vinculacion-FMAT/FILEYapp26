@@ -1,0 +1,12 @@
+{
+  "_nota": "Demanda ilustrativa por día para el dashboard de Seguimiento (gráfica de barras y 'día con más demanda'). El catálogo real solo modela el 14-mar-2027; estos totales agregados son de demostración.",
+  "dias": [
+    { "fecha": "2027-03-13", "reservaciones": 120 },
+    { "fecha": "2027-03-14", "reservaciones": 205 },
+    { "fecha": "2027-03-15", "reservaciones": 175 },
+    { "fecha": "2027-03-17", "reservaciones": 260 },
+    { "fecha": "2027-03-20", "reservaciones": 140 },
+    { "fecha": "2027-03-21", "reservaciones": 190 },
+    { "fecha": "2027-03-22", "reservaciones": 95 }
+  ]
+}

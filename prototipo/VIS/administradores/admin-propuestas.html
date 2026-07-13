@@ -7,7 +7,7 @@
 <title>FILEY 2027 — Admin · Visitas escolares</title>
 <link rel="stylesheet" href="../styles.css">
 </head>
-<body>
+<body data-vis-page="admin-propuestas">
 
 <header class="topbar is-admin">
   <div class="topbar-inner">
@@ -40,12 +40,13 @@
     <p>Consulta todas las visitas, revisa las fichas, edita reservaciones directamente en el catálogo o cancélalas por grupo o en general.</p>
   </div>
 
-  <!-- Numeralia -->
-  <div class="vis-stats">
-    <div class="vis-stat"><strong>40</strong><span>Escuelas registradas</span></div>
-    <div class="vis-stat"><strong>2,915</strong><span>Cupos reservados</span></div>
-    <div class="vis-stat"><strong>1,485</strong><span>Cupos libres totales</span></div>
-    <div class="vis-stat"><strong>17 mar</strong><span>Día con más demanda</span></div>
+  <!-- Numeralia (app.js la rellena desde el pseudo-backend) -->
+  <div class="vis-stat-card" data-vis-stat-card></div>
+
+  <!-- Solicitudes de cambio pendientes (app.js la rellena; oculta si no hay ninguna) -->
+  <div class="vis-dash-card" data-vis-solicitudes style="display:none; margin-bottom:22px">
+    <p class="vis-dash-card__title">Solicitudes de cambio pendientes</p>
+    <div data-vis-solicitudes-list></div>
   </div>
 
   <!-- Filtros -->
@@ -280,6 +281,7 @@
   <div>Panel de administración · Visitas escolares</div>
 </div></footer>
 
+<script src="../../common/db.js"></script>
 <script src="../app.js"></script>
 </body>
 </html>

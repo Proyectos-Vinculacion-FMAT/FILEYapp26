@@ -7,7 +7,7 @@
 <title>FILEY 2027 — Admin · Reservar talleres</title>
 <link rel="stylesheet" href="../styles.css">
 </head>
-<body>
+<body data-vis-page="reservar" data-vis-admin>
 
 <header class="topbar is-admin">
   <div class="topbar-inner">
@@ -36,7 +36,7 @@
 <main class="page page-wide">
   <div class="breadcrumb">
     <a href="admin-propuestas.html">Visitas escolares</a> <span>›</span>
-    Benito Juárez García · VIS-2027-001 <span>›</span> Reservar talleres
+    <span data-kv="institucion">Benito Juárez García</span> · <span data-kv="folio">VIS-2027-001</span> <span>›</span> Reservar talleres
   </div>
 
   <div class="page-head">
@@ -46,7 +46,7 @@
 
   <div class="note note-green">
     <div class="ico">🧰</div>
-    <div>Modo administrador — puedes asignar talleres directamente en nombre de la escuela. El catálogo muestra actividades de nivel <strong>Primaria</strong>.</div>
+    <div>Modo administrador — puedes asignar talleres directamente en nombre de la escuela. El catálogo muestra actividades de nivel <strong data-kv="nivel">Primaria</strong>.</div>
   </div>
 
   <!-- Cabecera de selección: institución + grupos -->
@@ -83,9 +83,9 @@
         </select></div>
       </div>
       <div class="vis-dia-selector">
-        <button type="button" class="vis-dia-btn" aria-label="Día anterior" disabled><svg viewBox="0 0 26 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0.999998 16.2926C-0.333335 15.5228 -0.333333 13.5983 1 12.8285L22.75 0.271127C24.0833 -0.498673 25.75 0.463579 25.75 2.00318V27.1179C25.75 28.6575 24.0833 29.6198 22.75 28.85L0.999998 16.2926Z"/></svg></button>
-        <span class="vis-dia-selector__text">14 de marzo de 2028</span>
-        <button type="button" class="vis-dia-btn" aria-label="Día siguiente"><svg viewBox="0 0 26 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M24.75 12.8285C26.0833 13.5983 26.0833 15.5228 24.75 16.2926L3 28.85C1.66666 29.6198 0 28.6575 0 27.1179V2.00318C0 0.463576 1.66667 -0.498672 3 0.271129L24.75 12.8285Z"/></svg></button>
+        <button type="button" class="vis-dia-btn" aria-label="Día anterior" data-vis-icon="prev-day" disabled></button>
+        <span class="vis-dia-selector__text">14 de marzo de 2027</span>
+        <button type="button" class="vis-dia-btn" aria-label="Día siguiente" data-vis-icon="next-day"></button>
       </div>
     </div>
     <div class="vis-horario-wrap" id="horario-wrap"><!-- app.js inyecta las áreas matutino + vespertino --></div>
@@ -97,7 +97,7 @@
       <strong><span id="reserva-count">0</span> talleres en el itinerario</strong>
       <span id="reserva-detalle">Asigna grupos a las actividades para reservarlas.</span>
     </div>
-    <a class="btn btn-gold btn-lg" href="itinerario-admin.html">Ver / confirmar itinerario →</a>
+    <a class="btn btn-gold btn-lg" href="itinerario-admin.html" data-vis-itin-link>Ver / confirmar itinerario →</a>
   </div>
 
   <div class="note note-info" style="margin-top:20px">
@@ -111,6 +111,7 @@
   <div>Panel de administración · Visitas escolares</div>
 </div></footer>
 
+<script src="../../common/db.js"></script>
 <script src="../app.js"></script>
 </body>
 </html>
