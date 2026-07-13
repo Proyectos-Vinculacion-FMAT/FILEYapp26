@@ -66,20 +66,20 @@
       <!-- Resumen -->
       <div class="stat-grid">
         <div class="stat-card accent-ok"><span class="k">Aceptadas</span><span class="v">19</span><span class="foot">Total a programar</span></div>
-        <div class="stat-card accent-gold"><span class="k">Por programar</span><span class="v">12</span><span class="foot">Sin sala/horario</span></div>
-        <div class="stat-card accent-blue"><span class="k">Programadas</span><span class="v">7</span><span class="foot">Con sala y horario</span></div>
-        <div class="stat-card accent-warn"><span class="k">Horario sin notificar</span><span class="v">3</span><span class="foot">Falta 2ª notificación</span></div>
+        <div class="stat-card accent-gold"><span class="k">Por programar</span><span class="v" id="v-porprog">12</span><span class="foot">Sin sala/horario</span></div>
+        <div class="stat-card accent-blue"><span class="k">Programadas</span><span class="v" id="v-prog">7</span><span class="foot">Con sala y horario</span></div>
+        <div class="stat-card accent-warn"><span class="k">Horario sin notificar</span><span class="v" id="v-sinnotif">3</span><span class="foot">Falta 2ª notificación</span></div>
       </div>
 
       <!-- Filtros -->
       <div class="toolbar-row">
         <div class="chips">
           <span class="chip is-active">Todas <span class="count">19</span></span>
-          <span class="chip">Por programar <span class="count">12</span></span>
-          <span class="chip">Programadas <span class="count">7</span></span>
+          <span class="chip">Por programar <span class="count" id="chip-porprog">12</span></span>
+          <span class="chip">Programadas <span class="count" id="chip-prog">7</span></span>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-primary" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
+          <button class="btn btn-primary" id="btn-notif" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
         </div>
       </div>
 
@@ -98,27 +98,27 @@
               <td><span class="badge badge-changes">Por programar</span></td>
               <td><a class="btn btn-gold btn-row" href="admin-evt-programar.html">Programar</a></td>
             </tr>
-            <tr>
+            <tr id="row-emqnh">
               <td class="folio">EVE-2027-0042</td>
               <td>El mar que nos habita</td>
               <td>Presentación de libro</td>
-              <td><span style="color:var(--gris-500)">— sin asignar —</span></td>
-              <td><span class="badge badge-changes">Por programar</span></td>
-              <td><a class="btn btn-gold btn-row" href="admin-evt-programar.html">Programar</a></td>
+              <td data-cell="horario"><span style="color:var(--gris-500)">— sin asignar —</span></td>
+              <td data-cell="estado"><span class="badge badge-changes">Por programar</span></td>
+              <td data-cell="accion"><a class="btn btn-gold btn-row" href="admin-evt-programar.html">Programar</a></td>
             </tr>
             <tr>
               <td class="folio">EVE-2027-0022</td>
-              <td>Taller de encuadernación artesanal</td>
-              <td>Taller</td>
-              <td>Salón Uxmal · 14 nov · 16:00–17:15 <span class="badge badge-changes" style="font-size:10px">Sin notificar</span></td>
+              <td>El oficio de la encuadernación</td>
+              <td>Conversatorio</td>
+              <td>Salón Uxmal · 9 mar · 16:00–17:15 <span class="badge badge-changes" style="font-size:10px">Sin notificar</span></td>
               <td><span class="badge badge-accepted">Programada</span></td>
               <td><a class="btn btn-ghost btn-row" href="admin-evt-programar.html">Editar</a></td>
             </tr>
             <tr>
-              <td class="folio">EVE-2027-0025</td>
-              <td>Lengua maya y tecnología</td>
+              <td class="folio">EVE-2027-0003</td>
+              <td>Traducción y lenguas del Mayab</td>
               <td>Conferencia</td>
-              <td>Auditorio M. Cepeda · 14 nov · 13:00–14:15 <span class="badge badge-accepted" style="font-size:10px">Notificada</span></td>
+              <td>Auditorio M. Cepeda · 9 mar · 13:00–14:15 <span class="badge badge-accepted" style="font-size:10px">Notificada</span></td>
               <td><span class="badge badge-accepted">Programada</span></td>
               <td><a class="btn btn-ghost btn-row" href="admin-evt-programar.html">Editar</a></td>
             </tr>
@@ -154,10 +154,36 @@
   </div>
 </div>
 
+<script src="../demo.js"></script>
 <script>
   document.querySelectorAll('.modal-back').forEach(function(b){
     b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
   });
+
+  // ---- Estado de la demo: si "El mar que nos habita" ya se programó, la lista lo refleja ----
+  (function(){
+    var s = window.FileyDemo.get();
+    if(!s.emqnhProgramada) return;
+    var h = s.emqnhHorario || {};
+    var fecha = (h.sala === 'Varias salas') ? 'mar 2028' : '9 mar';
+    var row = document.getElementById('row-emqnh');
+    if(row){
+      row.querySelector('[data-cell="horario"]').innerHTML =
+        (h.sala || 'Sala por definir') + ' · ' + fecha + ' · ' + (h.hora || '') +
+        ' <span class="badge badge-changes" style="font-size:10px">Sin notificar</span>';
+      row.querySelector('[data-cell="estado"]').innerHTML = '<span class="badge badge-accepted">Programada</span>';
+      row.querySelector('[data-cell="accion"]').innerHTML = '<a class="btn btn-ghost btn-row" href="admin-evt-programar.html">Editar</a>';
+    }
+    // Contadores: una menos por programar, una más programada y una más sin notificar.
+    document.getElementById('v-porprog').textContent = '11';
+    document.getElementById('v-prog').textContent = '8';
+    document.getElementById('v-sinnotif').textContent = '4';
+    document.getElementById('chip-porprog').textContent = '11';
+    document.getElementById('chip-prog').textContent = '8';
+    document.getElementById('btn-notif').innerHTML = '🔔 Notificar horarios (4)';
+    var strongN = document.querySelector('#m-notif strong');
+    if(strongN) strongN.textContent = '4 participantes';
+  })();
 </script>
 
 </body>

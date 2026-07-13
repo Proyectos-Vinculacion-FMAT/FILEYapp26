@@ -134,9 +134,9 @@
             </tr>
             <tr data-estado="aceptada">
               <td class="folio">EVE-2027-0022</td>
-              <td>Taller de encuadernación artesanal</td>
+              <td>El oficio de la encuadernación</td>
               <td>Colectivo Papel &amp; Tinta</td>
-              <td>Taller</td>
+              <td>Conversatorio</td>
               <td>Literaria · Externo</td>
               <td><span class="badge badge-accepted">Aceptada</span></td>
               <td><span class="link-arrow">✓ Programada</span></td>
@@ -185,8 +185,11 @@
     if (s.emqnhEstado === 'aceptada') {
       row.setAttribute('data-estado', 'aceptada');
       row.querySelector('[data-cell="estado"]').innerHTML = '<span class="badge badge-accepted">Aceptada</span>';
-      row.querySelector('[data-cell="accion"]').innerHTML =
-        '<a class="btn btn-gold btn-row" href="admin-evt-horario.html">Programar</a>';
+      // Aunque esté aceptada (o ya programada), el detalle sigue disponible para consulta/edición.
+      var verDetalle = '<a class="link-arrow" href="admin-evt-detalle-propuesta.html" style="white-space:nowrap">Ver detalle →</a>';
+      row.querySelector('[data-cell="accion"]').innerHTML = s.emqnhProgramada
+        ? '<span class="link-arrow" style="white-space:nowrap">✓ Programada</span> &nbsp;' + verDetalle
+        : '<a class="btn btn-gold btn-row" href="admin-evt-horario.html">Programar</a> &nbsp;' + verDetalle;
     }
   })();
 
