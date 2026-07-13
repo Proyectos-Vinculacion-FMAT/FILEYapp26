@@ -199,6 +199,29 @@
 .vis-grupo-card { border: 1px solid var(--oro-200); border-radius: var(--radio-sm); overflow: hidden; flex: 1 1 200px; min-width: 190px; max-width: 320px; }
 .vis-grupo-card__header { background: var(--color-dorado-encabezado); padding: 6px 12px; font-size: 15px; font-weight: 700; color: #fff; }
 .vis-grupo-card__body { background: #fff; padding: 10px 12px; font-size: 13px; color: var(--color-azul-texto); display: flex; flex-direction: column; gap: 4px; }
+.vis-grupo-card__vacio { margin: 2px 0; font-size: 12.5px; color: var(--gris-500); font-style: italic; }
+.vis-grupo-card__talleres { list-style: none; margin: 2px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.vis-grupo-card__talleres li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; background: var(--gris-050); border-radius: 6px; padding: 4px 8px; }
+.vis-grupo-card__taller-info { flex: 1 1 auto; min-width: 0; }
+
+/* --- Botón de icono "quitar/cerrar" reutilizable ---
+   SVG inline (ICON_CLOSE en app.js) con fill="currentColor": el color lo da `color`
+   (azul → rojo en hover) y el tamaño el SVG interior. viewBox de close.svg: 0 0 22 22.
+   --vis-icon-btn-size es el eje controlador; el otro sale de la razón 22/22 del viewBox. */
+.vis-icon-btn {
+  --vis-icon-btn-size: 14px;
+  flex: 0 0 auto; border: none; padding: 0; background: none;
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--color-azul-texto); cursor: pointer;
+  transition: color .15s ease;
+}
+.vis-icon-btn svg {
+  display: block;
+  height: var(--vis-icon-btn-size);
+  width: calc(var(--vis-icon-btn-size) * 22 / 22);
+}
+.vis-icon-btn:hover { color: var(--err-600); }
 
 /* --- Cabecera de selección de actividades --- */
 .vis-sel-header {
@@ -281,7 +304,8 @@
   box-shadow: var(--sombra-lg); border-radius: var(--radio);
   padding: 12px 16px; display: none; flex-direction: column; gap: 8px; min-width: 190px;
 }
-.vis-grupo-selector__title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gris-500); margin: 0 0 2px; }
+.vis-grupo-selector__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.vis-grupo-selector__title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gris-500); margin: 0; }
 .vis-grupo-selector__item { display: flex; align-items: center; gap: 10px; padding-bottom: 7px; border-bottom: 1px solid var(--gris-100); font-size: 14px; font-weight: 600; color: var(--tinta); cursor: pointer; }
 .vis-grupo-selector__item:last-child { border-bottom: none; padding-bottom: 0; }
 .vis-radio { width: 18px; height: 18px; border-radius: 50%; background: var(--vis-cupos-vacio); position: relative; flex-shrink: 0; }
@@ -355,8 +379,107 @@
 .vis-baja-options label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--color-azul-texto); cursor: pointer; }
 .vis-baja-options input[type="radio"] { accent-color: var(--err-600); cursor: pointer; }
 
+/* ===================== Sidebar de administración (overlay) ===================== */
+/* Se inyecta desde app.js en toda página admin. Overlay: no desplaza el layout,
+   se encima desde la izquierda. Abre al hacer hover en ☰, cierra al salir o al elegir. */
+.vis-adm-nav { position: fixed; left: 0; top: 0; height: 100vh; z-index: 1200; pointer-events: none; }
+.vis-adm-nav__trigger {
+  pointer-events: auto; position: absolute; left: 14px; top: 84px;
+  width: 44px; height: 44px; border: none; border-radius: var(--radio-sm);
+  background: var(--color-azul-institucional); color: #fff; font-size: 20px; line-height: 1;
+  cursor: pointer; box-shadow: var(--sombra-md); display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, opacity .15s ease;
+}
+.vis-adm-nav__trigger:hover { background: var(--color-azul-institucional-enfoque); }
+.vis-adm-nav.is-open .vis-adm-nav__trigger { opacity: 0; pointer-events: none; }
+.vis-adm-nav__panel {
+  pointer-events: auto; position: absolute; left: 0; top: 0; height: 100vh; width: 248px;
+  background: var(--color-azul-institucional-enfoque); color: #fff;
+  transform: translateX(-100%); transition: transform .22s ease; box-shadow: var(--sombra-lg);
+  display: flex; flex-direction: column; padding: 18px 0;
+}
+.vis-adm-nav.is-open .vis-adm-nav__panel { transform: translateX(0); }
+.vis-adm-nav__brand { display: flex; align-items: center; gap: 10px; padding: 6px 22px 18px; border-bottom: 1px solid rgba(255,255,255,.15); }
+.vis-adm-nav__brand strong { font-size: 15px; font-weight: 800; }
+.vis-adm-nav__brand small { display: block; font-size: 11.5px; color: rgba(255,255,255,.7); }
+.vis-adm-nav__list { display: flex; flex-direction: column; padding: 12px 0; gap: 2px; }
+.vis-adm-nav__item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 22px;
+  color: rgba(255,255,255,.85); font-size: 14.5px; font-weight: 600; text-decoration: none;
+  border-left: 3px solid transparent; transition: background .12s ease, color .12s ease;
+}
+.vis-adm-nav__item:hover { background: rgba(255,255,255,.08); color: #fff; text-decoration: none; }
+.vis-adm-nav__item.is-active { background: rgba(255,255,255,.12); color: #fff; border-left-color: var(--color-dorado-encabezado); }
+.vis-adm-nav__item .ico { font-size: 17px; width: 20px; text-align: center; }
+
+/* ===================== Card unificado de stats (Propuestas) ===================== */
+.vis-stat-card {
+  background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); box-shadow: var(--sombra-sm);
+  padding: 20px 24px; margin-bottom: 22px; display: flex; flex-wrap: wrap; gap: 28px; align-items: center;
+}
+.vis-stat-card__num { display: flex; flex-direction: column; }
+.vis-stat-card__num strong { font-size: 34px; color: var(--color-azul-institucional-enfoque); line-height: 1; }
+.vis-stat-card__num span { font-size: 12.5px; color: var(--gris-500); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+.vis-stat-card__prog { flex: 1 1 260px; min-width: 220px; }
+.vis-stat-card__prog-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.vis-stat-card__prog-head span { font-size: 13px; color: var(--gris-700); font-weight: 600; }
+.vis-stat-card__prog-head b { font-size: 13px; color: var(--color-azul-institucional-enfoque); }
+.vis-stat-card__bar { height: 12px; border-radius: 999px; background: var(--vis-cupos-vacio); overflow: hidden; }
+.vis-stat-card__bar-fill { height: 100%; border-radius: 999px; background: var(--vis-cupos-grad); transition: width .3s ease; }
+
+/* ===================== Seguimiento (dashboard) ===================== */
+.vis-dash-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; align-items: start; margin-bottom: 22px; }
+.vis-dash-card { background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); box-shadow: var(--sombra-sm); padding: 20px 24px; }
+.vis-dash-card__title { font-size: 15px; font-weight: 700; color: var(--color-azul-institucional-enfoque); text-transform: uppercase; letter-spacing: .3px; margin: 0 0 4px; }
+.vis-dash-card__sub { font-size: 12.5px; color: var(--gris-500); margin: 0 0 16px; }
+.vis-dash-kpis { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.vis-kpi { background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); box-shadow: var(--sombra-sm); padding: 18px 22px; flex: 1 1 200px; }
+.vis-kpi strong { display: block; font-size: 26px; color: var(--color-azul-institucional-enfoque); line-height: 1.1; }
+.vis-kpi span { font-size: 12.5px; color: var(--gris-500); text-transform: uppercase; letter-spacing: .5px; }
+
+/* Pestañas (Calendario | Listado) */
+.vis-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--gris-200); margin-bottom: 22px; }
+.vis-tabs__tab {
+  appearance: none; border: none; background: none; cursor: pointer;
+  font: inherit; font-weight: 600; font-size: 14px; color: var(--gris-500);
+  padding: 10px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.vis-tabs__tab:hover { color: var(--color-azul-institucional-enfoque); }
+.vis-tabs__tab.is-active { color: var(--color-azul-institucional-enfoque); border-bottom-color: var(--color-dorado-encabezado); }
+
+/* Gráfica de barras (SVG hand-rolled): marca fina, extremo redondeado en la base */
+.vis-barchart { width: 100%; }
+.vis-barchart .bar { transition: opacity .12s ease; cursor: default; }
+.vis-barchart .bar:hover { opacity: .78; }
+.vis-barchart .bar-label { font-size: 10.5px; fill: var(--gris-500); }
+.vis-barchart .bar-value { font-size: 11px; font-weight: 700; fill: var(--color-azul-institucional-enfoque); }
+.vis-barchart .axis { stroke: var(--gris-200); stroke-width: 1; }
+
+/* Cupos por nivel — medidores horizontales (color = entidad nivel, etiqueta = identidad) */
+.vis-nivel-meter { margin-bottom: 14px; }
+.vis-nivel-meter:last-child { margin-bottom: 0; }
+.vis-nivel-meter__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-size: 13px; }
+.vis-nivel-meter__head span { color: var(--gris-700); font-weight: 600; }
+.vis-nivel-meter__head b { color: var(--color-azul-institucional-enfoque); }
+.vis-nivel-meter__bar { height: 12px; border-radius: 999px; background: var(--vis-cupos-vacio); overflow: hidden; }
+.vis-nivel-meter__fill { height: 100%; border-radius: 999px; }
+
+/* Grid salas×horas de escuelas que asisten (reusa layout del catálogo, celdas = escuelas) */
+.vis-asist-celda { flex-direction: column; gap: 6px; align-items: flex-start; justify-content: center; cursor: default; }
+.vis-asist-celda:hover { box-shadow: none; }
+.vis-asist-celda__vacio { color: var(--gris-500); font-size: 13px; font-style: italic; }
+.vis-asist-escuela { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--color-azul-institucional-enfoque); }
+.vis-asist-escuela + .vis-asist-escuela { margin-top: 2px; }
+
+/* ===================== Configuración de convocatoria ===================== */
+.vis-cfg-estado { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.vis-cfg-estado::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.vis-cfg-estado.is-abierta { background: var(--vis-abierta-bg); color: var(--vis-abierta-dot); }
+.vis-cfg-estado.is-cerrada { background: var(--vis-cerrada-bg); color: var(--vis-cerrada-dot); }
+
 /* ===================== Responsive (VIS additions) ===================== */
 @media (max-width: 920px) {
   .vis-bento-layout { grid-template-columns: 1fr; }
   .vis-stats { grid-template-columns: repeat(2, 1fr); }
+  .vis-dash-grid { grid-template-columns: 1fr; }
 }

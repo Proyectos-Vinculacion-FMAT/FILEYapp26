@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../../common/assets/filey-org-ico.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Admin · Configuración</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body data-vis-page="configuracion">
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <a class="home" href="../../REG/administradores/admin-convocatorias.html">
+      <img class="logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <div class="brand-text"><strong>Edición 2027</strong><small>Administración · VIS</small></div>
+    </a>
+    <nav class="topnav">
+      <a href="#">Configuración</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="../../REG/administradores/admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="../../REG/administradores/admin-convocatorias.html">A2. Módulos</a> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A3. Propuestas</a> <span class="sep">›</span>
+  <a href="admin-seguimiento.html">Seguimiento</a> <span class="sep">›</span>
+  <b>Configuración</b>
+</div></div>
+
+<main class="page page-narrow">
+  <div class="page-head">
+    <h1>Configuración de la convocatoria</h1>
+    <p>Define el periodo en que las escuelas pueden enviar su propuesta de visita y controla si la convocatoria está abierta o cerrada.</p>
+  </div>
+
+  <!-- Estado de la convocatoria -->
+  <div class="card section-card">
+    <div class="section-head"><span class="num">1</span>
+      <div><h3>Estado de la convocatoria</h3><p>Abrir o cerrar la recepción de propuestas de escuelas</p></div>
+    </div>
+    <div class="section-body">
+      <div class="vis-bento__kv" style="border:none; padding-top:0">
+        <span class="vis-bento__kv-label">Estado actual</span>
+        <span class="vis-cfg-estado" data-cfg-estado>—</span>
+      </div>
+      <div class="form-actions" style="border-top:none; padding-top:6px; gap:10px">
+        <button type="button" class="btn btn-green" data-cfg-abrir>Abrir convocatoria</button>
+        <button type="button" class="btn btn-danger" data-cfg-cerrar>Cerrar convocatoria</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fechas -->
+  <div class="card section-card">
+    <div class="section-head"><span class="num">2</span>
+      <div><h3>Periodo para recibir propuestas</h3><p>Fechas de apertura y cierre de la convocatoria de visitas</p></div>
+    </div>
+    <div class="section-body">
+      <div class="grid-2">
+        <div class="field">
+          <label>Inicio de convocatoria</label>
+          <input type="date" data-cfg="inicio">
+        </div>
+        <div class="field">
+          <label>Fin de convocatoria</label>
+          <input type="date" data-cfg="fin">
+        </div>
+      </div>
+      <div class="note note-green" data-cfg-guardado style="display:none; margin-top:6px">
+        <div class="ico">✓</div>
+        <div>Cambios guardados.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="card card-pad">
+    <div class="form-actions" style="border-top:none; padding-top:0">
+      <a class="btn btn-ghost spacer" href="admin-propuestas.html">Volver a propuestas</a>
+      <button type="button" class="btn btn-primary btn-lg" data-cfg-guardar>Guardar cambios</button>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Panel de administración · Visitas escolares</div>
+</div></footer>
+
+<script src="../../common/db.js"></script>
+<script src="../app.js"></script>
+</body>
+</html>
