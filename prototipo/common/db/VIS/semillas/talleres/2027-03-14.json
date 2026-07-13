@@ -1,0 +1,136 @@
+{
+  "fecha": "2027-03-14",
+  "fecha_label": "14 de marzo de 2027",
+  "salas": [
+    "Ek Balam - Sala 1",
+    "Ek Balam - Sala 2",
+    "Ek Balam - Sala 3",
+    "Ek Balam - Sala 4",
+    "Ek Balam - Sala 5",
+    "Ek Balam - Sala 6",
+    "Sala de cine 1",
+    "Sala de cine 2",
+    "Zona de exhibición",
+    "Ludoteca"
+  ],
+  "horarios": {
+    "matutino": ["09:00 – 09:50", "10:00 – 10:50", "11:00 – 11:50", "12:00 – 12:50"],
+    "vespertino": ["15:00 – 15:50", "16:00 – 16:50", "17:00 – 17:50", "18:00 – 18:50"]
+  },
+  "grid": {
+    "matutino": [
+      [
+        { "tipo": "taller", "id": "m-0-0", "titulo": "Cuentacuentos maya", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "m-0-1", "titulo": "Taller de ilustración", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "m-0-2", "titulo": "Taller de Literatura Juvenil", "nivel": "un", "base": 35 },
+        { "tipo": "taller", "id": "m-0-3", "titulo": "Origami literario", "nivel": "pb", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "m-1-0", "titulo": "Ciencia divertida", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "m-1-1", "titulo": "Teatro de sombras", "nivel": "pb", "base": 35 },
+        { "tipo": "sin" },
+        { "tipo": "taller", "id": "m-1-3", "titulo": "Debate y oratoria", "nivel": "pr", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "m-2-0", "titulo": "Taller de Literatura Infantil", "nivel": "pb", "base": 35 },
+        { "tipo": "taller", "id": "m-2-1", "titulo": "Origami literario", "nivel": "pb", "base": 35 },
+        { "tipo": "taller", "id": "m-2-2", "titulo": "Cuentacuentos maya", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "m-2-3", "titulo": "Dibujo con luz", "nivel": "pa", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "m-3-0", "titulo": "Taller de Literatura Infantil", "nivel": "pa", "base": 35 },
+        { "tipo": "sin" },
+        { "tipo": "taller", "id": "m-3-2", "titulo": "Fotografía narrativa", "nivel": "pr", "base": 35 },
+        { "tipo": "taller", "id": "m-3-3", "titulo": "Escritura creativa", "nivel": "un", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "m-4-0", "titulo": "Taller de Literatura Juvenil", "nivel": "se", "base": 35 },
+        { "tipo": "taller", "id": "m-4-1", "titulo": "Cine y ensayo", "nivel": "un", "base": 35 },
+        { "tipo": "taller", "id": "m-4-2", "titulo": "Cómic e historieta", "nivel": "se", "base": 35 },
+        { "tipo": "taller", "id": "m-4-3", "titulo": "Club de robótica", "nivel": "se", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "m-5-0", "titulo": "Debate y oratoria", "nivel": "pr", "base": 35 },
+        { "tipo": "taller", "id": "m-5-1", "titulo": "Taller de Literatura Infantil", "nivel": "pb", "base": 35 },
+        { "tipo": "taller", "id": "m-5-2", "titulo": "Origami literario", "nivel": "pb", "base": 35 },
+        { "tipo": "sin" }
+      ],
+      [
+        { "tipo": "cine", "id": "m-6-0", "titulo": "Función de cine Infantil", "nivel": "pa", "base": 120 },
+        { "tipo": "cine", "id": "m-6-1", "titulo": "Cortometrajes animados", "nivel": "pb", "base": 120 },
+        { "tipo": "cine", "id": "m-6-2", "titulo": "Función de cine Infantil", "nivel": "pa", "base": 120 },
+        { "tipo": "cine", "id": "m-6-3", "titulo": "Función de cine Juvenil", "nivel": "pr", "base": 120 }
+      ],
+      [
+        { "tipo": "cine", "id": "m-7-0", "titulo": "Función de cine Juvenil", "nivel": "se", "base": 120 },
+        { "tipo": "cine", "id": "m-7-1", "titulo": "Cineclub preparatoria", "nivel": "pr", "base": 120 },
+        { "tipo": "cine", "id": "m-7-2", "titulo": "Matiné de cuentos", "nivel": "pb", "base": 120 },
+        { "tipo": "cine", "id": "m-7-3", "titulo": "Función de cine Juvenil", "nivel": "un", "base": 120 }
+      ],
+      [
+        { "tipo": "cer" },
+        { "tipo": "libre", "id": "m-8-1", "span": 3 }
+      ],
+      [
+        { "tipo": "libre", "id": "m-9-0", "span": 4 }
+      ]
+    ],
+    "vespertino": [
+      [
+        { "tipo": "taller", "id": "v-0-0", "titulo": "Taller de Literatura Infantil", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "v-0-1", "titulo": "Cuentacuentos maya", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "v-0-2", "titulo": "Debate y oratoria", "nivel": "pr", "base": 35 },
+        { "tipo": "taller", "id": "v-0-3", "titulo": "Escritura creativa", "nivel": "un", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "v-1-0", "titulo": "Taller de ilustración", "nivel": "pb", "base": 35 },
+        { "tipo": "taller", "id": "v-1-1", "titulo": "Cómic e historieta", "nivel": "se", "base": 35 },
+        { "tipo": "taller", "id": "v-1-2", "titulo": "Fotografía narrativa", "nivel": "pr", "base": 35 },
+        { "tipo": "taller", "id": "v-1-3", "titulo": "Debate y oratoria", "nivel": "pr", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "v-2-0", "titulo": "Taller de Literatura Infantil", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "v-2-1", "titulo": "Cine y ensayo", "nivel": "un", "base": 35 },
+        { "tipo": "taller", "id": "v-2-2", "titulo": "Club de robótica", "nivel": "se", "base": 35 },
+        { "tipo": "taller", "id": "v-2-3", "titulo": "Escritura creativa", "nivel": "un", "base": 35 }
+      ],
+      [
+        { "tipo": "taller", "id": "v-3-0", "titulo": "Cuentacuentos maya", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "v-3-1", "titulo": "Cine y ensayo", "nivel": "un", "base": 35 },
+        { "tipo": "taller", "id": "v-3-2", "titulo": "Cómic e historieta", "nivel": "se", "base": 35 },
+        { "tipo": "sin" }
+      ],
+      [
+        { "tipo": "taller", "id": "v-4-0", "titulo": "Taller de ilustración", "nivel": "pa", "base": 35 },
+        { "tipo": "taller", "id": "v-4-1", "titulo": "Club de robótica", "nivel": "se", "base": 35 },
+        { "tipo": "taller", "id": "v-4-2", "titulo": "Escritura creativa", "nivel": "un", "base": 35 },
+        { "tipo": "sin" }
+      ],
+      [
+        { "tipo": "taller", "id": "v-5-0", "titulo": "Teatro de sombras", "nivel": "pb", "base": 35 },
+        { "tipo": "taller", "id": "v-5-1", "titulo": "Fotografía narrativa", "nivel": "pr", "base": 35 },
+        { "tipo": "sin" },
+        { "tipo": "taller", "id": "v-5-3", "titulo": "Debate y oratoria", "nivel": "pr", "base": 35 }
+      ],
+      [
+        { "tipo": "cine", "id": "v-6-0", "titulo": "Función de cine Infantil", "nivel": "pb", "base": 120 },
+        { "tipo": "cine", "id": "v-6-1", "titulo": "Función de cine Juvenil", "nivel": "se", "base": 120 },
+        { "tipo": "cer" },
+        { "tipo": "cer" }
+      ],
+      [
+        { "tipo": "cine", "id": "v-7-0", "titulo": "Matiné de cuentos", "nivel": "pb", "base": 120 },
+        { "tipo": "cine", "id": "v-7-1", "titulo": "Documental joven", "nivel": "se", "base": 120 },
+        { "tipo": "cer" },
+        { "tipo": "cer" }
+      ],
+      [
+        { "tipo": "cer" },
+        { "tipo": "libre", "id": "v-8-1", "span": 3 }
+      ],
+      [
+        { "tipo": "libre", "id": "v-9-0", "span": 4 }
+      ]
+    ]
+  }
+}

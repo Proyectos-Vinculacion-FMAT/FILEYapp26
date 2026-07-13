@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../../common/assets/filey-org-ico.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2027 — Admin · Seguimiento</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body data-vis-page="seguimiento">
+
+<header class="topbar is-admin">
+  <div class="topbar-inner">
+    <a class="home" href="../../REG/administradores/admin-convocatorias.html">
+      <img class="logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <div class="brand-text"><strong>Edición 2027</strong><small>Administración · VIS</small></div>
+    </a>
+    <nav class="topnav">
+      <a href="#">Configuración</a>
+      <div class="user-chip"><span class="avatar is-admin">EL</span> Elvira · Admin</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY 2027 · VIS — Administrador —
+  <a href="../../REG/administradores/admin-login.html">A1. Acceso</a> <span class="sep">›</span>
+  <a href="../../REG/administradores/admin-convocatorias.html">A2. Módulos</a> <span class="sep">›</span>
+  <a href="admin-propuestas.html">A3. Propuestas</a> <span class="sep">›</span>
+  <b>Seguimiento (dashboard)</b>
+  &nbsp;·&nbsp; <a href="admin-configuracion.html">Configuración</a>
+</div></div>
+
+<main class="page page-wide">
+  <div class="page-head">
+    <h1>Seguimiento de la convocatoria</h1>
+    <p>Panorama de la demanda de visitas escolares: reservaciones por día, ocupación por nivel educativo y qué escuelas asisten a cada actividad.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="vis-dash-kpis">
+    <div class="vis-kpi"><strong data-kpi="escuelas">—</strong><span>Escuelas registradas</span></div>
+    <div class="vis-kpi"><strong data-kpi="reservado">—</strong><span>Cupos reservados</span></div>
+    <div class="vis-kpi"><strong data-kpi="dia">—</strong><span>Día con más demanda</span></div>
+  </div>
+
+  <!-- Pestañas: Calendario | Listado -->
+  <div class="vis-tabs" role="tablist">
+    <button type="button" class="vis-tabs__tab is-active" data-tab="calendario" role="tab" aria-selected="true">📅 Calendario</button>
+    <button type="button" class="vis-tabs__tab" data-tab="listado" role="tab" aria-selected="false">📋 Listado</button>
+  </div>
+
+  <div data-tab-panel="calendario">
+    <div class="vis-dash-grid">
+      <!-- Gráfica de barras: reservaciones por día -->
+      <div class="vis-dash-card">
+        <p class="vis-dash-card__title">Reservaciones por día</p>
+        <p class="vis-dash-card__sub">Cupos reservados en cada día de la convocatoria (13–22 mar). Cifras agregadas ilustrativas.</p>
+        <div data-barchart></div>
+      </div>
+
+      <!-- Cupos reservados por nivel educativo -->
+      <div class="vis-dash-card">
+        <p class="vis-dash-card__title">Cupos por nivel educativo</p>
+        <p class="vis-dash-card__sub">% reservado respecto al total de cupos de los talleres de ese nivel.</p>
+        <div data-nivel-meters></div>
+      </div>
+    </div>
+
+    <!-- Grid de asistencia: salas × horas, celdas = escuelas que asisten -->
+    <div class="vis-horario-container">
+      <div class="vis-horario-header">
+        <div class="vis-turno-selector">
+          <span class="vis-turno-selector__label">Turno</span>
+          <div class="select-wrap"><select class="vis-turno-dropdown" id="turno-select">
+            <option value="matutino">Matutino</option>
+            <option value="vespertino">Vespertino</option>
+          </select></div>
+        </div>
+        <div class="vis-dia-selector">
+          <button type="button" class="vis-dia-btn" aria-label="Día anterior" data-vis-icon="prev-day" disabled></button>
+          <span class="vis-dia-selector__text">14 de marzo de 2027</span>
+          <button type="button" class="vis-dia-btn" aria-label="Día siguiente" data-vis-icon="next-day"></button>
+        </div>
+      </div>
+      <div class="vis-horario-wrap" id="horario-wrap"><!-- app.js inyecta el grid de asistencia --></div>
+    </div>
+
+    <div class="vis-reserva-bar" style="margin-top:20px">
+      <div class="txt">
+        <strong>Escuelas que asisten el día seleccionado</strong>
+        <span>Cada celda muestra la actividad programada y qué escuela(s) la reservaron; vacío si nadie asiste a ese bloque.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-tab-panel="listado" style="display:none">
+    <div class="vis-dash-card">
+      <p class="vis-dash-card__title">Escuelas registradas</p>
+      <p class="vis-dash-card__sub">Ficha básica por escuela: representante, grupos, alumnos por grupo, número de instituto y hora de llegada a talleres.</p>
+      <div class="vis-tabla-wrap">
+        <table class="vis-tabla" data-listado-tabla>
+          <thead>
+            <tr>
+              <th>Folio</th><th>Institución</th><th>CCT</th><th>Representante</th>
+              <th>Grupos</th><th>Alumnos por grupo</th><th>Hora de llegada</th>
+            </tr>
+          </thead>
+          <tbody><!-- app.js rellena una fila por escuela --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="vis-reserva-bar" style="margin-top:20px">
+    <div class="txt">
+      <strong>Reporte de seguimiento</strong>
+      <span>Descarga el reporte de la pestaña activa.</span>
+    </div>
+    <button type="button" class="btn btn-gold btn-lg" data-pdf title="Función ilustrativa (no implementada en el prototipo)">⤓ Descargar como PDF</button>
+  </div>
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Panel de administración · Visitas escolares</div>
+</div></footer>
+
+<script src="../../common/db.js"></script>
+<script src="../app.js"></script>
+</body>
+</html>

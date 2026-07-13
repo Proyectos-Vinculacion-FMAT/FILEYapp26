@@ -1,8 +1,20 @@
 ﻿# Prototipo — VIS (Visitas Escolares)
 
-HTML/CSS/JS estático demostrativo para el módulo de visitas escolares de FILEY.
+HTML/CSS/JS demostrativo para el módulo de visitas escolares de FILEY.
 Cubre el flujo completo: propuesta de la escuela → revisión administrativa → reserva
 de talleres en el catálogo → itinerario confirmado.
+
+> [!important] VIS usa un pseudo-backend (JSON + localStorage)
+> A diferencia del resto del prototipo, VIS mantiene consistencia de datos entre pantallas:
+> `app.js` lee/escribe vía `../common/db.js`, que carga la semilla desde
+> `../common/db/VIS/semillas/` (3 escuelas + catálogo de talleres del 14-mar-2027) hacia
+> `localStorage`. Como la semilla se carga con `fetch()`, **estas páginas deben servirse por
+> HTTP**, no abrirse por `file://` (CORS). Para desarrollo: `scripts/preview-vis.sh`. En
+> producción, GitHub Pages ya sirve por HTTP. Para reiniciar la demo a su estado de fábrica:
+> abre cualquier página con `?reset=1` o ejecuta `FileyDB.reset()` en la consola.
+> Solo **Benito Juárez García (VIS-2027-001)** es visible del lado escuela; las otras dos
+> escuelas semilla existen para el panel de administrador. Ver
+> [`docs/soporte/notas/VIS-pseudo-backend.md`](../../docs/soporte/notas/VIS-pseudo-backend.md).
 
 ## Estructura
 

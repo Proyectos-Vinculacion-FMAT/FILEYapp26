@@ -1,0 +1,29 @@
+{
+  "id": "vis-2027-046",
+  "folio": "VIS-2027-046",
+  "institucion": {
+    "nombre": "Ermilo Abreu Gómez",
+    "cct": "31DES0042K",
+    "sector": "Pública",
+    "turno": "Matutino",
+    "direccion": "Calle 50 x 39, Centro, Mérida",
+    "estado": "Yucatán",
+    "municipio": "Mérida",
+    "telefono": "999 928 1140",
+    "correo": "contacto@ermiloabreu.edu.mx",
+    "nombre_director": "Rodrigo Canché Uc"
+  },
+  "responsable": {
+    "nombre": "María Ruiz Arjona",
+    "cargo": "Prefecto(a)",
+    "telefono": "999 120 4488",
+    "correo": "mruiz@ermiloabreu.edu.mx"
+  },
+  "nivel_educativo": "Secundaria",
+  "campo_libre": "La visita fue reprogramada; la coordinación canceló el itinerario original y está por reasignar talleres.",
+  "grupos": [
+    { "id": "g1", "grado": "1°", "cantidad_alumnos": 35, "nombre_responsable": "María Ruiz Arjona" },
+    { "id": "g2", "grado": "2°", "cantidad_alumnos": 35, "nombre_responsable": "María Ruiz Arjona" }
+  ],
+  "reservas": []
+}

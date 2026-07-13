@@ -7,7 +7,7 @@
 <title>FILEY 2027 — Admin · Itinerario de visita</title>
 <link rel="stylesheet" href="../styles.css">
 </head>
-<body>
+<body data-vis-page="itinerario" data-vis-readonly data-vis-admin>
 
 <header class="topbar is-admin">
   <div class="topbar-inner">
@@ -36,12 +36,12 @@
 <main class="page">
   <div class="breadcrumb">
     <a href="admin-propuestas.html">Visitas escolares</a> <span>›</span>
-    Benito Juárez García · VIS-2027-001 <span>›</span> Itinerario
+    <span data-kv="institucion">Benito Juárez García</span> · <span data-kv="folio">VIS-2027-001</span> <span>›</span> Itinerario
   </div>
 
   <div class="page-head">
     <h1>Itinerario de la visita</h1>
-    <p>Benito Juárez García · Primaria · Folio <strong>VIS-2027-001</strong>. Vista de administrador — revisa las reservaciones confirmadas antes de notificar a la institución.</p>
+    <p><span data-kv="institucion">Benito Juárez García</span> · <span data-kv="nivel">Primaria</span> · Folio <strong data-kv="folio">VIS-2027-001</strong>. Vista de administrador — revisa las reservaciones confirmadas antes de notificar a la institución.</p>
   </div>
 
   <div class="info-grid">
@@ -52,38 +52,8 @@
           <div><h3>Talleres reservados</h3><p>Cupo garantizado para los grupos de esta escuela</p></div>
         </div>
         <div class="section-body">
-          <div class="vis-itin-list">
-
-            <div class="vis-itin-item">
-              <div class="vis-itin-item__day">14 mar · 10:00</div>
-              <div class="vis-itin-item__main">
-                <strong>Taller de ilustración</strong>
-                <span>Salón Chichén Itzá · Sala 1</span>
-              </div>
-              <div class="vis-itin-item__groups"><span class="vis-grupo-badge">G3</span></div>
-            </div>
-
-            <div class="vis-itin-item">
-              <div class="vis-itin-item__day">14 mar · 9:00</div>
-              <div class="vis-itin-item__main">
-                <strong>Ciencia divertida</strong>
-                <span>Salón Chichén Itzá · Sala 2</span>
-              </div>
-              <div class="vis-itin-item__groups"><span class="vis-grupo-badge">G1</span></div>
-            </div>
-
-            <div class="vis-itin-item">
-              <div class="vis-itin-item__day">14 mar · 12:00</div>
-              <div class="vis-itin-item__main">
-                <strong>Dibujo con luz</strong>
-                <span>Salón Chichén Itzá · Sala 3</span>
-              </div>
-              <div class="vis-itin-item__groups">
-                <span class="vis-grupo-badge">G1</span>
-                <span class="vis-grupo-badge">G3</span>
-              </div>
-            </div>
-
+          <div class="vis-grupos-row" data-vis-grupos>
+            <!-- app.js rellena las tarjetas de grupo con sus talleres reservados (solo lectura) -->
           </div>
 
           <div class="form-actions">
@@ -101,14 +71,14 @@
           <div><h3>Resumen</h3><p>Datos de la visita</p></div>
         </div>
         <div class="section-body">
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Folio</span><span class="vis-bento__kv-value">VIS-2027-001</span></div>
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Institución</span><span class="vis-bento__kv-value">Benito Juárez García</span></div>
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Nivel</span><span class="vis-bento__kv-value">Primaria</span></div>
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Grupos</span><span class="vis-bento__kv-value">3 (90 alumnos)</span></div>
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Talleres reservados</span><span class="vis-bento__kv-value">3</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Folio</span><span class="vis-bento__kv-value" data-kv="folio">VIS-2027-001</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Institución</span><span class="vis-bento__kv-value" data-kv="institucion">Benito Juárez García</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Nivel</span><span class="vis-bento__kv-value" data-kv="nivel">Primaria</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Grupos</span><span class="vis-bento__kv-value" data-kv="grupos">3 (90 alumnos)</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Talleres reservados</span><span class="vis-bento__kv-value" data-kv="talleres">3</span></div>
           <div class="vis-bento__kv"><span class="vis-bento__kv-label">Día de visita</span><span class="vis-bento__kv-value">14 de marzo</span></div>
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Responsable</span><span class="vis-bento__kv-value">Isaac Alejandro Ortiz Zaldivar</span></div>
-          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Correo inst.</span><span class="vis-bento__kv-value">bjuarezgarcia@educ.yucatan.gob.mx</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Responsable</span><span class="vis-bento__kv-value" data-kv="responsable">Isaac Alejandro Ortiz Zaldivar</span></div>
+          <div class="vis-bento__kv"><span class="vis-bento__kv-label">Correo inst.</span><span class="vis-bento__kv-value" data-kv="correo_inst">bjuarezgarcia@educ.yucatan.gob.mx</span></div>
         </div>
       </div>
 
@@ -127,6 +97,7 @@
   <div>Panel de administración · Visitas escolares</div>
 </div></footer>
 
+<script src="../../common/db.js"></script>
 <script src="../app.js"></script>
 </body>
 </html>
