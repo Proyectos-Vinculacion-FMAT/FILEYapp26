@@ -104,6 +104,18 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema lo reconoce c
 2. El sistema no muestra la pantalla de código; informa al usuario que el correo no pudo enviarse y le pide intentar de nuevo en unos minutos.
 3. No se crea ningún registro `SesionOTP` si el envío falló antes de almacenarlo, o se invalida si ya se almacenó.
 
+### E4. se ingresa mas de 5 veces incorrectamente el codigo
+
+1. en el paso 7, el usuario ingresa mas de 5 veces el codigo incorrectamante
+2. el sistema le avisa al usuario que ya no puede intentar con ese codigo, por lo que tiene que generar uno nuevo
+3. y se le reenvia un codigo nuevo para que lo vuelva a intentar 
+
+### E5. presiana el boton reenviar 
+
+1. en el paso 6, cuando el usuario esta en la pantalla de OTP, debe tener la opportuindad de apretar el boton de reenviar
+2. luego de que aprete reenviar las contraseñas que se hayan mandado anteriormente por correo no seran validas
+3. cuando el boton sea apretado, tendra un cool-down de 30 segundos para que se pueda enviar de nuevo el codigo
+
 ## Datos relevantes
 
 ### Entradas
