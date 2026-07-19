@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -21,12 +21,14 @@
 <div class="auth-wrap">
   <div class="auth-hero">
     <img class="logo-lg" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
-    <h2>Crea tu cuenta una sola vez</h2>
-    <p>Con estos datos básicos tendrás acceso a todas las convocatorias abiertas de FILEY 2027.
-       No necesitas contraseña: entras con un código que enviamos a tu correo.</p>
+    <h2>Portal de participantes<br>Edición 2027</h2>
+    <p>Plataforma de registro y gestión de actividades de la Coordinación General de Contenidos.
+       Envía tu propuesta, da seguimiento a su estado y consulta tu programación.</p>
     <div class="pills">
-      <span>✅ Solo correo, nombre y teléfono</span>
-      <span>🔒 Sin contraseñas</span>
+      <span>📚 Convocatoria de Stands</span>
+      <span>🎨 Actividades Infantiles/Juveniles</span>
+      <span>🎤 Actividades FILEY (Eventos)</span>
+      <span>🚌 Visitas escolares</span>
     </div>
   </div>
 
@@ -35,20 +37,20 @@
       <h3>Crear cuenta</h3>
       <p class="sub">No encontramos una cuenta con ese correo. Completa tus datos para registrarte.</p>
 
-      <form onsubmit="return false">
+      <form id="form-registro" novalidate>
         <div class="field">
-          <label>Correo electrónico <span class="req">*</span></label>
-          <input type="email" value="lectora@ejemplo.com" readonly>
+          <label for="correo">Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="correo" value="" readonly>
         </div>
         <div class="field">
-          <label>Nombre completo <span class="req">*</span></label>
-          <input type="text" placeholder="Nombre(s) y apellidos">
+          <label for="nombre">Nombre completo <span class="req">*</span></label>
+          <input type="text" id="nombre" placeholder="Nombre(s) y apellidos" autocomplete="name">
         </div>
         <div class="field">
-          <label>Número telefónico <span class="req">*</span></label>
-          <input type="tel" placeholder="999 000 0000">
+          <label for="telefono">Número telefónico <span class="req">*</span></label>
+          <input type="tel" id="telefono" placeholder="999 000 0000" autocomplete="tel">
         </div>
-        <a class="btn btn-primary btn-block btn-lg" href="otp.html">Crear cuenta y continuar</a>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-crear" type="submit" disabled>Crear cuenta y continuar</button>
       </form>
 
       <div class="auth-foot">
@@ -57,6 +59,53 @@
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  "use strict";
+  var CUENTAS_KEY = "filey_reg_cuentas";
+  var FLUJO_KEY   = "filey_reg_flujo";
+
+  var flujo = {};
+  try { flujo = JSON.parse(localStorage.getItem(FLUJO_KEY)) || {}; } catch(e){}
+  var correo = flujo.correo || "escritor@ejemplo.com"; /* respaldo si se entra directo desde la proto-bar */
+
+  var inCorreo   = document.getElementById("correo");
+  var inNombre   = document.getElementById("nombre");
+  var inTelefono = document.getElementById("telefono");
+  var boton      = document.getElementById("btn-crear");
+  inCorreo.value = correo;
+
+  function nombreValido(){ return inNombre.value.trim().length >= 3; }
+  function telefonoValido(){ return inTelefono.value.replace(/\D/g, "").length >= 10; }
+  function refrescar(){ boton.disabled = !(nombreValido() && telefonoValido()); }
+
+  [[inNombre, nombreValido], [inTelefono, telefonoValido]].forEach(function(par){
+    var input = par[0], valida = par[1];
+    input.addEventListener("input", function(){
+      input.classList.remove("is-invalid");
+      refrescar();
+    });
+    input.addEventListener("blur", function(){
+      input.classList.toggle("is-invalid", input.value.trim() !== "" && !valida());
+    });
+  });
+
+  document.getElementById("form-registro").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (boton.disabled) return;
+
+    var cuentas;
+    try { cuentas = JSON.parse(localStorage.getItem(CUENTAS_KEY)) || []; } catch(e){ cuentas = []; }
+    if (cuentas.indexOf("lectora@ejemplo.com") === -1) cuentas.push("lectora@ejemplo.com");
+    if (cuentas.indexOf(correo) === -1) cuentas.push(correo);
+    localStorage.setItem(CUENTAS_KEY, JSON.stringify(cuentas));
+
+    localStorage.setItem(FLUJO_KEY, JSON.stringify({ correo: correo, origen: "registro" }));
+    window.location.href = "otp.html";
+  });
+})();
+</script>
 
 </body>
 </html>
