@@ -118,15 +118,32 @@ son las **variables de entorno del servidor** (nunca se versionan):
 # Django
 DJANGO_SECRET_KEY=<clave-larga-y-aleatoria>
 DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=servidor-de-pruebas.ejemplo.com,203.0.113.10
+# "*" permite todos los hosts (temporal, mientras se configura el frontend).
+DJANGO_ALLOWED_HOSTS=*
 
-# CORS (orígenes del frontend permitidos)
-CORS_ALLOWED_ORIGINS=https://frontend-de-pruebas.ejemplo.com
+# CORS: permitir todos los orígenes temporalmente (mientras se arma el frontend).
+CORS_ALLOW_ALL_ORIGINS=True
+CORS_ALLOWED_ORIGINS=
+
+# PostgreSQL (el contenedor `db` se inicializa con estos valores)
+POSTGRES_DB=filey
+POSTGRES_USER=filey
+POSTGRES_PASSWORD=<contraseña-segura>
 
 # Resend (envío de correos / OTP)
 RESEND_API_KEY=re_xxxxxxsu_clave
 DEFAULT_FROM_EMAIL=no-reply@tudominio-verificado.com
 ```
+
+> **Base de datos:** cuando `POSTGRES_DB` está definido, Django usa PostgreSQL
+> (servicio `db` de `docker-compose`). `docker-compose` inyecta
+> automáticamente `POSTGRES_HOST=db`. Si `POSTGRES_DB` no está definido, Django
+> cae en SQLite (útil solo para desarrollo local).
+>
+> **Allow-all temporal:** `DJANGO_ALLOWED_HOSTS=*` y `CORS_ALLOW_ALL_ORIGINS=True`
+> abren el acceso mientras se configura el frontend. **Restríngelos** (host real
+> + lista explícita de orígenes en `CORS_ALLOWED_ORIGINS`) antes de exponer el
+> servicio públicamente.
 
 Genera un `DJANGO_SECRET_KEY` seguro con:
 
@@ -185,14 +202,15 @@ sobre el mismo servidor.
 
 ## 5. Datos y persistencia
 
-- La base de datos SQLite se guarda en el volumen Docker `fileyapp_data`
-  (montado en `/data`), por lo que **sobrevive a los redepliegues**.
+- La base de datos **PostgreSQL** corre en el contenedor `db` y guarda sus
+  datos en el volumen Docker `fileyapp_pgdata`, por lo que **sobrevive a los
+  redepliegues**. El contenedor `web` espera a que `db` esté saludable
+  (`healthcheck` + `depends_on`) antes de arrancar y aplicar migraciones.
 - Los archivos estáticos (admin de Django + DRF) se sirven con **WhiteNoise**
   desde el propio contenedor; no se necesita Nginx para el servidor de pruebas.
 
-> Para producción se recomienda migrar a PostgreSQL (ya está `psycopg2-binary`
-> en `requirements.txt`) y colocar un proxy inverso (Nginx/Caddy) con HTTPS al
-> frente.
+> Para producción se recomienda colocar un proxy inverso (Nginx/Caddy) con
+> HTTPS al frente, y respaldar el volumen de PostgreSQL con `pg_dump`.
 
 ---
 

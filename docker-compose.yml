@@ -10,12 +10,30 @@ services:
     env_file:
       - .env
     environment:
-      # SQLite lives on the named volume so data survives redeploys.
-      DJANGO_DB_PATH: /data/db.sqlite3
-    volumes:
-      - fileyapp_data:/data
+      # Reach the Postgres container by its service name.
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
 
+  db:
+    image: postgres:17
+    container_name: fileyapp-db-test
+    restart: unless-stopped
+    # Reads POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD from .env to
+    # initialise the database on first run.
+    env_file:
+      - .env
+    volumes:
+      - fileyapp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
-  fileyapp_data:
+  fileyapp_pgdata:

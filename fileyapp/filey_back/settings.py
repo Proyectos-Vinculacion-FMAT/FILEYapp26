@@ -35,7 +35,13 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if os.environ.get('DJANGO_ALLOWED_HOSTS') else []
+# Comma-separated list, or "*" to allow all hosts (use "*" only while the
+# frontend/infra is still being set up; lock this down before going public).
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
 
 
 # Application definition
@@ -95,14 +101,28 @@ WSGI_APPLICATION = 'filey_back.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        # Configurable so the SQLite file can live on a persistent volume in
-        # containers, instead of inside the (ephemeral) code directory.
-        'NAME': os.environ.get('DJANGO_DB_PATH', str(BASE_DIR / 'db.sqlite3')),
+# Use PostgreSQL when POSTGRES_DB is configured (server/containers); otherwise
+# fall back to SQLite for local development.
+if os.environ.get('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ['POSTGRES_DB'],
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            # Configurable so the SQLite file can live on a persistent volume in
+            # containers, instead of inside the (ephemeral) code directory.
+            'NAME': os.environ.get('DJANGO_DB_PATH', str(BASE_DIR / 'db.sqlite3')),
+        }
+    }
 
 
 # Password validation
@@ -192,8 +212,13 @@ CORS_ALLOWED_ORIGINS = [
     for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
     if origin.strip()
 ]
-# In DEBUG, allow all origins so local frontends can talk to the API.
-CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
+# Allow all origins when CORS_ALLOW_ALL_ORIGINS=True (temporary, while the
+# frontend is being set up) or, in DEBUG, when no explicit list is given.
+# Safe with token auth since credentials/cookies are not used cross-origin.
+CORS_ALLOW_ALL_ORIGINS = (
+    os.environ.get('CORS_ALLOW_ALL_ORIGINS', '').lower() == 'true'
+    or (DEBUG and not CORS_ALLOWED_ORIGINS)
+)
 
 
 # Resend email delivery (used by the notificaciones app)
