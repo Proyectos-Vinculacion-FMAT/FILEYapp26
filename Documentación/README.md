@@ -9,6 +9,7 @@ FILEY. La API se organiza por aplicaciones; cada una tiene su propio documento.
 | --- | --- | --- |
 | `usuarios` | [usuarios.md](./usuarios.md) | Autenticación por OTP (sin contraseña) y emisión de tokens JWT. |
 | `notificaciones` | [notificaciones.md](./notificaciones.md) | Capa de servicios de correo electrónico (Resend). |
+| Infraestructura | [despliegue.md](./despliegue.md) | Despliegue automático a `backend-test` (GitHub Actions + Docker + SSH). |
 
 ## Visión general
 

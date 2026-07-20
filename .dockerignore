@@ -1,0 +1,31 @@
+# Virtual environments
+virtenv/
+venv/
+env/
+.venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local database & static build artifacts (regenerated in the image / volume)
+**/db.sqlite3
+**/db.sqlite3-journal
+**/staticfiles/
+
+# Secrets & local env
+.env
+.env.*
+!.env.example
+
+# VCS / CI / editor / OS
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Docs (not needed inside the image)
+Documentación/

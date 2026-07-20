@@ -1,0 +1,45 @@
+name: Deploy backend-test
+
+# Runs after code lands on backend-test (i.e. once a PR is merged into it).
+on:
+  push:
+    branches: [backend-test]
+  workflow_dispatch: {}   # allow manual re-deploys from the Actions tab
+
+# Never let two deploys run at once against the same server.
+concurrency:
+  group: deploy-backend-test
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TEST_SERVER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.TEST_SERVER_HOST }}
+          SSH_USER: ${{ secrets.TEST_SERVER_USER }}
+          SSH_PORT: ${{ secrets.TEST_SERVER_PORT }}
+          DEPLOY_PATH: ${{ secrets.TEST_SERVER_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          PORT="${SSH_PORT:-22}"
+
+          # Load the private deploy key.
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Trust the server's host key (TOFU).
+          ssh-keyscan -p "$PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Pull latest backend-test and (re)build the container on the server.
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" \
+            "set -euo pipefail; \
+             cd '$DEPLOY_PATH'; \
+             git fetch --all --prune; \
+             git checkout backend-test; \
+             git reset --hard origin/backend-test; \
+             docker compose up -d --build; \
+             docker image prune -f"

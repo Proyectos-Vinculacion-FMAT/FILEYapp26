@@ -1,0 +1,21 @@
+# Test-server deployment for the FILEY backend.
+# Secrets/config are read from a .env file that lives ONLY on the server
+# (never committed). See Documentación/despliegue.md.
+services:
+  web:
+    build: .
+    image: fileyapp-backend:test
+    container_name: fileyapp-backend-test
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # SQLite lives on the named volume so data survives redeploys.
+      DJANGO_DB_PATH: /data/db.sqlite3
+    volumes:
+      - fileyapp_data:/data
+    ports:
+      - "8000:8000"
+
+volumes:
+  fileyapp_data:
