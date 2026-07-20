@@ -1,0 +1,40 @@
+# Python / Django
+*.pyc
+*.pyo
+__pycache__/
+*.pyd
+.Python
+
+# Virtual Environments
+venv/
+virtenv/
+env/
+.venv/
+*/venv/
+*/env/
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+
+# Environment Variables / Secrets
+.env
+.env.*
+!.env.example
+
+# Django specific
+*.log
+local_settings.py
+static/
+media/
+staticfiles/
+
+# IDE / OS 
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+.fileyapp/.claude/
