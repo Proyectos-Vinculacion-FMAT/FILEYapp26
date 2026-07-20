@@ -29,8 +29,13 @@ Se usa una llave **exclusiva para CI**, revocable y de alcance limitado.
 En tu máquina local:
 
 ```bash
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ./filey_deploy_key -N ""
+# Con passphrase (recomendado): omite -N para que te la pida de forma interactiva.
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ./filey_deploy_key
+# Sin passphrase: usa  -N ""  (en ese caso no crees el secret de passphrase).
 ```
+
+Si la llave tiene passphrase, guárdala en el secret
+`TEST_SERVER_SSH_KEY_PASSPHRASE` (paso 2).
 
 Esto genera dos archivos:
 - `filey_deploy_key` → **llave privada** (va en un *secret* de GitHub).
@@ -67,6 +72,7 @@ secret**. Crea:
 | Secret | Ejemplo | Descripción |
 | --- | --- | --- |
 | `TEST_SERVER_SSH_KEY` | *(contenido de `filey_deploy_key`)* | Llave **privada** completa, incluyendo las líneas `-----BEGIN/END-----`. |
+| `TEST_SERVER_SSH_KEY_PASSPHRASE` | `mi-frase-secreta` | Frase de la llave privada (si tiene passphrase). |
 | `TEST_SERVER_HOST` | `203.0.113.10` | IP o dominio del servidor de pruebas. |
 | `TEST_SERVER_USER` | `deploy` | Usuario SSH en el servidor. |
 | `TEST_SERVER_PORT` | `22` | Puerto SSH (opcional; por defecto `22`). |
@@ -74,6 +80,12 @@ secret**. Crea:
 
 > Pega la llave privada tal cual, con sus saltos de línea. No la envuelvas en
 > comillas.
+>
+> **Llave con passphrase:** el flujo carga la llave en un `ssh-agent` y le pasa
+> la passphrase (desde `TEST_SERVER_SSH_KEY_PASSPHRASE`) de forma no
+> interactiva vía `SSH_ASKPASS`. Si tu llave **no** tiene passphrase, puedes
+> dejar ese *secret* vacío o no crearlo (el paso de `ssh-add` simplemente no
+> pedirá frase).
 
 ---
 

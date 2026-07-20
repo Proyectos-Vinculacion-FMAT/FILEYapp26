@@ -18,6 +18,7 @@ jobs:
       - name: Deploy over SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.TEST_SERVER_SSH_KEY }}
+          SSH_PASSPHRASE: ${{ secrets.TEST_SERVER_SSH_KEY_PASSPHRASE }}
           SSH_HOST: ${{ secrets.TEST_SERVER_HOST }}
           SSH_USER: ${{ secrets.TEST_SERVER_USER }}
           SSH_PORT: ${{ secrets.TEST_SERVER_PORT }}
@@ -34,8 +35,21 @@ jobs:
           # Trust the server's host key (TOFU).
           ssh-keyscan -p "$PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
+          # Start an agent and add the (passphrase-protected) key. The passphrase
+          # is supplied non-interactively via SSH_ASKPASS.
+          eval "$(ssh-agent -s)"
+          ASKPASS="$(mktemp)"
+          printf '#!/usr/bin/env bash\necho "$SSH_PASSPHRASE"\n' > "$ASKPASS"
+          chmod 700 "$ASKPASS"
+          # SSH_ASKPASS_REQUIRE=force makes ssh-add use the askpass helper even
+          # without a terminal (OpenSSH >= 8.4, present on ubuntu-latest).
+          SSH_ASKPASS="$ASKPASS" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 \
+            ssh-add ~/.ssh/deploy_key
+          rm -f "$ASKPASS"
+
           # Pull latest backend-test and (re)build the container on the server.
-          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" \
+          # The key is served by the agent, so no -i is needed.
+          ssh -p "$PORT" "$SSH_USER@$SSH_HOST" \
             "set -euo pipefail; \
              cd '$DEPLOY_PATH'; \
              git fetch --all --prune; \
@@ -43,3 +57,5 @@ jobs:
              git reset --hard origin/backend-test; \
              docker compose up -d --build; \
              docker image prune -f"
+
+          ssh-agent -k >/dev/null 2>&1 || true
