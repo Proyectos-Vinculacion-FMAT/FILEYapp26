@@ -232,6 +232,7 @@ sobre el mismo servidor.
 | --- | --- |
 | Actions falla en el paso SSH | Revisa `TEST_SERVER_*`; la llave privada debe estar completa. Prueba `ssh -i llave user@host`. |
 | `Permission denied (publickey)` | La llave pública no está en `~/.ssh/authorized_keys` del servidor. |
+| `fatal: not a git repository` | `TEST_SERVER_DEPLOY_PATH` no apunta al directorio del repo clonado (el que contiene `.git` y `docker-compose.yml`), o el repo aún no se ha clonado ahí (paso 3.2). |
 | `git reset` falla en el servidor | El repo del servidor no puede autenticarse con GitHub (deploy key/token). |
 | `DisallowedHost` en las respuestas | Falta el host en `DJANGO_ALLOWED_HOSTS` del `.env`. |
 | No llegan los correos OTP | `RESEND_API_KEY` inválida o dominio remitente no verificado en Resend. |

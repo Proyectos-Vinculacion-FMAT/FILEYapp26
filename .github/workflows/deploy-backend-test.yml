@@ -49,13 +49,14 @@ jobs:
 
           # Pull latest backend-test and (re)build the container on the server.
           # The key is served by the agent, so no -i is needed.
+          # Chained with && (not `set -euo pipefail`) so it stops on the first
+          # failure regardless of the server's login shell (sh/dash/fish/bash).
           ssh -p "$PORT" "$SSH_USER@$SSH_HOST" \
-            "set -euo pipefail; \
-             cd '$DEPLOY_PATH'; \
-             git fetch --all --prune; \
-             git checkout backend-test; \
-             git reset --hard origin/backend-test; \
-             docker compose up -d --build; \
-             docker image prune -f"
+            "cd '$DEPLOY_PATH' \
+             && git fetch --all --prune \
+             && git checkout backend-test \
+             && git reset --hard origin/backend-test \
+             && docker compose up -d --build \
+             && docker image prune -f"
 
           ssh-agent -k >/dev/null 2>&1 || true
