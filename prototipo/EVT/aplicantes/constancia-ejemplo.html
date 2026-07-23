@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../../common/assets/filey-org-ico.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2028 — Constancia de participación (ejemplo)</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* ===== La hoja: proporción carta horizontal (279 × 216 mm) ===== */
+  .hoja-wrap { display:flex; justify-content:center; margin:0 0 26px; }
+  .hoja {
+    position:relative; width:100%; max-width:1000px; aspect-ratio:279/216;
+    background:var(--color-blanco); box-shadow:var(--sombra-lg);
+    padding:clamp(18px,2.4vw,30px); overflow:hidden;
+  }
+
+  /* Marco decorativo: filete dorado por dentro de un borde azul */
+  .hoja::before {
+    content:""; position:absolute; inset:0;
+    border:clamp(8px,1.1vw,14px) solid var(--color-azul-institucional);
+  }
+  .hoja::after {
+    content:""; position:absolute; inset:clamp(14px,1.9vw,24px);
+    border:1.5px solid var(--color-dorado-encabezado); pointer-events:none;
+  }
+
+  /* Marca de agua: esto es una muestra, no un documento válido */
+  .muestra {
+    position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; z-index:4;
+  }
+  .muestra span {
+    transform:rotate(-24deg);
+    font-size:clamp(56px,10vw,132px); font-weight:800; letter-spacing:.14em;
+    color:var(--color-azul-institucional); opacity:.07; white-space:nowrap;
+  }
+
+  .hoja-in {
+    position:relative; z-index:2; height:100%;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:clamp(20px,3vw,38px) clamp(26px,5vw,74px);
+  }
+
+  /* Encabezado */
+  .c-logo { height:clamp(30px,4.2vw,52px); width:auto; margin-bottom:clamp(6px,1vw,12px); }
+  .c-inst {
+    font-size:clamp(9px,1.05vw,12.5px); font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gris-500); line-height:1.7;
+  }
+  .c-inst b { color:var(--color-azul-institucional); font-weight:800; }
+
+  /* Cuerpo */
+  .c-otorga {
+    margin-top:clamp(10px,1.8vw,22px);
+    font-size:clamp(10px,1.15vw,13.5px); letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gris-500); font-weight:600;
+  }
+  .c-titulo {
+    margin:clamp(2px,.6vw,8px) 0 clamp(8px,1.4vw,18px);
+    font-size:clamp(20px,3.3vw,42px); font-weight:800; letter-spacing:.06em;
+    color:var(--color-azul-institucional); text-transform:uppercase; line-height:1.1;
+  }
+  .c-a {
+    font-size:clamp(9px,1.05vw,12.5px); letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gris-500); font-weight:600;
+  }
+  .c-nombre {
+    margin:clamp(6px,1vw,12px) 0 clamp(4px,.8vw,10px);
+    font-size:clamp(22px,3.6vw,46px); font-weight:700; color:var(--color-azul-institucional-enfoque); line-height:1.15;
+  }
+  .c-regla {
+    width:min(74%,560px); height:1.5px; background:var(--color-dorado-encabezado);
+    margin:0 auto clamp(10px,1.6vw,20px); opacity:.7;
+  }
+  .c-cuerpo {
+    font-size:clamp(11px,1.32vw,16px); line-height:1.75; color:var(--gris-700);
+    max-width:74ch;
+  }
+  .c-cuerpo strong { color:var(--color-azul-institucional-enfoque); font-weight:700; }
+  .c-obra { font-style:italic; color:var(--color-azul-institucional); font-weight:600; }
+
+  .c-lugar {
+    margin-top:auto; padding-top:clamp(10px,1.6vw,20px);
+    font-size:clamp(10px,1.15vw,13.5px); color:var(--gris-500);
+  }
+
+  /* Firmas */
+  .c-firmas {
+    display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,6vw,90px);
+    width:min(88%,700px); margin:clamp(14px,2.2vw,28px) auto clamp(6px,1vw,12px);
+  }
+  .c-firma { text-align:center; }
+  .c-firma .linea { height:1px; background:var(--gris-300); margin-bottom:7px; }
+  .c-firma .n { font-size:clamp(9.5px,1.1vw,13px); font-weight:700; color:var(--color-azul-institucional-enfoque); line-height:1.35; }
+  .c-firma .r { font-size:clamp(8px,.92vw,11px); color:var(--gris-500); line-height:1.4; margin-top:2px; }
+
+  /* Pie: folio y verificación */
+  .c-pie {
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    width:100%; padding-top:clamp(6px,1vw,12px);
+    border-top:1px solid var(--gris-200);
+    font-size:clamp(7.5px,.86vw,10.5px); color:var(--gris-500); letter-spacing:.04em;
+  }
+  .c-pie .folio { font-family:ui-monospace,Menlo,Consolas,monospace; }
+
+  /* ===== Panel de notas para revisión (no forma parte del documento) ===== */
+  .campo-var {
+    background:var(--oro-050); border-bottom:1.5px dashed var(--color-dorado-encabezado);
+    padding:0 2px; border-radius:2px;
+  }
+  .leyenda-var {
+    display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--gris-500);
+  }
+  .leyenda-var i {
+    width:26px; height:13px; border-radius:3px; display:inline-block;
+    background:var(--oro-050); border-bottom:1.5px dashed var(--color-dorado-encabezado);
+  }
+
+  /* ===== Impresión: solo la hoja ===== */
+  @media print {
+    @page { size:letter landscape; margin:0; }
+    .topbar, .proto-bar, .footer, .page-head, .no-print { display:none !important; }
+    body { background:var(--color-blanco); }
+    .page { padding:0 !important; max-width:none !important; }
+    .hoja { box-shadow:none; max-width:none; width:100%; height:100vh; aspect-ratio:auto; }
+    .campo-var { background:none; border-bottom:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="home" href="../../REG/aplicantes/convocatorias.html">
+      <img class="logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <div class="brand-text"><strong>Edición 2028</strong><small>Portal del proponente</small></div>
+    </a>
+    <nav class="topnav">
+      <a href="mis-propuestas.html">Mis propuestas</a>
+      <div class="user-chip"><span class="avatar">RS</span> Renata S.</div>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY · EVT —
+  <b>Ejemplo de constancia (CU-EVT-005)</b> &nbsp;·&nbsp;
+  <a href="mis-propuestas.html">↩ Mis propuestas</a>
+  &nbsp;·&nbsp; <a href="../../REG/aplicantes/convocatorias.html">Convocatorias ↗</a>
+</div></div>
+
+<main class="page">
+
+  <div class="page-head no-print">
+    <h1>Constancia de participación — ejemplo</h1>
+    <p>Así se vería la constancia que descarga un participante después de la feria. Los datos son
+      <strong>inventados</strong> y sirven solo para revisar el diseño: nombres, folios y firmas no
+      corresponden a personas ni documentos reales.</p>
+  </div>
+
+  <div class="note note-gold no-print" style="margin-bottom:22px">
+    <div class="ico">🧾</div>
+    <div><strong>Plantilla única, sin editor.</strong> El diseño es fijo (así se decidió); lo único
+      que cambia de una constancia a otra son los datos resaltados en dorado abajo, que el sistema
+      toma de la propuesta y de la programación. La marca de agua <strong>MUESTRA</strong> no aparece
+      en las constancias reales.</div>
+  </div>
+
+  <!-- ======================= LA CONSTANCIA ======================= -->
+  <div class="hoja-wrap">
+    <div class="hoja">
+      <div class="muestra" aria-hidden="true"><span>MUESTRA</span></div>
+
+      <div class="hoja-in">
+
+        <img class="c-logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+        <div class="c-inst">
+          Universidad Autónoma de Yucatán<br>
+          <b>Feria Internacional de la Lectura Yucatán 2028</b>
+        </div>
+
+        <div class="c-otorga">Otorga la presente</div>
+        <div class="c-titulo">Constancia de participación</div>
+
+        <div class="c-a">a</div>
+        <div class="c-nombre"><span class="campo-var">Renata Solís Manzanilla</span></div>
+        <div class="c-regla"></div>
+
+        <p class="c-cuerpo">
+          Por su participación como <strong><span class="campo-var">autora</span></strong> en la
+          <strong><span class="campo-var">presentación del libro</span></strong>
+          <span class="c-obra campo-var">«El mar que nos habita»</span>,
+          actividad realizada el <strong><span class="campo-var">sábado 11 de marzo de 2028</span></strong>,
+          de <span class="campo-var">13:00 a 14:15 horas</span>, en el
+          <strong><span class="campo-var">Salón Uxmal</span></strong> del Centro de Convenciones Yucatán
+          Siglo XXI, dentro del programa de la vigésima edición de la Feria Internacional de la
+          Lectura Yucatán.
+        </p>
+
+        <div class="c-lugar">Mérida, Yucatán, a <span class="campo-var">11 de marzo de 2028</span>.</div>
+
+        <div class="c-firmas">
+          <div class="c-firma">
+            <div class="linea"></div>
+            <div class="n">Mtra. Adriana Herrera Novelo</div>
+            <div class="r">Directora General<br>Feria Internacional de la Lectura Yucatán</div>
+          </div>
+          <div class="c-firma">
+            <div class="linea"></div>
+            <div class="n">Lic. Hipólito Canul Estrada</div>
+            <div class="r">Coordinación General de Contenidos<br>FILEY 2028</div>
+          </div>
+        </div>
+
+        <div class="c-pie">
+          <span class="folio">Folio <b>FILEY-2028-CONST-00417</b> · Actividad EVE-2027-0042</span>
+          <span>Verifica este documento en filey.org/constancias con el código <b>4K7M-92QX</b></span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="no-print" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:30px">
+    <span class="leyenda-var"><i></i> Campos que el sistema rellena con los datos de cada participante</span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ Ver cómo se imprime</button>
+      <a class="btn btn-primary" href="#" onclick="return false">⬇ Descargar constancia (PDF)</a>
+    </div>
+  </div>
+
+  <!-- ======================= NOTAS DE REVISIÓN ======================= -->
+  <div class="card section-card no-print">
+    <div class="section-head"><span class="num">?</span><div><h3>Qué falta decidir</h3><p>Puntos abiertos que conviene revisar con la Coordinación</p></div></div>
+    <div class="section-body">
+      <ul class="req-list">
+        <li><span class="ck">1</span> <strong>Constancia grupal.</strong> Este ejemplo es individual: una
+          constancia por persona. Falta decidir si una actividad con varios participantes (aquí serían la
+          autora y el moderador) genera <strong>una constancia por cada uno</strong> o
+          <strong>una sola con todos los nombres</strong>. Cambia el texto del cuerpo.</li>
+        <li><span class="ck">2</span> <strong>Quién firma.</strong> Los dos cargos de arriba son una
+          suposición. Hay que confirmar los nombres, los cargos exactos y si van firmas escaneadas o
+          solo el nombre impreso.</li>
+        <li><span class="ck">3</span> <strong>Rol del participante.</strong> El texto dice “como autora”.
+          Falta la lista cerrada de roles que puede tomar ese campo: autor/a, moderador/a, presentador/a,
+          ponente, editor/a, tallerista.</li>
+        <li><span class="ck">4</span> <strong>Verificación.</strong> El código del pie da para comprobar
+          que una constancia es auténtica. Falta decidir si se implementa (una página de verificación) o
+          si se quita del diseño.</li>
+        <li><span class="ck">5</span> <strong>Solo a quien se presentó.</strong> La constancia debería
+          emitirse únicamente si la actividad se marcó como <strong>realizada</strong>; a quien no llegó
+          no se le genera. Depende de que exista el marcado de desenlace en Seguimiento.</li>
+      </ul>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2028</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+</body>
+</html>

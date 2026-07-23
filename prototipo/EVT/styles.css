@@ -6,6 +6,13 @@
 
 @import '../common/styles-base.css';
 
+:root {
+  /* Bordes tenues de estado — extienden la escala --ok-*/--err-* de common/,
+     que solo trae el 050 (fondo) y el 600 (texto). */
+  --ok-200:  #c9e5d3;
+  --err-200: #eecac5;
+}
+
 /* ===================== Shell (sidebar + contenido) ===================== */
 .admin-body { display: flex; min-height: calc(100vh - 67px); }
 

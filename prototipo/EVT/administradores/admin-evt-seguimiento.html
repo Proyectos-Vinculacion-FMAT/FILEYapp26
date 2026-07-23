@@ -6,6 +6,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FILEY 2027 — Panel Eventos · Seguimiento</title>
 <link rel="stylesheet" href="../styles.css">
+<style>
+  /* Sección Reportes: un solo botón con menú, no tres botones sueltos */
+  .rep-wrap { position:relative; display:inline-block; }
+  .rep-menu {
+    position:absolute; top:calc(100% + 6px); left:0; z-index:30; min-width:330px;
+    background:var(--color-blanco); border:1px solid var(--gris-200);
+    border-radius:var(--radio); box-shadow:var(--sombra-lg); padding:6px;
+  }
+  .rep-menu[hidden] { display:none; }
+  .rep-menu button {
+    display:block; width:100%; text-align:left; background:none; border:none;
+    font-family:inherit; font-size:14px; color:var(--gris-700); cursor:pointer;
+    padding:11px 13px; border-radius:var(--radio-sm); line-height:1.4;
+  }
+  .rep-menu button:hover { background:var(--azul-050); color:var(--color-azul-institucional-enfoque); }
+  .rep-menu button strong { display:block; font-weight:600; color:var(--color-azul-institucional-enfoque); }
+  .rep-menu button small { display:block; margin-top:2px; font-size:12.5px; color:var(--gris-500); }
+
+  /* Modal de generación: parámetros + alcance. Nunca el reporte en pantalla. */
+  .rep-campo { margin-bottom:16px; }
+  .rep-campo > label {
+    display:block; font-size:12.5px; font-weight:700; letter-spacing:.4px;
+    text-transform:uppercase; color:var(--gris-500); margin-bottom:7px;
+  }
+  .rep-campo select { width:100%; }
+  .rep-opt { display:flex; align-items:center; gap:9px; font-size:14px; color:var(--gris-700); margin-bottom:8px; cursor:pointer; }
+  .rep-opt input { accent-color:var(--color-azul-institucional); width:17px; height:17px; cursor:pointer; }
+  .rep-alcance {
+    background:var(--azul-050); border:1px solid var(--azul-100); border-radius:var(--radio-sm);
+    padding:13px 15px; font-size:14px; color:var(--color-azul-institucional);
+  }
+  .rep-alcance b { font-size:16px; }
+  .rep-alcance small { display:block; margin-top:4px; font-size:12.5px; color:var(--azul-600); }
+</style>
 </head>
 <body>
 
@@ -58,7 +92,7 @@
       </div>
 
       <!-- Contadores por estado -->
-      <h3 style="color:var(--azul-900);margin:0 0 12px">Propuestas por estado</h3>
+      <h3 style="color:var(--color-azul-institucional-enfoque);margin:0 0 12px">Propuestas por estado</h3>
       <div class="stat-grid">
         <div class="stat-card accent-blue"><span class="k">Recibidas</span><span class="v">42</span><span class="foot">Total de la edición</span></div>
         <div class="stat-card accent-warn"><span class="k">Pendientes</span><span class="v">14</span><span class="foot">Por revisar</span></div>
@@ -71,7 +105,7 @@
       </div>
 
       <!-- Cupos por categoría -->
-      <h3 style="color:var(--azul-900);margin:30px 0 12px">Espacios por categoría (aceptadas / cupo)</h3>
+      <h3 style="color:var(--color-azul-institucional-enfoque);margin:30px 0 12px">Espacios por categoría (aceptadas / cupo)</h3>
       <div class="card card-pad">
         <div class="cupos">
           <div class="cupo">
@@ -98,9 +132,163 @@
         <div><strong>Académica · UADY</strong> alcanzó su cupo (15/15). Puedes seguir aceptando propuestas de
           esa categoría (quedan en reserva ante posibles bajas); el sistema solo te avisa, no lo bloquea.</div>
       </div>
+
+      <!-- ===== Reportes: se generan como archivo, no se muestran en pantalla ===== -->
+      <h3 style="color:var(--color-azul-institucional-enfoque);margin:34px 0 12px">Reportes</h3>
+      <div class="card card-pad">
+        <div style="display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+          <div style="max-width:52ch">
+            <strong style="display:block;font-size:15px;color:var(--color-azul-institucional-enfoque);margin-bottom:4px">Descargar un reporte de la edición</strong>
+            <span style="font-size:13.5px;color:var(--gris-500)">Los reportes no se muestran aquí en pantalla: eliges cuál quieres,
+              confirmas qué va a incluir y se genera el archivo para guardar o imprimir.</span>
+          </div>
+          <div class="rep-wrap">
+            <button class="btn btn-primary" id="rep-btn" onclick="repMenu()">📥 Descargar reporte ▾</button>
+            <div class="rep-menu" id="rep-menu" hidden>
+              <button onclick="repAbrir('participantes')">
+                <strong>Participantes por evento</strong>
+                <small>Para agradecimientos y constancias. Quién participó y en qué actividad.</small>
+              </button>
+              <button onclick="repAbrir('resumen')">
+                <strong>Resumen ejecutivo de la edición</strong>
+                <small>Totales por estado y categoría, ocupación por salón, actividades por día.</small>
+              </button>
+              <button onclick="repAbrir('estado')">
+                <strong>Actividades y su estado final</strong>
+                <small>Listado de lo programado con su desenlace: realizada, cancelada o no se presentó.</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note note-info" style="margin-top:16px">
+        <div class="ico">📄</div>
+        <div>El reporte se entrega como <strong>archivo</strong> (PDF para imprimir o entregar, Excel para
+          trabajarlo). Antes de generarlo se te dice <strong>cuántos registros va a incluir</strong>, para que
+          no tengas que abrirlo para saber si trajo lo que esperabas.</div>
+      </div>
+
     </div>
   </div>
 </div>
+
+<!-- Modal: generar reporte (parámetros + alcance) -->
+<div class="modal-back" id="m-rep" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="rep-titulo">Reporte de participantes</h3>
+      <p id="rep-sub">Elige qué debe incluir. El archivo se descarga al confirmar.</p>
+    </div>
+    <div class="modal-body">
+      <div class="rep-campo">
+        <label>Edición</label>
+        <select><option>FILEY 2028 (marzo 2028)</option><option>FILEY 2027</option></select>
+      </div>
+
+      <div class="rep-campo" id="rep-filtros">
+        <label>Incluir</label>
+        <label class="rep-opt"><input type="checkbox" id="rep-solo-real" checked onchange="repAlcance()"> Solo actividades <strong style="font-weight:600">realizadas</strong></label>
+        <label class="rep-opt"><input type="checkbox" id="rep-canc" onchange="repAlcance()"> Canceladas con aviso previo</label>
+        <label class="rep-opt"><input type="checkbox" id="rep-nopres" onchange="repAlcance()"> Incomparecencias (no se presentaron)</label>
+      </div>
+
+      <div class="rep-campo">
+        <label>Formato</label>
+        <label class="rep-opt"><input type="radio" name="rep-fmt" checked> PDF · para imprimir o entregar</label>
+        <label class="rep-opt"><input type="radio" name="rep-fmt"> Excel · para seguir trabajándolo</label>
+      </div>
+
+      <div class="rep-alcance" id="rep-alcance">
+        <b>17 actividades · 38 participantes</b>
+        <small>Es lo que va a traer el archivo con los filtros de arriba.</small>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('m-rep').hidden=true">Cancelar</button>
+      <button class="btn btn-primary" onclick="repGenerar()">Generar y descargar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../demo.js"></script>
+<script>
+  document.querySelectorAll('.modal-back').forEach(function(b){
+    b.addEventListener('click', function(e){ if(e.target === b) b.hidden = true; });
+  });
+
+  /* ===== Menú de reportes ===== */
+  function repMenu(){
+    var m = document.getElementById('rep-menu');
+    m.hidden = !m.hidden;
+  }
+  // Clic fuera: cierra el menú.
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.rep-wrap')) document.getElementById('rep-menu').hidden = true;
+  });
+
+  /* ===== Configuración de cada reporte ===== */
+  var REPORTES = {
+    participantes: {
+      titulo: 'Reporte de participantes por evento',
+      sub: 'Para agradecimientos y constancias. El archivo se descarga al confirmar.',
+      filtros: true, actividades: 19, participantes: 42
+    },
+    resumen: {
+      titulo: 'Resumen ejecutivo de la edición',
+      sub: 'Totales, ocupación por salón y actividades por día. El archivo se descarga al confirmar.',
+      filtros: false, actividades: 19, participantes: 42
+    },
+    estado: {
+      titulo: 'Actividades y su estado final',
+      sub: 'Listado de lo programado con su desenlace. El archivo se descarga al confirmar.',
+      filtros: true, actividades: 19, participantes: 42
+    }
+  };
+  var repActual = 'participantes';
+
+  function repAbrir(cual){
+    repActual = cual;
+    var r = REPORTES[cual];
+    document.getElementById('rep-titulo').textContent = r.titulo;
+    document.getElementById('rep-sub').textContent = r.sub;
+    document.getElementById('rep-filtros').style.display = r.filtros ? '' : 'none';
+    document.getElementById('rep-menu').hidden = true;
+    repAlcance();
+    document.getElementById('m-rep').hidden = false;
+  }
+
+  // El conteo NO es el reporte: solo confirma qué alcance va a tener el archivo.
+  function repAlcance(){
+    var r = REPORTES[repActual];
+    var acts = 0, parts = 0;
+    if(!r.filtros){
+      acts = 19; parts = 42;
+    } else {
+      if(document.getElementById('rep-solo-real').checked){ acts += 17; parts += 38; }
+      if(document.getElementById('rep-canc').checked){      acts += 1;  parts += 2;  }
+      if(document.getElementById('rep-nopres').checked){    acts += 1;  parts += 2;  }
+    }
+    var box = document.getElementById('rep-alcance');
+    if(acts === 0){
+      box.querySelector('b').textContent = 'Sin registros';
+      box.querySelector('small').textContent = 'Con estos filtros el archivo saldría vacío. Marca al menos una opción.';
+    } else {
+      box.querySelector('b').textContent = acts + ' actividades · ' + parts + ' participantes';
+      box.querySelector('small').textContent = 'Es lo que va a traer el archivo con los filtros de arriba.';
+    }
+  }
+
+  function repGenerar(){
+    var acts = document.getElementById('rep-alcance').querySelector('b').textContent;
+    if(acts === 'Sin registros'){
+      window.FileyDemo.toast('Marca al menos una opción: así el reporte saldría vacío.', 'warn');
+      return;
+    }
+    document.getElementById('m-rep').hidden = true;
+    window.FileyDemo.toast('Generando “' + REPORTES[repActual].titulo + '” (' + acts + ')… la descarga inicia en unos segundos.', 'ok');
+  }
+</script>
 
 </body>
 </html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../common/assets/filey-org-ico.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2028 — Programa de eventos</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Barra de la URL estática: identifica la versión que se está viendo */
+  .pub-bar {
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background:var(--color-blanco); border:1px solid var(--gris-200);
+    border-radius:var(--radio); padding:16px 20px; box-shadow:var(--sombra-sm);
+    margin-bottom:22px;
+  }
+  .pub-ver { display:flex; flex-direction:column; gap:3px; }
+  .pub-ver strong { font-size:14px; color:var(--color-azul-institucional-enfoque); }
+  .pub-ver small { font-size:12.5px; color:var(--gris-500); }
+  .pub-url {
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px;
+    background:var(--gris-050); border:1px solid var(--gris-200); border-radius:var(--radio-sm);
+    padding:6px 10px; color:var(--gris-500); word-break:break-all;
+  }
+
+  /* Rejilla de solo lectura: mismo formato que el Excel (una tabla por salón) */
+  .pub-salon { margin-bottom:26px; }
+  .pub-salon > h3 {
+    margin:0 0 10px; font-size:16px; color:var(--color-azul-institucional-enfoque);
+    display:flex; align-items:center; gap:10px;
+  }
+  .pub-salon > h3 .cnt { font-size:12.5px; font-weight:600; color:var(--gris-500); }
+  .pub-table { width:100%; border-collapse:collapse; background:var(--color-blanco); }
+  .pub-table th, .pub-table td {
+    text-align:left; padding:12px 14px; font-size:13.5px;
+    border-bottom:1px solid var(--gris-200); vertical-align:top;
+  }
+  .pub-table th {
+    background:var(--gris-050); color:var(--gris-700); font-size:12px;
+    text-transform:uppercase; letter-spacing:.5px; font-weight:700;
+  }
+  .pub-table td.hora { white-space:nowrap; font-weight:700; color:var(--azul-600); width:120px; }
+  .pub-table td.dia  { white-space:nowrap; color:var(--gris-500); width:110px; }
+  .pub-table .tit { font-weight:600; color:var(--color-azul-institucional-enfoque); }
+  .pub-table .sub { display:block; margin-top:3px; font-size:12.5px; color:var(--gris-500); }
+  .pub-table tr.libre td { color:var(--gris-300); font-style:italic; }
+
+  @media (max-width:720px){
+    .pub-table th, .pub-table td { padding:10px; font-size:13px; }
+    .pub-table td.dia { width:auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="home" href="programa-publico.html">
+      <img class="logo" src="../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <div class="brand-text"><strong>Edición 2028</strong><small>Programa de eventos</small></div>
+    </a>
+    <nav class="topnav">
+      <span style="font-size:13px;color:rgba(255,255,255,.75)">Vista pública · solo lectura</span>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY · EVT —
+  <b>Programa publicado (CU-PRG-010)</b> &nbsp;·&nbsp;
+  <a href="administradores/admin-evt-horario.html">↩ Volver al tablero</a>
+  &nbsp;·&nbsp; <a href="administradores/admin-evt-programa.html">Programa (lista) ↗</a>
+  &nbsp;·&nbsp; <a href="programa-cuadricula.html">Descargar cuadrícula ↗</a>
+</div></div>
+
+<main class="page">
+
+  <div class="page-head">
+    <h1>Programa de eventos · FILEY 2028</h1>
+    <p>Esta es la vista pública del programa. Cualquiera con esta dirección puede consultarla:
+      no hace falta cuenta ni permisos. Se muestra siempre <strong>lo último guardado</strong>
+      por la Coordinación, así que puede cambiar hasta el día de la feria.</p>
+  </div>
+
+  <!-- Sello de versión + descarga del PDF (el PDF se genera desde aquí, no se almacena) -->
+  <div class="pub-bar">
+    <div class="pub-ver">
+      <strong>Versión 14 · programa preliminar</strong>
+      <small>Última actualización: 21 de julio de 2026, 11:42 h</small>
+    </div>
+    <span class="pub-url">filey.org/2028/programa/eventos</span>
+    <a class="btn btn-primary" href="programa-cuadricula.html" target="_blank"
+       title="Abre el programa en cuadrícula (formato del Excel) para imprimir o guardar como PDF">⬇ Descargar este programa en PDF</a>
+  </div>
+
+  <div class="note note-warn" style="margin-bottom:24px">
+    <div class="ico">⚠️</div>
+    <div>El programa es <strong>preliminar</strong>: aún hay actividades sin sala y horario asignados.
+      Si imprimes o compartes el PDF, revisa que el número de versión coincida con el de esta página
+      antes de distribuirlo.</div>
+  </div>
+
+  <!-- Salón Chichén Itzá -->
+  <div class="pub-salon">
+    <h3>Salón Chichén Itzá <span class="cnt">· 3 actividades</span></h3>
+    <div class="card" style="overflow:hidden">
+      <table class="pub-table">
+        <thead><tr><th>Día</th><th>Horario</th><th>Actividad</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="dia">Jue 9 mar</td>
+            <td class="hora">10:00 – 11:15</td>
+            <td><span class="tit">Conferencia inaugural</span>
+              <span class="sub">Conferencia · Coordinación General de Contenidos</span></td>
+          </tr>
+          <tr>
+            <td class="dia">Jue 9 mar</td>
+            <td class="hora">11:30 – 12:45</td>
+            <td><span class="tit">Poesía joven del Mayab</span>
+              <span class="sub">Lectura de obra · Colectivo Raíz Nueva</span></td>
+          </tr>
+          <tr>
+            <td class="dia">Vie 10 mar</td>
+            <td class="hora">16:00 – 17:15</td>
+            <td><span class="tit">Novela gráfica del Mayab</span>
+              <span class="sub">Conversatorio · Ediciones Sureste</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Salón Uxmal -->
+  <div class="pub-salon">
+    <h3>Salón Uxmal <span class="cnt">· 2 actividades</span></h3>
+    <div class="card" style="overflow:hidden">
+      <table class="pub-table">
+        <thead><tr><th>Día</th><th>Horario</th><th>Actividad</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="dia">Jue 9 mar</td>
+            <td class="hora">16:00 – 17:15</td>
+            <td><span class="tit">El oficio de la encuadernación</span>
+              <span class="sub">Conversatorio · Taller Papel y Hueso</span></td>
+          </tr>
+          <tr>
+            <td class="dia">Sáb 11 mar</td>
+            <td class="hora">13:00 – 14:15</td>
+            <td><span class="tit">El mar que nos habita</span>
+              <span class="sub">Presentación de libro · Editorial La Nave · Renata Solís, Jorge Cauich</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Auditorio -->
+  <div class="pub-salon">
+    <h3>Auditorio Manuel Cepeda Peraza <span class="cnt">· 1 actividad</span></h3>
+    <div class="card" style="overflow:hidden">
+      <table class="pub-table">
+        <thead><tr><th>Día</th><th>Horario</th><th>Actividad</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="dia">Jue 9 mar</td>
+            <td class="hora">13:00 – 14:15</td>
+            <td><span class="tit">Traducción y lenguas del Mayab</span>
+              <span class="sub">Conferencia · Facultad de Ciencias Antropológicas, UADY</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sala de Estados -->
+  <div class="pub-salon">
+    <h3>Sala de Estados <span class="cnt">· sin actividades asignadas</span></h3>
+    <div class="card" style="overflow:hidden">
+      <table class="pub-table">
+        <thead><tr><th>Día</th><th>Horario</th><th>Actividad</th></tr></thead>
+        <tbody>
+          <tr class="libre"><td colspan="3" style="text-align:center;padding:22px">Todavía no hay actividades programadas en esta sala.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note note-info">
+    <div class="ico">ℹ️</div>
+    <div>El mismo programa se publica también para <strong>talleres</strong> en su propia dirección.
+      Esta vista es de <strong>solo lectura</strong>: los cambios se hacen desde el panel de la
+      Coordinación y aparecen aquí en cuanto se guardan.</div>
+  </div>
+
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2028</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+</body>
+</html>
