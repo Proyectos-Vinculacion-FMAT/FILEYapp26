@@ -1,11 +1,12 @@
 ---
 estado: aprobado
-version: 0.1
+version: 0.2
 tags:
   - caso-de-uso
   - autenticacion
   - core-registros
 fecha: 2026-06-22
+fecha_actualizacion: 2026-07-22
 id: CU-REG-004
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -22,7 +23,7 @@ Terminar la sesión activa del usuario (externo o administrativo), invalidando e
 
 ## Alcance
 
-Core Registros. Aplica a cualquier usuario autenticado, independientemente del módulo o del mecanismo con que inició sesión (OTP o contraseña).
+Core Registros. Aplica a cualquier usuario autenticado, sea aplicante (externo) o administrativo. Todos inician sesión por OTP por correo (CU-REG-002 / CU-REG-003), por lo que el cierre de sesión es idéntico para todos: invalidar el JWT de la sesión activa.
 
 ## Actores
 

@@ -59,4 +59,4 @@ Inventario de casos de uso del **Core Registros**: creación de cuenta, inicio d
 - [ ] ¿Correo y teléfono son **ambos obligatorios** al registrarse, o basta con el correo? (Pendiente de la junta del lunes 22-Jun — ver `Definicion de Cores.md`)
 - [ ] ¿Qué pasa si dos registros tienen el mismo correo pero distinto teléfono? (Posible duplicado de escuela registrándose varias veces — ver `Definicion de Cores.md`)
 - [x] ¿Los usuarios administrativos también usan OTP o siempre contraseña? **Resuelto (2026-06-30):** OTP para todos; se derogó la contraseña para admins (ver CU-REG-003).
-- [ ] Homologar CU-REG-005 al nuevo esquema OTP: al provisionar una cuenta administrativa ya no se envía enlace para "establecer contraseña"; basta crear la `Persona` y su `RolPermiso`.
+- [x] Homologar CU-REG-005 al nuevo esquema OTP: al provisionar una cuenta administrativa ya no se envía enlace para "establecer contraseña"; basta crear la `Persona` y su `RolPermiso`. **Resuelto (2026-07-22):** CU-REG-005 actualizado a v0.2 — sin contraseña ni enlace de activación; no se envía correo al alta y el OTP se emite en el login (CU-REG-003).
