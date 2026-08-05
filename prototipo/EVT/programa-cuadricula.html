@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../common/assets/filey-org-ico.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FILEY 2028 — Programa de eventos (cuadrícula para imprimir)</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Página imprimible: una cuadrícula por salón, como el Excel de la Coordinación =====
+     Columnas = días · filas = bloques de horario. Se abre desde el botón
+     "Descargar PDF" de programa-publico.html; se guarda como PDF desde el navegador. */
+
+  @page { size: A4 landscape; margin: 11mm; }
+
+  /* Barra de acciones (no se imprime) */
+  .print-bar {
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background:var(--color-blanco); border:1px solid var(--gris-200);
+    border-radius:var(--radio); padding:14px 18px; box-shadow:var(--sombra-sm); margin-bottom:22px;
+  }
+  .print-bar .pb-ver { display:flex; flex-direction:column; gap:3px; }
+  .print-bar .pb-ver strong { font-size:14px; color:var(--color-azul-institucional-enfoque); }
+  .print-bar .pb-ver small { font-size:12.5px; color:var(--gris-500); }
+
+  /* Encabezado que sí se imprime en la primera página */
+  .cuad-doc-head { text-align:center; margin-bottom:14px; }
+  .cuad-doc-head h1 { margin:0; font-size:20px; color:var(--color-azul-institucional-enfoque); }
+  .cuad-doc-head small { color:var(--gris-500); font-size:12.5px; }
+
+  /* Bloque de cada salón (una hoja del Excel) */
+  .cuad-salon { margin:0 0 26px; }
+  .cuad-salon + .cuad-salon { break-before:page; page-break-before:always; }
+  .cuad-banner {
+    background:var(--color-azul-institucional); color:var(--color-blanco);
+    text-align:center; padding:9px 12px; border-radius:6px 6px 0 0;
+    font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700;
+  }
+  .cuad-titulo {
+    background:var(--color-azul-institucional-enfoque); color:var(--color-blanco);
+    text-align:center; padding:7px 12px; font-size:15px; font-weight:700;
+  }
+
+  table.cuad { width:100%; border-collapse:collapse; table-layout:fixed; background:var(--color-blanco); }
+  table.cuad th, table.cuad td { border:1px solid var(--gris-300); vertical-align:top; }
+  table.cuad thead th {
+    background:var(--color-azul-institucional); color:var(--color-blanco);
+    text-align:center; padding:8px 5px; font-size:11.5px; font-weight:700;
+  }
+  table.cuad thead th.h-hora { width:88px; }
+  table.cuad td.hora {
+    background:var(--gris-050); text-align:center; font-weight:700; font-size:11px;
+    color:var(--color-azul-institucional-enfoque); white-space:nowrap; width:88px;
+  }
+  table.cuad td.cell { height:66px; padding:5px; }
+  table.cuad td.cell.free { background:var(--color-blanco); }
+
+  /* Franja de receso (cruza todos los días, como en el Excel) */
+  table.cuad td.receso {
+    background:repeating-linear-gradient(135deg,var(--gris-050),var(--gris-050) 9px,var(--gris-100) 9px,var(--gris-100) 18px);
+    text-align:center; font-weight:700; font-size:11px; color:var(--gris-500);
+    letter-spacing:2px; text-transform:uppercase;
+  }
+
+  /* Actividad dentro de una celda */
+  .cuad .act {
+    border-left:3px solid var(--color-azul-institucional);
+    background:var(--azul-100); border-radius:4px; padding:5px 7px; height:100%;
+  }
+  .cuad .act strong { display:block; font-size:11.5px; line-height:1.25; color:var(--color-azul-institucional-enfoque); }
+  .cuad .act small { display:block; margin-top:3px; font-size:10.5px; color:var(--gris-500); line-height:1.3; }
+  .cuad .act .hora-act { font-weight:700; color:var(--color-azul-institucional); }
+  .cuad-salon .vacio {
+    text-align:center; color:var(--gris-300); font-style:italic; font-size:12px; padding:16px;
+    border:1px solid var(--gris-300); border-top:none; background:var(--color-blanco);
+  }
+  .cuad-leyenda { font-size:11.5px; color:var(--gris-500); margin-top:8px; }
+
+  /* Al imprimir: fuera todo lo que no es el programa */
+  @media print {
+    .topbar, .proto-bar, .print-bar, .footer, .no-print { display:none !important; }
+    body { background:#fff; }
+    main.page { padding:0; max-width:none; }
+    .cuad-salon { margin-bottom:0; }
+  }
+
+  @media (max-width:760px){
+    table.cuad thead th, table.cuad td.hora { font-size:10.5px; }
+    .cuad .act strong { font-size:11px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="home" href="programa-publico.html">
+      <img class="logo" src="../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <div class="brand-text"><strong>Edición 2028</strong><small>Programa de eventos · cuadrícula</small></div>
+    </a>
+    <nav class="topnav">
+      <span style="font-size:13px;color:rgba(255,255,255,.75)">Formato para imprimir · solo lectura</span>
+    </nav>
+  </div>
+</header>
+
+<div class="proto-bar"><div class="proto-bar-inner">
+  <span class="dot"></span> Prototipo FILEY · EVT —
+  <b>Descarga del programa en cuadrícula (CU-PRG-010)</b> &nbsp;·&nbsp;
+  <a href="programa-publico.html">↩ Volver al programa público</a>
+</div></div>
+
+<main class="page">
+
+  <!-- Barra de acción: aquí se "descarga" (imprimir → Guardar como PDF) -->
+  <div class="print-bar">
+    <div class="pb-ver">
+      <strong>Versión 14 · programa preliminar</strong>
+      <small>Última actualización: 21 de julio de 2026, 11:42 h · filey.org/2028/programa/eventos</small>
+    </div>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+  </div>
+
+  <div class="note note-warn no-print" style="margin-bottom:22px">
+    <div class="ico">⚠️</div>
+    <div>Esta es la vista en <strong>cuadrícula</strong> (el mismo formato que usa la Coordinación en su Excel):
+      <strong>una tabla por salón</strong>, con los días en columnas y los bloques de horario en filas.
+      El programa es <strong>preliminar</strong>; usa <strong>Imprimir / Guardar como PDF</strong> y revisa que
+      el número de versión coincida antes de compartirlo.</div>
+  </div>
+
+  <!-- Encabezado que sí sale impreso -->
+  <div class="cuad-doc-head">
+    <h1>Programa de eventos · FILEY 2028</h1>
+    <small>Versión 14 (preliminar) · 21 de julio de 2026 · Coordinación General de Contenidos</small>
+  </div>
+
+  <!-- ===================== Salón Chichén Itzá ===================== -->
+  <section class="cuad-salon">
+    <div class="cuad-banner">Coordinación General de Contenidos</div>
+    <div class="cuad-titulo">Salón Chichén Itzá</div>
+    <table class="cuad">
+      <thead>
+        <tr>
+          <th class="h-hora">Horario</th>
+          <th>Jueves 9</th><th>Viernes 10</th><th>Sábado 11</th><th>Domingo 12</th><th>Lunes 13</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="hora">10:00<br>11:15</td>
+          <td class="cell"><div class="act"><strong>Conferencia inaugural</strong><small>Conferencia · Coordinación General de Contenidos</small></div></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">11:30<br>12:45</td>
+          <td class="cell"><div class="act"><strong>Poesía joven del Mayab</strong><small>Lectura de obra · Colectivo Raíz Nueva</small></div></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">13:00<br>14:15</td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">14:15<br>16:00</td>
+          <td class="receso" colspan="5">Receso</td>
+        </tr>
+        <tr>
+          <td class="hora">16:00<br>17:15</td>
+          <td class="cell free"></td>
+          <td class="cell"><div class="act"><strong>Novela gráfica del Mayab</strong><small>Conversatorio · Ediciones Sureste</small></div></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">17:30<br>18:45</td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================== Salón Uxmal ===================== -->
+  <section class="cuad-salon">
+    <div class="cuad-banner">Coordinación General de Contenidos</div>
+    <div class="cuad-titulo">Salón Uxmal</div>
+    <table class="cuad">
+      <thead>
+        <tr>
+          <th class="h-hora">Horario</th>
+          <th>Jueves 9</th><th>Viernes 10</th><th>Sábado 11</th><th>Domingo 12</th><th>Lunes 13</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="hora">10:00<br>11:15</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">11:30<br>12:45</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">13:00<br>14:15</td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell"><div class="act"><strong>El mar que nos habita</strong><small>Presentación de libro · Editorial La Nave · Renata Solís, Jorge Cauich</small></div></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">14:15<br>16:00</td>
+          <td class="receso" colspan="5">Receso</td>
+        </tr>
+        <tr>
+          <td class="hora">16:00<br>17:15</td>
+          <td class="cell"><div class="act"><strong>El oficio de la encuadernación</strong><small>Conversatorio · Taller Papel y Hueso</small></div></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">17:30<br>18:45</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================== Auditorio Manuel Cepeda Peraza ===================== -->
+  <section class="cuad-salon">
+    <div class="cuad-banner">Coordinación General de Contenidos</div>
+    <div class="cuad-titulo">Auditorio Manuel Cepeda Peraza</div>
+    <table class="cuad">
+      <thead>
+        <tr>
+          <th class="h-hora">Horario</th>
+          <th>Jueves 9</th><th>Viernes 10</th><th>Sábado 11</th><th>Domingo 12</th><th>Lunes 13</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="hora">10:00<br>11:15</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">11:30<br>12:45</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">13:00<br>14:15</td>
+          <td class="cell"><div class="act"><strong>Traducción y lenguas del Mayab</strong><small>Conferencia · Facultad de Ciencias Antropológicas, UADY</small></div></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+          <td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">14:15<br>16:00</td>
+          <td class="receso" colspan="5">Receso</td>
+        </tr>
+        <tr>
+          <td class="hora">16:00<br>17:15</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">17:30<br>18:45</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================== Sala de Estados ===================== -->
+  <section class="cuad-salon">
+    <div class="cuad-banner">Coordinación General de Contenidos</div>
+    <div class="cuad-titulo">Sala de Estados</div>
+    <table class="cuad">
+      <thead>
+        <tr>
+          <th class="h-hora">Horario</th>
+          <th>Jueves 9</th><th>Viernes 10</th><th>Sábado 11</th><th>Domingo 12</th><th>Lunes 13</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="hora">10:00<br>11:15</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">11:30<br>12:45</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">13:00<br>14:15</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">14:15<br>16:00</td>
+          <td class="receso" colspan="5">Receso</td>
+        </tr>
+        <tr>
+          <td class="hora">16:00<br>17:15</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+        <tr>
+          <td class="hora">17:30<br>18:45</td>
+          <td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td><td class="cell free"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="vacio">Todavía no hay actividades programadas en esta sala.</div>
+  </section>
+
+  <div class="cuad-leyenda no-print">Celda vacía = bloque libre · Los bloques son fijos de 1:15; la franja de receso separa la mañana de la tarde.</div>
+
+</main>
+
+<footer class="footer"><div class="footer-inner">
+  <div><strong>FILEY 2028</strong> — Coordinación General de Contenidos · UADY</div>
+  <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
+</div></footer>
+
+</body>
+</html>

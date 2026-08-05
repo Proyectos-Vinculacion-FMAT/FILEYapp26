@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -22,11 +22,9 @@
     <img class="logo-lg" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
 
     <h2>Panel de administración</h2>
-    <p>Coordinación General de Contenidos. Revisa propuestas, gestiona convocatorias y supervisa el programa de actividades de la feria.</p>
+    <p>Coordinación General de Contenidos · FILEY, edición 2027.</p>
     <div class="pills">
-      <span>🗂️ Revisión de propuestas</span>
-      <span>📅 Armado del programa</span>
-      <span>🔑 Sin contraseña — código OTP</span>
+      <span>Acceso restringido al comité organizador</span>
     </div>
   </div>
 
@@ -35,13 +33,15 @@
       <h3>Acceso de administrador</h3>
       <p class="sub">Ingresa tu correo institucional. Te enviaremos un código de acceso de un solo uso.</p>
 
-      <form onsubmit="return false">
+      <form id="form-admin" novalidate>
         <div class="field">
-          <label>Correo institucional <span class="req">*</span></label>
-          <input type="email" placeholder="usuario@filey.org" value="hipolito@filey.org">
+          <label for="correo">Correo institucional <span class="req">*</span></label>
+          <input type="email" id="correo" placeholder="usuario@filey.org" autocomplete="email">
         </div>
+        <p class="msg-error" id="error-admin" hidden>Este correo no está registrado como administrador.
+          Si crees que es un error, contacta a <strong>contenidos@filey.org</strong>.</p>
 
-        <a class="btn btn-gold btn-block btn-lg" href="admin-otp.html">Continuar →</a>
+        <button class="btn btn-gold btn-block btn-lg" id="btn-continuar" type="submit" disabled>Continuar →</button>
       </form>
 
       <div class="note note-info" style="margin-top: 22px">
@@ -50,12 +50,53 @@
           contacta a <strong>contenidos@filey.org</strong>.</div>
       </div>
 
-      <div class="auth-foot">
-        ¿Eres proponente? <a href="../aplicantes/aplicantes-login.html">Ir al acceso de proponentes</a>
+      <div class="note note-gold" style="margin-top:12px">
+        <div class="ico">🧪</div>
+        <div><strong>Modo demo:</strong> <code>hipolito@filey.org</code> tiene permiso de
+          administrador. Cualquier otro correo muestra el error de acceso.</div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  "use strict";
+  /* Cuentas administrativas harcodeadas — las da de alta el superusuario */
+  var ADMINS = ["hipolito@filey.org", "contenidos@filey.org"];
+  var FLUJO_KEY = "filey_admin_flujo";
+
+  var input = document.getElementById("correo");
+  var boton = document.getElementById("btn-continuar");
+  var error = document.getElementById("error-admin");
+
+  function correoValido(){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value.trim());
+  }
+
+  input.addEventListener("input", function(){
+    input.classList.remove("is-invalid");
+    error.hidden = true;
+    boton.disabled = !correoValido();
+  });
+  input.addEventListener("blur", function(){
+    input.classList.toggle("is-invalid", input.value.trim() !== "" && !correoValido());
+  });
+
+  document.getElementById("form-admin").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (boton.disabled) return;
+    var correo = input.value.trim().toLowerCase();
+    if (ADMINS.indexOf(correo) === -1){
+      input.classList.add("is-invalid");
+      error.hidden = false;
+      return;
+    }
+    localStorage.setItem(FLUJO_KEY, JSON.stringify({ correo: correo }));
+    window.location.href = "admin-otp.html";
+  });
+})();
+</script>
 
 </body>
 </html>

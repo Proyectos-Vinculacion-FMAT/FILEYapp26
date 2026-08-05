@@ -33,3 +33,49 @@
   color: var(--color-azul-institucional-enfoque);
   font-weight: 600;
 }
+
+/* ── Acceso/registro: validación en vivo ── */
+.btn:disabled {
+  background: var(--gris-200);
+  color: var(--gris-500);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn:disabled:active { transform: none; }
+
+.field input.is-invalid {
+  border-color: var(--err-600);
+}
+
+.msg-error {
+  margin: -6px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--err-600);
+}
+
+/* ── OTP interactivo ── */
+.otp-estado {
+  min-height: 18px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--gris-500);
+}
+.otp-estado.err { color: var(--err-600); }
+
+.otp-row.error input {
+  border-color: var(--err-600);
+  animation: otp-sacudir .3s ease;
+}
+@keyframes otp-sacudir {
+  20%  { transform: translateX(-4px); }
+  45%  { transform: translateX(4px); }
+  70%  { transform: translateX(-2px); }
+  100% { transform: none; }
+}
+
+.otp-cooldown {
+  font-variant-numeric: tabular-nums;
+  color: var(--gris-500);
+}

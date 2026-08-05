@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -21,33 +21,34 @@
   <div class="auth-hero is-admin">
     <img class="logo-lg" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
 
-    <h2>Verifica tu identidad</h2>
-    <p>Te enviamos un código de un solo uso a tu correo institucional. Ingrésalo para acceder al panel de administración.</p>
+    <h2>Panel de administración</h2>
+    <p>Coordinación General de Contenidos · FILEY, edición 2027.</p>
     <div class="pills">
-      <span>🛡️ Panel de administración</span>
-      <span>⏱️ Válido 15 minutos</span>
+      <span>Acceso restringido al comité organizador</span>
     </div>
   </div>
 
   <div class="auth-form">
     <div class="auth-card">
       <h3>Ingresa tu código</h3>
-      <p class="sub">Enviamos un código de 6 dígitos a <strong>hipolito@filey.org</strong></p>
+      <p class="sub">Enviamos un código de 6 dígitos a <strong id="otp-correo">hipolito@filey.org</strong></p>
 
-      <form onsubmit="return false">
-        <div class="otp-row">
-          <input maxlength="1" inputmode="numeric" value="7">
-          <input maxlength="1" inputmode="numeric" value="1">
-          <input maxlength="1" inputmode="numeric" value="3">
-          <input maxlength="1" inputmode="numeric" value="">
-          <input maxlength="1" inputmode="numeric" value="">
-          <input maxlength="1" inputmode="numeric" value="">
+      <form id="form-otp" novalidate>
+        <div class="otp-row" id="otp-row">
+          <input maxlength="1" inputmode="numeric" autocomplete="one-time-code" aria-label="Dígito 1">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 2">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 3">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 4">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 5">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 6">
         </div>
+        <p class="otp-estado" id="otp-estado" aria-live="polite"></p>
         <div class="otp-meta">
-          <span>El código vence en <strong>14:47</strong></span>
-          <a href="#">Reenviar código</a>
+          <span>El código vence en <strong id="otp-vence">15:00</strong></span>
+          <span class="otp-cooldown" id="otp-cooldown">Reenviar en 00:30</span>
+          <a href="#" id="btn-reenviar" hidden>Reenviar código</a>
         </div>
-        <a class="btn btn-gold btn-block btn-lg" href="admin-convocatorias.html" style="margin-top: 22px">Verificar y entrar →</a>
+        <button class="btn btn-gold btn-block btn-lg" id="btn-verificar" type="submit" style="margin-top: 22px" disabled>Verificar y entrar →</button>
       </form>
 
       <div class="note note-info" style="margin-top: 22px">
@@ -56,12 +57,134 @@
           administrador general.</div>
       </div>
 
-      <div class="auth-foot">
-        ¿No eres del comité? <a href="../aplicantes/aplicantes-login.html">Ir al acceso de proponentes</a>
+      <div class="note note-gold" style="margin-top:12px">
+        <div class="ico">🧪</div>
+        <div><strong>Modo demo:</strong> el código válido es <code>492817</code>.</div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  "use strict";
+  var CODIGO_DEMO = "492817";
+  var VIGENCIA = 15 * 60;
+  var COOLDOWN = 30;
+  var FLUJO_KEY = "filey_admin_flujo";
+
+  var flujo = {};
+  try { flujo = JSON.parse(localStorage.getItem(FLUJO_KEY)) || {}; } catch(e){}
+  if (flujo.correo) document.getElementById("otp-correo").textContent = flujo.correo;
+
+  var fila   = document.getElementById("otp-row");
+  var cajas  = Array.prototype.slice.call(fila.querySelectorAll("input"));
+  var estado = document.getElementById("otp-estado");
+  var boton  = document.getElementById("btn-verificar");
+
+  function valor(){ return cajas.map(function(c){ return c.value; }).join(""); }
+  function limpiarError(){
+    fila.classList.remove("error");
+    estado.textContent = "";
+    estado.classList.remove("err");
+  }
+  function refrescar(){ boton.disabled = valor().length !== 6; }
+
+  cajas.forEach(function(caja, i){
+    caja.addEventListener("input", function(){
+      limpiarError();
+      caja.value = caja.value.replace(/\D/g, "").slice(0, 1);
+      if (caja.value && i < cajas.length - 1) cajas[i + 1].focus();
+      refrescar();
+      if (valor().length === 6) verificar();
+    });
+    caja.addEventListener("keydown", function(ev){
+      if (ev.key === "Backspace" && !caja.value && i > 0){
+        cajas[i - 1].focus();
+        cajas[i - 1].value = "";
+        refrescar();
+        ev.preventDefault();
+      }
+      if (ev.key === "ArrowLeft"  && i > 0)                cajas[i - 1].focus();
+      if (ev.key === "ArrowRight" && i < cajas.length - 1) cajas[i + 1].focus();
+    });
+    caja.addEventListener("paste", function(ev){
+      ev.preventDefault();
+      var texto = (ev.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "");
+      if (!texto) return;
+      limpiarError();
+      texto.slice(0, 6).split("").forEach(function(d, j){ cajas[j].value = d; });
+      cajas[Math.min(texto.length, 5)].focus();
+      refrescar();
+      if (valor().length === 6) verificar();
+    });
+  });
+
+  function verificar(){
+    if (valor() === CODIGO_DEMO){
+      window.location.href = "admin-convocatorias.html";
+    } else {
+      fila.classList.add("error");
+      estado.textContent = "Código incorrecto, inténtalo de nuevo.";
+      estado.classList.add("err");
+      cajas.forEach(function(c){ c.value = ""; });
+      cajas[0].focus();
+      boton.disabled = true;
+    }
+  }
+  document.getElementById("form-otp").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (!boton.disabled) verificar();
+  });
+
+  var vence = document.getElementById("otp-vence");
+  var restanteVigencia = VIGENCIA;
+  function pintarVigencia(){
+    var m = Math.floor(restanteVigencia / 60), s = restanteVigencia % 60;
+    vence.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+  setInterval(function(){
+    if (restanteVigencia > 0){ restanteVigencia--; pintarVigencia(); }
+  }, 1000);
+  pintarVigencia();
+
+  var cooldown    = document.getElementById("otp-cooldown");
+  var btnReenviar = document.getElementById("btn-reenviar");
+  var timer = null;
+
+  function iniciarCooldown(){
+    if (timer) clearInterval(timer);
+    var restante = COOLDOWN;
+    cooldown.hidden = false;
+    btnReenviar.hidden = true;
+    cooldown.textContent = "Reenviar en 00:" + String(restante).padStart(2, "0");
+    timer = setInterval(function(){
+      restante--;
+      if (restante <= 0){
+        clearInterval(timer); timer = null;
+        cooldown.hidden = true;
+        btnReenviar.hidden = false;
+        return;
+      }
+      cooldown.textContent = "Reenviar en 00:" + String(restante).padStart(2, "0");
+    }, 1000);
+  }
+  btnReenviar.addEventListener("click", function(ev){
+    ev.preventDefault();
+    restanteVigencia = VIGENCIA;
+    pintarVigencia();
+    limpiarError();
+    estado.textContent = "Código reenviado a tu correo.";
+    cajas.forEach(function(c){ c.value = ""; });
+    boton.disabled = true;
+    cajas[0].focus();
+    iniciarCooldown();
+  });
+  iniciarCooldown();
+
+  cajas[0].focus();
+})();
+</script>
 
 </body>
 </html>

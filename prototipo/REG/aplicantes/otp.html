@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -21,42 +21,181 @@
 <div class="auth-wrap">
   <div class="auth-hero">
     <img class="logo-lg" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
-    <h2>Tu acceso seguro, sin contraseñas</h2>
-    <p>Te enviamos un código de un solo uso a tu correo. Es válido por 15 minutos y
-       garantiza que solo tú entres a tu cuenta.</p>
+    <h2>Portal de participantes<br>Edición 2027</h2>
+    <p>Plataforma de registro y gestión de actividades de la Coordinación General de Contenidos.
+       Envía tu propuesta, da seguimiento a su estado y consulta tu programación.</p>
     <div class="pills">
-      <span>⏱️ Válido 15 minutos</span>
-      <span>🔁 Puedes reenviarlo</span>
+      <span>📚 Convocatoria de Stands</span>
+      <span>🎨 Actividades Infantiles/Juveniles</span>
+      <span>🎤 Actividades FILEY (Eventos)</span>
+      <span>🚌 Visitas escolares</span>
     </div>
   </div>
 
   <div class="auth-form">
     <div class="auth-card">
       <h3>Ingresa tu código</h3>
-      <p class="sub">Enviamos un código de 6 dígitos a <strong>lectora@ejemplo.com</strong></p>
+      <p class="sub" id="otp-sub">Enviamos un código de 6 dígitos a <strong id="otp-correo">lectora@ejemplo.com</strong></p>
 
-      <form onsubmit="return false">
-        <div class="otp-row">
-          <input maxlength="1" inputmode="numeric" value="4">
-          <input maxlength="1" inputmode="numeric" value="9">
-          <input maxlength="1" inputmode="numeric" value="2">
-          <input maxlength="1" inputmode="numeric" value="">
-          <input maxlength="1" inputmode="numeric" value="">
-          <input maxlength="1" inputmode="numeric" value="">
+      <form id="form-otp" novalidate>
+        <div class="otp-row" id="otp-row">
+          <input maxlength="1" inputmode="numeric" autocomplete="one-time-code" aria-label="Dígito 1">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 2">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 3">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 4">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 5">
+          <input maxlength="1" inputmode="numeric" aria-label="Dígito 6">
         </div>
+        <p class="otp-estado" id="otp-estado" aria-live="polite"></p>
         <div class="otp-meta">
-          <span>El código vence en <strong>14:32</strong></span>
-          <a href="#">Reenviar código</a>
+          <span>El código vence en <strong id="otp-vence">15:00</strong></span>
+          <span class="otp-cooldown" id="otp-cooldown">Reenviar en 00:30</span>
+          <a href="#" id="btn-reenviar" hidden>Reenviar código</a>
         </div>
-        <a class="btn btn-primary btn-block btn-lg" href="convocatorias.html" style="margin-top:22px">Verificar y entrar</a>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-verificar" type="submit" style="margin-top:22px" disabled>Verificar y entrar</button>
       </form>
 
+      <div class="note note-gold" style="margin-top:22px">
+        <div class="ico">🧪</div>
+        <div><strong>Modo demo:</strong> el código válido es <code>492817</code>. Cualquier otro
+          muestra el estado de error.</div>
+      </div>
+
       <div class="auth-foot">
-        ¿No te llegó? Revisa tu carpeta de spam o <a href="#">reenvía el código</a>.
+        ¿No te llegó? Revisa tu carpeta de spam. · <a href="aplicantes-login.html">Usar otro correo</a>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  "use strict";
+  var CODIGO_DEMO = "492817";
+  var VIGENCIA = 15 * 60;  /* segundos de validez del código */
+  var COOLDOWN = 30;       /* segundos para poder reenviar */
+  var FLUJO_KEY = "filey_reg_flujo";
+
+  /* ── Contexto: ¿viene del acceso o de crear cuenta? ── */
+  var flujo = {};
+  try { flujo = JSON.parse(localStorage.getItem(FLUJO_KEY)) || {}; } catch(e){}
+  if (flujo.correo) document.getElementById("otp-correo").textContent = flujo.correo;
+  if (flujo.origen === "registro"){
+    document.getElementById("otp-sub").innerHTML =
+      "Tu cuenta quedó creada. Enviamos un código de 6 dígitos a <strong>" +
+      (flujo.correo || "tu correo") + "</strong> para verificarla.";
+  }
+
+  var fila   = document.getElementById("otp-row");
+  var cajas  = Array.prototype.slice.call(fila.querySelectorAll("input"));
+  var estado = document.getElementById("otp-estado");
+  var boton  = document.getElementById("btn-verificar");
+
+  function valor(){ return cajas.map(function(c){ return c.value; }).join(""); }
+  function limpiarError(){
+    fila.classList.remove("error");
+    estado.textContent = "";
+    estado.classList.remove("err");
+  }
+  function refrescar(){ boton.disabled = valor().length !== 6; }
+
+  cajas.forEach(function(caja, i){
+    caja.addEventListener("input", function(){
+      limpiarError();
+      caja.value = caja.value.replace(/\D/g, "").slice(0, 1);
+      if (caja.value && i < cajas.length - 1) cajas[i + 1].focus();
+      refrescar();
+      if (valor().length === 6) verificar();
+    });
+    caja.addEventListener("keydown", function(ev){
+      if (ev.key === "Backspace" && !caja.value && i > 0){
+        cajas[i - 1].focus();
+        cajas[i - 1].value = "";
+        refrescar();
+        ev.preventDefault();
+      }
+      if (ev.key === "ArrowLeft"  && i > 0)                cajas[i - 1].focus();
+      if (ev.key === "ArrowRight" && i < cajas.length - 1) cajas[i + 1].focus();
+    });
+    caja.addEventListener("paste", function(ev){
+      ev.preventDefault();
+      var texto = (ev.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "");
+      if (!texto) return;
+      limpiarError();
+      texto.slice(0, 6).split("").forEach(function(d, j){ cajas[j].value = d; });
+      cajas[Math.min(texto.length, 5)].focus();
+      refrescar();
+      if (valor().length === 6) verificar();
+    });
+  });
+
+  function verificar(){
+    if (valor() === CODIGO_DEMO){
+      window.location.href = "convocatorias.html";
+    } else {
+      fila.classList.add("error");
+      estado.textContent = "Código incorrecto, inténtalo de nuevo.";
+      estado.classList.add("err");
+      cajas.forEach(function(c){ c.value = ""; });
+      cajas[0].focus();
+      boton.disabled = true;
+    }
+  }
+  document.getElementById("form-otp").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (!boton.disabled) verificar();
+  });
+
+  /* ── Cuenta regresiva de vigencia (15:00) ── */
+  var vence = document.getElementById("otp-vence");
+  var restanteVigencia = VIGENCIA;
+  function pintarVigencia(){
+    var m = Math.floor(restanteVigencia / 60), s = restanteVigencia % 60;
+    vence.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+  setInterval(function(){
+    if (restanteVigencia > 0){ restanteVigencia--; pintarVigencia(); }
+  }, 1000);
+  pintarVigencia();
+
+  /* ── Cooldown de reenvío (30 s) ── */
+  var cooldown    = document.getElementById("otp-cooldown");
+  var btnReenviar = document.getElementById("btn-reenviar");
+  var timer = null;
+
+  function iniciarCooldown(){
+    if (timer) clearInterval(timer);
+    var restante = COOLDOWN;
+    cooldown.hidden = false;
+    btnReenviar.hidden = true;
+    cooldown.textContent = "Reenviar en 00:" + String(restante).padStart(2, "0");
+    timer = setInterval(function(){
+      restante--;
+      if (restante <= 0){
+        clearInterval(timer); timer = null;
+        cooldown.hidden = true;
+        btnReenviar.hidden = false;
+        return;
+      }
+      cooldown.textContent = "Reenviar en 00:" + String(restante).padStart(2, "0");
+    }, 1000);
+  }
+  btnReenviar.addEventListener("click", function(ev){
+    ev.preventDefault();
+    restanteVigencia = VIGENCIA;
+    pintarVigencia();
+    limpiarError();
+    estado.textContent = "Código reenviado a tu correo.";
+    cajas.forEach(function(c){ c.value = ""; });
+    boton.disabled = true;
+    cajas[0].focus();
+    iniciarCooldown();
+  });
+  iniciarCooldown();
+
+  cajas[0].focus();
+})();
+</script>
 
 </body>
 </html>

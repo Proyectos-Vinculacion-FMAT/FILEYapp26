@@ -12,7 +12,7 @@
 <div class="proto-bar"><div class="proto-bar-inner">
   <span class="dot"></span> Prototipo FILEY 2027 · REG —
   <b>1. Acceso (CU-REG-002)</b> <span class="sep">›</span>
-  <a href="registro.html">2. Registro</a> <span class="sep">›</span>
+  <a href="registro.html">2. Registro (solo 1ª vez)</a> <span class="sep">›</span>
   <a href="otp.html">3. Código</a> <span class="sep">›</span>
   <a href="convocatorias.html">4. Convocatorias</a>
   &nbsp;·&nbsp; <a href="../administradores/admin-login.html">Administrador ↗</a>
@@ -35,29 +35,76 @@
   <div class="auth-form">
     <div class="auth-card">
       <h3>Acceso a FILEY</h3>
-      <p class="sub">Ingresa tu correo electrónico para entrar o crear tu cuenta.</p>
+      <p class="sub">Ingresa tu correo electrónico. Si ya tienes cuenta te enviamos un código;
+        si es tu primera vez, te pedimos unos datos para crearla.</p>
 
-      <form onsubmit="return false">
+      <form id="form-acceso" novalidate>
         <div class="field">
-          <label>Correo electrónico <span class="req">*</span></label>
-          <input type="email" id="user" placeholder="tucorreo@ejemplo.com" value="">
+          <label for="correo">Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="correo" placeholder="tucorreo@ejemplo.com" autocomplete="email">
         </div>
 
-        <a class="btn btn-primary btn-block btn-lg" href="registro.html">Continuar</a>
+        <button class="btn btn-primary btn-block btn-lg" id="btn-continuar" type="submit" disabled>Continuar</button>
       </form>
 
       <div class="note note-info" style="margin-top:22px">
-        <div class="ico">ℹ️</div>
-        <div>Si es tu primera vez, te pediremos unos datos para crear tu cuenta.
-          Si ya tienes cuenta, te enviaremos un <strong>código de acceso</strong> a tu correo.</div>
+        <div class="ico">🔒</div>
+        <div>Sin contraseñas: entras siempre con un <strong>código de acceso</strong> de un solo
+          uso que enviamos a tu correo.</div>
       </div>
 
-      <div class="auth-foot">
-        ¿Eres parte del comité organizador? <a href="../administradores/admin-login.html">Acceso administrativo</a>
+      <div class="note note-gold" style="margin-top:12px">
+        <div class="ico">🧪</div>
+        <div><strong>Modo demo:</strong> <code>lectora@ejemplo.com</code> ya tiene cuenta y va
+          directo al código. Cualquier otro correo pasa por el registro. El panel administrativo
+          tiene su propia URL (aquí, vía la barra de prototipo).</div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  "use strict";
+  var CUENTAS_KEY = "filey_reg_cuentas";
+  var FLUJO_KEY   = "filey_reg_flujo";
+
+  var input = document.getElementById("correo");
+  var boton = document.getElementById("btn-continuar");
+
+  function leerCuentas(){
+    try {
+      var lista = JSON.parse(localStorage.getItem(CUENTAS_KEY));
+      if (Array.isArray(lista)) return lista;
+    } catch(e){}
+    return ["lectora@ejemplo.com"]; /* cuenta sembrada para la demo */
+  }
+
+  function correoValido(){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value.trim());
+  }
+
+  input.addEventListener("input", function(){
+    input.classList.remove("is-invalid");
+    boton.disabled = !correoValido();
+  });
+  input.addEventListener("blur", function(){
+    input.classList.toggle("is-invalid", input.value.trim() !== "" && !correoValido());
+  });
+
+  document.getElementById("form-acceso").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (boton.disabled) return;
+    var correo = input.value.trim().toLowerCase();
+    var existe = leerCuentas().indexOf(correo) !== -1;
+    localStorage.setItem(FLUJO_KEY, JSON.stringify({
+      correo: correo,
+      origen: existe ? "login" : "registro"
+    }));
+    window.location.href = existe ? "otp.html" : "registro.html";
+  });
+})();
+</script>
 
 </body>
 </html>

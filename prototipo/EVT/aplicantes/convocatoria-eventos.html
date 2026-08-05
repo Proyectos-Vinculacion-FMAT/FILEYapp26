@@ -39,6 +39,42 @@
     font-size:14px; color:var(--azul-600); background:var(--azul-050);
     border-radius:6px; padding:2px 7px;
   }
+
+  /* Bases y condiciones: qué cubre / qué no cubre FILEY */
+  .bases-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .bases-col { border:1px solid var(--gris-200); border-radius:var(--radio-sm); padding:16px 18px; }
+  .bases-col.is-si { background:var(--ok-050); border-color:var(--ok-200); }
+  .bases-col.is-no { background:var(--err-050); border-color:var(--err-200); }
+  .bases-col h4 {
+    margin:0 0 12px; font-size:13px; font-weight:800; letter-spacing:.4px;
+    text-transform:uppercase; display:flex; align-items:center; gap:8px;
+  }
+  .bases-col.is-si h4 { color:var(--ok-600); }
+  .bases-col.is-no h4 { color:var(--err-600); }
+  .bases-list { list-style:none; margin:0; padding:0; display:grid; gap:9px; }
+  .bases-list li { display:flex; gap:9px; align-items:flex-start; font-size:13.5px; color:var(--gris-700); line-height:1.45; }
+  .bases-list .mk { flex:0 0 16px; font-weight:800; line-height:1.45; }
+  .bases-col.is-si .mk { color:var(--ok-600); }
+  .bases-col.is-no .mk { color:var(--err-600); }
+
+  /* Condiciones de participación: numeradas, tono contractual */
+  .cond-list { margin:0; padding:0; list-style:none; counter-reset:cond; display:grid; gap:11px; }
+  .cond-list li {
+    counter-increment:cond; position:relative; padding-left:34px;
+    font-size:14px; color:var(--gris-700); line-height:1.5;
+  }
+  .cond-list li::before {
+    content:counter(cond); position:absolute; left:0; top:0;
+    width:23px; height:23px; border-radius:6px; display:grid; place-items:center;
+    background:var(--azul-050); color:var(--azul-600);
+    font-size:12px; font-weight:800;
+  }
+  .bases-foot {
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    margin-top:18px; padding-top:16px; border-top:1px solid var(--gris-200);
+  }
+  .bases-foot small { font-size:12.5px; color:var(--gris-500); max-width:44ch; }
+  @media (max-width:720px){ .bases-cols { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -123,18 +159,65 @@
         </div>
       </div>
 
-      <!-- Requisitos -->
-      <div class="card section-card">
-        <div class="section-head"><span class="num">3</span><div><h3>Requisitos generales</h3><p>Ten estos documentos listos antes de aplicar</p></div></div>
+      <!-- Bases y condiciones (antes "Requisitos generales") -->
+      <div class="card section-card" id="bases">
+        <div class="section-head"><span class="num">3</span><div><h3>Bases y condiciones</h3><p>Qué cubre la FILEY y bajo qué condiciones participas</p></div></div>
         <div class="section-body">
-          <ul class="req-list">
-            <li><span class="ck">✓</span> Datos de contacto y de la institución u organización que representas.</li>
-            <li><span class="ck">✓</span> <strong>Semblanzas</strong> de los participantes en un archivo <strong>PDF</strong> (máx. 500 palabras por participante).</li>
-            <li><span class="ck">✓</span> <strong>Sinopsis</strong> de la actividad en <strong>PDF</strong> (máx. 500 palabras; 800 para presentaciones de libro/revista).</li>
-            <li><span class="ck">✓</span> Para presentaciones: <strong>portada</strong> (JPG/PDF) y <strong>fotografía del autor/a</strong> (JPG/PNG) en alta resolución.</li>
-            <li><span class="ck">✓</span> Para presentaciones: envío de un <strong>ejemplar físico</strong> a las oficinas de FILEY.</li>
-            <li><span class="ck">✓</span> Indicar si requieres <strong>constancia de participación</strong>.</li>
-          </ul>
+
+          <div class="bases-cols">
+            <div class="bases-col is-si">
+              <h4>✓ La FILEY sí cubre</h4>
+              <ul class="bases-list">
+                <li><span class="mk">✓</span> <strong>Vuelo redondo</strong> en clase turista para un (1) participante foráneo por actividad.</li>
+                <li><span class="mk">✓</span> <strong>Hospedaje</strong> hasta por dos noches en el hotel sede.</li>
+                <li><span class="mk">✓</span> <strong>Peajes y caseta</strong> para quien se traslade por carretera, contra comprobante.</li>
+                <li><span class="mk">✓</span> <strong>Traslados</strong> aeropuerto – hotel – recinto.</li>
+                <li><span class="mk">✓</span> <strong>Espacio, mobiliario y equipo</strong> de audio y proyección de la sala asignada.</li>
+                <li><span class="mk">✓</span> <strong>Difusión</strong> de la actividad en el programa oficial y en redes de la feria.</li>
+              </ul>
+            </div>
+            <div class="bases-col is-no">
+              <h4>✕ La FILEY no cubre</h4>
+              <ul class="bases-list">
+                <li><span class="mk">✕</span> <strong>Honorarios ni pago</strong> por la participación.</li>
+                <li><span class="mk">✕</span> Gastos de <strong>acompañantes</strong> ni noches adicionales.</li>
+                <li><span class="mk">✕</span> <strong>Alimentos</strong> fuera de los incluidos en el hospedaje.</li>
+                <li><span class="mk">✕</span> <strong>Traslado ni resguardo</strong> de los ejemplares que se pongan a la venta.</li>
+                <li><span class="mk">✕</span> Trámites ni costos <strong>migratorios</strong> (visa, pasaporte).</li>
+                <li><span class="mk">✕</span> <strong>Seguro de gastos médicos</strong> ni de viaje.</li>
+              </ul>
+            </div>
+          </div>
+
+          <h4 style="margin:26px 0 14px;font-size:14px;color:var(--color-azul-institucional-enfoque)">Condiciones de participación</h4>
+          <ol class="cond-list">
+            <li>El envío de una propuesta <strong>no garantiza su aceptación</strong>. El comité dictamina cada solicitud y su fallo es inapelable.</li>
+            <li>La <strong>sala, el día y el horario</strong> los asigna la Coordinación General de Contenidos. Aceptar la propuesta no da derecho a elegir un horario específico.</li>
+            <li>La duración máxima de cada actividad es de <strong>50 minutos</strong>, sin excepción.</li>
+            <li>Quien resulte aceptado se compromete a <strong>confirmar el horario</strong> que se le notifique dentro de la ventana de ajustes.</li>
+            <li>La <strong>inasistencia sin aviso previo</strong> se registra y puede considerarse en convocatorias posteriores.</li>
+            <li>La FILEY podrá <strong>grabar, fotografiar y difundir</strong> la actividad con fines de documentación y promoción.</li>
+            <li>Los apoyos de traslado y hospedaje se gestionan <strong>a través de la FILEY</strong>; no hay reembolso de compras hechas por cuenta propia.</li>
+          </ol>
+
+          <div class="bases-foot">
+            <small>Deberás aceptar estas bases de forma expresa al enviar tu propuesta.</small>
+            <a class="btn btn-ghost" href="#" onclick="return false">⬇ Descargar bases y condiciones (PDF)</a>
+          </div>
+
+          <div class="note note-info" style="margin:18px 0 0">
+            <div class="ico">📎</div>
+            <div>La <strong>lista de documentos</strong> que debes adjuntar (semblanzas, sinopsis, portada,
+              fotografía, ejemplar físico) aparece dentro del formulario, en el paso que corresponda a tu
+              tipo de actividad. Aquí no necesitas prepararlos todavía.</div>
+          </div>
+
+          <div class="note note-gold" style="margin:12px 0 0">
+            <div class="ico">✏️</div>
+            <div><strong>Prototipo:</strong> el detalle exacto de lo que la FILEY cubre y no cubre es un
+              texto de ejemplo. Falta que la Coordinación confirme la redacción definitiva.</div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -97,7 +97,11 @@
           <span class="chip is-active">Jueves 9 mar 2028</span>
           <button class="cal-nav" title="Día siguiente">›</button>
         </div>
-        <button class="btn btn-primary" id="btn-notif" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-ghost" href="../programa-publico.html" target="_blank"
+             title="Abre la vista pública del programa, desde donde se descarga el PDF">📄 Ver programa publicado ↗</a>
+          <button class="btn btn-primary" id="btn-notif" onclick="document.getElementById('m-notif').hidden=false">🔔 Notificar horarios (3)</button>
+        </div>
       </div>
 
       <!-- Layout: riel "por programar" + rejilla -->
