@@ -47,6 +47,7 @@ panel de tags y en el grafo.
 | `tipo/documento-extraido` | Texto extraído automáticamente de un original (PDF/DOCX) | `soporte/extraido/**` |
 | `tipo/analisis` | Análisis/contraste de fuentes | `extraido/Analisis de archivos proporcionados.md` |
 | `tipo/nota` | Nota de trabajo o documento fuente suelto | `soporte/notas/*`, `documentos proporcionados.../*` |
+| `tipo/adr` | Registro de decisión de arquitectura (*Architecture Decision Record*) | `adr/*` |
 
 ## Faceta `dom/` — dominio del sistema (0 o más)
 

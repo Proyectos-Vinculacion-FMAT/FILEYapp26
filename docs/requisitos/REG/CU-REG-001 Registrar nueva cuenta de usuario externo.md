@@ -1,11 +1,12 @@
 ---
-estado: acpetado
-version: 0.1
+estado: aceptado
+version: 0.2
 tags:
   - caso-de-uso
   - autenticacion
   - core-registros
 fecha: 2026-06-22
+fecha_actualizacion: 2026-08-05
 id: CU-REG-001
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -22,7 +23,7 @@ Permitir que una persona que nunca ha usado el sistema FILEY cree su cuenta con 
 
 ## Alcance
 
-Core Registros. Aplica a proponentes (EVE), talleristas (TAL) y representantes escolares (TAL). No aplica a usuarios administrativos — sus cuentas las crea el administrador general.
+Core Registros. Aplica a proponentes (EVT), talleristas (TAL), representantes escolares (VIS) y expositores (STD). No aplica a usuarios administrativos — sus cuentas las crea el administrador general (CU-REG-005).
 
 ## Actores
 
@@ -38,6 +39,13 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 
 - El correo ingresado no está registrado en la entidad `Persona`.
 - El sistema tiene al menos un módulo con convocatoria activa (no se puede registrar si no hay nada abierto).
+
+> [!warning] La segunda precondición **no está implementada** (verificado el 2026-08-05)
+> Hoy cualquiera puede crear una cuenta aunque no haya ninguna convocatoria abierta. No es
+> exigible todavía: el estado de las convocatorias es un catálogo fijo provisional y no habrá
+> dato real hasta que los dominios EVT/TAL/STD/VIS expongan el suyo. **Queda pendiente** decidir
+> si se aplica de verdad — vale la pena preguntarse si conviene: bloquear el registro fuera de
+> convocatoria impide que alguien prepare su cuenta con antelación, y no aporta seguridad.
 
 ## Postcondiciones
 
@@ -76,6 +84,19 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 2. El sistema resalta el campo en error con un mensaje descriptivo.
 3. El flujo no avanza hasta que el campo sea válido.
 
+**Criterios de validación vigentes** (los tres campos son obligatorios):
+
+| Campo | Regla |
+| --- | --- |
+| Correo | Formato de correo válido; se normaliza a minúsculas y sin espacios sobrantes. Es la identidad única de la cuenta. |
+| Nombre completo | Mínimo 3 caracteres. |
+| Teléfono | Al menos 10 dígitos; se guardan solo los dígitos, descartando espacios, guiones y paréntesis. |
+
+> [!note] Correo y teléfono son **ambos** obligatorios
+> El índice de CU-REG dejaba esta pregunta abierta ("¿basta con el correo?"). La implementación
+> los exige a los dos, y así queda documentado. Nótese que el alta de cuentas **administrativas**
+> (CU-REG-005) sí permite omitir el teléfono — son flujos distintos a propósito.
+
 ### E2. Teléfono ya asociado a otra cuenta con correo distinto
 
 1. En el paso 6, el sistema detecta el conflicto.
@@ -93,5 +114,11 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 
 ### Salidas
 
-- Registro `Persona` creado (id, correo, teléfono, nombre_completo, tipo, fecha_registro, estado)
+- Registro `Persona` creado (id, correo, teléfono, nombre_completo, fecha_registro, estado)
 - Disparo de CU-REG-002
+
+> [!note] No existe un campo `tipo` en la cuenta
+> La v0.1 listaba un atributo `tipo` (externo/administrativo). No se implementó, y a propósito:
+> lo que distingue a un administrador es **tener al menos un `RolPermiso`**, no una etiqueta en
+> la cuenta. Guardar ambas cosas abriría la puerta a que se contradijeran. Una misma persona
+> puede ser proponente y administradora sin ambigüedad (ver CU-REG-005 A1).

@@ -1,12 +1,12 @@
 ---
 estado: aprobado
-version: 0.2
+version: 0.3
 tags:
   - caso-de-uso
   - autenticacion
   - core-registros
 fecha: 2026-06-22
-fecha_actualizacion: 2026-07-22
+fecha_actualizacion: 2026-08-05
 id: CU-REG-004
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -43,9 +43,25 @@ El usuario presiona el botón "Cerrar sesión" desde cualquier pantalla del sist
 
 ### En éxito
 
-- El JWT queda invalidado (añadido a la lista de tokens revocados o eliminado del almacenamiento del cliente).
+- El **token de renovación** queda revocado en el servidor: la sesión ya no se puede prolongar.
+- El cliente elimina de su almacenamiento tanto el token de acceso como el de renovación.
 - El usuario es redirigido a la pantalla de inicio de acceso correspondiente (portal público o panel admin, según desde dónde cerró sesión).
-- Cualquier intento posterior de usar el JWT invalidado es rechazado con error 401.
+- Cualquier intento posterior de renovar la sesión con el token revocado es rechazado.
+
+> [!warning] Precisión importante — el token de acceso no se revoca al instante
+> La sesión usa **dos** tokens: uno de **acceso** (de vida corta, el que acompaña cada petición)
+> y uno de **renovación** (de vida más larga, el que permite obtener accesos nuevos). Cerrar
+> sesión revoca el de **renovación**; el de **acceso** que ya estaba emitido **sigue siendo
+> válido hasta que caduca por sí solo** — actualmente hasta **1 hora**.
+>
+> En la práctica esto no afecta a la persona que cierra sesión (su navegador ya borró el token),
+> pero sí importa en un caso concreto: si alguien copió el token de acceso antes del cierre,
+> conserva acceso durante esa hora. Es la contrapartida conocida de este tipo de sesiones, que
+> no consultan la base de datos en cada petición.
+>
+> **Decisión pendiente:** si se considera demasiado tiempo, hay dos salidas — acortar la vida
+> del token de acceso (más renovaciones, más carga) o verificar revocaciones en cada petición
+> (más seguro, más consultas). No se ha decidido; hoy rige 1 hora.
 
 ### En fallo
 
@@ -54,10 +70,10 @@ El usuario presiona el botón "Cerrar sesión" desde cualquier pantalla del sist
 ## Flujo principal
 
 1. El usuario presiona "Cerrar sesión".
-2. El cliente envía la solicitud de cierre al servidor con el JWT actual.
-3. El servidor registra el JWT en la lista de tokens revocados (hasta su fecha de expiración natural).
-4. El servidor responde con confirmación.
-5. El cliente elimina el JWT de su almacenamiento local.
+2. El cliente envía la solicitud de cierre al servidor, incluyendo su **token de renovación**.
+3. El servidor registra ese token en la lista de revocados (hasta su fecha de expiración natural).
+4. El servidor responde con confirmación. **Si el token ya era inválido o estaba expirado, responde igualmente con éxito**: el objetivo —que no sirva— ya se cumple, y fallar aquí solo dejaría al usuario atrapado en una sesión que quiere abandonar.
+5. El cliente elimina de su almacenamiento local ambos tokens (acceso y renovación).
 6. El sistema redirige al usuario a la pantalla de inicio de acceso.
 
 ## Flujos de excepción
@@ -65,17 +81,19 @@ El usuario presiona el botón "Cerrar sesión" desde cualquier pantalla del sist
 ### E1. Error de red al comunicar el cierre al servidor
 
 1. El cliente no puede alcanzar al servidor.
-2. El cliente elimina el JWT de su almacenamiento local de todas formas.
+2. El cliente elimina sus tokens del almacenamiento local de todas formas.
 3. El sistema redirige al usuario a la pantalla de inicio de acceso.
-4. El JWT quedará válido en el servidor hasta su expiración natural — riesgo aceptable dado que los JWTs tienen vida corta.
+4. El token de renovación quedará válido en el servidor hasta su expiración natural. Riesgo acotado: nadie más lo tiene, porque el cliente ya lo borró.
 
 ## Datos relevantes
 
 ### Entradas
 
-- JWT de sesión activo (en cabecera de la solicitud)
+- Token de renovación de la sesión activa
+- Token de acceso (autentica la propia petición de cierre)
 
 ### Salidas
 
-- JWT añadido a la lista de revocados en el servidor
+- Token de renovación añadido a la lista de revocados en el servidor
+- Almacenamiento local del cliente limpio
 - Redirección a pantalla de acceso

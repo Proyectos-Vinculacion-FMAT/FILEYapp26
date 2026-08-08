@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: 0.1
+version: 0.2
 tags:
   - caso-de-uso
   - autenticacion
@@ -8,6 +8,7 @@ tags:
   - admin
   - navegacion
 fecha: 2026-06-30
+fecha_actualizacion: 2026-08-05
 id: CU-REG-006
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -62,9 +63,14 @@ El sistema termina CU-REG-003 y la cuenta tiene más de un `RolPermiso`, o el ad
 
 ## Flujo principal
 
-1. El sistema muestra las tarjetas de los módulos administrables por la cuenta (según sus `RolPermiso`): Eventos, Infantil/Juvenil, Stands.
+1. El sistema muestra las tarjetas de los módulos administrables por la cuenta (según sus `RolPermiso`): Actividades FILEY (`EVT`), Infantil/Juvenil (`TAL`), Stands (`STD`) y Visitas Escolares (`VIS`).
 2. El administrador selecciona un módulo.
-3. El sistema abre el panel administrativo de ese módulo (para EVE: la lista de propuestas del panel de Hipólito).
+3. El sistema abre el panel administrativo de ese módulo (para `EVT`: la lista de propuestas del panel de Hipólito).
+
+> [!note] Los cuatro módulos y quién decide qué se ve
+> Una cuenta con `modulo = *` administra los cuatro. La lista de tarjetas y su estado los define
+> el servidor, no la pantalla: el navegador solo dibuja lo que recibe, y marca como no navegable
+> todo módulo sobre el que la cuenta no tenga permiso.
 
 ## Flujos alternos
 
@@ -72,6 +78,13 @@ El sistema termina CU-REG-003 y la cuenta tiene más de un `RolPermiso`, o el ad
 
 1. En el paso 1, el sistema detecta que la cuenta tiene un único `RolPermiso`.
 2. El sistema **omite** esta pantalla y entra directamente al panel de ese módulo (esta selección solo tiene sentido con dos o más módulos).
+
+> [!warning] Pendiente de implementar (verificado el 2026-08-05)
+> Hoy **todas** las cuentas administrativas caen en la pantalla de selección, tengan uno o
+> varios módulos: el salto directo de A1 no está construido. No es urgente mientras los paneles
+> de módulo no existan (ver nota de estado al final), pero debe implementarse antes de que
+> haya administradores de un solo módulo operando, o verán siempre una pantalla intermedia
+> con una sola tarjeta.
 
 ### A2. Módulos a los que no se tiene permiso
 
@@ -83,7 +96,8 @@ El sistema termina CU-REG-003 y la cuenta tiene más de un `RolPermiso`, o el ad
 ### E1. Sesión sin RolPermiso
 
 1. La cuenta perdió sus `RolPermiso` o la sesión expiró.
-2. El sistema redirige al login administrativo (CU-REG-003) sin mostrar módulos.
+2. El sistema **rechaza la consulta en el servidor** (no basta con ocultar las tarjetas en la pantalla) y redirige al login administrativo (CU-REG-003) sin mostrar módulos.
+3. Esto cubre el caso de una cuenta a la que se le revocaron los permisos mientras tenía sesión abierta: deja de tener acceso en su siguiente consulta, sin esperar a que caduque su token.
 
 ## Datos relevantes
 
@@ -98,7 +112,13 @@ El sistema termina CU-REG-003 y la cuenta tiene más de un `RolPermiso`, o el ad
 
 > [!note] Nota de prototipo (maqueta de la vista del administrador — EVT)
 > En la maqueta, Hipólito se presenta como **administrador general** (`modulo = *`) y ve las
-> tres tarjetas, pero **solo el panel de Eventos está construido**. Las tarjetas de
-> Infantil/Juvenil y de Stands se muestran visibles pero **no navegables** (etiqueta
-> "Próximamente" / deshabilitadas), porque esta primera maqueta modela exclusivamente la vista
-> del administrador del módulo de Eventos.
+> tarjetas, pero **solo el panel de Eventos está construido**. Las demás se muestran visibles
+> pero **no navegables** (etiqueta "Próximamente" / deshabilitadas), porque esa primera maqueta
+> modela exclusivamente la vista del administrador del módulo de Eventos.
+
+> [!warning] Estado de la implementación funcional (2026-08-05)
+> En la implementación del Core Registros, la pantalla de selección **ya funciona y respeta los
+> permisos**, pero **ningún panel de módulo está conectado todavía**: al elegir una tarjeta, el
+> sistema avisa que ese panel llegará en una entrega posterior. Esta entrega cubre únicamente
+> REG. El paso 3 del flujo principal queda, por tanto, **pendiente de completarse** cuando cada
+> dominio (EVT/TAL/STD/VIS) construya su panel.
