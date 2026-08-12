@@ -1,0 +1,84 @@
+{% comment %} ===========================================================
+   Tarjeta del formulario de correo.
+
+   Va aparte porque es lo que HTMX reemplaza cuando el envío falla:
+   así el error aparece en su sitio sin recargar la página ni perder
+   lo que la persona ya escribió.
+   =========================================================== {% endcomment %}
+<div class="auth-card" id="tarjeta-acceso">
+  {% if es_admin %}
+    <h3>Acceso de administrador</h3>
+    <p class="sub">
+      Ingresa tu correo institucional. Si corresponde a una cuenta
+      administrativa, te enviaremos un código de acceso de un solo uso.
+    </p>
+  {% else %}
+    <h3>Acceso a FILEY</h3>
+    <p class="sub">
+      Ingresa tu correo electrónico. Si ya tienes cuenta te enviamos un
+      código; si es tu primera vez, te pedimos unos datos para crearla.
+    </p>
+  {% endif %}
+
+  <form method="post"
+        action="{% if es_admin %}{% url 'registros:admin_acceso' %}{% else %}{% url 'registros:acceso' %}{% endif %}"
+        hx-post="{% if es_admin %}{% url 'registros:admin_acceso' %}{% else %}{% url 'registros:acceso' %}{% endif %}"
+        hx-target="#tarjeta-acceso"
+        hx-swap="outerHTML"
+        hx-disabled-elt="find button[type=submit]"
+        x-data="accesoCorreo()"
+        novalidate>
+    {% csrf_token %}
+
+    <div class="field">
+      <label for="id_correo">
+        {% if es_admin %}Correo institucional{% else %}Correo electrónico{% endif %}
+        <span class="req">*</span>
+      </label>
+      <input type="email"
+             id="id_correo"
+             name="correo"
+             value="{{ form.correo.value|default:'' }}"
+             placeholder="{% if es_admin %}usuario@filey.org{% else %}tucorreo@ejemplo.com{% endif %}"
+             autocomplete="email"
+             x-init="correo = $el.value"
+             x-model="correo"
+             @blur="tocado = true"
+             :class="seVeMal ? 'is-invalid' : ''"
+             class="{% if form.correo.errors %}is-invalid{% endif %}">
+      {% for error in form.correo.errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <button class="btn {% if es_admin %}btn-gold{% else %}btn-primary{% endif %} btn-block btn-lg"
+            type="submit"
+            :disabled="!valido">
+      <span class="etiqueta-lista">Continuar{% if es_admin %} →{% endif %}</span>
+      <span class="etiqueta-cargando">Enviando…</span>
+    </button>
+  </form>
+
+  {% if es_admin %}
+    <div class="note note-info" style="margin-top: 22px">
+      <div class="ico">ℹ️</div>
+      <div>
+        Las cuentas administrativas las crea el administrador general. Si no
+        tienes acceso, contacta a <strong>contenidos&#64;filey.org</strong>.
+      </div>
+    </div>
+    <div class="auth-foot">
+      ¿Eres participante?
+      <a href="{% url 'registros:acceso' %}">Ir al portal de participantes</a>
+    </div>
+  {% else %}
+    <div class="note note-info" style="margin-top: 22px">
+      <div class="ico">🔒</div>
+      <div>
+        Sin contraseñas: entras siempre con un
+        <strong>código de acceso</strong> de un solo uso que enviamos a tu
+        correo.
+      </div>
+    </div>
+  {% endif %}
+</div>

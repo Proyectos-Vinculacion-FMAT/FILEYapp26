@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% comment %} Se muestra cuando alguien con sesión iniciada llega a una pantalla
+   para la que no tiene permiso (ver apps/registros/permisos.py). No es
+   un error del sistema, así que se explica y se ofrece una salida. {% endcomment %}
+
+{% block titulo %}FILEY 2027 — Sin permiso{% endblock %}
+
+{% block cuerpo %}
+<main class="page pagina-mensaje">
+  <div class="page-head">
+    <h1>No tienes acceso a esta sección</h1>
+    <p>
+      {% if exception %}{{ exception }}{% else %}
+        Tu cuenta no tiene permiso sobre esta parte del sistema.
+      {% endif %}
+    </p>
+  </div>
+  <p>
+    Si crees que debería tenerlo, escríbele al administrador general a
+    <strong>contenidos&#64;filey.org</strong>.
+  </p>
+  <p style="margin-top:22px">
+    <a class="btn btn-primary" href="{% url 'registros:raiz' %}">Volver al inicio</a>
+  </p>
+</main>
+{% endblock %}

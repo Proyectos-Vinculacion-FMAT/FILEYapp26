@@ -1,0 +1,13 @@
+{% extends "layouts/acceso.html" %}
+
+{% comment %} Acceso del participante (CU-REG-002) y del administrador
+   (CU-REG-003). Es la misma pantalla: cambian los textos y el color
+   del botón, no el mecanismo — ambos entran con un OTP por correo. {% endcomment %}
+
+{% block titulo %}
+  {% if es_admin %}FILEY 2027 — Acceso administrativo{% else %}FILEY 2027 — Acceso{% endif %}
+{% endblock %}
+
+{% block tarjeta %}
+  {% include "registros/parciales/tarjeta_acceso.html" %}
+{% endblock %}

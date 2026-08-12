@@ -1,0 +1,21 @@
+# Configuración de herramientas del monolito.
+#
+# Las dependencias NO se declaran aquí: un proyecto Django se despliega,
+# no se instala como paquete. Viven en requirements.txt (ejecución) y
+# requirements-dev.txt (pruebas).
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+testpaths = ["apps"]
+addopts = "-q"
+markers = [
+    "con_pisos_reales: no desactiva las esperas anti-enumeración del acceso admin",
+]
+
+[tool.coverage.run]
+source = ["apps", "comun"]
+omit = ["*/migrations/*", "*/pruebas/*"]
+
+[tool.coverage.report]
+show_missing = true

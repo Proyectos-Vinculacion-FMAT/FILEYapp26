@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static personas %}
+
+{% comment %} ===========================================================
+   Layout de todo lo que hay DESPUÉS del login: barra superior con
+   la identidad de quien entró, contenido y pie.
+
+   Es la plantilla que extienden los módulos de dominio (EVT, TAL,
+   STD, VIS) para que sus pantallas se vean parte del mismo sistema
+   sin volver a maquetar la barra ni el pie:
+
+       {% extends "layouts/panel.html" %}
+       {% block encabezado_titulo %}Propuestas recibidas{% endblock %}
+       {% block contenido %} … {% endblock %}
+
+   `zona_admin` pinta la variante administrativa (barra azul oscuro,
+   chip de rol) y decide a qué acceso se regresa al cerrar sesión. Es
+   un dato del contexto, no un bloque: una pantalla de panel se
+   renderiza con `{"zona_admin": True}` y una del participante sin él.
+   =========================================================== {% endcomment %}
+
+{% block cuerpo %}
+<header class="topbar {% if zona_admin %}is-admin{% endif %}">
+  <div class="topbar-inner">
+    <a class="home" href="{% block url_inicio %}{% if zona_admin %}{% url 'registros:admin_modulos' %}{% else %}{% url 'registros:convocatorias' %}{% endif %}{% endblock %}">
+      <img class="logo" src="{% static 'img/filey-logotipo-azul.svg' %}" alt="FILEY">
+      <div class="brand-text">
+        <strong>Edición 2027</strong>
+        <small>{% block marca %}{% if zona_admin %}Panel de administración{% else %}Portal del participante{% endif %}{% endblock %}</small>
+      </div>
+    </a>
+
+    <nav class="topnav">
+      {% block navegacion %}{% endblock %}
+
+      {% if zona_admin and es_admin_general %}
+        <div class="rol-chip">🛡️ Administrador general</div>
+      {% endif %}
+
+      <div class="user-chip">
+        <span class="avatar {% if zona_admin %}is-admin{% endif %}">{{ user.nombre_completo|iniciales }}</span>
+        {{ user.nombre_completo }}
+      </div>
+
+      {% comment %} Cerrar sesión es un POST con CSRF, no un enlace: si fuera un
+         GET, bastaría con que alguien cargara una imagen apuntando a
+         esa dirección para sacar a la persona del sistema. {% endcomment %}
+      <form method="post" action="{% url 'registros:salir' %}">
+        {% csrf_token %}
+        <button class="btn-salir" type="submit">Cerrar sesión</button>
+      </form>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  {% block encabezado %}
+    <div class="page-head">
+      <h1>{% block encabezado_titulo %}Hola, {{ user.nombre_completo|primer_nombre }} 👋{% endblock %}</h1>
+      <p>{% block encabezado_texto %}{% endblock %}</p>
+    </div>
+  {% endblock %}
+
+  {% block contenido %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
+    <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos&#64;filey.org</div>
+  </div>
+</footer>
+{% endblock %}

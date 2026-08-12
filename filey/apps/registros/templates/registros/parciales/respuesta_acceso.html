@@ -1,0 +1,4 @@
+{% comment %} Respuesta a un envío por HTMX: la tarjeta con sus errores y, fuera
+   del objetivo del intercambio, la zona de avisos actualizada. {% endcomment %}
+{% include "registros/parciales/tarjeta_acceso.html" %}
+{% include "componentes/avisos.html" with oob=True %}
