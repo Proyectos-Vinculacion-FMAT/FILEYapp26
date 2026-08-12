@@ -47,7 +47,15 @@ prototipo/common/styles-base.css     Capa common — tokens y componentes de TOD
 prototipo/{DOM}/styles.css           Capa dominio — @import de common + lo propio del dominio
 ```
 
-No hay tercera capa. **El CSS de un dominio vive en un único archivo**, sin importar el rol:
+> [!warning] Existe una segunda copia fuera del prototipo
+> El monolito Django tiene su propia hoja, `filey/estaticos/css/filey.css`: una copia a mano
+> de estas dos capas, con los mismos nombres de token, que **ya derivó** (le faltan 16 tokens
+> y conserva uno muerto). No es una tercera capa; es una segunda fuente que hay que mantener
+> a mano. Si tocas un token o un componente compartido, propágalo. Detalle y lista de la
+> deriva en el skill `filey-render`, sección 6.
+
+Dentro del prototipo no hay tercera capa. **El CSS de un dominio vive en un único archivo**,
+sin importar el rol:
 nunca `{DOM}/administradores/algo.css`. Si un componente solo lo usa admin, lo indica su
 **nombre** (`.vis-adm-nav`, `.evt-admin-sidebar`), no su ubicación.
 

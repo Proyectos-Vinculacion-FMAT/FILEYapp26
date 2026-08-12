@@ -1,3 +1,0 @@
-# Verificado el 2026-08-11 con Python 3.14 + Django 6.1 (manage.py check sin issues).
-# Django 5.2 LTS soporta hasta Python 3.13; con 3.14 hace falta Django >= 6.0.
-Django>=6.0

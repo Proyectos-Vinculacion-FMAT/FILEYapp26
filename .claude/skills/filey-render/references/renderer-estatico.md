@@ -1,7 +1,9 @@
 # Renderizador estático — `prototipo/`
 
-Aplica a todo archivo bajo `prototipo/` (excepto `prototipo/STD/`, que es una app Angular
-aparte y queda fuera de alcance).
+Aplica a todo archivo bajo `prototipo/` excepto `prototipo/STD/`, que es una app Angular
+aparte y queda fuera de este renderizador. Por ADR-0001, STD no se construye como Angular
+separado: cuando le toque, se reconstruye como un módulo más del monolito, igual que el
+resto. El Angular de `prototipo/STD/` es maqueta, no la implementación futura.
 
 ## Qué es
 
