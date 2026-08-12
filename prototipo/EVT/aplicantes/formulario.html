@@ -18,25 +18,25 @@
     display: inline-flex; align-items: center; gap: 6px;
     border: 1.5px solid var(--gris-300); border-radius: 999px;
     padding: 6px 14px; font-size: 14px; font-weight: 500;
-    color: var(--gris-700); background: var(--blanco);
+    color: var(--gris-700); background: var(--color-blanco);
     transition: all .15s ease; cursor: pointer; user-select: none;
   }
   .check-chip input:checked + .chip {
     border-color: var(--azul-600); background: var(--azul-050);
-    color: var(--azul-900); font-weight: 600;
+    color: var(--color-azul-texto); font-weight: 600;
   }
   .check-chip input:checked + .chip::before { content: "✓ "; font-size: 12px; }
-  .check-chip .chip:hover { border-color: var(--azul-400); background: var(--azul-050); }
+  .check-chip .chip:hover { border-color: var(--azul-600); background: var(--azul-050); }
 
   .tipo-opt {
-    border: 1.5px solid var(--gris-300); background: var(--blanco);
+    border: 1.5px solid var(--gris-300); background: var(--color-blanco);
     border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;
     text-align: center; font-family: inherit; font-size: 14px; font-weight: 600;
     color: var(--gris-700); transition: all .15s ease;
   }
   .tipo-opt .em { display: block; font-size: 24px; margin-bottom: 8px; }
   .tipo-opt:hover { border-color: var(--azul-600); background: var(--azul-050); }
-  .tipo-opt.is-active { border-color: var(--oro-600); background: var(--oro-050); color: var(--azul-900); box-shadow: 0 0 0 3px var(--oro-050); }
+  .tipo-opt.is-active { border-color: var(--color-dorado-700); background: var(--oro-050); color: var(--color-azul-texto); box-shadow: 0 0 0 3px var(--oro-050); }
   @media (max-width: 720px){ .tipo-grid { grid-template-columns: repeat(2,1fr); } }
 
   /* Aceptación expresa de bases y condiciones */
@@ -59,7 +59,7 @@
 <header class="topbar">
   <div class="topbar-inner">
     <a class="home" href="../../REG/aplicantes/convocatorias.html">
-      <img class="logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <img class="logo" src="../../common/assets/filey-logotipo-azul.svg" alt="FILEY">
       <div class="brand-text"><strong>Edición 2027</strong><small>Portal del proponente</small></div>
     </a>
     <nav class="topnav">
@@ -203,6 +203,7 @@
 </div></footer>
 
 <script src="../demo.js"></script>
+<script src="../../common/demo-reset.js"></script>
 <script src="../app.js"></script>
 <script>
   // Envío real (demo): registra la propuesta y sigue a la confirmación.

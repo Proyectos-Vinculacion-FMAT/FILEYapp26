@@ -19,12 +19,11 @@
   --color-dorado-700: #B3810F;
   --color-dorado-800: #9C700B;
   --color-dorado-degradado-oscuro: #6E4D03;
+  --color-dorado-050: #fff8e6;
   --color-negro: #000000;
   --font-filey: "Open Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --radio-card: 13px;
-  --radio-btn: 16px;
-  --radio-pill: 30px;
-  --sombra-card: 0 4px 4px rgba(0, 0, 0, 0.25);
+  /* Forma: el sistema vivo es --radio / --radio-sm y --sombra-sm/md/lg (más abajo).
+     Los antiguos --radio-card/btn/pill y --sombra-card se eliminaron: cero usos. */
 
   /* ---- Tokens canónicos secundarios ---- */
   --color-morado: #955FF2;
@@ -33,6 +32,10 @@
   --color-verde-700: #839F10;
   --color-verde-800: #6C840B;
   --color-verde-degradado-oscuro: #3F4E00;
+  /* Verde de TAL (infantil/juvenil) — distinto del verde lima de VIS a propósito:
+     son dos convocatorias que conviven en la pantalla de convocatorias de REG. */
+  --color-verde-tal: #1d8a4e;
+  --color-verde-tal-oscuro: #0a6b53;
   --color-rojo: #CC311D;
   --color-rojo-700: #912111;
   --color-rojo-800: #73190B;
@@ -42,20 +45,29 @@
   --tinta: #1b2330;
   --gris-700: #3f4a5a;
   --gris-500: #6b7686;
+  --gris-400: #aab3c0;
   --gris-300: #c8d0db;
   --gris-200: #e2e7ee;
   --gris-100: #eef1f6;
   --gris-050: #f7f9fc;
 
-  /* ---- Estado ---- */
+  /* ---- Estado ----
+     Escalas completas: 050 fondo · 100/200 borde · 600/800 texto.
+     --ok-200 y --err-200 se promovieron desde EVT/styles.css (los usan EVT y VIS). */
   --ok-600: #1d8a4e;
+  --ok-200: #c9e5d3;
   --ok-050: #e7f6ee;
+  --warn-800: #7a5a00;
   --warn-600: #b8860b;
   --warn-050: #fdf6e3;
   --oro-200: #f1e3b0;
   --oro-050: #fbf6e6;
   --err-600: var(--color-rojo);
+  --err-200: #eecac5;
+  --err-100: #f7dcd8;
   --err-050: #fbeae8;
+  --verde-200: #dbe6ad;
+  --verde-050: #f3f7e3;
 
   /* ---- Espaciado / forma ---- */
   --radio: 12px;
@@ -249,7 +261,7 @@ select {
 input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--azul-600); box-shadow: 0 0 0 3px var(--azul-100);
 }
-input::placeholder, textarea::placeholder { color: #aab3c0; }
+input::placeholder, textarea::placeholder { color: var(--gris-400); }
 input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: not-allowed; }
 textarea { resize: vertical; min-height: 80px; }
 
@@ -346,7 +358,7 @@ textarea { resize: vertical; min-height: 80px; }
 .conv-banner .ico { font-size: 30px; position: absolute; top: 14px; right: 16px; opacity: .85; }
 .conv-banner h3 { margin: 0; font-size: 19px; }
 .banner-stand    { background: linear-gradient(135deg, var(--color-azul-degradado-claro), var(--color-azul-degradado-oscuro)); }
-.banner-infantil { background: linear-gradient(135deg, #1d8a4e, #0a6b53); }
+.banner-infantil { background: linear-gradient(135deg, var(--color-verde-tal), var(--color-verde-tal-oscuro)); }
 .banner-eventos  { background: linear-gradient(135deg, var(--color-dorado-encabezado), var(--color-dorado-700)); }
 .banner-visitas  { background: linear-gradient(135deg, var(--color-verde-700), var(--color-verde-degradado-oscuro)); }
 .conv-body { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
@@ -372,12 +384,12 @@ textarea { resize: vertical; min-height: 80px; }
 .info-hero {
   border-radius: var(--radio); overflow: hidden; margin-bottom: 24px;
   background: linear-gradient(135deg, var(--color-dorado-encabezado), var(--color-dorado-700));
-  color: #fff; padding: 34px 36px; position: relative;
+  color: var(--color-blanco); padding: 34px 36px; position: relative;
 }
 .info-hero h1 { margin: 0 0 8px; font-size: 30px; }
-.info-hero p { margin: 0; max-width: 60ch; color: #fff8e6; }
-.info-hero .badge { margin-bottom: 14px; background: rgba(255,255,255,.2); color: #fff; }
-.info-hero .badge::before { background: #fff; }
+.info-hero p { margin: 0; max-width: 60ch; color: var(--color-dorado-050); }
+.info-hero .badge { margin-bottom: 14px; background: rgba(255,255,255,.2); color: var(--color-blanco); }
+.info-hero .badge::before { background: var(--color-blanco); }
 
 .info-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
 
@@ -411,7 +423,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 .cta-bar {
   margin-top: 26px; padding: 22px 26px; border-radius: var(--radio);
-  background: var(--color-azul-institucional-enfoque); color: #fff; display: flex; align-items: center; gap: 20px;
+  background: var(--color-azul-institucional-enfoque); color: var(--color-blanco); display: flex; align-items: center; gap: 20px;
 }
 .cta-bar .txt { flex: 1; }
 .cta-bar .txt strong { display: block; font-size: 17px; }
@@ -447,7 +459,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .note .ico { flex: 0 0 22px; font-size: 18px; line-height: 1.2; }
 .note-info { background: var(--azul-050); color: var(--color-azul-institucional); border: 1px solid var(--azul-100); }
-.note-warn { background: var(--warn-050); color: #7a5a00; border: 1px solid var(--oro-200); }
+.note-warn { background: var(--warn-050); color: var(--warn-800); border: 1px solid var(--oro-200); }
 .note-gold { background: var(--oro-050); color: var(--color-dorado-700); border: 1px solid var(--oro-200); }
 
 .closed-overlay {

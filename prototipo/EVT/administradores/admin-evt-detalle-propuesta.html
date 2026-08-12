@@ -12,7 +12,7 @@
 <header class="topbar admin">
   <div class="topbar-inner">
     <a class="home" href="../../REG/administradores/admin-convocatorias.html">
-      <img class="logo" src="../../common/assets/filey-logotipo-azul%201.svg" alt="FILEY">
+      <img class="logo" src="../../common/assets/filey-logotipo-azul.svg" alt="FILEY">
       <div class="brand-text"><strong>Edición 2027</strong><small>Panel de Eventos</small></div>
     </a>
     <nav class="topnav">
@@ -144,7 +144,7 @@
         <!-- Columna derecha: dictamen + ejemplar -->
         <div>
           <div class="card card-pad" style="position:sticky;top:82px">
-            <h3 style="margin:0 0 6px;color:var(--azul-900)">Dictamen</h3>
+            <h3 style="margin:0 0 6px;color:var(--color-azul-texto)">Dictamen</h3>
             <p style="margin:0 0 18px;color:var(--gris-500);font-size:13.5px">Resuelve la propuesta. La decisión queda registrada.</p>
             <div style="display:flex;flex-direction:column;gap:10px" id="dictamen-botones">
               <button class="btn btn-primary btn-block" onclick="abrir('m-aceptar')">✓ Aceptar</button>
@@ -166,7 +166,7 @@
             <hr style="border:none;border-top:1px solid var(--gris-200);margin:20px 0">
 
             <!-- Ejemplar físico ACTIVO (CU-EVT-012) -->
-            <h4 style="margin:0 0 10px;color:var(--azul-900);font-size:14.5px">📚 Ejemplar físico</h4>
+            <h4 style="margin:0 0 10px;color:var(--color-azul-texto);font-size:14.5px">📚 Ejemplar físico</h4>
             <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--gris-700);cursor:pointer">
               <input type="checkbox" id="chk-ejemplar" style="margin-top:3px">
               <span>Marcar ejemplar como <strong>recibido</strong> en oficinas de FILEY</span>
@@ -252,6 +252,7 @@
 </div>
 
 <script src="../demo.js"></script>
+<script src="../../common/demo-reset.js"></script>
 <script>
   function abrir(id){ document.getElementById(id).hidden = false; }
   function cerrar(id){ document.getElementById(id).hidden = true; }

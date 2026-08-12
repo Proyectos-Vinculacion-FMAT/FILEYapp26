@@ -7,10 +7,8 @@
 @import '../common/styles-base.css';
 
 :root {
-  /* Bordes tenues de estado — extienden la escala --ok-*/--err-* de common/,
-     que solo trae el 050 (fondo) y el 600 (texto). */
-  --ok-200:  #c9e5d3;
-  --err-200: #eecac5;
+  /* --ok-200 / --err-200 se promovieron a common/styles-base.css: los usan EVT y VIS. */
+  --evt-constancias: #6b46c1;   /* morado de la tarjeta de constancias (solo EVT) */
 }
 
 /* ===================== Shell (sidebar + contenido) ===================== */
@@ -151,7 +149,7 @@
 .ev-notif { background: var(--color-azul-institucional); }
 .ev-ajustes { background: var(--color-dorado-encabezado); color: var(--color-azul-institucional-enfoque); }
 .ev-asignacion { background: var(--azul-600); }
-.ev-constancias { background: #6b46c1; }
+.ev-constancias { background: var(--evt-constancias); }
 
 /* Lista de fechas clave (leyenda + edición) */
 .date-list { display: flex; flex-direction: column; gap: 10px; }
