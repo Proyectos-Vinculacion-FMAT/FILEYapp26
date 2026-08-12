@@ -10,8 +10,9 @@
      · Admin la revisa y la ACEPTA    → cambia de estado en ambos lados.
      · Admin la coloca en el horario  → queda programada.
 
-   Es solo demostrativo (no hay backend). Incluye toasts y un
-   botón flotante "Reiniciar demo" para volver a correr el guion.
+   Es solo demostrativo (no hay backend). Incluye toasts para dar
+   continuidad al guion. El botón "Reiniciar demo" es compartido
+   con VIS/REG — lo inyecta common/demo-reset.js.
    ========================================================= */
 (function () {
   "use strict";
@@ -88,7 +89,7 @@
     }
   };
 
-  /* ---- Estilos inyectados (toast + botón reiniciar) ---- */
+  /* ---- Estilos inyectados (toast) ---- */
   function injectStyles() {
     if (document.getElementById("filey-demo-css")) return;
     var css = document.createElement("style");
@@ -101,38 +102,16 @@
       ".filey-toast.show{opacity:1;transform:translateY(0)}",
       ".filey-toast.is-ok{background:var(--ok-600,#1d8a4e)}",
       ".filey-toast.is-warn{background:var(--warn-600,#b8860b)}",
-      ".filey-toast .ic{font-size:15px;line-height:1.35}",
-      "#filey-demo-reset{position:fixed;left:14px;bottom:14px;z-index:9998;display:inline-flex;align-items:center;gap:7px;",
-      "background:rgba(255,255,255,.92);color:#6b7686;border:1px solid #e2e7ee;border-radius:999px;padding:6px 13px;",
-      "font-size:12.5px;font-weight:600;font-family:var(--font-filey,sans-serif);cursor:pointer;box-shadow:0 4px 14px rgba(16,36,64,.12);",
-      "backdrop-filter:saturate(1.2) blur(2px);transition:all .15s ease}",
-      "#filey-demo-reset:hover{color:#01457C;border-color:#c8d0db;box-shadow:0 6px 18px rgba(16,36,64,.18)}",
-      "#filey-demo-reset .dot{width:7px;height:7px;border-radius:50%;background:#c99213;display:inline-block}"
+      ".filey-toast .ic{font-size:15px;line-height:1.35}"
     ].join("");
     document.head.appendChild(css);
-  }
-
-  /* ---- Botón flotante para reiniciar el guion de la demo ---- */
-  function injectReset() {
-    if (document.getElementById("filey-demo-reset")) return;
-    var b = document.createElement("button");
-    b.id = "filey-demo-reset";
-    b.type = "button";
-    b.title = "Vuelve el prototipo al inicio del guion (El mar que nos habita)";
-    b.innerHTML = '<span class="dot"></span> Reiniciar demo';
-    b.addEventListener("click", function () {
-      FileyDemo.reset();
-      FileyDemo.toast("Demo reiniciada. El guion vuelve al inicio.", "ok");
-      setTimeout(function () { location.reload(); }, 650);
-    });
-    document.body.appendChild(b);
   }
 
   window.FileyDemo = FileyDemo;
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () { injectStyles(); injectReset(); });
+    document.addEventListener("DOMContentLoaded", injectStyles);
   } else {
-    injectStyles(); injectReset();
+    injectStyles();
   }
 })();

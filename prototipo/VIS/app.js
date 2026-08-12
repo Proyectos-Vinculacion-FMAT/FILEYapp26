@@ -484,7 +484,16 @@
     }
     function tallerInfo(id) { return cat.byId[id]; }
     function esLibre(id) { var t = tallerInfo(id); return !t || t.tipo === 'libre'; }
-    function bloque(id) { var t = tallerInfo(id); return t ? t.turno + '|' + t.horario : ''; }
+
+    // Reserva de ese grupo en CUALQUIER otro taller (política: un taller por
+    // grupo). Las zonas de acceso libre no cuentan ni generan conflicto —
+    // pueden combinarse siempre con el taller que el grupo tenga asignado.
+    function findConflicto(e, grupo, tallerId) {
+      if (esLibre(tallerId)) return null;
+      return (e.reservas || []).find(function (r) {
+        return r.grupo_id === grupo.id && r.taller_id !== tallerId && !esLibre(r.taller_id);
+      }) || null;
+    }
 
     // ---- construcción del grid ----
     function celdaHTML(celda) {
@@ -559,7 +568,7 @@
       updateResumen(e);
       if (popup.style.display === 'flex' && currentTallerId) {
         currentCell = wrap.querySelector('[data-taller-id="' + currentTallerId + '"]');
-        if (currentCell) syncRadios(); else closePopup();
+        if (currentCell) buildPopup(); else closePopup();
       }
     }
 
@@ -569,45 +578,80 @@
     var itinLink = document.querySelector('[data-vis-itin-link]');
     if (itinLink) itinLink.href = 'itinerario-admin.html?id=' + escuelaId;
 
-    // ---- popup de asignación de grupos ----
+    // ---- popup de asignación de grupos (selección en dos pasos) ----
+    // El popup NO escribe en el pseudo-backend en cada clic: junta la selección
+    // en memoria (seleccionados) y solo la persiste si el usuario da "Aceptar".
+    // "Cancelar" (o la X, o clic afuera, o Escape) descarta todo sin tocar datos.
     var popup = document.createElement('div');
     popup.className = 'vis-grupo-selector';
     popup.style.cssText = 'position:fixed;z-index:9999;';
     document.body.appendChild(popup);
     var currentCell = null, currentTallerId = null;
+    var original = [];      // grupos que YA estaban en este taller al abrir el popup
+    var seleccionados = []; // selección en memoria mientras el popup está abierto
 
+    // Ficha resumen del taller (real: título/nivel/cupo/sala/horario · lorem: tema/reseña/imparte/organiza).
+    function fichaHTML(tallerId) {
+      var f = DB.getFichaTaller(tallerId);
+      if (!f) return '';
+      return '<div class="vis-ficha">' +
+        '<p class="vis-ficha__tag">' + esc(f.tipo) + ' · ' + esc(f.publicoMeta) + '</p>' +
+        '<h4 class="vis-ficha__titulo">' + esc(f.titulo) + '</h4>' +
+        '<p class="vis-ficha__campo"><strong>Tema:</strong> ' + esc(f.tema) + '</p>' +
+        '<p class="vis-ficha__resena">' + esc(f.resena) + '</p>' +
+        '<dl class="vis-ficha__meta">' +
+          '<div><dt>Imparte</dt><dd>' + esc(f.imparte) + '</dd></div>' +
+          '<div><dt>Organiza</dt><dd>' + esc(f.organiza) + '</dd></div>' +
+          '<div><dt>Horario</dt><dd>' + esc(f.turno) + ' · ' + esc(f.horario) + '</dd></div>' +
+          '<div><dt>Sala</dt><dd>' + esc(f.sala) + '</dd></div>' +
+          '<div><dt>Cupo</dt><dd>' + esc(f.cupoLabel) + '</dd></div>' +
+        '</dl></div>';
+    }
+
+    // Un ítem por grupo, siempre el mismo toggle (radio). Si el grupo ya tiene
+    // asignado OTRO taller (política: un taller por grupo, las zonas de acceso
+    // libre no cuentan), el texto avisa que seleccionarlo lo cambiará de taller.
     function buildPopup() {
       var e = getEsc();
       var items = (e.grupos || []).map(function (g, i) {
-        return '<div class="vis-grupo-selector__item" data-group="G' + (i + 1) + '">' +
-          '<span class="vis-radio"></span> Grupo ' + (i + 1) + ' · ' + g.cantidad_alumnos + ' alumnos</div>';
+        var code = 'G' + (i + 1);
+        var enSeleccion = seleccionados.indexOf(code) !== -1;
+        var conflicto = !enSeleccion && findConflicto(e, g, currentTallerId);
+        var texto = conflicto
+          ? 'Cambiar Grupo ' + (i + 1) + ' a este taller<small>Estaba en «' +
+            esc((tallerInfo(conflicto.taller_id) || {}).titulo || 'otro taller') + '»</small>'
+          : 'Grupo ' + (i + 1) + ' · ' + g.cantidad_alumnos + ' alumnos';
+        return '<div class="vis-grupo-selector__item' + (conflicto ? ' vis-grupo-selector__item--conflict' : '') + '" data-group="' + code + '">' +
+          '<span class="vis-radio' + (enSeleccion ? ' vis-radio--selected' : '') + '"></span>' +
+          '<span class="vis-grupo-selector__item-text">' + texto + '</span></div>';
       }).join('');
       popup.innerHTML =
+        fichaHTML(currentTallerId) +
         '<div class="vis-grupo-selector__head"><p class="vis-grupo-selector__title">Asignar grupo completo</p>' +
-        '<button type="button" class="vis-icon-btn" data-popup-close title="Cerrar" aria-label="Cerrar">' + ICON_CLOSE + '</button></div>' +
+        '<button type="button" class="vis-icon-btn" data-popup-cancel title="Cerrar sin guardar" aria-label="Cerrar sin guardar">' + ICON_CLOSE + '</button></div>' +
         items +
         '<div class="vis-grupo-selector__item"><button type="button" class="vis-todos-btn">Todos los grupos</button></div>' +
-        '<p style="margin:6px 0 0;font-size:11px;color:var(--gris-500);line-height:1.4">Se reserva la totalidad de alumnos del grupo seleccionado.</p>';
-    }
-    function syncRadios() {
-      if (!currentCell) return;
-      var e = getEsc();
-      var codes = gruposEn(e, currentTallerId);
-      popup.querySelectorAll('[data-group]').forEach(function (item) {
-        item.querySelector('.vis-radio').classList.toggle(
-          'vis-radio--selected', codes.indexOf(item.getAttribute('data-group')) !== -1);
-      });
+        '<p style="margin:2px 0 0;font-size:11px;color:var(--gris-500);line-height:1.4">Un grupo solo puede tener un taller asignado a la vez (las zonas de acceso libre no cuentan). Los cambios se guardan hasta dar “Aceptar”.</p>' +
+        '<div class="vis-grupo-selector__actions">' +
+          '<button type="button" class="btn btn-ghost" data-popup-cancel>Cancelar</button>' +
+          '<button type="button" class="btn btn-primary" data-popup-aceptar>Aceptar</button>' +
+        '</div>';
     }
     function openPopup(cell, x, y) {
       currentCell = cell;
       currentTallerId = cell.getAttribute('data-taller-id');
-      buildPopup(); syncRadios();
+      original = gruposEn(getEsc(), currentTallerId);
+      seleccionados = original.slice();
+      buildPopup();
       popup.style.display = 'flex';
       var pw = popup.offsetWidth || 200, ph = popup.offsetHeight || 200;
       popup.style.left = Math.min(x, window.innerWidth - pw - 8) + 'px';
       popup.style.top = Math.min(y, window.innerHeight - ph - 8) + 'px';
     }
-    function closePopup() { popup.style.display = 'none'; currentCell = null; currentTallerId = null; }
+    function closePopup() {
+      popup.style.display = 'none';
+      currentCell = null; currentTallerId = null; original = []; seleccionados = [];
+    }
 
     function flash(cell) {
       cell.style.boxShadow = 'inset 0 0 0 2px var(--err-600)';
@@ -625,47 +669,73 @@
     }
 
     function nivelCat(n) { return (n === 'pa' || n === 'pb') ? 'primaria' : (n || ''); }
-
-    // Intenta asignar un grupo (code) al taller actual. Devuelve true si cambió algo.
-    function tryAssign(code) {
+    function sumAlumnos(codes) {
       var e = getEsc();
-      var grupo = DB.grupoPorCodigo(e, code);
-      if (!grupo) return false;
-      var id = currentTallerId;
-      var info = tallerInfo(id);
+      return codes.reduce(function (sum, code) {
+        var g = DB.grupoPorCodigo(e, code);
+        return sum + (g ? g.cantidad_alumnos : 0);
+      }, 0);
+    }
 
-      // ¿ya está? → alternar (quitar)
-      if (gruposEn(e, id).indexOf(code) !== -1) {
-        DB.removeReserva(escuelaId, function (r) { return r.taller_id === id && r.grupo_id === grupo.id; });
-        return true;
-      }
-
-      // cupo
-      if (!esLibre(id)) {
-        var remaining = info.base - DB.cupoTomado(id);
-        if (grupo.cantidad_alumnos > remaining) { flash(currentCell); showConflict('Sin cupo suficiente para ' + code + '.'); return false; }
-      }
-      // nivel educativo compatible (regla dura: se bloquea)
-      if (!esLibre(id) && info.nivel) {
-        var gN = DB.nivelDeGrupo(e, grupo);
+    // ¿Puede este grupo sumarse a la selección en memoria? Valida nivel y cupo
+    // (cupo de otras escuelas + lo ya seleccionado en este popup + el propio grupo).
+    function puedeAgregar(grupo, code) {
+      if (esLibre(currentTallerId)) return true;
+      var info = tallerInfo(currentTallerId);
+      if (info.nivel) {
+        var gN = DB.nivelDeGrupo(getEsc(), grupo);
         if (gN && nivelCat(info.nivel) !== nivelCat(gN)) {
-          flash(currentCell);
           showConflict('Nivel incompatible: este taller es de ' + (DB.NIVELES[info.nivel] || {}).label + '.');
           return false;
         }
       }
-      // conflicto de horario → MOVER (quita la reserva previa del grupo en ese bloque)
-      if (!esLibre(id)) {
-        var previa = (e.reservas || []).find(function (r) {
-          return r.grupo_id === grupo.id && r.taller_id !== id &&
-            !esLibre(r.taller_id) && bloque(r.taller_id) === bloque(id);
-        });
-        if (previa) {
-          DB.removeReserva(escuelaId, function (r) { return r.grupo_id === grupo.id && r.taller_id === previa.taller_id; });
-        }
+      var otrasEscuelas = DB.cupoTomado(currentTallerId, escuelaId);
+      if (otrasEscuelas + sumAlumnos(seleccionados) + grupo.cantidad_alumnos > info.base) {
+        showConflict('Sin cupo suficiente para ' + code + '.');
+        return false;
       }
-      DB.addReserva(escuelaId, { grupo_id: grupo.id, taller_id: id, cantidad_alumnos: grupo.cantidad_alumnos });
       return true;
+    }
+
+    function toggleSeleccion(code) {
+      var grupo = DB.grupoPorCodigo(getEsc(), code);
+      if (!grupo) return;
+      var idx = seleccionados.indexOf(code);
+      if (idx !== -1) { seleccionados.splice(idx, 1); buildPopup(); return; }
+      if (!puedeAgregar(grupo, code)) { flash(currentCell); return; }
+      seleccionados.push(code);
+      buildPopup();
+    }
+
+    function seleccionarTodos() {
+      var e = getEsc();
+      (e.grupos || []).forEach(function (g, i) {
+        var code = 'G' + (i + 1);
+        if (seleccionados.indexOf(code) === -1 && puedeAgregar(g, code)) seleccionados.push(code);
+      });
+      buildPopup();
+    }
+
+    // Persiste la selección: quita lo deseleccionado, agrega/mueve lo nuevo
+    // (política de un taller por grupo → libera cualquier otro taller que tuviera).
+    function commitSeleccion() {
+      var e = getEsc();
+      original.forEach(function (code) {
+        if (seleccionados.indexOf(code) === -1) {
+          var grupo = DB.grupoPorCodigo(e, code);
+          if (grupo) DB.removeReserva(escuelaId, function (r) { return r.taller_id === currentTallerId && r.grupo_id === grupo.id; });
+        }
+      });
+      seleccionados.forEach(function (code) {
+        if (original.indexOf(code) !== -1) return;
+        var grupo = DB.grupoPorCodigo(e, code);
+        if (!grupo) return;
+        var previa = findConflicto(e, grupo, currentTallerId);
+        if (previa) DB.removeReserva(escuelaId, function (r) { return r.grupo_id === grupo.id && r.taller_id === previa.taller_id; });
+        DB.addReserva(escuelaId, { grupo_id: grupo.id, taller_id: currentTallerId, cantidad_alumnos: grupo.cantidad_alumnos });
+      });
+      closePopup();
+      render();
     }
 
     // Eventos del grid
@@ -682,19 +752,15 @@
     });
 
     popup.addEventListener('click', function (ev) {
-      if (ev.target.closest('[data-popup-close]')) { closePopup(); return; }
+      // Nunca dejar que burbujee: el listener de "clic afuera" en document usa
+      // popup.contains(ev.target), y buildPopup() reemplaza el DOM interno en
+      // cada toggle — sin este corte, el propio clic cerraría el popup.
+      ev.stopPropagation();
+      if (ev.target.closest('[data-popup-cancel]')) { closePopup(); return; }
+      if (ev.target.closest('[data-popup-aceptar]')) { commitSeleccion(); return; }
       var item = ev.target.closest('[data-group]');
-      if (item) { if (tryAssign(item.getAttribute('data-group'))) render(); return; }
-      if (ev.target.closest('.vis-todos-btn')) {
-        var e = getEsc(), changed = false;
-        (e.grupos || []).forEach(function (g, i) {
-          var code = 'G' + (i + 1);
-          if (gruposEn(getEsc(), currentTallerId).indexOf(code) === -1) {
-            if (tryAssign(code)) changed = true;
-          }
-        });
-        if (changed) render();
-      }
+      if (item) { toggleSeleccion(item.getAttribute('data-group')); return; }
+      if (ev.target.closest('.vis-todos-btn')) { seleccionarTodos(); return; }
     });
     document.addEventListener('click', function (ev) {
       if (!popup.contains(ev.target) && !ev.target.closest('.vis-horario-celda')) closePopup();

@@ -373,6 +373,57 @@
     });
   }
 
+  // ---------- ficha de taller (resumen para el selector de grupos) ----------
+  // Los campos reales (título, nivel, cupo, sala, turno, horario) vienen del
+  // catálogo sembrado. El resto (tema, reseña, imparte, organiza) todavía no
+  // se captura en el pseudo-backend, así que se completa con lorem ipsum
+  // determinista (mismo taller → mismo texto en cada carga) para no romper
+  // el layout de la ficha mientras se define el modelo de datos real.
+  var LOREM = ('lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod ' +
+    'tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis ' +
+    'nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat').split(' ');
+
+  function hashStr(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+  function loremPhrase(seed, minW, maxW) {
+    var n = minW + (seed % (maxW - minW + 1));
+    var words = [];
+    for (var i = 0; i < n; i++) words.push(LOREM[(seed + i * 7) % LOREM.length]);
+    var s = words.join(' ');
+    return s.charAt(0).toUpperCase() + s.slice(1) + '.';
+  }
+  function loremParrafo(seed, oraciones) {
+    var out = [];
+    for (var i = 0; i < oraciones; i++) out.push(loremPhrase(seed + i * 13, 8, 14));
+    return out.join(' ');
+  }
+
+  var TIPO_LABELS = { taller: 'Taller', cine: 'Función de cine', libre: 'Actividad de acceso libre' };
+
+  function fichaTaller(tallerId) {
+    var t = store.catalogo.byId[tallerId];
+    if (!t) return null;
+    var seed = hashStr(tallerId);
+    var nivelInfo = NIVELES[t.nivel] || null;
+    var ilimitado = t.tipo === 'libre' || t.base < 0;
+    return {
+      titulo: t.titulo,
+      tipo: TIPO_LABELS[t.tipo] || 'Actividad',
+      publicoMeta: nivelInfo ? nivelInfo.label : 'Todo público',
+      cupoLabel: ilimitado ? 'Ilimitado' : (t.base + ' alumnos'),
+      sala: t.sala,
+      turno: t.turno === 'matutino' ? 'Matutino' : 'Vespertino',
+      horario: t.horario,
+      tema: loremPhrase(seed, 5, 8),
+      resena: loremParrafo(seed + 1, 2),
+      imparte: 'Por definir — dato aún no capturado',
+      organiza: 'Por definir — dato aún no capturado'
+    };
+  }
+
   function demandaPorDia() { return clone(store.demanda || []); }
   function diaMayorDemanda() {
     return (store.demanda || []).reduce(function (max, d) {
@@ -397,6 +448,7 @@
     updateEscuela: updateEscuela,
     insertEscuela: insertEscuela,
     getCatalogo: function () { return store.catalogo; },
+    getFichaTaller: fichaTaller,
     cupoTomado: cupoTomado,
     addReserva: addReserva,
     removeReserva: removeReserva,
