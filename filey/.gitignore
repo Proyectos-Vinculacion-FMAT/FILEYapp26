@@ -1,12 +1,39 @@
-.venv/
+# Python caches
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Django specific
+*.log
+local_settings.py
 db.sqlite3
+db.sqlite3-journal
+
+# User-uploaded media
+media/
+
+# Static files (if running collectstatic locally)
+staticfiles/
+static_root/
+
+# Environments (in case you create one inside the subfolder)
 .env
+.venv/
+venv/
+env/
 
-# Salida de `manage.py collectstatic` (se regenera en cada despliegue).
-estaticos_recolectados/
+# IDE / OS specific
+.vscode/
+.idea/
+.DS_Store
+__MACOSX/
 
+# Pytest / Coverage
 .pytest_cache/
-.coverage
 htmlcov/
+.coverage
+.coverage.*
+
+# Celery (if used)
+celerybeat-schedule
+celerybeat.pid
