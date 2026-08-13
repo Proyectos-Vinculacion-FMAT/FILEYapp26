@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # FILEY
     "apps.registros",
+    "apps.notificaciones",
 ]
 
 MIDDLEWARE = [
@@ -94,13 +95,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# ── Base de datos (SQLite en desarrollo) ──────────────────────
+import dj_database_url
+
+# ── Base de datos (Postgres en Producción / SQLite fallback) ──
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR}/db.sqlite3",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
@@ -179,57 +183,21 @@ WHITENOISE_AUTOREFRESH = DEBUG
 URL_BASE = os.getenv("URL_BASE", "http://localhost:8000").rstrip("/")
 
 
-# ── Correo (envío del OTP) ────────────────────────────────────
-# Con credenciales en .env se usa Gmail SMTP; sin ellas, los
-# correos se imprimen en la consola (útil en desarrollo).
-
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
-
-# Google muestra la contraseña de aplicación en cuatro bloques
-# ("abcd efgh ijkl mnop"); pegada tal cual, el AUTH de Gmail falla.
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "").replace(" ", "").strip()
-
-CORREO_CONFIGURADO = bool(EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
-
-if CORREO_CONFIGURADO:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-    # 587 es STARTTLS y 465 es SSL directo: cruzarlos deja la
-    # conexión colgada hasta agotar el timeout.
-    EMAIL_USE_SSL = EMAIL_PORT == 465
-    EMAIL_USE_TLS = not EMAIL_USE_SSL
-    # Sin timeout, un SMTP que no responde bloquea indefinidamente
-    # el hilo que envía el OTP.
-    EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-# Gmail solo deja enviar como la cuenta autenticada (o un alias
-# verificado). Un remitente de otro dominio —como el noreply@filey.org
-# que traía el .env— se reescribe o se rechaza, y falla SPF/DMARC,
-# así que el correo acaba en spam o no sale.
-_remitente = os.getenv("DEFAULT_FROM_EMAIL", "").strip()
-
-if CORREO_CONFIGURADO and EMAIL_HOST_USER not in _remitente:
-    _remitente = f"FILEY <{EMAIL_HOST_USER}>"
-
-DEFAULT_FROM_EMAIL = _remitente or "FILEY <noreply@filey.org>"
+# ── Correo (Notificaciones vía Resend) ────────────────────────
+# Resend email delivery (usado por el módulo notificaciones)
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "FILEY <noreply@filey.org>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
-# La caída silenciosa a consola es la causa nº1 de "el OTP no
-# llega": el envío parece exitoso pero el código solo se imprime
-# en esta terminal. Avisarlo en voz alta al levantar el servidor.
-if not CORREO_CONFIGURADO and "runserver" in sys.argv:
+if not RESEND_API_KEY and "runserver" in sys.argv:
     print(
         "\n"
         "  ┌─────────────────────────────────────────────────────────────┐\n"
-        "  │  CORREO EN MODO CONSOLA — el OTP NO se envía por correo.    │\n"
-        "  │  El código aparece impreso aquí abajo, en esta terminal.    │\n"
+        "  │  CORREO SIN RESEND_API_KEY — el OTP NO se enviará.          │\n"
+        "  │  El sistema lanzará un error al intentar enviar correos.    │\n"
         "  │                                                             │\n"
         "  │  Para enviarlo de verdad, llena en filey/.env:              │\n"
-        "  │     EMAIL_HOST_USER / EMAIL_HOST_PASSWORD                   │\n"
-        "  │  y comprueba con:  python manage.py probar_correo <destino> │\n"
+        "  │     RESEND_API_KEY                                          │\n"
         "  └─────────────────────────────────────────────────────────────┘\n",
         file=sys.stderr,
     )

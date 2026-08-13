@@ -1,0 +1,32 @@
+services:
+  # Servicio Web Django
+  - type: web
+    name: filey-backend
+    env: docker
+    plan: free # Usa 'starter' en producción para evitar hibernación
+    region: ohio
+    branch: main
+    # Comando de pre-despliegue (Render lo corre justo antes del deploy exitoso)
+    # Útil para correr las migraciones automáticamente
+    preDeployCommand: "python manage.py migrate --noinput"
+    dockerCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: filey-postgres
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "*" # Actualizar a tu dominio final luego
+      - key: DJANGO_SSL_REDIRECT
+        value: "true"
+
+  # Base de Datos PostgreSQL manejada por Render
+  - type: psql
+    name: filey-postgres
+    plan: free
+    region: ohio
+    postgresMajorVersion: 16

@@ -26,8 +26,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.db import connections, transaction
+
+from apps.notificaciones.services.email import EmailDeliveryError, send_otp_email
 from django.utils import timezone
 
 from ..models import Persona, SesionOTP
@@ -206,9 +207,9 @@ def _tarea_envio(correo: str, nombre: str, codigo: str, sesion_id: int):
     usa "Enviar nuevo código".
     """
     try:
-        _enviar_correo(correo, nombre, codigo)
-        logger.info("OTP enviado a %s vía %s", correo, settings.EMAIL_BACKEND)
-    except Exception:  # noqa: BLE001 — cualquier fallo del proveedor
+        send_otp_email(correo, nombre, codigo, settings.OTP_VIGENCIA_MINUTOS)
+        logger.info("OTP enviado a %s vía Resend", correo)
+    except EmailDeliveryError:
         # El motivo real (credenciales, remitente rechazado, timeout)
         # solo existe aquí: sin este log el fallo es invisible.
         logger.exception("OTP no enviado a %s — el código queda anulado", correo)
@@ -265,21 +266,3 @@ def verificar(persona: Persona, codigo: str) -> ResultadoVerificacion:
             intentos_restantes=sesion.intentos_restantes,
         )
 
-
-def _enviar_correo(correo: str, nombre: str, codigo: str):
-    minutos = settings.OTP_VIGENCIA_MINUTOS
-    saludo = f"Hola {nombre}," if nombre else "Hola,"
-    send_mail(
-        subject=f"{codigo} es tu código de acceso a FILEY",
-        message=(
-            f"{saludo}\n\n"
-            f"Tu código de acceso de un solo uso es: {codigo}\n\n"
-            f"Vence en {minutos} minutos. Si tú no lo solicitaste, "
-            "ignora este correo.\n\n"
-            "FILEY — Feria Internacional de la Lectura Yucatán\n"
-            "Coordinación General de Contenidos · UADY"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[correo],
-        fail_silently=False,
-    )
