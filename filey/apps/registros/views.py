@@ -366,12 +366,12 @@ def admin_acceso(peticion):
     correo = formulario.cleaned_data["correo"]
     persona = _persona_por_correo(correo)
 
-    # Sin RolPermiso (o sin cuenta) no se emite nada de verdad, pero el
-    # señuelo produce el mismo comportamiento observable.
-    if _es_admin(persona):
-        meta, error, espera = _emitir(persona=persona)
-    else:
-        meta, error, espera = _emitir(correo=correo)
+    if not _es_admin(persona):
+        _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
+        messages.error(peticion, "Correo incorrecto.")
+        return _pantalla_acceso(peticion, CONTEXTO_ADMIN, formulario)
+
+    meta, error, espera = _emitir(persona=persona)
 
     _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
 
