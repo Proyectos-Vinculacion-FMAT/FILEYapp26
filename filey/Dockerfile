@@ -9,10 +9,10 @@ ENV PYTHONUNBUFFERED=1
 # Configura el directorio de trabajo
 WORKDIR /app
 
-# Instala el servidor de PostgreSQL local, dependencias y sudo
+# Instala dependencias para compilar adaptadores de bases de datos
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       gcc libpq-dev postgresql postgresql-contrib sudo \
+       gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia los archivos de requerimientos e instala dependencias
