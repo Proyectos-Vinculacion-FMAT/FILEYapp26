@@ -119,7 +119,9 @@ document.addEventListener('alpine:init', () => {
       evento.target.value = valor;
       if (valor && i < 5) this.enfocar(i + 1);
       // Con las 6 cajas llenas se envía solo, como en el prototipo.
-      if (this.completo) this.$root.requestSubmit();
+      if (this.completo) {
+        this.$nextTick(() => this.$root.requestSubmit());
+      }
     },
 
     alTeclear(i, evento) {
@@ -139,7 +141,9 @@ document.addEventListener('alpine:init', () => {
       this.hayError = false;
       texto.slice(0, 6).split('').forEach((digito, j) => (this.digitos[j] = digito));
       this.enfocar(Math.min(texto.length, 5));
-      if (this.completo) this.$root.requestSubmit();
+      if (this.completo) {
+        this.$nextTick(() => this.$root.requestSubmit());
+      }
     },
 
     limpiar() {
