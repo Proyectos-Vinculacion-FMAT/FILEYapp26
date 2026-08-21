@@ -16,3 +16,6 @@ node_modules/
 dist/
 .angular/
 sona_pruebas_FILEY/
+
+# Notas personales de handoff entre mis propias máquinas — no son para el equipo.
+HANDOFF_OTRA_PC.md

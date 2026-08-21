@@ -1,0 +1,39 @@
+{% load static %}<!doctype html>
+{% comment %} ===========================================================
+   Esqueleto de todas las páginas del monolito.
+
+   Cualquier módulo (EVT, TAL, STD, VIS) parte de aquí — casi
+   siempre a través de `layouts/panel.html`, que ya trae la barra
+   superior y el pie. Extender esta plantilla directamente solo
+   tiene sentido para pantallas sin encabezado, como el acceso.
+   =========================================================== {% endcomment %}
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}FILEY 2027{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/filey-org-ico.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/filey.css' %}">
+
+  {% comment %} HTMX y Alpine viven en el repositorio, no en un CDN: el sistema
+     tiene que poder levantarse y funcionar sin salida a internet, y
+     así nadie puede cambiar por su cuenta el JavaScript que servimos. {% endcomment %}
+  <script src="{% static 'js/htmx.min.js' %}" defer></script>
+  {% comment %} filey.js registra los componentes en `alpine:init`, así que tiene
+     que estar cargado antes de que Alpine arranque. {% endcomment %}
+  <script src="{% static 'js/filey.js' %}" defer></script>
+  <script src="{% static 'js/alpine.min.js' %}" defer></script>
+  {% block cabeza %}{% endblock %}
+</head>
+
+{% comment %} El token CSRF va en todas las peticiones de HTMX: Django lo exige
+   en cada POST y sin esta cabecera cada formulario tendría que
+   repetirlo a mano. {% endcomment %}
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+  {% include "componentes/avisos.html" %}
+
+  {% block cuerpo %}{% endblock %}
+
+</body>
+</html>

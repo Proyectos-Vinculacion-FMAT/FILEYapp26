@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% comment %} ===========================================================
+   Layout de las pantallas de acceso: panel de identidad a la
+   izquierda, tarjeta con el formulario a la derecha.
+
+   `es_admin` cambia la variante del panel (dorado con identidad
+   azul) sin duplicar la pantalla, igual que hacía el componente
+   `auth-hero` del frontend anterior.
+   =========================================================== {% endcomment %}
+
+{% block cuerpo %}
+<div class="auth-wrap">
+
+  {% if es_admin %}
+    <div class="auth-hero is-admin">
+      <img class="logo-lg" src="{% static 'img/filey-logotipo-azul.svg' %}" alt="FILEY">
+      <h2>Panel de administración</h2>
+      <p>Coordinación General de Contenidos · FILEY, edición 2027.</p>
+      <div class="pills">
+        <span>Acceso restringido al comité organizador</span>
+      </div>
+    </div>
+  {% else %}
+    <div class="auth-hero">
+      <img class="logo-lg" src="{% static 'img/filey-logotipo-azul.svg' %}" alt="FILEY">
+      <h2>Portal de participantes<br>Edición 2027</h2>
+      <p>
+        Plataforma de registro y gestión de actividades de la Coordinación
+        General de Contenidos. Envía tu propuesta, da seguimiento a su
+        estado y consulta tu programación.
+      </p>
+      <div class="pills">
+        <span>📚 Convocatoria de Stands</span>
+        <span>🎨 Actividades Infantiles/Juveniles</span>
+        <span>🎤 Actividades FILEY (Eventos)</span>
+        <span>🚌 Visitas escolares</span>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="auth-form">
+    {% block tarjeta %}{% endblock %}
+  </div>
+
+</div>
+{% endblock %}

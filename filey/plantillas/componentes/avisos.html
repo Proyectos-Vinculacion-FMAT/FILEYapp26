@@ -1,0 +1,40 @@
+{% comment %} ===========================================================
+   Avisos flotantes — el mensaje que en Angular daba MatSnackBar.
+
+   Dos fuentes en el mismo lugar:
+
+   - El servidor, con `django.contrib.messages`. Cualquier vista de
+     cualquier módulo avisa algo con una línea:
+         messages.error(peticion, "No pudimos enviar el correo.")
+   - La pantalla, con `$store.avisos.agregar('texto')`, para lo que
+     no involucra al servidor.
+
+   Cuando la respuesta es un fragmento de HTMX (`oob`), este bloque se
+   marca `hx-swap-oob` para que HTMX lo reemplace fuera del objetivo
+   del intercambio: así el aviso aparece aunque lo que se haya
+   actualizado sea un rincón de la página.
+   =========================================================== {% endcomment %}
+<div id="avisos" class="avisos" x-data {% if oob %}hx-swap-oob="true"{% endif %}>
+
+  {% for mensaje in messages %}
+    <div class="aviso aviso-{{ mensaje.level_tag }}"
+         role="status"
+         x-data="{ visible: true }"
+         x-show="visible"
+         x-init="setTimeout(() => visible = false, 6000)">
+      <span>{{ mensaje }}</span>
+      <button type="button" class="aviso-cerrar" @click="visible = false"
+              aria-label="Cerrar aviso">&times;</button>
+    </div>
+  {% endfor %}
+
+  <template x-for="aviso in $store.avisos.lista" :key="aviso.id">
+    <div class="aviso" :class="'aviso-' + aviso.nivel" role="status">
+      <span x-text="aviso.texto"></span>
+      <button type="button" class="aviso-cerrar"
+              @click="$store.avisos.quitar(aviso.id)"
+              aria-label="Cerrar aviso">&times;</button>
+    </div>
+  </template>
+
+</div>

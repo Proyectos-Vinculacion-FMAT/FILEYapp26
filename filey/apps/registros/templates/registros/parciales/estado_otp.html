@@ -1,0 +1,6 @@
+{% comment %} El renglón bajo las cajas del código. Es lo único que se reemplaza
+   cuando un código falla: los contadores y lo ya escrito no se pierden
+   porque el resto de la pantalla no se vuelve a dibujar. {% endcomment %}
+<p class="otp-estado {% if estado_error %}err{% endif %}"
+   id="otp-estado"
+   aria-live="polite">{{ estado }}</p>

@@ -1,0 +1,66 @@
+<div class="auth-card" id="tarjeta-registro">
+  <h3>Crear cuenta</h3>
+  <p class="sub">
+    No encontramos una cuenta con ese correo. Completa tus datos para
+    registrarte.
+  </p>
+
+  <form method="post"
+        action="{% url 'registros:registro' %}"
+        hx-post="{% url 'registros:registro' %}"
+        hx-target="#tarjeta-registro"
+        hx-swap="outerHTML"
+        hx-disabled-elt="find button[type=submit]"
+        x-data="formularioRegistro()"
+        novalidate>
+    {% csrf_token %}
+
+    {% comment %} El correo se muestra pero no se envía: el que vale es el que
+       quedó guardado en la sesión al identificarse. {% endcomment %}
+    <div class="field">
+      <label for="id_correo">Correo electrónico <span class="req">*</span></label>
+      <input type="email" id="id_correo" value="{{ correo }}" readonly>
+    </div>
+
+    <div class="field">
+      <label for="id_nombre_completo">Nombre completo <span class="req">*</span></label>
+      <input type="text"
+             id="id_nombre_completo"
+             name="nombre_completo"
+             value="{{ form.nombre_completo.value|default:'' }}"
+             placeholder="Nombre(s) y apellidos"
+             autocomplete="name"
+             x-init="nombre = $el.value"
+             x-model="nombre"
+             class="{% if form.nombre_completo.errors %}is-invalid{% endif %}">
+      {% for error in form.nombre_completo.errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="id_telefono">Número telefónico <span class="req">*</span></label>
+      <input type="tel"
+             id="id_telefono"
+             name="telefono"
+             value="{{ form.telefono.value|default:'' }}"
+             placeholder="999 000 0000"
+             autocomplete="tel"
+             x-init="telefono = $el.value"
+             x-model="telefono"
+             class="{% if form.telefono.errors %}is-invalid{% endif %}">
+      {% for error in form.telefono.errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <button class="btn btn-primary btn-block btn-lg" type="submit" :disabled="!completo">
+      <span class="etiqueta-lista">Crear cuenta y continuar</span>
+      <span class="etiqueta-cargando">Creando cuenta…</span>
+    </button>
+  </form>
+
+  <div class="auth-foot">
+    ¿Ese no es tu correo? <a href="{% url 'registros:acceso' %}">Volver al acceso</a>
+  </div>
+</div>

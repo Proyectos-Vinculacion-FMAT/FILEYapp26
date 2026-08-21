@@ -1,0 +1,16 @@
+{% if nombre %}Hola {{ nombre }},{% else %}Hola,{% endif %}
+
+Tu correo {{ correo }} fue dado de alta como administrador de FILEY.
+
+Acceso concedido: {{ acceso }}
+
+Entra al panel administrativo aquí:
+{{ url_panel }}
+
+No necesitas contraseña. Escribe este mismo correo ({{ correo }}) y te
+enviaremos un código de un solo uso para entrar.
+
+Si no esperabas este mensaje, ignóralo o avísanos a {{ correo_soporte }}.
+
+FILEY — Feria Internacional de la Lectura Yucatán
+Coordinación General de Contenidos · UADY

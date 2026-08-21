@@ -1,0 +1,98 @@
+{% extends "layouts/acceso.html" %}
+
+{% comment %} Pantalla del código OTP: CU-REG-002 para el participante y
+   CU-REG-003 para el administrador. Mismo mecanismo, distinto destino
+   al acertar — por eso es una sola pantalla y no dos. {% endcomment %}
+
+{% block titulo %}
+  {% if flujo.es_admin %}FILEY 2027 — Acceso administrativo · Código{% else %}FILEY 2027 — Código de acceso{% endif %}
+{% endblock %}
+
+{% block tarjeta %}
+<div class="auth-card">
+  <h3>Ingresa tu código</h3>
+  {% if flujo.origen == "registro" %}
+    <p class="sub">
+      Tu cuenta quedó creada. Enviamos un código de 6 dígitos a
+      <strong>{{ flujo.correo }}</strong> para verificarla.
+    </p>
+  {% else %}
+    <p class="sub">
+      Enviamos un código de 6 dígitos a <strong>{{ flujo.correo }}</strong>
+    </p>
+  {% endif %}
+
+  <form method="post"
+        action="{{ url_verificar }}"
+        hx-post="{{ url_verificar }}"
+        hx-target="#otp-estado"
+        hx-swap="outerHTML"
+        x-data="codigoOtp({ vigencia: {{ flujo.vigencia_segundos }}, cooldown: {{ flujo.cooldown_segundos }} })"
+        @otp:fallo.window="alFallar($event.detail)"
+        @otp:reenviado.window="alReenviar($event.detail)"
+        novalidate>
+    {% csrf_token %}
+
+    {% comment %} Seis campos `digito` que el servidor vuelve a juntar. Se envían
+       tal cual, sin depender de JavaScript para armar el código. {% endcomment %}
+    <div class="otp-row" :class="hayError ? 'error' : ''">
+      {% for _ in "xxxxxx" %}
+        <input class="otp-caja"
+               type="text"
+               name="digito"
+               maxlength="1"
+               inputmode="numeric"
+               aria-label="Dígito {{ forloop.counter }}"
+               {% if forloop.first %}autocomplete="one-time-code" autofocus{% endif %}
+               :value="digitos[{{ forloop.counter0 }}]"
+               @input="alEscribir({{ forloop.counter0 }}, $event)"
+               @keydown="alTeclear({{ forloop.counter0 }}, $event)"
+               @paste="alPegar($event)">
+      {% endfor %}
+    </div>
+
+    {% include "registros/parciales/estado_otp.html" %}
+
+    <div class="otp-meta">
+      <span>El código vence en <strong x-text="formatear(vigencia)">--:--</strong></span>
+
+      <span class="otp-cooldown" x-show="cooldown > 0">
+        Reenviar en <span x-text="formatear(cooldown)"></span>
+      </span>
+      <button type="button"
+              class="enlace"
+              x-show="cooldown === 0"
+              x-cloak
+              hx-post="{{ url_reenviar }}"
+              hx-target="#otp-estado"
+              hx-swap="outerHTML">Reenviar código</button>
+    </div>
+
+    <button class="btn {% if flujo.es_admin %}btn-gold{% else %}btn-primary{% endif %} btn-block btn-lg"
+            type="submit"
+            style="margin-top: 22px"
+            :disabled="!completo || requiereNuevo">
+      <span class="etiqueta-lista">Verificar y entrar{% if flujo.es_admin %} →{% endif %}</span>
+      <span class="etiqueta-cargando">Verificando…</span>
+    </button>
+  </form>
+
+  {% if flujo.es_admin %}
+    <div class="note note-info" style="margin-top: 22px">
+      <div class="ico">ℹ️</div>
+      <div>
+        Las cuentas administrativas no se auto-registran. Si no recibes el
+        código, contacta al administrador general.
+      </div>
+    </div>
+    <div class="auth-foot">
+      <a href="{{ url_acceso }}">Usar otro correo</a>
+    </div>
+  {% else %}
+    <div class="auth-foot">
+      ¿No te llegó? Revisa tu carpeta de spam. ·
+      <a href="{{ url_acceso }}">Usar otro correo</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

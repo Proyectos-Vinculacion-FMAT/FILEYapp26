@@ -1,0 +1,10 @@
+{% extends "layouts/acceso.html" %}
+
+{% comment %} Crear cuenta de usuario externo (CU-REG-001). Solo se llega aquí
+   desde el acceso, cuando el correo no tenía cuenta. {% endcomment %}
+
+{% block titulo %}FILEY 2027 — Crear cuenta{% endblock %}
+
+{% block tarjeta %}
+  {% include "registros/parciales/tarjeta_registro.html" %}
+{% endblock %}
