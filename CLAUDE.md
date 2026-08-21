@@ -1,0 +1,18 @@
+# FILEY 2027
+
+Monolito Django (ADR-0001) + `prototipo/`, el mockup HTML estático que hoy sigue siendo el
+entregable vivo y la especificación visual.
+
+El código Django vive en `filey/` **en la rama `feature/registro-otp`**; en esta rama solo
+está el prototipo. La arquitectura la mandan el `CLAUDE.md` de esa rama y `docs/adr/`, no
+este archivo.
+
+## Qué skill aplica
+
+| Vas a… | Skill |
+| --- | --- |
+| Elegir color, tipografía, radio, tono, o cuántos pasos/campos lleva una pantalla | `filey-identidad` |
+| Escribir o editar CSS/markup, buscar si una clase ya existe | `filey-ui-componentes` |
+| Tocar plantillas, vistas, URLs, estáticos, o portar del prototipo a Django | `filey-render` |
+
+Cada hecho vive en **un solo** skill; los demás enlazan. No dupliques contenido entre ellos.

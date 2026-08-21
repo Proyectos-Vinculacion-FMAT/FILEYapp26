@@ -4,6 +4,11 @@ Todos los componentes de esta lista están definidos en `prototipo/common/styles
 y están disponibles en **todos los dominios** (REG, EVT, VIS, TAL) sin importar nada extra.
 Para componentes exclusivos de VIS, ver `componentes-vis.md`.
 
+> [!note] Relación con `inventario.md`
+> Este archivo dice **cuándo usar** cada componente y está escrito a mano.
+> [`inventario.md`](inventario.md) dice **qué existe y dónde**, y se genera desde el CSS real.
+> Si se contradicen, manda el inventario: regenéralo y corrige este archivo.
+
 ---
 
 ## Estructura de página
