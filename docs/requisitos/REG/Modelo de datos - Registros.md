@@ -9,19 +9,36 @@ fecha: 2026-08-19
 # Modelo de datos — Registros (REG)
 
 > Modelo **conceptual** del core transversal `REG`: la identidad única del sistema
-> (`Persona`) y el acceso administrativo por módulo (`RolPermiso`), más el mecanismo de login
-> (`SesionOTP`). Todos los demás dominios (`EVT`, `TAL`, `STD`, `VIS`) referencian estas
-> entidades en vez de redefinirlas — ver la nota de cada uno de sus "Modelo de datos".
+> (`Persona`) y el mecanismo de login (`SesionOTP`). Todos los demás dominios (`EVT`, `TAL`,
+> `STD`, `VIS`) referencian estas entidades en vez de redefinirlas — ver la nota de cada uno de
+> sus "Modelo de datos".
+
+<!-- -->
+
+> [!warning] `RolPermiso` quedó derogado el 2026-08-21 — el acceso administrativo ya no vive aquí
+> Este documento describía también el acceso administrativo por módulo y nivel
+> (`RolPermiso`). Ese modelo lo reemplaza `AdminFeria`, en
+> [`FER/Modelo de datos - Ferias`](<../FER/Modelo de datos - Ferias.md>): el permiso se otorga
+> **por feria**, no por módulo, y cada feria tiene un dueño que es el único que administra sus
+> accesos (ver [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>)).
+>
+> `RolPermiso` se conserva en §2.2 marcado como derogado, y no por nostalgia: **sigue existiendo
+> en el código** (`filey/apps/registros/models.py`) y hay que retirarlo. Hasta que esa migración
+> se ejecute, código y documentación no coinciden — manda la documentación.
+>
+> Lo que **no** cambia: `Persona` sigue siendo global y no pertenece a ninguna feria.
 
 <!-- -->
 
 > [!warning] Este core **ya está construido**, a diferencia de la mayoría de este repositorio
 > `Persona`, `RolPermiso` y `SesionOTP` existen hoy como código real en
-> `filey/apps/registros/models.py` (rama `feature/registro-otp`), implementando
-> `CU-REG-001`/`002`/`003`/`005`. Este documento describe el modelo **objetivo** tras la
-> sesión de diseño del 2026-08-19 (`nombres`/`apellidos` separados) — donde diverge de lo
-> desplegado, se marca explícitamente. Migrar el código real a este modelo es trabajo aparte,
-> no un efecto de editar este documento.
+> `filey/apps/registros/models.py` (en `main`), implementando `CU-REG-001`/`002`/`003`/`005`.
+> Este documento describe el modelo **objetivo**; donde diverge de lo desplegado, se marca
+> explícitamente. Migrar el código real a este modelo es trabajo aparte, no un efecto de editar
+> este documento. Hay **dos divergencias abiertas**, ambas en §5:
+>
+> 1. `nombre_completo` desplegado vs. `nombres`/`apellidos` decididos el 2026-08-19.
+> 2. `RolPermiso` desplegado vs. derogado el 2026-08-21 en favor de `AdminFeria` (`FER`).
 
 ---
 
@@ -29,9 +46,13 @@ fecha: 2026-08-19
 
 | Entidad     | Propósito                                                                              |
 | ----------- | ---------------------------------------------------------------------------------------- |
-| Persona     | Identidad única del sistema — registro mínimo, compartido entre todos los módulos.      |
-| RolPermiso  | Qué módulos puede administrar una `Persona`, y con qué nivel.                           |
+| Persona     | Identidad única del sistema — registro mínimo, compartido entre todos los módulos y todas las ferias. |
 | SesionOTP   | Código de un solo uso para autenticar una sesión (sin contraseña para usuarios externos). |
+| ~~RolPermiso~~ | **Derogado 2026-08-21.** Lo reemplaza `AdminFeria` (`FER`). Ver §2.2.                 |
+
+Ambas entidades vivas son **globales**: viven en el schema `public` y hay una sola copia para
+todo el sistema, con independencia de cuántas ferias existan
+([ADR-0003](<../../adr/0003-una-feria-por-schema.md>)).
 
 ---
 
@@ -58,10 +79,16 @@ fecha: 2026-08-19
 > (con `set_unusable_password()`) para poder reusar su sistema de sesiones; eso es detalle de
 > implementación, no forma parte de este modelo conceptual.
 
-### 2.2 RolPermiso
+### 2.2 ~~RolPermiso~~ — derogado el 2026-08-21
 
-> Lo que distingue a una cuenta administrativa: tener al menos un `RolPermiso` (`CU-REG-003`,
-> `CU-REG-005`). Sin `RolPermiso`, la `Persona` es un usuario externo normal.
+> [!danger] No implementar ni extender esta entidad
+> La reemplaza `AdminFeria(feria, persona, es_dueño)` en
+> [`FER/Modelo de datos - Ferias`](<../FER/Modelo de datos - Ferias.md>) §3.2. Se conserva aquí
+> **solo** para que quien lea el código actual —donde todavía existe— entienda qué era y por
+> qué se fue. Ver la tabla de equivalencia al final de esta sección.
+
+> Lo que distinguía a una cuenta administrativa: tener al menos un `RolPermiso` (`CU-REG-003`,
+> `CU-REG-005`). Sin `RolPermiso`, la `Persona` era un usuario externo normal.
 
 | Atributo    | Descripción                                                                                     |
 | ------------ | --------------------------------------------------------------------------------------------- |
@@ -74,16 +101,26 @@ fecha: 2026-08-19
 > Restricción: único por (`persona_id`, `modulo`) — no se puede duplicar el permiso de un
 > mismo módulo para la misma persona (`CU-REG-005`, E1).
 
-> [!note] Relación pendiente con `admin`(usuario, feria) — sesión de diseño 2026-08-19
-> En esa sesión se propuso una tabla `admin(usuario, feria)` para controlar acceso por
-> **feria**, con `feria` como FK a un dominio de Ferias "aún sin contemplar formalmente"
-> (multi-tenant, fuera del alcance actual — solo existe una feria implícita hoy). Mientras
-> `Feria` no exista, `RolPermiso` sigue siendo el único control de acceso administrativo y ya
-> cumple lo que pide `CU-REG-005` (módulo + nivel, cosa que `admin(usuario, feria)` tal como
-> se esbozó no cubre). Queda pendiente decidir, cuando `Feria` se formalice, si `RolPermiso`
-> gana un `feria_id` o si el acceso queda en dos niveles: `admin` decide *si* eres
-> administrador de esa feria, `RolPermiso` decide *de qué módulos* dentro de ella — ver
-> sección 5.
+> [!success] Pregunta cerrada el 2026-08-21 — ganó `admin(usuario, feria)`
+> Esta sección preguntaba, desde la sesión de diseño del 2026-08-19, si al formalizarse `Feria`
+> el permiso ganaría un `feria_id` o quedaría en dos niveles. La respuesta es **ninguna de las
+> dos**: `RolPermiso` desaparece y lo sustituye `AdminFeria`, que es la tabla
+> `admin(usuario, feria)` que aquella sesión esbozó, más el flag de dueño.
+>
+> Se descartó mantener los dos niveles (`AdminFeria` decide *si* entras, `RolPermiso` de *qué
+> módulos*) por ser la respuesta correcta a un problema que todavía no se tiene: los paneles de
+> módulo no existen y la granularidad nunca se ha ejercido. El razonamiento completo, con lo que
+> se pierde a cambio, está en
+> [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>).
+
+**Equivalencia entre el modelo viejo y el nuevo:**
+
+| `RolPermiso` (derogado) | `AdminFeria` (vigente) |
+| --- | --- |
+| `modulo = *`, `nivel = edicion` | Una fila por cada feria que administra. Si además la creó el operador de la plataforma al dar de alta la feria, con `es_dueño = verdadero`. |
+| `modulo = EVT`, `nivel = edicion` | Una fila en la feria correspondiente. **Se pierde la restricción al módulo**: administra toda la feria. |
+| `nivel = lectura` (supervisor) | **No tiene equivalente.** Ver ADR-0004, "Negativas / riesgos aceptados". |
+| `Persona.es_administrativa` (¿tiene algún rol?) | Sin equivalente global: la pregunta pasa a ser "¿administra *esta* feria?". |
 
 ### 2.3 SesionOTP
 
@@ -106,9 +143,9 @@ fecha: 2026-08-19
 
 ## 3. Relaciones principales
 
-- **Persona** 1—N **RolPermiso** (una persona puede administrar varios módulos).
 - **Persona** 1—N **SesionOTP** (historial de códigos emitidos; en la práctica, 0 o 1 vigente a la vez).
-- **Persona** 1—N *(entidad de solicitud de cada dominio)* — ver `EVT/Modelo de datos - Eventos.md` (`Propuesta.participante_id`) y equivalentes en `TAL`/`STD`/`VIS`.
+- **Persona** 1—N **AdminFeria** (`FER`) — una persona puede administrar varias ferias, y ser dueña de unas y administradora de otras.
+- **Persona** 1—N *(entidad de solicitud de cada dominio)* — ver `EVT/Modelo de datos - Eventos.md` (`Propuesta.participante_id`) y equivalentes en `TAL`/`STD`/`VIS`. Esas entidades viven en el schema de una feria; `Persona` no.
 
 ---
 
@@ -116,9 +153,9 @@ fecha: 2026-08-19
 
 | Entidad     | Casos de uso relacionados                  |
 | ----------- | --------------------------------------------- |
-| Persona     | CU-REG-001, CU-REG-002, CU-REG-003, CU-REG-004 |
-| RolPermiso  | CU-REG-003, CU-REG-005                        |
+| Persona     | CU-REG-001, CU-REG-002, CU-REG-003, CU-REG-004, CU-FER-001, CU-FER-003 |
 | SesionOTP   | CU-REG-002, CU-REG-003                        |
+| ~~RolPermiso~~ | Derogado. Su trazabilidad pasa a `AdminFeria`: CU-FER-001, CU-FER-002, CU-FER-003, CU-FER-004 |
 
 ---
 
@@ -128,14 +165,15 @@ fecha: 2026-08-19
   `Persona.nombre_completo` (un solo campo). Este documento fija `nombres`/`apellidos`
   separados como decisión definitiva (2026-08-19) — falta la migración de schema (y de datos,
   si ya hay registros de desarrollo cargados) para alinear el código real con este modelo.
-- **Reconciliar `admin`(usuario, feria) con `RolPermiso`(modulo, nivel)** cuando el dominio
-  `Feria` se formalice (ver nota en 2.2). No es urgente mientras solo exista una feria
-  implícita, pero conviene decidirlo antes de que haya datos reales de `RolPermiso` que migrar.
-- **Confirmar el alcance de unicidad de `Persona.correo`** una vez exista `Feria`: la sesión
-  de diseño 2026-08-19 estableció que las ferias son "planas" (cada edición es una instancia
-  propia) y que los usuarios se comparten entre todas — lo cual ya es compatible con el
-  `unique=True` global desplegado hoy. Dejar constancia aquí para que nadie lo cambie a único
-  *por feria* sin revisar esta decisión.
+- ~~**Reconciliar `admin`(usuario, feria) con `RolPermiso`(modulo, nivel)**~~ — **resuelto el
+  2026-08-21**: `RolPermiso` se deroga y lo sustituye `AdminFeria`. Ver §2.2 y
+  [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>). Queda como trabajo de código
+  retirar `RolPermiso` y el decorador `requiere_modulo` de `filey/apps/registros/`.
+- ~~**Confirmar el alcance de unicidad de `Persona.correo`**~~ — **confirmado el 2026-08-21**:
+  el correo es único **globalmente**, no por feria, y así queda fijado por
+  [ADR-0003](<../../adr/0003-una-feria-por-schema.md>), que coloca `Persona` en el schema
+  `public` y el contenido de cada feria en el suyo. La cuenta no pertenece a ninguna feria.
+  Nadie debe cambiarlo a único por feria sin reemplazar ese ADR.
 - **`es_recurrente` (¿ya participó en ediciones anteriores?) — deuda pendiente, no una
   decisión por tomar hoy.** Cada dominio de captura (`EVT`, y a futuro `TAL`/`STD`/`VIS`)
   necesita saber si un participante es recurrente, pero el dato solo tiene sentido si vive

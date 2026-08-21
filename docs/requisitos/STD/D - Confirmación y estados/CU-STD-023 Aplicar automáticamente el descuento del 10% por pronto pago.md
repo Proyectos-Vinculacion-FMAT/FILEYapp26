@@ -34,7 +34,7 @@ Validación de un abono (CU-STD-018 o CU-STD-019) o ejecución de la revisión d
 ## Flujo principal
 
 1. El sistema realiza una evaluación de la reserva (activada por un nuevo abono o por rutina diaria).
-2. El sistema compara la fecha actual con la `fecha_limite_pronto_pago` global configurada en `ParametrosSistema`.
+2. El sistema compara la fecha actual con la `fecha_limite_pronto_pago` configurada en `ParametrosSistema` para esta feria.
 3. Si la fecha vigente aún es válida para el pronto pago, el sistema verifica si el `monto_abonado` es igual o mayor al monto total menos el 10%.
 4. Al cumplirse la condición, el sistema registra definitivamente el descuento en la entidad `DescuentoAplicado` con tipo `pronto_pago` y el porcentaje (10%).
 5. El sistema recalcula el total, establece que la reserva está cubierta al 100% y dispara el cambio de estado a Pagada (CU-STD-027).

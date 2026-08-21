@@ -61,6 +61,7 @@ fuente de verdad de qué es cada dominio; aquí solo se listan los códigos como
 | `dom/sal` | Salas y salones | Documentado |
 | `dom/vis` | Visitas escolares | Documentado |
 | `dom/reg` | Registros / Convocatorias (core transversal) | Sin carpeta aún |
+| `dom/fer` | Ferias (aislamiento por edición y acceso administrativo) | Documentado |
 | `dom/evt` | Eventos | Documentado |
 | `dom/tal` | Talleres | Documentado |
 | `dom/pag` | Pagos | Futuro (reservado) |

@@ -6,10 +6,16 @@ Dos cosas hay que domar para poder probar el OTP:
 1. **El código no se puede leer de la base** — se guarda hasheado, que
    es justo el punto. Se fija con ``codigo_fijo`` monkeypatcheando el
    generador, igual que se haría con un reloj falso para probar fechas.
-2. **El correo sale en un hilo aparte** — bien en producción (su
-   latencia delataba a los administradores), incómodo en pruebas, donde
-   ese hilo abriría su propia conexión a la base de pruebas. ``sin_hilo_de_correo``
-   lo vuelve síncrono, así que el buzón de Django queda consultable.
+2. **El correo sale en un hilo aparte** — bien en producción, porque
+   hablar con el proveedor tarda segundos, e incómodo en pruebas, donde
+   ese hilo abriría su propia conexión a la base de pruebas.
+   ``sin_hilo_de_correo`` lo vuelve síncrono, así que el buzón de Django
+   queda consultable.
+
+El correo en sí no hay que domarlo: sale por ``django.core.mail``, y
+Django sustituye el backend por ``locmem`` durante los tests. Ninguna
+prueba puede alcanzar la red aunque haya una ``RESEND_API_KEY`` en el
+entorno (ver ``apps/notificaciones/backends.py``).
 """
 
 import pytest
@@ -48,20 +54,6 @@ def estaticos_sin_manifiesto(settings):
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
         },
     }
-
-
-@pytest.fixture(autouse=True)
-def sin_pisos_de_tiempo(settings, request):
-    """Quita las esperas anti-enumeración (1.5 s por petición admin).
-
-    Lo que hay que comprobar de esos pisos es que existan y con qué
-    valor, no pagarlos en cada una de las pruebas. La prueba que sí los
-    verifica se marca con ``@pytest.mark.con_pisos_reales``.
-    """
-    if "con_pisos_reales" in request.keywords:
-        return
-    settings.ADMIN_PISO_IDENTIFICAR_SEG = 0
-    settings.ADMIN_PISO_OTP_SEG = 0
 
 
 @pytest.fixture(autouse=True)

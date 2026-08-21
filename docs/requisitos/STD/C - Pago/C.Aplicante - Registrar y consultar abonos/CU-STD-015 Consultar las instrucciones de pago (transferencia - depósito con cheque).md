@@ -34,7 +34,7 @@ El aplicante ingresa a la sección de pagos de su reserva con la intención de r
 ## Flujo principal
 
 1. El aplicante navega a la sección de pagos de su reserva (vista U6).
-2. El sistema recupera los datos bancarios desde la configuración global (`ParametrosSistema`).
+2. El sistema recupera los datos bancarios desde la configuración de la convocatoria de stands de esta feria (`ParametrosSistema`).
 3. El sistema muestra las instrucciones de pago estructuradas según los datos vigentes. A modo de ejemplo, mostrará el titular (ej. *Patronato de la UADY*), el banco, la cuenta, la cuenta CLABE, la sucursal y la instrucción de concepto/referencia (ej. *Nombre de la Editorial*).
 4. El sistema subraya la advertencia de que solo se aceptan pagos por transferencia bancaria, depósito o cheque, y que **no se acepta efectivo** (RN-08).
 5. El aplicante toma nota de los datos para realizar su operación bancaria fuera del sistema.

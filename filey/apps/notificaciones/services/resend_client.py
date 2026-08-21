@@ -15,14 +15,20 @@ class EmailDeliveryError(Exception):
     """Raised when an email could not be handed off to Resend."""
 
 
-def send_email(*, to, subject, html, text=None):
+def send_email(*, to, subject, html, text=None, from_email=None):
     """Send a single email through Resend.
+
+    Normalmente no se llama directo: el camino del proyecto es
+    ``django.core.mail`` con ``EMAIL_BACKEND`` apuntando a
+    ``apps.notificaciones.backends.ResendBackend``, que acaba aquí. Eso
+    es lo que mantiene el correo de las pruebas fuera de la red.
 
     Args:
         to: Recipient address (str) or list of addresses.
         subject: Email subject line.
         html: HTML body.
         text: Optional plain-text body.
+        from_email: Remitente; por omisión, ``DEFAULT_FROM_EMAIL``.
 
     Returns:
         The Resend message id on success.
@@ -36,7 +42,7 @@ def send_email(*, to, subject, html, text=None):
     resend.api_key = settings.RESEND_API_KEY
 
     params = {
-        "from": settings.DEFAULT_FROM_EMAIL,
+        "from": from_email or settings.DEFAULT_FROM_EMAIL,
         "to": [to] if isinstance(to, str) else list(to),
         "subject": subject,
         "html": html,

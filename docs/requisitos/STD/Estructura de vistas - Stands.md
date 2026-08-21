@@ -101,7 +101,8 @@ flowchart LR
   de detalle** con dimensiones, m², precio (m² × costo m²) y qué incluye, con acción
   *Agregar al carrito*.
 - **CU involucrados:** CU-STD-009 (visualizar mapa), CU-STD-010 (detalle de stand).
-- **Entidades:** Evento, Stand, ParametrosSistema (costo m²).
+- **Entidades:** Stand, ParametrosSistema (costo m²). La edición de la feria es el contexto
+  de la sesión, no una entidad que esta vista consulte.
 
 ### U3 · Carrito de stands
 - **Objetivo:** gestionar la selección antes de reservar.

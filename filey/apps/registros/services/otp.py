@@ -5,8 +5,9 @@ Generación con ``secrets`` (CSPRNG de la stdlib) y almacenamiento
 hasheado con el hasher de contraseñas de Django — el patrón
 estándar del sector para códigos de un solo uso por correo.
 
-Defensas contra abuso (además del throttling por IP de DRF), todas
-por **cuenta destino**, no por IP, para resistir el abuso distribuido:
+Defensas contra abuso (además del límite por IP de `comun/limites.py`),
+todas por **cuenta destino**, no por IP, para resistir el abuso
+distribuido:
 
 - Cool-down entre emisiones (A1): frena el mail bombing y el brute
   force, e impide el DoS de login (regenerar el código de otra
@@ -113,35 +114,60 @@ def _bloqueo_por_emisiones(persona: Persona) -> int:
 def _bloqueo_por_fallos(persona: Persona) -> int:
     """Segundos de lockout si se acumularon demasiados fallos en la ventana.
 
-    Suma los intentos fallidos de todos los códigos emitidos en la
-    ventana. Los de un código que se acertó no cuentan: entrar bien
-    limpia el historial. 0 si aún hay margen.
+    E7 de CU-REG-002 dice dos cosas: se bloquea al acumular
+    ``OTP_FALLOS_MAX_VENTANA`` fallos dentro de la ventana, y **un
+    inicio de sesión exitoso reinicia el contador**.
+
+    Lo segundo obliga a contar desde el último acierto y no solo a
+    descartar el código acertado: quien falló ocho veces, acertó y
+    entró, no debe arrastrar esos ocho fallos a su siguiente sesión —
+    ya demostró ser el dueño de la cuenta. Sin este corte bastaban dos
+    fallos posteriores para bloquear a alguien que acababa de entrar
+    bien.
+
+    0 si aún hay margen.
     """
     ventana = _ventana_inicio()
-    sesiones = persona.sesiones_otp.filter(creado_en__gte=ventana)
-    total_fallos = sum(s.intentos for s in sesiones if not s.acertado)
+    sesiones = list(
+        persona.sesiones_otp.filter(creado_en__gte=ventana).order_by("creado_en")
+    )
+
+    # El último acierto de la ventana marca el punto de reinicio: nada
+    # anterior a él cuenta.
+    corte = None
+    for sesion in sesiones:
+        if sesion.acertado:
+            corte = sesion.creado_en
+
+    posteriores = [
+        s
+        for s in sesiones
+        if not s.acertado and (corte is None or s.creado_en > corte)
+    ]
+
+    total_fallos = sum(s.intentos for s in posteriores)
     if total_fallos < settings.OTP_FALLOS_MAX_VENTANA:
         return 0
-    ultima = sesiones.order_by("-creado_en").first()
-    libera_en = ultima.creado_en + timedelta(
+
+    libera_en = posteriores[-1].creado_en + timedelta(
         minutes=settings.OTP_LOCKOUT_MINUTOS
     )
     restante = (libera_en - timezone.now()).total_seconds()
     return max(int(restante) + 1, 0)
 
 
-def emitir(persona: Persona, *, es_reenvio: bool = False) -> dict:
+def emitir(persona: Persona) -> dict:
     """Genera, guarda (hasheado) y despacha un OTP nuevo.
 
     Toda emisión (primera, solicitud o reenvío) respeta el cool-down
     frente a la anterior y el tope de emisiones por ventana. Solo la
     primerísima emisión de la cuenta pasa sin cool-down. Cada emisión
-    invalida los códigos anteriores (A1/E5).
+    invalida los códigos anteriores (A1/E5) — por eso una emisión y un
+    reenvío hacen exactamente lo mismo y no hace falta distinguirlos.
 
-    El **envío del correo ocurre en segundo plano**: hablar con el SMTP
-    tarda segundos y de forma muy variable, y esa latencia dentro de la
-    respuesta delataba quién es administrador (el señuelo del acceso
-    admin no envía nada y contestaba mucho antes). Ver E3 más abajo.
+    El **envío del correo ocurre en segundo plano**: hablar con el
+    proveedor tarda segundos y de forma muy variable, y esa latencia
+    dentro de la respuesta hacía lento el login. Ver E3 más abajo.
     """
     codigo = _generar_codigo()
 
@@ -203,12 +229,12 @@ def _tarea_envio(correo: str, nombre: str, codigo: str, sesion_id: int):
     E3 dice que un envío fallido no debe dejar un OTP utilizable: si el
     correo no sale, el código recién guardado se marca como usado. La
     diferencia con la versión síncrona es que la persona ya no ve un
-    502 inmediato — ve la pantalla de código y, al no llegarle nada,
+    error inmediato — ve la pantalla de código y, al no llegarle nada,
     usa "Enviar nuevo código".
     """
     try:
         send_otp_email(correo, nombre, codigo, settings.OTP_VIGENCIA_MINUTOS)
-        logger.info("OTP enviado a %s vía Resend", correo)
+        logger.info("OTP enviado a %s", correo)
     except EmailDeliveryError:
         # El motivo real (credenciales, remitente rechazado, timeout)
         # solo existe aquí: sin este log el fallo es invisible.

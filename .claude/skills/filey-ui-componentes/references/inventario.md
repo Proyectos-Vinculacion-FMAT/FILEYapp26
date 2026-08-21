@@ -4,7 +4,7 @@
 Regenerar con `./scripts/gen-inventario.sh` tras cualquier cambio en un `styles.css`.
 Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 
-**85 tokens · 402 definiciones de clase · 41 sin uso detectado en HTML/JS.**
+**      78 tokens ·      393 definiciones de clase · 39 sin uso detectado en HTML/JS.**
 
 ## Cómo usar este archivo
 
@@ -32,17 +32,18 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `--color-dorado-700` | common | `#B3810F` |
 | `--color-dorado-800` | common | `#9C700B` |
 | `--color-dorado-degradado-oscuro` | common | `#6E4D03` |
-| `--color-dorado-050` | common | `#fff8e6` |
 | `--color-negro` | common | `#000000` |
 | `--font-filey` | common | `"Open Sans", "Segoe UI", "Helvetica Neue", A…` |
+| `--radio-card` | common | `13px` |
+| `--radio-btn` | common | `16px` |
+| `--radio-pill` | common | `30px` |
+| `--sombra-card` | common | `0 4px 4px rgba(0, 0, 0, 0.25)` |
 | `--color-morado` | common | `#955FF2` |
 | `--color-magenta-oscuro` | common | `#70124C` |
 | `--color-verde-lima` | common | `#99BA15` |
 | `--color-verde-700` | common | `#839F10` |
 | `--color-verde-800` | common | `#6C840B` |
 | `--color-verde-degradado-oscuro` | common | `#3F4E00` |
-| `--color-verde-tal` | common | `#1d8a4e` |
-| `--color-verde-tal-oscuro` | common | `#0a6b53` |
 | `--color-rojo` | common | `#CC311D` |
 | `--color-rojo-700` | common | `#912111` |
 | `--color-rojo-800` | common | `#73190B` |
@@ -50,25 +51,18 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `--tinta` | common | `#1b2330` |
 | `--gris-700` | common | `#3f4a5a` |
 | `--gris-500` | common | `#6b7686` |
-| `--gris-400` | common | `#aab3c0` |
 | `--gris-300` | common | `#c8d0db` |
 | `--gris-200` | common | `#e2e7ee` |
 | `--gris-100` | common | `#eef1f6` |
 | `--gris-050` | common | `#f7f9fc` |
 | `--ok-600` | common | `#1d8a4e` |
-| `--ok-200` | common | `#c9e5d3` |
 | `--ok-050` | common | `#e7f6ee` |
-| `--warn-800` | common | `#7a5a00` |
 | `--warn-600` | common | `#b8860b` |
 | `--warn-050` | common | `#fdf6e3` |
 | `--oro-200` | common | `#f1e3b0` |
 | `--oro-050` | common | `#fbf6e6` |
 | `--err-600` | common | `var(--color-rojo)` |
-| `--err-200` | common | `#eecac5` |
-| `--err-100` | common | `#f7dcd8` |
 | `--err-050` | common | `#fbeae8` |
-| `--verde-200` | common | `#dbe6ad` |
-| `--verde-050` | common | `#f3f7e3` |
 | `--radio` | common | `12px` |
 | `--radio-sm` | common | `8px` |
 | `--sombra-sm` | common | `0 1px 2px rgba(16, 36, 64, .08), 0 1px 3px r…` |
@@ -79,12 +73,11 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `--azul-100` | common | `#e6f0fa` |
 | `--azul-050` | common | `#f3f8fd` |
 | `--caret-svg` | common | `url("data:image/svg+xml,%3Csvg xmlns='http:/…` |
-| `--evt-constancias` | EVT | `#6b46c1;   /* morado de la tarjeta de consta…` |
+| `--ok-200` | EVT | `#c9e5d3` |
+| `--err-200` | EVT | `#eecac5` |
 | `--color-azul-texto` | VIS | `#00437C;             /* alias explícito par…` |
 | `--color-dorado-degradado-oscuro` | VIS | `#6E4D03; /* dorado profundo para bordes de d…` |
 | `--vis-dia-btn-size` | VIS | `16px;               /* altura de los botones…` |
-| `--vis-sala-borde` | VIS | `#9db3c4;              /* separador de la col…` |
-| `--vis-radio-dot` | VIS | `#9a9a9a;              /* punto interior del …` |
 | `--vis-abierta-bg` | VIS | `rgba(123, 186, 21, 0.5)` |
 | `--vis-abierta-dot` | VIS | `#174E00` |
 | `--vis-cerrada-bg` | VIS | `rgba(151, 151, 151, 0.5)` |
@@ -111,110 +104,110 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 
 | clase | capa | línea | usada en |
 | --- | --- | --- | --- |
-| `.topbar` | common | 106 | EVT, REG, VIS |
-| `.topbar-inner` | common | 114 | EVT, REG, VIS |
-| `.home` | common | 122 | EVT, REG, VIS |
-| `.logo` | common | 125 | EVT, REG, VIS |
-| `.brand-text` | common | 126 | EVT, REG, VIS |
-| `.topnav` | common | 130 | EVT, REG, VIS |
-| `.user-chip` | common | 134 | EVT, REG, VIS |
-| `.avatar` | common | 142 | EVT, REG, VIS |
-| `.is-admin` | common | 149 | REG, VIS |
-| `.page` | common | 153 | EVT, REG, VIS |
-| `.page-narrow` | common | 154 | EVT, VIS |
-| `.page-wide` | common | 155 | VIS |
-| `.breadcrumb` | common | 157 | EVT, VIS |
-| `.page-head` | common | 161 | EVT, REG, VIS |
-| `.auth-wrap` | common | 166 | EVT, REG |
-| `.auth-hero` | common | 171 | EVT, REG |
-| `.logo-lg` | common | 179 | EVT, REG |
-| `.pills` | common | 182 | EVT, REG |
-| `.auth-form` | common | 187 | EVT, REG |
-| `.auth-card` | common | 192 | EVT, REG |
-| `.sub` | common | 194 | EVT, REG |
-| `.auth-foot` | common | 195 | EVT, REG |
-| `.otp-row` | common | 198 | REG |
-| `.otp-meta` | common | 205 | REG |
-| `.field` | common | 208 | EVT, REG, VIS |
-| `.hint` | common | 210 | EVT, REG |
-| `.req` | common | 211 | EVT, REG, VIS |
-| `.opt` | common | 212 | EVT, REG, VIS |
-| `.select-wrap` | common | 229 | VIS |
-| `.is-open` | common | 257 | VIS |
-| `.field-prefill` | common | 268 | EVT, VIS |
-| `.tag-auto` | common | 269 | EVT, VIS |
-| `.grid-2` | common | 275 | EVT, VIS |
-| `.grid-3` | common | 276 | VIS |
-| `.radio-row` | common | 278 | EVT, REG |
-| `.file-mock` | common | 282 | EVT, REG |
-| `.ico` | common | 288 | EVT, REG, VIS |
-| `.txt` | common | 289 | EVT, REG, VIS |
-| `.multi-input` | common | 293 | EVT, REG |
-| `.card` | common | 296 | EVT, VIS |
-| `.card-pad` | common | 300 | EVT, VIS |
-| `.section-card` | common | 302 | EVT, VIS |
-| `.section-head` | common | 303 | EVT, VIS |
-| `.num` | common | 308 | EVT, VIS |
-| `.section-body` | common | 315 | EVT, VIS |
-| `.btn` | common | 317 | EVT, REG, VIS |
-| `.btn-primary` | common | 324 | EVT, REG, VIS |
-| `.btn-gold` | common | 326 | EVT, REG, VIS |
-| `.btn-green` | common | 328 | VIS |
-| `.btn-ghost` | common | 330 | EVT, REG, VIS |
-| `.btn-special` | common | 334 | EVT, VIS |
-| `.btn-block` | common | 336 | EVT, REG |
-| `.btn-lg` | common | 337 | EVT, REG, VIS |
-| `.form-actions` | common | 339 | EVT, VIS |
-| `.spacer` | common | 343 | EVT, VIS |
-| `.conv-grid` | common | 346 | EVT, REG |
-| `.conv-card` | common | 347 | EVT, REG |
-| `.is-closed` | common | 353 | REG |
-| `.conv-banner` | common | 354 | EVT, REG |
-| `.banner-stand` | common | 360 | EVT, REG |
-| `.banner-infantil` | common | 361 | EVT, REG |
-| `.banner-eventos` | common | 362 | EVT, REG |
-| `.banner-visitas` | common | 363 | EVT, REG |
-| `.conv-body` | common | 364 | EVT, REG |
-| `.conv-dates` | common | 366 | EVT, REG |
-| `.conv-foot` | common | 367 | EVT, REG |
-| `.badge` | common | 369 | EVT, REG |
-| `.badge-open` | common | 375 | EVT, REG |
-| `.badge-closed` | common | 376 | REG |
-| `.badge-soon` | common | 377 | REG |
-| `.badge-pending` | common | 378 | EVT |
-| `.badge-accepted` | common | 379 | EVT |
-| `.badge-rejected` | common | 380 | EVT |
-| `.badge-changes` | common | 381 | EVT |
-| `.info-hero` | common | 384 | EVT |
-| `.info-grid` | common | 394 | EVT, VIS |
-| `.dl-dates` | common | 396 | EVT |
-| `.row` | common | 397 | EVT |
-| `.dot` | common | 404 | EVT, REG, VIS, common |
-| `.cupos` | common | 406 | EVT |
-| `.cupo` | common | 407 | EVT |
-| `.top` | common | 410 | EVT |
-| `.bar` | common | 413 | EVT, VIS |
-| `.full` | common | 415 | EVT |
-| `.req-list` | common | 417 | EVT |
-| `.ck` | common | 419 | EVT |
-| `.types-row` | common | 421 | EVT |
-| `.type-pill` | common | 422 | EVT |
-| `.cta-bar` | common | 424 | EVT, VIS |
-| `.table` | common | 433 | EVT |
-| `.folio` | common | 437 | EVT, VIS |
-| `.confirm-card` | common | 440 | EVT, VIS |
-| `.check` | common | 441 | EVT, VIS |
-| `.folio-box` | common | 447 | EVT, VIS |
-| `.note` | common | 456 | EVT, REG, VIS |
-| `.note-info` | common | 461 | EVT, REG, VIS |
-| `.note-warn` | common | 462 | EVT, REG, VIS |
-| `.note-gold` | common | 463 | EVT, REG |
-| `.closed-overlay` | common | 465 | REG |
-| `.proto-bar` | common | 472 | EVT, REG, VIS |
-| `.proto-bar-inner` | common | 476 | EVT, REG, VIS |
-| `.sep` | common | 479 | EVT, REG, VIS |
-| `.footer` | common | 483 | EVT, REG, VIS |
-| `.footer-inner` | common | 487 | EVT, REG, VIS |
+| `.topbar` | common | 94 | EVT, REG, VIS |
+| `.topbar-inner` | common | 102 | EVT, REG, VIS |
+| `.home` | common | 110 | EVT, REG, VIS |
+| `.logo` | common | 113 | EVT, REG, VIS |
+| `.brand-text` | common | 114 | EVT, REG, VIS |
+| `.topnav` | common | 118 | EVT, REG, VIS |
+| `.user-chip` | common | 122 | EVT, REG, VIS |
+| `.avatar` | common | 130 | EVT, REG, VIS |
+| `.is-admin` | common | 137 | REG, VIS |
+| `.page` | common | 141 | EVT, REG, VIS |
+| `.page-narrow` | common | 142 | EVT, VIS |
+| `.page-wide` | common | 143 | VIS |
+| `.breadcrumb` | common | 145 | EVT, VIS |
+| `.page-head` | common | 149 | EVT, REG, VIS |
+| `.auth-wrap` | common | 154 | EVT, REG |
+| `.auth-hero` | common | 159 | EVT, REG |
+| `.logo-lg` | common | 167 | EVT, REG |
+| `.pills` | common | 170 | EVT, REG |
+| `.auth-form` | common | 175 | EVT, REG |
+| `.auth-card` | common | 180 | EVT, REG |
+| `.sub` | common | 182 | EVT, REG |
+| `.auth-foot` | common | 183 | EVT, REG |
+| `.otp-row` | common | 186 | REG |
+| `.otp-meta` | common | 193 | REG |
+| `.field` | common | 196 | EVT, REG, VIS |
+| `.hint` | common | 198 | EVT, REG |
+| `.req` | common | 199 | EVT, REG, VIS |
+| `.opt` | common | 200 | EVT, REG, VIS |
+| `.select-wrap` | common | 217 | VIS |
+| `.is-open` | common | 245 | VIS |
+| `.field-prefill` | common | 256 | EVT, VIS |
+| `.tag-auto` | common | 257 | EVT, VIS |
+| `.grid-2` | common | 263 | EVT, VIS |
+| `.grid-3` | common | 264 | VIS |
+| `.radio-row` | common | 266 | EVT, REG |
+| `.file-mock` | common | 270 | EVT, REG |
+| `.ico` | common | 276 | EVT, REG, VIS |
+| `.txt` | common | 277 | EVT, REG, VIS |
+| `.multi-input` | common | 281 | EVT, REG |
+| `.card` | common | 284 | EVT, VIS |
+| `.card-pad` | common | 288 | EVT, VIS |
+| `.section-card` | common | 290 | EVT, VIS |
+| `.section-head` | common | 291 | EVT, VIS |
+| `.num` | common | 296 | EVT, VIS |
+| `.section-body` | common | 303 | EVT, VIS |
+| `.btn` | common | 305 | EVT, REG, VIS |
+| `.btn-primary` | common | 312 | EVT, REG, VIS |
+| `.btn-gold` | common | 314 | EVT, REG, VIS |
+| `.btn-green` | common | 316 | VIS |
+| `.btn-ghost` | common | 318 | EVT, REG, VIS |
+| `.btn-special` | common | 322 | EVT, VIS |
+| `.btn-block` | common | 324 | EVT, REG |
+| `.btn-lg` | common | 325 | EVT, REG, VIS |
+| `.form-actions` | common | 327 | EVT, VIS |
+| `.spacer` | common | 331 | EVT, VIS |
+| `.conv-grid` | common | 334 | EVT, REG |
+| `.conv-card` | common | 335 | EVT, REG |
+| `.is-closed` | common | 341 | REG |
+| `.conv-banner` | common | 342 | EVT, REG |
+| `.banner-stand` | common | 348 | EVT, REG |
+| `.banner-infantil` | common | 349 | EVT, REG |
+| `.banner-eventos` | common | 350 | EVT, REG |
+| `.banner-visitas` | common | 351 | EVT, REG |
+| `.conv-body` | common | 352 | EVT, REG |
+| `.conv-dates` | common | 354 | EVT, REG |
+| `.conv-foot` | common | 355 | EVT, REG |
+| `.badge` | common | 357 | EVT, REG |
+| `.badge-open` | common | 363 | EVT, REG |
+| `.badge-closed` | common | 364 | REG |
+| `.badge-soon` | common | 365 | REG |
+| `.badge-pending` | common | 366 | EVT |
+| `.badge-accepted` | common | 367 | EVT |
+| `.badge-rejected` | common | 368 | EVT |
+| `.badge-changes` | common | 369 | EVT |
+| `.info-hero` | common | 372 | EVT |
+| `.info-grid` | common | 382 | EVT, VIS |
+| `.dl-dates` | common | 384 | EVT |
+| `.row` | common | 385 | EVT |
+| `.dot` | common | 392 | EVT, REG, VIS |
+| `.cupos` | common | 394 | EVT |
+| `.cupo` | common | 395 | EVT |
+| `.top` | common | 398 | EVT |
+| `.bar` | common | 401 | EVT, VIS |
+| `.full` | common | 403 | EVT |
+| `.req-list` | common | 405 | EVT |
+| `.ck` | common | 407 | EVT |
+| `.types-row` | common | 409 | EVT |
+| `.type-pill` | common | 410 | EVT |
+| `.cta-bar` | common | 412 | EVT, VIS |
+| `.table` | common | 421 | EVT |
+| `.folio` | common | 425 | EVT, VIS |
+| `.confirm-card` | common | 428 | EVT, VIS |
+| `.check` | common | 429 | EVT, VIS |
+| `.folio-box` | common | 435 | EVT, VIS |
+| `.note` | common | 444 | EVT, REG, VIS |
+| `.note-info` | common | 449 | EVT, REG, VIS |
+| `.note-warn` | common | 450 | EVT, REG, VIS |
+| `.note-gold` | common | 451 | EVT, REG |
+| `.closed-overlay` | common | 453 | REG |
+| `.proto-bar` | common | 460 | EVT, REG, VIS |
+| `.proto-bar-inner` | common | 464 | EVT, REG, VIS |
+| `.sep` | common | 467 | EVT, REG, VIS |
+| `.footer` | common | 471 | EVT, REG, VIS |
+| `.footer-inner` | common | 475 | EVT, REG, VIS |
 | `.auth-hero` | REG | 8 | EVT, REG |
 | `.logo-lg` | REG | 8 | EVT, REG |
 | `.is-admin` | REG | 14 | REG, VIS |
@@ -228,288 +221,279 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.otp-row` | REG | 67 | REG |
 | `.error` | REG | 67 | REG |
 | `.otp-cooldown` | REG | 78 | REG |
-| `.admin-body` | EVT | 15 | EVT |
-| `.sidebar` | EVT | 17 | EVT |
-| `.side-section` | EVT | 26 | EVT |
-| `.side-nav` | EVT | 28 | EVT |
-| `.side-link` | EVT | 29 | EVT |
-| `.ico` | EVT | 36 | EVT, REG, VIS |
-| `.active` | EVT | 37 | EVT |
-| `.is-disabled` | EVT | 41 | — |
-| `.admin-main` | EVT | 44 | EVT |
-| `.admin-toolbar` | EVT | 45 | EVT |
-| `.menu-btn` | EVT | 49 | EVT |
-| `.crumb` | EVT | 54 | EVT |
-| `.admin-content` | EVT | 55 | EVT |
-| `.topbar` | EVT | 58 | EVT, REG, VIS |
-| `.admin` | EVT | 58 | EVT |
-| `.topbar-inner` | EVT | 58 | EVT, REG, VIS |
-| `.chip-modulo` | EVT | 59 | — |
-| `.chips` | EVT | 66 | EVT |
-| `.chip` | EVT | 67 | EVT, REG |
-| `.is-active` | EVT | 73 | EVT, REG, VIS |
-| `.count` | EVT | 74 | EVT |
-| `.toolbar-row` | EVT | 77 | EVT |
-| `.searchbox` | EVT | 78 | EVT |
-| `.stat-grid` | EVT | 88 | EVT |
-| `.stat-card` | EVT | 89 | EVT |
-| `.k` | EVT | 93 | EVT |
-| `.v` | EVT | 94 | EVT |
-| `.foot` | EVT | 95 | EVT |
-| `.accent-blue` | EVT | 96 | EVT |
-| `.accent-gold` | EVT | 97 | EVT |
-| `.accent-ok` | EVT | 98 | EVT |
-| `.accent-warn` | EVT | 99 | EVT |
-| `.accent-err` | EVT | 100 | EVT |
-| `.btn-row` | EVT | 103 | EVT |
-| `.link-arrow` | EVT | 104 | EVT |
-| `.modal-back` | EVT | 107 | EVT |
-| `.modal` | EVT | 112 | EVT |
-| `.modal-head` | EVT | 116 | EVT |
-| `.modal-body` | EVT | 119 | EVT |
-| `.modal-foot` | EVT | 120 | EVT |
-| `.cal-wrap` | EVT | 123 | EVT |
-| `.cal-side` | EVT | 124 | EVT |
-| `.cal-panel` | EVT | 125 | EVT |
-| `.cal-main` | EVT | 128 | EVT |
-| `.cal-toolbar` | EVT | 129 | EVT |
-| `.month` | EVT | 130 | EVT |
-| `.cal-nav` | EVT | 131 | EVT |
-| `.cal-grid` | EVT | 134 | EVT |
-| `.dow` | EVT | 135 | EVT |
-| `.cal-cell` | EVT | 136 | — |
-| `.num` | EVT | 138 | EVT, VIS |
-| `.out` | EVT | 139 | — |
-| `.today` | EVT | 140 | — |
-| `.cal-event` | EVT | 142 | — |
-| `.ev-apertura` | EVT | 147 | EVT |
-| `.ev-cierre` | EVT | 148 | EVT |
-| `.ev-notif` | EVT | 149 | EVT |
-| `.ev-ajustes` | EVT | 150 | EVT |
-| `.ev-asignacion` | EVT | 151 | EVT |
-| `.ev-constancias` | EVT | 152 | EVT |
-| `.date-list` | EVT | 155 | EVT |
-| `.date-item` | EVT | 156 | EVT |
-| `.swatch` | EVT | 157 | EVT |
-| `.lbl` | EVT | 158 | EVT |
-| `.val` | EVT | 159 | — |
-| `.sched` | EVT | 163 | EVT |
-| `.time-col` | EVT | 167 | EVT |
-| `.slot` | EVT | 168 | EVT |
-| `.act` | EVT | 169 | EVT |
-| `.clash` | EVT | 175 | EVT |
-| `.free` | EVT | 176 | EVT |
-| `.rep-badge` | EVT | 179 | EVT |
-| `.salon-th` | EVT | 185 | — |
-| `.sala-th` | EVT | 186 | — |
-| `.aforo-badge` | EVT | 187 | — |
-| `.mock-banner` | EVT | 195 | EVT |
-| `.prg-layout` | EVT | 205 | EVT |
-| `.rail` | EVT | 208 | EVT |
-| `.hint` | EVT | 210 | EVT, REG |
-| `.rail-item` | EVT | 211 | EVT |
-| `.is-selected` | EVT | 217 | EVT |
-| `.grip` | EVT | 218 | EVT |
-| `.r-body` | EVT | 219 | EVT |
-| `.rail-empty` | EVT | 221 | EVT |
-| `.modal-wide` | EVT | 224 | EVT |
-| `.evt-dialog` | EVT | 225 | EVT |
-| `.evt-form` | EVT | 226 | EVT |
-| `.evt-row` | EVT | 227 | EVT |
-| `.ic` | EVT | 229 | EVT |
-| `.f` | EVT | 230 | EVT |
-| `.big` | EVT | 232 | EVT |
-| `.evt-preview` | EVT | 235 | EVT |
-| `.pv-head` | EVT | 236 | EVT |
-| `.nav` | EVT | 237 | EVT |
-| `.day-mini` | EVT | 239 | EVT |
-| `.drow` | EVT | 240 | EVT |
-| `.dh` | EVT | 242 | EVT |
-| `.dcell` | EVT | 243 | EVT |
-| `.ev-block` | EVT | 244 | EVT |
-| `.grab-dot` | EVT | 248 | EVT |
-| `.top` | EVT | 249 | EVT |
-| `.bot` | EVT | 250 | EVT |
-| `.taken` | EVT | 251 | — |
-| `.mini-act` | EVT | 251 | — |
-| `.pv-foot` | EVT | 252 | EVT |
-| `.banner-infantil` | VIS | 45 | EVT, REG |
-| `.btn-green` | VIS | 48 | VIS |
-| `.auth-hero` | VIS | 52 | EVT, REG |
-| `.is-vis` | VIS | 52 | VIS |
-| `.section-card` | VIS | 59 | EVT, VIS |
-| `.section-head` | VIS | 59 | EVT, VIS |
-| `.num` | VIS | 59 | EVT, VIS |
-| `.btn-danger` | VIS | 62 | VIS |
-| `.btn-sm` | VIS | 64 | VIS |
-| `.note-green` | VIS | 67 | VIS |
-| `.note-err` | VIS | 68 | VIS |
-| `.vis-estado` | VIS | 78 | — |
-| `.vis-estado__dot` | VIS | 83 | — |
-| `.vis-estado--abierta` | VIS | 84 | — |
-| `.vis-estado--cerrada` | VIS | 86 | — |
-| `.vis-banner` | VIS | 90 | VIS |
-| `.vis-banner__badge` | VIS | 96 | VIS |
-| `.vis-banner__badge-dot` | VIS | 102 | VIS |
-| `.vis-banner__badge-label` | VIS | 103 | VIS |
-| `.vis-banner__title` | VIS | 104 | VIS |
-| `.vis-banner__desc` | VIS | 105 | VIS |
-| `.vis-bento-layout` | VIS | 108 | VIS |
-| `.vis-bento-left` | VIS | 109 | VIS |
-| `.vis-bento-right` | VIS | 110 | VIS |
-| `.vis-bento` | VIS | 112 | VIS |
-| `.vis-bento__header` | VIS | 117 | VIS |
-| `.vis-bento__num` | VIS | 121 | VIS |
-| `.vis-bento__title` | VIS | 126 | VIS |
-| `.vis-bento__body` | VIS | 127 | VIS |
-| `.vis-bento__list` | VIS | 128 | VIS |
-| `.vis-bento__item` | VIS | 129 | VIS |
-| `.vis-bento__kv` | VIS | 132 | VIS |
-| `.vis-bento__kv-label` | VIS | 137 | VIS |
-| `.vis-bento__kv-value` | VIS | 138 | VIS |
-| `.vis-cupo` | VIS | 141 | VIS |
-| `.vis-cupo__row` | VIS | 143 | VIS |
-| `.vis-cupo__dia` | VIS | 144 | VIS |
-| `.vis-cupo__count` | VIS | 145 | VIS |
-| `.vis-cupo__nota` | VIS | 146 | VIS |
-| `.vis-cupo__bar-bg` | VIS | 147 | VIS |
-| `.vis-cupo__bar-fill` | VIS | 148 | VIS |
-| `.vis-cupo__bar-fill--magenta` | VIS | 149 | VIS |
-| `.vis-cupo__bar-fill--lleno` | VIS | 150 | VIS |
-| `.vis-tabla-wrap` | VIS | 153 | VIS |
-| `.vis-tabla` | VIS | 154 | VIS |
-| `.vis-row` | VIS | 161 | VIS |
-| `.folio` | VIS | 162 | EVT, VIS |
-| `.vis-tabla__toggle` | VIS | 163 | VIS |
-| `.vis-tabla__toggle-icon` | VIS | 169 | VIS |
-| `.is-open` | VIS | 171 | VIS |
-| `.vis-tabla__row-detail` | VIS | 173 | VIS |
-| `.vis-tabla-detail` | VIS | 177 | VIS |
-| `.vis-tabla-detail__inner` | VIS | 178 | VIS |
-| `.vis-ficha` | VIS | 181 | VIS |
-| `.vis-ficha__section` | VIS | 182 | VIS |
-| `.vis-ficha__grid` | VIS | 183 | VIS |
-| `.vis-ficha__key` | VIS | 184 | VIS |
-| `.vis-ficha__value` | VIS | 185 | VIS |
-| `.vis-detail-actions` | VIS | 188 | VIS |
-| `.vis-itinerario-btn__pill` | VIS | 191 | VIS |
-| `.vis-grupos-row` | VIS | 200 | VIS |
-| `.vis-grupo-card` | VIS | 201 | VIS |
-| `.vis-grupo-card__header` | VIS | 202 | VIS |
-| `.vis-grupo-card__body` | VIS | 203 | VIS |
-| `.vis-grupo-card__vacio` | VIS | 204 | VIS |
-| `.vis-grupo-card__talleres` | VIS | 205 | VIS |
-| `.vis-grupo-card__taller-info` | VIS | 207 | VIS |
-| `.vis-icon-btn` | VIS | 213 | VIS |
-| `.vis-sel-header` | VIS | 229 | VIS |
-| `.vis-sel-header__instituto` | VIS | 234 | VIS |
-| `.vis-horario-container` | VIS | 238 | VIS |
-| `.vis-horario-header` | VIS | 239 | VIS |
-| `.vis-turno-selector` | VIS | 240 | VIS |
-| `.vis-turno-selector__label` | VIS | 241 | VIS |
-| `.vis-turno-dropdown` | VIS | 242 | VIS |
-| `.vis-dia-selector` | VIS | 243 | VIS |
-| `.vis-dia-selector__text` | VIS | 244 | VIS |
-| `.vis-dia-btn` | VIS | 245 | VIS |
-| `.vis-horario-wrap` | VIS | 254 | VIS |
-| `.vis-horario-area` | VIS | 255 | VIS |
-| `.is-active` | VIS | 256 | EVT, REG, VIS |
-| `.vis-horario-tiempos` | VIS | 257 | VIS |
-| `.vis-horario-tiempo` | VIS | 258 | VIS |
-| `.vis-horario-tiempo--sala` | VIS | 259 | VIS |
-| `.vis-horario-fila` | VIS | 261 | VIS |
-| `.vis-horario-celda` | VIS | 263 | VIS |
-| `.vis-horario-celda__nombre` | VIS | 270 | VIS |
-| `.vis-horario-celda__meta` | VIS | 271 | VIS |
-| `.vis-horario-celda__cupos` | VIS | 272 | VIS |
-| `.vis-nivel` | VIS | 273 | VIS |
-| `.vis-nivel--preescolar` | VIS | 274 | VIS |
-| `.vis-nivel--primaria-alta` | VIS | 275 | — |
-| `.vis-nivel--primaria-baja` | VIS | 276 | — |
-| `.vis-nivel--secundaria` | VIS | 277 | — |
-| `.vis-nivel--preparatoria` | VIS | 278 | — |
-| `.vis-nivel--universidad` | VIS | 279 | — |
-| `.vis-horario-celda--sala-label` | VIS | 280 | VIS |
-| `.vis-horario-celda--llena` | VIS | 282 | VIS |
-| `.vis-horario-celda--sin-taller` | VIS | 284 | VIS |
-| `.vis-horario-celda--cerrado` | VIS | 284 | VIS |
-| `.vis-horario-celda--libre` | VIS | 288 | VIS |
-| `.vis-bloque-label` | VIS | 289 | VIS |
-| `.vis-celda-badges` | VIS | 294 | — |
-| `.vis-grupo-badge` | VIS | 295 | VIS |
-| `.vis-grupo-selector` | VIS | 304 | — |
-| `.vis-grupo-selector__head` | VIS | 310 | VIS |
-| `.vis-grupo-selector__title` | VIS | 311 | VIS |
-| `.vis-grupo-selector__item` | VIS | 312 | VIS |
-| `.vis-grupo-selector__item-text` | VIS | 314 | VIS |
-| `.vis-radio` | VIS | 315 | — |
-| `.vis-radio--selected` | VIS | 317 | — |
-| `.vis-todos-btn` | VIS | 318 | VIS |
-| `.vis-grupo-selector__item--conflict` | VIS | 323 | — |
-| `.vis-grupo-selector__actions` | VIS | 327 | VIS |
-| `.btn` | VIS | 328 | EVT, REG, VIS |
-| `.vis-ficha__tag` | VIS | 332 | VIS |
-| `.vis-ficha__titulo` | VIS | 333 | VIS |
-| `.vis-ficha__campo` | VIS | 334 | VIS |
-| `.vis-ficha__resena` | VIS | 335 | VIS |
-| `.vis-ficha__meta` | VIS | 336 | VIS |
-| `.vis-reserva-bar` | VIS | 341 | VIS |
-| `.txt` | VIS | 346 | EVT, REG, VIS |
-| `.vis-itin-list` | VIS | 351 | — |
-| `.vis-itin-item` | VIS | 352 | — |
-| `.vis-itin-item__day` | VIS | 353 | — |
-| `.vis-itin-item__main` | VIS | 354 | — |
-| `.vis-itin-item__groups` | VIS | 357 | — |
-| `.vis-stats` | VIS | 360 | — |
-| `.vis-stat` | VIS | 361 | — |
-| `.vis-filters` | VIS | 366 | VIS |
-| `.field` | VIS | 367 | EVT, REG, VIS |
-| `.grupo-block` | VIS | 371 | VIS |
-| `.grupo-block__head` | VIS | 372 | VIS |
-| `.grupo-remove` | VIS | 374 | VIS |
-| `.total-box` | VIS | 376 | VIS |
-| `.over` | VIS | 378 | VIS |
-| `.vis-grado-hint` | VIS | 382 | — |
-| `.vis-grado-hint--alta` | VIS | 384 | — |
-| `.vis-grado-hint--baja` | VIS | 385 | — |
-| `.is-invalid` | VIS | 388 | REG, VIS |
-| `.field__err` | VIS | 391 | VIS |
-| `.vis-baja-panel` | VIS | 395 | — |
-| `.vis-baja-panel__title` | VIS | 400 | — |
-| `.vis-baja-options` | VIS | 401 | — |
-| `.vis-adm-nav` | VIS | 408 | — |
-| `.vis-adm-nav__trigger` | VIS | 409 | VIS |
-| `.vis-adm-nav__panel` | VIS | 418 | VIS |
-| `.vis-adm-nav__brand` | VIS | 425 | VIS |
-| `.vis-adm-nav__list` | VIS | 428 | VIS |
-| `.vis-adm-nav__item` | VIS | 429 | — |
-| `.ico` | VIS | 436 | EVT, REG, VIS |
-| `.vis-stat-card` | VIS | 439 | VIS |
-| `.vis-stat-card__num` | VIS | 443 | VIS |
-| `.vis-stat-card__prog` | VIS | 446 | VIS |
-| `.vis-stat-card__prog-head` | VIS | 447 | VIS |
-| `.vis-stat-card__bar` | VIS | 450 | VIS |
-| `.vis-stat-card__bar-fill` | VIS | 451 | VIS |
-| `.vis-dash-grid` | VIS | 454 | VIS |
-| `.vis-dash-card` | VIS | 455 | VIS |
-| `.vis-dash-card__title` | VIS | 456 | VIS |
-| `.vis-dash-card__sub` | VIS | 457 | VIS |
-| `.vis-dash-kpis` | VIS | 458 | VIS |
-| `.vis-kpi` | VIS | 459 | VIS |
-| `.vis-tabs` | VIS | 464 | VIS |
-| `.vis-tabs__tab` | VIS | 465 | VIS |
-| `.vis-barchart` | VIS | 474 | VIS |
-| `.bar` | VIS | 475 | EVT, VIS |
-| `.bar-label` | VIS | 477 | VIS |
-| `.bar-value` | VIS | 478 | VIS |
-| `.axis` | VIS | 479 | VIS |
-| `.vis-nivel-meter` | VIS | 482 | VIS |
-| `.vis-nivel-meter__head` | VIS | 484 | VIS |
-| `.vis-nivel-meter__bar` | VIS | 487 | VIS |
-| `.vis-nivel-meter__fill` | VIS | 488 | VIS |
-| `.vis-asist-celda` | VIS | 491 | VIS |
-| `.vis-asist-celda__vacio` | VIS | 493 | VIS |
-| `.vis-asist-escuela` | VIS | 494 | VIS |
-| `.vis-cfg-estado` | VIS | 498 | VIS |
-| `.is-abierta` | VIS | 500 | VIS |
-| `.is-cerrada` | VIS | 501 | VIS |
+| `.admin-body` | EVT | 17 | EVT |
+| `.sidebar` | EVT | 19 | EVT |
+| `.side-section` | EVT | 28 | EVT |
+| `.side-nav` | EVT | 30 | EVT |
+| `.side-link` | EVT | 31 | EVT |
+| `.ico` | EVT | 38 | EVT, REG, VIS |
+| `.active` | EVT | 39 | EVT |
+| `.is-disabled` | EVT | 43 | — |
+| `.admin-main` | EVT | 46 | EVT |
+| `.admin-toolbar` | EVT | 47 | EVT |
+| `.menu-btn` | EVT | 51 | EVT |
+| `.crumb` | EVT | 56 | EVT |
+| `.admin-content` | EVT | 57 | EVT |
+| `.topbar` | EVT | 60 | EVT, REG, VIS |
+| `.admin` | EVT | 60 | EVT |
+| `.topbar-inner` | EVT | 60 | EVT, REG, VIS |
+| `.chip-modulo` | EVT | 61 | — |
+| `.chips` | EVT | 68 | EVT |
+| `.chip` | EVT | 69 | EVT, REG |
+| `.is-active` | EVT | 75 | EVT, REG, VIS |
+| `.count` | EVT | 76 | EVT |
+| `.toolbar-row` | EVT | 79 | EVT |
+| `.searchbox` | EVT | 80 | EVT |
+| `.stat-grid` | EVT | 90 | EVT |
+| `.stat-card` | EVT | 91 | EVT |
+| `.k` | EVT | 95 | EVT |
+| `.v` | EVT | 96 | EVT |
+| `.foot` | EVT | 97 | EVT |
+| `.accent-blue` | EVT | 98 | EVT |
+| `.accent-gold` | EVT | 99 | EVT |
+| `.accent-ok` | EVT | 100 | EVT |
+| `.accent-warn` | EVT | 101 | EVT |
+| `.accent-err` | EVT | 102 | EVT |
+| `.btn-row` | EVT | 105 | EVT |
+| `.link-arrow` | EVT | 106 | EVT |
+| `.modal-back` | EVT | 109 | EVT |
+| `.modal` | EVT | 114 | EVT |
+| `.modal-head` | EVT | 118 | EVT |
+| `.modal-body` | EVT | 121 | EVT |
+| `.modal-foot` | EVT | 122 | EVT |
+| `.cal-wrap` | EVT | 125 | EVT |
+| `.cal-side` | EVT | 126 | EVT |
+| `.cal-panel` | EVT | 127 | EVT |
+| `.cal-main` | EVT | 130 | EVT |
+| `.cal-toolbar` | EVT | 131 | EVT |
+| `.month` | EVT | 132 | EVT |
+| `.cal-nav` | EVT | 133 | EVT |
+| `.cal-grid` | EVT | 136 | EVT |
+| `.dow` | EVT | 137 | EVT |
+| `.cal-cell` | EVT | 138 | — |
+| `.num` | EVT | 140 | EVT, VIS |
+| `.out` | EVT | 141 | — |
+| `.today` | EVT | 142 | — |
+| `.cal-event` | EVT | 144 | — |
+| `.ev-apertura` | EVT | 149 | EVT |
+| `.ev-cierre` | EVT | 150 | EVT |
+| `.ev-notif` | EVT | 151 | EVT |
+| `.ev-ajustes` | EVT | 152 | EVT |
+| `.ev-asignacion` | EVT | 153 | EVT |
+| `.ev-constancias` | EVT | 154 | EVT |
+| `.date-list` | EVT | 157 | EVT |
+| `.date-item` | EVT | 158 | EVT |
+| `.swatch` | EVT | 159 | EVT |
+| `.lbl` | EVT | 160 | EVT |
+| `.val` | EVT | 161 | — |
+| `.sched` | EVT | 165 | EVT |
+| `.time-col` | EVT | 169 | EVT |
+| `.slot` | EVT | 170 | EVT |
+| `.act` | EVT | 171 | EVT |
+| `.clash` | EVT | 177 | EVT |
+| `.free` | EVT | 178 | EVT |
+| `.rep-badge` | EVT | 181 | EVT |
+| `.salon-th` | EVT | 187 | — |
+| `.sala-th` | EVT | 188 | — |
+| `.aforo-badge` | EVT | 189 | — |
+| `.mock-banner` | EVT | 197 | EVT |
+| `.prg-layout` | EVT | 207 | EVT |
+| `.rail` | EVT | 210 | EVT |
+| `.hint` | EVT | 212 | EVT, REG |
+| `.rail-item` | EVT | 213 | EVT |
+| `.is-selected` | EVT | 219 | EVT |
+| `.grip` | EVT | 220 | EVT |
+| `.r-body` | EVT | 221 | EVT |
+| `.rail-empty` | EVT | 223 | EVT |
+| `.modal-wide` | EVT | 226 | EVT |
+| `.evt-dialog` | EVT | 227 | EVT |
+| `.evt-form` | EVT | 228 | EVT |
+| `.evt-row` | EVT | 229 | EVT |
+| `.ic` | EVT | 231 | EVT |
+| `.f` | EVT | 232 | EVT |
+| `.big` | EVT | 234 | EVT |
+| `.evt-preview` | EVT | 237 | EVT |
+| `.pv-head` | EVT | 238 | EVT |
+| `.nav` | EVT | 239 | EVT |
+| `.day-mini` | EVT | 241 | EVT |
+| `.drow` | EVT | 242 | EVT |
+| `.dh` | EVT | 244 | EVT |
+| `.dcell` | EVT | 245 | EVT |
+| `.ev-block` | EVT | 246 | EVT |
+| `.grab-dot` | EVT | 250 | EVT |
+| `.top` | EVT | 251 | EVT |
+| `.bot` | EVT | 252 | EVT |
+| `.taken` | EVT | 253 | — |
+| `.mini-act` | EVT | 253 | — |
+| `.pv-foot` | EVT | 254 | EVT |
+| `.banner-infantil` | VIS | 43 | EVT, REG |
+| `.btn-green` | VIS | 46 | VIS |
+| `.auth-hero` | VIS | 50 | EVT, REG |
+| `.is-vis` | VIS | 50 | VIS |
+| `.section-card` | VIS | 57 | EVT, VIS |
+| `.section-head` | VIS | 57 | EVT, VIS |
+| `.num` | VIS | 57 | EVT, VIS |
+| `.btn-danger` | VIS | 60 | VIS |
+| `.btn-sm` | VIS | 62 | VIS |
+| `.note-green` | VIS | 65 | VIS |
+| `.note-err` | VIS | 66 | VIS |
+| `.vis-estado` | VIS | 76 | — |
+| `.vis-estado__dot` | VIS | 81 | — |
+| `.vis-estado--abierta` | VIS | 82 | — |
+| `.vis-estado--cerrada` | VIS | 84 | — |
+| `.vis-banner` | VIS | 88 | VIS |
+| `.vis-banner__badge` | VIS | 94 | VIS |
+| `.vis-banner__badge-dot` | VIS | 100 | VIS |
+| `.vis-banner__badge-label` | VIS | 101 | VIS |
+| `.vis-banner__title` | VIS | 102 | VIS |
+| `.vis-banner__desc` | VIS | 103 | VIS |
+| `.vis-bento-layout` | VIS | 106 | VIS |
+| `.vis-bento-left` | VIS | 107 | VIS |
+| `.vis-bento-right` | VIS | 108 | VIS |
+| `.vis-bento` | VIS | 110 | VIS |
+| `.vis-bento__header` | VIS | 115 | VIS |
+| `.vis-bento__num` | VIS | 119 | VIS |
+| `.vis-bento__title` | VIS | 124 | VIS |
+| `.vis-bento__body` | VIS | 125 | VIS |
+| `.vis-bento__list` | VIS | 126 | VIS |
+| `.vis-bento__item` | VIS | 127 | VIS |
+| `.vis-bento__kv` | VIS | 130 | VIS |
+| `.vis-bento__kv-label` | VIS | 135 | VIS |
+| `.vis-bento__kv-value` | VIS | 136 | VIS |
+| `.vis-cupo` | VIS | 139 | VIS |
+| `.vis-cupo__row` | VIS | 141 | VIS |
+| `.vis-cupo__dia` | VIS | 142 | VIS |
+| `.vis-cupo__count` | VIS | 143 | VIS |
+| `.vis-cupo__nota` | VIS | 144 | VIS |
+| `.vis-cupo__bar-bg` | VIS | 145 | VIS |
+| `.vis-cupo__bar-fill` | VIS | 146 | VIS |
+| `.vis-cupo__bar-fill--magenta` | VIS | 147 | VIS |
+| `.vis-cupo__bar-fill--lleno` | VIS | 148 | VIS |
+| `.vis-tabla-wrap` | VIS | 151 | VIS |
+| `.vis-tabla` | VIS | 152 | VIS |
+| `.vis-row` | VIS | 159 | VIS |
+| `.folio` | VIS | 160 | EVT, VIS |
+| `.vis-tabla__toggle` | VIS | 161 | VIS |
+| `.vis-tabla__toggle-icon` | VIS | 167 | VIS |
+| `.is-open` | VIS | 169 | VIS |
+| `.vis-tabla__row-detail` | VIS | 171 | VIS |
+| `.vis-tabla-detail` | VIS | 175 | VIS |
+| `.vis-tabla-detail__inner` | VIS | 176 | VIS |
+| `.vis-ficha` | VIS | 179 | VIS |
+| `.vis-ficha__section` | VIS | 180 | VIS |
+| `.vis-ficha__grid` | VIS | 181 | VIS |
+| `.vis-ficha__key` | VIS | 182 | VIS |
+| `.vis-ficha__value` | VIS | 183 | VIS |
+| `.vis-detail-actions` | VIS | 186 | VIS |
+| `.vis-itinerario-btn__pill` | VIS | 189 | VIS |
+| `.vis-grupos-row` | VIS | 198 | VIS |
+| `.vis-grupo-card` | VIS | 199 | VIS |
+| `.vis-grupo-card__header` | VIS | 200 | VIS |
+| `.vis-grupo-card__body` | VIS | 201 | VIS |
+| `.vis-grupo-card__vacio` | VIS | 202 | VIS |
+| `.vis-grupo-card__talleres` | VIS | 203 | VIS |
+| `.vis-grupo-card__taller-info` | VIS | 205 | VIS |
+| `.vis-icon-btn` | VIS | 211 | VIS |
+| `.vis-sel-header` | VIS | 227 | VIS |
+| `.vis-sel-header__instituto` | VIS | 232 | VIS |
+| `.vis-horario-container` | VIS | 236 | VIS |
+| `.vis-horario-header` | VIS | 237 | VIS |
+| `.vis-turno-selector` | VIS | 238 | VIS |
+| `.vis-turno-selector__label` | VIS | 239 | VIS |
+| `.vis-turno-dropdown` | VIS | 240 | VIS |
+| `.vis-dia-selector` | VIS | 241 | VIS |
+| `.vis-dia-selector__text` | VIS | 242 | VIS |
+| `.vis-dia-btn` | VIS | 243 | VIS |
+| `.vis-horario-wrap` | VIS | 252 | VIS |
+| `.vis-horario-area` | VIS | 253 | VIS |
+| `.is-active` | VIS | 254 | EVT, REG, VIS |
+| `.vis-horario-tiempos` | VIS | 255 | VIS |
+| `.vis-horario-tiempo` | VIS | 256 | VIS |
+| `.vis-horario-tiempo--sala` | VIS | 257 | VIS |
+| `.vis-horario-fila` | VIS | 259 | VIS |
+| `.vis-horario-celda` | VIS | 261 | VIS |
+| `.vis-horario-celda__nombre` | VIS | 268 | VIS |
+| `.vis-horario-celda__meta` | VIS | 269 | VIS |
+| `.vis-horario-celda__cupos` | VIS | 270 | VIS |
+| `.vis-nivel` | VIS | 271 | VIS |
+| `.vis-nivel--preescolar` | VIS | 272 | VIS |
+| `.vis-nivel--primaria-alta` | VIS | 273 | — |
+| `.vis-nivel--primaria-baja` | VIS | 274 | — |
+| `.vis-nivel--secundaria` | VIS | 275 | — |
+| `.vis-nivel--preparatoria` | VIS | 276 | — |
+| `.vis-nivel--universidad` | VIS | 277 | — |
+| `.vis-horario-celda--sala-label` | VIS | 278 | VIS |
+| `.vis-horario-celda--llena` | VIS | 280 | VIS |
+| `.vis-horario-celda--sin-taller` | VIS | 282 | VIS |
+| `.vis-horario-celda--cerrado` | VIS | 282 | VIS |
+| `.vis-horario-celda--libre` | VIS | 286 | VIS |
+| `.vis-bloque-label` | VIS | 287 | VIS |
+| `.vis-celda-badges` | VIS | 292 | — |
+| `.vis-grupo-badge` | VIS | 293 | VIS |
+| `.vis-grupo-selector` | VIS | 302 | — |
+| `.vis-grupo-selector__head` | VIS | 307 | VIS |
+| `.vis-grupo-selector__title` | VIS | 308 | VIS |
+| `.vis-grupo-selector__item` | VIS | 309 | VIS |
+| `.vis-radio` | VIS | 311 | VIS |
+| `.vis-radio--selected` | VIS | 313 | — |
+| `.vis-todos-btn` | VIS | 314 | VIS |
+| `.vis-reserva-bar` | VIS | 318 | VIS |
+| `.txt` | VIS | 323 | EVT, REG, VIS |
+| `.vis-itin-list` | VIS | 328 | — |
+| `.vis-itin-item` | VIS | 329 | — |
+| `.vis-itin-item__day` | VIS | 330 | — |
+| `.vis-itin-item__main` | VIS | 331 | — |
+| `.vis-itin-item__groups` | VIS | 334 | — |
+| `.vis-stats` | VIS | 337 | — |
+| `.vis-stat` | VIS | 338 | — |
+| `.vis-filters` | VIS | 343 | VIS |
+| `.field` | VIS | 344 | EVT, REG, VIS |
+| `.grupo-block` | VIS | 348 | VIS |
+| `.grupo-block__head` | VIS | 349 | VIS |
+| `.grupo-remove` | VIS | 351 | VIS |
+| `.total-box` | VIS | 353 | VIS |
+| `.over` | VIS | 355 | VIS |
+| `.vis-grado-hint` | VIS | 359 | — |
+| `.vis-grado-hint--alta` | VIS | 361 | — |
+| `.vis-grado-hint--baja` | VIS | 362 | — |
+| `.is-invalid` | VIS | 365 | REG, VIS |
+| `.field__err` | VIS | 368 | VIS |
+| `.vis-baja-panel` | VIS | 372 | — |
+| `.vis-baja-panel__title` | VIS | 377 | — |
+| `.vis-baja-options` | VIS | 378 | — |
+| `.vis-adm-nav` | VIS | 385 | — |
+| `.vis-adm-nav__trigger` | VIS | 386 | VIS |
+| `.vis-adm-nav__panel` | VIS | 395 | VIS |
+| `.vis-adm-nav__brand` | VIS | 402 | VIS |
+| `.vis-adm-nav__list` | VIS | 405 | VIS |
+| `.vis-adm-nav__item` | VIS | 406 | — |
+| `.ico` | VIS | 413 | EVT, REG, VIS |
+| `.vis-stat-card` | VIS | 416 | VIS |
+| `.vis-stat-card__num` | VIS | 420 | VIS |
+| `.vis-stat-card__prog` | VIS | 423 | VIS |
+| `.vis-stat-card__prog-head` | VIS | 424 | VIS |
+| `.vis-stat-card__bar` | VIS | 427 | VIS |
+| `.vis-stat-card__bar-fill` | VIS | 428 | VIS |
+| `.vis-dash-grid` | VIS | 431 | VIS |
+| `.vis-dash-card` | VIS | 432 | VIS |
+| `.vis-dash-card__title` | VIS | 433 | VIS |
+| `.vis-dash-card__sub` | VIS | 434 | VIS |
+| `.vis-dash-kpis` | VIS | 435 | VIS |
+| `.vis-kpi` | VIS | 436 | VIS |
+| `.vis-tabs` | VIS | 441 | VIS |
+| `.vis-tabs__tab` | VIS | 442 | VIS |
+| `.vis-barchart` | VIS | 451 | VIS |
+| `.bar` | VIS | 452 | EVT, VIS |
+| `.bar-label` | VIS | 454 | VIS |
+| `.bar-value` | VIS | 455 | VIS |
+| `.axis` | VIS | 456 | VIS |
+| `.vis-nivel-meter` | VIS | 459 | VIS |
+| `.vis-nivel-meter__head` | VIS | 461 | VIS |
+| `.vis-nivel-meter__bar` | VIS | 464 | VIS |
+| `.vis-nivel-meter__fill` | VIS | 465 | VIS |
+| `.vis-asist-celda` | VIS | 468 | VIS |
+| `.vis-asist-celda__vacio` | VIS | 470 | VIS |
+| `.vis-asist-escuela` | VIS | 471 | VIS |
+| `.vis-cfg-estado` | VIS | 475 | VIS |
+| `.is-abierta` | VIS | 477 | VIS |
+| `.is-cerrada` | VIS | 478 | VIS |

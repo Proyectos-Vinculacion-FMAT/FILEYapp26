@@ -136,17 +136,30 @@ CSRF_COOKIE_SAMESITE = "Lax"
 
 
 # ── Caché ─────────────────────────────────────────────────────
-# La usan el estado señuelo del acceso admin (services/senuelo.py) y
-# el limitador de peticiones (comun/limites.py). Con LocMemCache cada
-# proceso ve la suya: en producción con varios workers hay que
-# configurar aquí una caché compartida (Redis/Memcached) o ambas
-# defensas quedan divididas entre procesos.
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "filey",
+# La usa el limitador de peticiones por IP (comun/limites.py), y de ella
+# depende que ese límite signifique algo.
+#
+# Con LocMemCache cada proceso lleva su propio contador, así que el
+# límite real se multiplica por el número de workers: `start.sh` levanta
+# gunicorn con 3, o sea 60 peticiones/min donde la configuración dice 20.
+# Por eso, en producción, LocMem no es una configuración válida y el
+# `check` de abajo lo impide (CU-REG-003, "Requisito de despliegue").
+REDIS_URL = os.getenv("REDIS_URL", "")
+
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "filey",
+        }
+    }
 
 
 # ── Archivos estáticos ────────────────────────────────────────
@@ -184,7 +197,18 @@ URL_BASE = os.getenv("URL_BASE", "http://localhost:8000").rstrip("/")
 
 
 # ── Correo (Notificaciones vía Resend) ────────────────────────
-# Resend email delivery (usado por el módulo notificaciones)
+# TODO el correo del proyecto sale por `django.core.mail`; quién lo
+# entrega lo decide este ajuste. Antes el OTP hablaba con Resend por su
+# cuenta, sin pasar por aquí: las pruebas no lo veían y, con la clave
+# configurada, la suite mandaba correos reales. Ver
+# apps/notificaciones/backends.py.
+#
+# Django sustituye este backend por `locmem` durante los tests, así que
+# ninguna prueba puede salir a la red por accidente.
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND", "apps.notificaciones.backends.ResendBackend"
+)
+
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "FILEY <noreply@filey.org>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
@@ -240,18 +264,6 @@ LIMITES_PETICIONES = {
     "auth-identificar": "20/min",
     "auth-otp": "10/min",
 }
-
-
-# ── Anti-enumeración del acceso administrativo ────────────────
-# El acceso admin responde igual exista o no el correo (ver
-# services/senuelo.py). Para que el TIEMPO tampoco delate quién es
-# administrador, las respuestas se retienen hasta un mínimo: el
-# camino real hashea el código y habla con el SMTP, y sin este piso
-# esa latencia extra vuelve a distinguir las cuentas reales.
-# Si el SMTP de producción resulta más lento, subir el piso de OTP.
-
-ADMIN_PISO_IDENTIFICAR_SEG = float(os.getenv("ADMIN_PISO_IDENTIFICAR_SEG", "0.3"))
-ADMIN_PISO_OTP_SEG = float(os.getenv("ADMIN_PISO_OTP_SEG", "1.5"))
 
 
 # ── Internacionalización ──────────────────────────────────────

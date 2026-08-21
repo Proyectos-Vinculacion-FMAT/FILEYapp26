@@ -15,7 +15,7 @@ dependencias: []
 
 ## Descripción
 
-El administrador establece las reglas y valores globales (costos, porcentajes, plazos y cuentas bancarias) que el sistema utilizará como plantilla base para todas las nuevas reservas que se generen.
+El administrador establece las reglas y valores (costos, porcentajes, plazos y cuentas bancarias) que el sistema utilizará como plantilla base para todas las nuevas reservas de **esta feria**. Cada edición tiene sus propios parámetros: el costo por m² y la fecha límite de pronto pago cambian cada año.
 
 ## Actores
 
@@ -23,7 +23,7 @@ El administrador establece las reglas y valores globales (costos, porcentajes, p
 
 ## Precondiciones
 
-- El administrador tiene sesión iniciada y permisos de configuración global.
+- El administrador tiene acceso a la feria en la que opera (`AdminFeria`).
 
 ## Disparador
 

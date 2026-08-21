@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: 0.2
+version: 0.3
 tags:
   - caso-de-uso
   - autenticacion
@@ -8,7 +8,7 @@ tags:
   - admin
   - navegacion
 fecha: 2026-06-30
-fecha_actualizacion: 2026-08-05
+fecha_actualizacion: 2026-08-21
 id: CU-REG-006
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -17,45 +17,55 @@ diagramas_relacionados: []
 trazabilidad:
   ddr: []
 ---
-# CU-REG-006 Consultar los módulos administrables y entrar a un panel
+# CU-REG-006 Consultar los módulos de una feria y entrar a un panel
 
-> [!note] Por qué vive en REG (Core Registros) y no en EVT
-> Esta pantalla es el **punto de entrada transversal** posterior al login administrativo: le
-> muestra al administrador **todos** los módulos que puede gestionar (Eventos, Infantil/Juvenil,
-> Stands), no solo uno. Por eso no pertenece a `EVT` (que es específico de eventos) sino al Core
-> Registros, que el propio `CU-REG Índice.md` define como "la puerta de entrada a cualquier
-> módulo del sistema". Se coloca en la raíz de `docs/requisitos/REG/` junto a CU-REG-001…005,
-> siguiendo la convención de REG (dominio sin subcarpetas). Es la contraparte con pantalla del
-> flujo A1 de CU-REG-003 (selección de módulo cuando hay más de un `RolPermiso`).
+> [!important] Actualización 2026-08-21 — este CU se partió en dos, y perdió su parte de permisos
+> La v0.2 respondía "¿a qué panel entro?" con una sola pregunta, resuelta contra `RolPermiso`.
+> Con [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>) esa pregunta se parte:
+>
+> 1. **¿A qué feria?** → [CU-FER-002](<../FER/CU-FER-002 Consultar mis ferias y entrar a una.md>).
+>    Ahí sí hay una comprobación de acceso: solo se listan las ferias que la cuenta administra.
+> 2. **¿A qué módulo, dentro de esa feria?** → este CU. Aquí **ya no hay permisos que comprobar**:
+>    quien entró a una feria puede operar todos sus módulos.
+>
+> En consecuencia esta pantalla deja de ser un control de acceso y pasa a ser **navegación**. Sus
+> flujos A1 y A2 de la v0.2 —saltar la pantalla si solo hay un módulo permitido, y mostrar
+> deshabilitados los módulos sin permiso— quedan **sin objeto**: todas las cuentas que llegan
+> aquí ven los cuatro módulos y pueden entrar a los cuatro.
 
 ## Objetivo
 
-Tras autenticarse, el usuario administrativo con permisos en más de un módulo visualiza los módulos que puede administrar y elige a cuál panel entrar. Reutiliza visualmente la misma pantalla de "convocatorias" que ven los usuarios externos, pero cada tarjeta lleva al **panel administrativo** del módulo, no al portal público.
+Dentro de una feria, mostrar al usuario administrativo los módulos de esa feria y dejarle entrar
+al panel de uno.
 
 ## Alcance
 
-Core Registros — navegación posterior al login del panel administrativo. No cubre la autenticación (CU-REG-003) ni las funciones internas de cada panel (`EVT`/`TAL`/`STD`). No aplica a usuarios externos.
+Core Registros — navegación **dentro** de una feria. No cubre la autenticación (CU-REG-003), la
+selección de feria (CU-FER-002) ni las funciones internas de cada panel (`EVT`/`TAL`/`STD`/`VIS`).
+No aplica a usuarios externos.
 
 ## Actores
 
 ### Actor principal
 
-- Usuario administrativo (con uno o varios `RolPermiso`). Caso típico del prototipo: **Hipólito como administrador general** (`modulo = *`), que puede entrar a los tres módulos.
+- Usuario administrativo con acceso a la feria en la que se encuentra: dueño o administrador.
+  Ambos ven exactamente lo mismo en esta pantalla — la única diferencia entre ellos, administrar
+  accesos, vive en otra (CU-FER-003).
 
 ## Disparador
 
-El sistema termina CU-REG-003 y la cuenta tiene más de un `RolPermiso`, o el administrador ya dentro de un panel decide cambiar de módulo.
+El usuario acaba de entrar a una feria (CU-FER-002, o el salto directo de su A1), o ya dentro de
+un panel decide cambiar de módulo.
 
 ## Precondiciones
 
-- El usuario tiene sesión administrativa activa (CU-REG-003).
-- La cuenta tiene al menos un `RolPermiso` registrado.
+- El usuario tiene sesión activa y **acceso a esta feria** (`AdminFeria`).
 
 ## Postcondiciones
 
 ### En éxito
 
-- El sistema abre el panel del módulo elegido y fija ese módulo como contexto activo de la sesión.
+- El sistema abre el panel del módulo elegido, dentro de la feria activa.
 
 ### En fallo
 
@@ -63,62 +73,70 @@ El sistema termina CU-REG-003 y la cuenta tiene más de un `RolPermiso`, o el ad
 
 ## Flujo principal
 
-1. El sistema muestra las tarjetas de los módulos administrables por la cuenta (según sus `RolPermiso`): Actividades FILEY (`EVT`), Infantil/Juvenil (`TAL`), Stands (`STD`) y Visitas Escolares (`VIS`).
-2. El administrador selecciona un módulo.
-3. El sistema abre el panel administrativo de ese módulo (para `EVT`: la lista de propuestas del panel de Hipólito).
+1. El sistema muestra las tarjetas de los cuatro módulos de la feria: Actividades FILEY (`EVT`),
+   Infantil/Juvenil (`TAL`), Stands (`STD`) y Visitas Escolares (`VIS`).
+2. El sistema indica en cada tarjeta el estado de su convocatoria dentro de **esta** feria
+   (abierta, cerrada, sin configurar). Dos ferias distintas muestran estados distintos: el dato
+   sale del schema de la feria activa, no de un catálogo global.
+3. El administrador selecciona un módulo.
+4. El sistema abre el panel administrativo de ese módulo, dentro de la feria activa.
 
-> [!note] Los cuatro módulos y quién decide qué se ve
-> Una cuenta con `modulo = *` administra los cuatro. La lista de tarjetas y su estado los define
-> el servidor, no la pantalla: el navegador solo dibuja lo que recibe, y marca como no navegable
-> todo módulo sobre el que la cuenta no tenga permiso.
+> [!note] Qué decide el servidor y qué la pantalla
+> La pantalla dibuja lo que recibe. Los cuatro módulos y el estado de sus convocatorias los
+> resuelve el servidor **dentro del schema de la feria activa**
+> ([ADR-0003](<../../adr/0003-una-feria-por-schema.md>)); el navegador no elige feria ni consulta
+> nada por su cuenta.
 
 ## Flujos alternos
 
-### A1. La cuenta administra un solo módulo
+### A1. Un módulo cuyo panel todavía no existe
 
-1. En el paso 1, el sistema detecta que la cuenta tiene un único `RolPermiso`.
-2. El sistema **omite** esta pantalla y entra directamente al panel de ese módulo (esta selección solo tiene sentido con dos o más módulos).
+1. El usuario selecciona un módulo que aún no está construido.
+2. El sistema muestra la tarjeta pero no navega, avisando de que ese panel llegará en una entrega
+   posterior.
+3. Esto es una limitación **de construcción**, no de permisos: la tarjeta no está deshabilitada
+   porque la cuenta no pueda, sino porque el panel no existe.
 
-> [!warning] Pendiente de implementar (verificado el 2026-08-05)
-> Hoy **todas** las cuentas administrativas caen en la pantalla de selección, tengan uno o
-> varios módulos: el salto directo de A1 no está construido. No es urgente mientras los paneles
-> de módulo no existan (ver nota de estado al final), pero debe implementarse antes de que
-> haya administradores de un solo módulo operando, o verán siempre una pantalla intermedia
-> con una sola tarjeta.
+### A2. Volver a la selección de feria
 
-### A2. Módulos a los que no se tiene permiso
-
-1. La cuenta no tiene `RolPermiso = *`, sino permisos sobre módulos específicos.
-2. El sistema muestra únicamente las tarjetas de los módulos permitidos (o muestra los demás deshabilitados, como referencia visual). Decisión de presentación, no de acceso: los módulos sin permiso nunca son navegables.
+1. El usuario elige cambiar de feria desde el menú.
+2. El sistema lo lleva a CU-FER-002 y, al elegir otra feria, esta pantalla se vuelve a dibujar
+   con los datos de la nueva.
 
 ## Flujos de excepción
 
-### E1. Sesión sin RolPermiso
+### E1. La cuenta perdió el acceso a esta feria
 
-1. La cuenta perdió sus `RolPermiso` o la sesión expiró.
-2. El sistema **rechaza la consulta en el servidor** (no basta con ocultar las tarjetas en la pantalla) y redirige al login administrativo (CU-REG-003) sin mostrar módulos.
-3. Esto cubre el caso de una cuenta a la que se le revocaron los permisos mientras tenía sesión abierta: deja de tener acceso en su siguiente consulta, sin esperar a que caduque su token.
+1. A la cuenta se le retiró el acceso (CU-FER-004) o su sesión expiró mientras tenía la pantalla
+   abierta.
+2. El sistema **rechaza la consulta en el servidor** —no basta con ocultar las tarjetas— y la
+   saca de la feria, según CU-FER-002 E2.
+3. Esto cubre la revocación en caliente: deja de tener acceso en su siguiente consulta, sin
+   esperar a que caduque nada.
 
 ## Datos relevantes
 
 ### Entradas
 
 - Selección del módulo por parte del administrador.
+- Feria activa, tomada del contexto de la sesión (no del navegador).
 
 ### Salidas
 
-- Contexto de módulo activo fijado en la sesión.
-- Panel administrativo del módulo elegido, abierto.
+- Panel administrativo del módulo elegido, dentro de la feria activa.
 
 > [!note] Nota de prototipo (maqueta de la vista del administrador — EVT)
-> En la maqueta, Hipólito se presenta como **administrador general** (`modulo = *`) y ve las
-> tarjetas, pero **solo el panel de Eventos está construido**. Las demás se muestran visibles
-> pero **no navegables** (etiqueta "Próximamente" / deshabilitadas), porque esa primera maqueta
-> modela exclusivamente la vista del administrador del módulo de Eventos.
+> La maqueta se dibujó antes de que existiera el concepto de feria: presenta a Hipólito como
+> "administrador general" viendo las tarjetas de módulo, con solo el panel de Eventos construido
+> y las demás marcadas como "Próximamente". Esa pantalla sigue siendo válida como diseño de
+> **esta** pantalla; lo que le falta es el paso anterior —la feria— y el rótulo que indique en
+> cuál se está.
 
-> [!warning] Estado de la implementación funcional (2026-08-05)
-> En la implementación del Core Registros, la pantalla de selección **ya funciona y respeta los
-> permisos**, pero **ningún panel de módulo está conectado todavía**: al elegir una tarjeta, el
-> sistema avisa que ese panel llegará en una entrega posterior. Esta entrega cubre únicamente
-> REG. El paso 3 del flujo principal queda, por tanto, **pendiente de completarse** cuando cada
-> dominio (EVT/TAL/STD/VIS) construya su panel.
+<!-- -->
+
+> [!warning] Estado de la implementación funcional (2026-08-21)
+> Lo construido hoy corresponde a la **v0.2** de este CU: la pantalla lista módulos según
+> `RolPermiso` y marca como no navegables los que la cuenta no tiene, sin ninguna noción de
+> feria. Al elegir una tarjeta, el sistema avisa de que ese panel llegará después: **ningún panel
+> de módulo está conectado todavía**. Alinear la implementación con esta versión es parte de la
+> migración a `AdminFeria`.
