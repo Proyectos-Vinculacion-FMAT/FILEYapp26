@@ -42,7 +42,14 @@ jobs:
       - name: Run Tests
         env:
           DJANGO_SECRET_KEY: "dummy-key-for-tests"
+          # Se prueba con la configuración endurecida (DEBUG=false), que es
+          # la que se despliega: cookies `Secure`, nosniff, referrer-policy.
           DJANGO_DEBUG: "false"
+          # Menos el redirect a HTTPS. `SecurityMiddleware` respondería 301
+          # a *toda* petición del cliente de pruebas, que habla http contra
+          # `testserver`, y la suite entera fallaría sin que nada esté roto.
+          # El redirect lo hace Render en su capa, no este proceso.
+          DJANGO_SSL_REDIRECT: "false"
         run: |
           pytest
 
