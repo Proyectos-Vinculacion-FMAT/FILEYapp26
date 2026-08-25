@@ -40,7 +40,9 @@ def avisar_alta_admin(persona: Persona) -> None:
     así que el enlace no es un secreto y no caduca.
     """
     contexto = {
-        "nombre": persona.nombre_completo or "",
+        # Saludo por el nombre de pila: "Hola Hipólito", no
+        # "Hola Hipólito Canto Uc".
+        "nombre": persona.primer_nombre,
         "correo": persona.correo,
         "acceso": _describir_acceso(persona),
         # La ruta se resuelve con `reverse`, no escrita a mano: si el

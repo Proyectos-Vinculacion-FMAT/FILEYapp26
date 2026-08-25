@@ -50,7 +50,7 @@ El administrador identifica la necesidad de ajustar las propiedades de un stand 
 
 ### E1. Editar un stand ya reservado
 1. En el paso 1, el stand seleccionado ya está vinculado a una reserva (`Reservado` u `Ocupado`).
-2. El sistema permite editar los datos físicos para que el mapa sea preciso, pero **no** altera retroactivamente el monto de la reserva existente (debido a que se congeló mediante `precio_snapshot` y `metros_cuadrados_snapshot` en la `ReservaStand`, RN-01).
+2. El sistema permite editar los datos físicos para que el mapa sea preciso, pero **no** altera retroactivamente el monto de la reserva existente: lo cobrado es el `monto_total` guardado en la `Reserva` al crearla, y editar el stand no lo recalcula (RN-01).
 
 ## Postcondiciones
 
@@ -59,4 +59,4 @@ El administrador identifica la necesidad de ajustar las propiedades de un stand 
 
 ## Reglas de negocio relacionadas
 
-- **RN-01:** Las reservas ya creadas guardan una fotografía (snapshot) del precio y dimensiones; editar el stand base no modifica cobros ya realizados.
+- **RN-01:** Las reservas ya creadas guardan su `monto_total`; editar el stand base no modifica cobros ya realizados. Lo que sí cambia es el **desglose** que se muestra, porque se recalcula desde el stand (ver `Modelo de datos - Stands` §3.7).

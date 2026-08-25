@@ -29,6 +29,28 @@ trazabilidad:
 > Además se documentan aquí las **defensas contra abuso** añadidas en la auditoría de
 > seguridad del 2026-08-02 (E6, E7), que la v0.1 no contemplaba.
 
+<!-- -->
+
+> [!important] Actualización 2026-08-21 — la sesión ya no es un JWT
+> Hasta la v0.3 este CU describía la emisión de un **JWT** con *access token* y *refresh token*.
+> Eso dejó de ser cierto el 2026-08-11, cuando el Core Registros se migró al monolito: la sesión
+> pasó a ser la de Django —una cookie `HttpOnly` con el estado en el servidor—, sin tokens en el
+> cliente. La documentación quedó diez días describiendo un mecanismo que el sistema ya no
+> tenía; esta versión lo corrige. El razonamiento del cambio está en
+> [ADR-0002](<../../adr/0002-migracion-de-registro-al-monolito.md>).
+>
+> **Lo que no cambia:** el OTP, sus siete parámetros, y todas las defensas de A1, E6 y E7. Solo
+> cambia qué se emite al final, en el paso 11.
+
+<!-- -->
+
+> [!note] El acceso es al sistema, no a una feria
+> Con la llegada del core `FER`, conviene ser explícito: iniciar sesión **no** sitúa a nadie en
+> una feria. La cuenta es global y el mismo correo sirve en todas las ediciones
+> ([ADR-0003](<../../adr/0003-una-feria-por-schema.md>)). La feria se elige después — el
+> administrador entre las que administra (CU-FER-002), y el aplicante al entrar a una
+> convocatoria.
+
 ## Objetivo
 
 Autenticar a un usuario externo (proponente, tallerista, representante escolar) mediante un código de un solo uso enviado a su correo, sin necesidad de contraseña. El usuario obtiene una sesión activa para operar en el módulo que le corresponde.
@@ -38,11 +60,11 @@ Autenticar a un usuario externo (proponente, tallerista, representante escolar) 
 Core Registros. Cubre el acceso por el **portal público**, con independencia de los permisos de la cuenta. El acceso al **panel administrativo** se cubre en CU-REG-003.
 
 > [!note] Qué distingue este CU de CU-REG-003: la puerta, no la persona
-> Lo que separa ambos casos de uso es **por dónde entra la persona**, no quién es. Una cuenta con
-> `RolPermiso` puede iniciar sesión por el portal público con este CU —y es lo correcto cuando
-> Hipólito o Elvira entran a presentar una propuesta propia, no a administrar—; simplemente
-> llega al portal de convocatorias, no al panel. El caso de una persona que es a la vez
-> proponente y administradora está previsto en CU-REG-005 A1.
+> Lo que separa ambos casos de uso es **por dónde entra la persona**, no quién es. Quien
+> administra una feria puede iniciar sesión por el portal público con este CU —y es lo correcto
+> cuando Hipólito o Elvira entran a presentar una propuesta propia, no a administrar—;
+> simplemente llega al portal de convocatorias, no al panel. El caso de una persona que es a la
+> vez proponente y administradora está previsto en CU-FER-003 A1.
 
 ## Actores
 
@@ -77,13 +99,16 @@ El usuario ingresa su correo en la pantalla de acceso del portal público y el s
 ### En éxito
 
 - La entrada en `SesionOTP` queda con `usado = true` (quemada al validar).
-- El sistema emite un JWT de sesión ligado a `persona_id`. **El JWT no lleva dentro el módulo ni el rol**: los permisos se resuelven contra `RolPermiso` en cada petición, para que revocar un permiso surta efecto sin esperar a que caduque el token.
+- El sistema **abre una sesión de servidor** ligada a `persona_id`, identificada por una cookie
+  `HttpOnly` que JavaScript no puede leer. **La sesión no lleva dentro ningún permiso**: lo que
+  la cuenta puede hacer se resuelve en cada petición contra los datos, para que retirar un
+  acceso surta efecto de inmediato.
 - El usuario queda autenticado y es redirigido al portal de convocatorias (EVT, TAL, STD, VIS).
 - Se actualiza el último acceso en `Persona`.
 
 ### En fallo
 
-- No se emite ningún JWT. El usuario permanece sin sesión.
+- No se abre ninguna sesión. El usuario permanece sin autenticar.
 - El OTP queda invalidado si fue el último intento permitido.
 
 ## Flujo principal
@@ -98,7 +123,7 @@ El usuario ingresa su correo en la pantalla de acceso del portal público y el s
 8. El usuario ingresa el código recibido.
 9. El sistema valida: (a) el código coincide con el hash almacenado, (b) `expira_en` no ha pasado, (c) `usado = false`.
 10. El sistema marca el OTP como `usado = true`.
-11. El sistema emite un JWT de sesión firmado con `persona_id` y expiración de sesión, y registra el último acceso en `Persona`.
+11. El sistema abre la sesión ligada a `persona_id` y registra el último acceso en `Persona`. Al abrirla, **rota el identificador de sesión**: el que tuviera el navegador antes de autenticarse deja de servir (defensa contra fijación de sesión).
 12. El sistema redirige al usuario al portal de convocatorias, donde elige el módulo en el que quiere participar.
 
 > [!note] Por qué el correo sale en segundo plano (cambio 2026-08-02)
@@ -211,7 +236,7 @@ tras código y seguir probando indefinidamente desde muchas direcciones distinta
 
 ### Salidas
 
-- JWT de sesión (`persona_id`, expiración). Se entregan un *access token* de vida corta y un *refresh token* para renovarlo.
+- Sesión de servidor abierta (`persona_id`), identificada por una cookie `HttpOnly`.
 - Registro `SesionOTP` actualizado (`usado = true`)
 - Último acceso actualizado en `Persona`
 

@@ -14,6 +14,7 @@
   --color-azul-link-enfoque: #C8D7E3;
   --color-azul-institucional: #01457C;
   --color-azul-texto: #00437C;
+  --caret-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 826 374' fill='%2300437C'%3E%3Cpath d='M731.872 6.864 412 318.672 92.128 6.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L389.664 380.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z'/%3E%3C/svg%3E");
   --color-azul-institucional-enfoque: #013763;
   --color-azul-degradado-claro: #01497B;
   --color-azul-degradado-oscuro: #151A30;
@@ -249,19 +250,61 @@ a.home:hover { opacity: 0.88; }
 .field { margin-bottom: 16px; }
 .field > label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--gris-700); }
 .req { color: var(--color-rojo); font-weight: 700; }
+.opt { color: var(--gris-500); font-weight: 400; font-size: 12.5px; }
 
-input[type="text"], input[type="email"], input[type="tel"] {
+input[type="text"], input[type="email"], input[type="tel"], select {
   width: 100%; padding: 11px 13px; font-size: 14.5px; color: var(--tinta);
   border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
   background: var(--color-blanco); font-family: inherit;
 }
-input:focus {
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+/* Wrapper del select: pone el caret con ::after y mask-image. El caret
+   es un token embebido como data-URI y no un `url()` a un .svg suelto,
+   porque el prototipo se abre con file:// y ahí un archivo externo no
+   carga (ver el skill `filey-ui-componentes`, §6.4). */
+.select-wrap {
+  position: relative;
+  display: block;
+}
+.select-wrap select { width: 100%; }
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  pointer-events: none;
+  width: 11px;
+  height: 6px;
+  background-color: var(--color-azul-texto);
+  -webkit-mask-image: var(--caret-svg);
+  mask-image: var(--caret-svg);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transform: translateY(-50%) rotate(180deg);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.select-wrap:hover::after {
+  background-color: var(--color-dorado-encabezado);
+}
+
+input:focus, select:focus {
   outline: none; border-color: var(--azul-600); box-shadow: 0 0 0 3px var(--azul-100);
 }
 input::placeholder { color: #aab3c0; }
 input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: not-allowed; }
 
-.field input.is-invalid { border-color: var(--err-600); }
+.field input.is-invalid,
+.field select.is-invalid { border-color: var(--err-600); }
 
 .msg-error {
   margin: 6px 0 0;

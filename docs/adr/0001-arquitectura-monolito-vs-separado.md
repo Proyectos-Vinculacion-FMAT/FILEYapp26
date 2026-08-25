@@ -19,6 +19,12 @@ reemplazado_por:
 la frase de decisión y "Consecuencias" para lo que implica en la práctica, incluida la
 migración pendiente de `registro/frontend/`.
 
+> [!note] La migración de `registro/` ya se ejecutó (2026-08-11)
+> Lo que aquí se lee como pendiente está hecho, y con una decisión añadida que este ADR no
+> tomaba: sustituir el JWT por la sesión de Django. Ambas cosas se registran en
+> [ADR-0002](<0002-migracion-de-registro-al-monolito.md>). Esta nota no cambia la decisión de
+> este ADR; solo evita leer como pendiente algo que ya ocurrió.
+
 ## Contexto
 
 El backend de FILEY se construye en **Django** (Python) — decisión ya tomada el 2026-07-20,

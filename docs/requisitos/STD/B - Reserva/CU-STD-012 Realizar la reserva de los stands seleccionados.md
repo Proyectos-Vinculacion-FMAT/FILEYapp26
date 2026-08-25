@@ -46,7 +46,7 @@ El aplicante decide formalizar la reserva desde su carrito (CU-STD-011).
 
 ### En éxito
 
-- Se crea una reserva en estado `Por confirmar` (RN-11) asociada a la editorial y al evento, con una línea por stand y los snapshots de m² y precio.
+- Se crea una reserva en estado `Por confirmar` (RN-11) asociada a la editorial, con una línea por stand y con el **`monto_total` calculado y almacenado** en la reserva (RN-01). Las líneas (`ReservaStand`) solo dicen qué stands entran; no guardan importes.
 - Cada stand reservado pasa a estado Reservado (RN-10; CU-STD-021).
 - Inicia el plazo de 30 días para cubrir el anticipo del 50% (RN-03).
 - Quedan calculados el total con descuento, el anticipo del 50% (RN-02) y el descuento aplicado.
@@ -62,7 +62,7 @@ El aplicante decide formalizar la reserva desde su carrito (CU-STD-011).
 3. El sistema calcula el total considerando el descuento del 10% por pronto pago (RN-04), y muestra una nota con el **tiempo restante** para conservar ese descuento y el **monto que aplicará** una vez vencida la fecha de pronto pago.
 4. El aplicante confirma la reserva.
 5. El sistema valida que todos los stands del carrito sigan disponibles.
-6. El sistema crea la reserva en estado `Por confirmar`, genera una línea por stand con los snapshots de m² y precio (RN-01), marca los stands como Reservado (CU-STD-021) e inicia el plazo de 30 días (RN-03).
+6. El sistema crea la reserva en estado `Por confirmar`, genera una línea por stand, **calcula y guarda `monto_total`** con el `costo_m2` vigente en ese momento (RN-01), marca los stands como Reservado (CU-STD-021) e inicia el plazo de 30 días (RN-03).
 7. El sistema registra el descuento aplicado y calcula el anticipo del 50% (RN-02).
 8. El sistema confirma la reserva al aplicante y lo dirige a las instrucciones de pago (CU-STD-015).
 

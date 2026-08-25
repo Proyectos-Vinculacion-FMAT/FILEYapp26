@@ -15,6 +15,8 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
 
+from .paises import PAISES
+
 
 class Modulo(models.TextChoices):
     """Módulos administrables del sistema FILEY."""
@@ -42,12 +44,22 @@ class PersonaManager(BaseUserManager):
 
     use_in_migrations = True
 
-    def create_user(self, correo, nombre_completo="", telefono="", **extra):
+    def create_user(
+        self,
+        correo,
+        nombre="",
+        primer_apellido="",
+        segundo_apellido="",
+        telefono="",
+        **extra,
+    ):
         if not correo:
             raise ValueError("El correo es obligatorio")
         persona = self.model(
             correo=self.normalize_email(correo).lower(),
-            nombre_completo=nombre_completo,
+            nombre=nombre,
+            primer_apellido=primer_apellido,
+            segundo_apellido=segundo_apellido,
             telefono=telefono,
             **extra,
         )
@@ -81,8 +93,22 @@ class Persona(AbstractBaseUser, PermissionsMixin):
         INACTIVA = "inactiva", "Inactiva"
 
     correo = models.EmailField(unique=True)
-    nombre_completo = models.CharField(max_length=180)
+    # El nombre va en tres campos y no en uno (decisión 2026-08-25, ver
+    # `REG/Modelo de datos - Registros` §2.1): sin separarlo no se puede
+    # ordenar por apellido, saludar por el nombre de pila en un correo,
+    # ni imprimir una constancia con el formato que pida cada documento.
+    nombre = models.CharField(max_length=80)
+    primer_apellido = models.CharField(max_length=80)
+    # Opcional a propósito, y no por descuido: hay personas que no tienen
+    # segundo apellido y la mayoría de los participantes extranjeros usan
+    # uno solo. Ninguna validación puede exigirlo (CU-REG-001, E1).
+    segundo_apellido = models.CharField(max_length=80, blank=True)
     telefono = models.CharField(max_length=20, blank=True)
+    # Se guarda el código ISO de dos letras, no el nombre — ver
+    # `paises.py`. `blank` porque las cuentas administrativas se dan de
+    # alta por comando sin pedirlo; el formulario de CU-REG-001 sí lo
+    # exige.
+    pais = models.CharField(max_length=2, choices=PAISES, blank=True)
     estado = models.CharField(
         max_length=10, choices=Estado.choices, default=Estado.ACTIVA
     )
@@ -104,6 +130,48 @@ class Persona(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.correo
+
+    # ── Presentación del nombre ──────────────────────────────
+    #
+    # Viven en el modelo y no en un filtro de plantilla porque no
+    # dependen de la pantalla: el saludo del correo del OTP y el avatar
+    # de la barra superior quieren exactamente lo mismo. Al ser
+    # propiedades, cualquier plantilla de EVT/TAL/STD/VIS las tiene
+    # disponibles sin `{% load %}`.
+
+    @property
+    def nombre_completo(self) -> str:
+        """Nombre y apellidos en un solo texto, para mostrar.
+
+        Es **derivado**, no una columna: la fuente son los tres campos.
+        Existía como campo hasta el 2026-08-25 y se conserva con el
+        mismo nombre para no reescribir cada plantilla y cada correo que
+        ya lo pedía.
+        """
+        partes = [self.nombre, self.primer_apellido, self.segundo_apellido]
+        return " ".join(p for p in partes if p).strip()
+
+    @property
+    def nombre_para_orden(self) -> str:
+        """`Apellidos, Nombre` — el formato de un listado alfabético."""
+        apellidos = " ".join(
+            p for p in (self.primer_apellido, self.segundo_apellido) if p
+        ).strip()
+        if not apellidos:
+            return self.nombre
+        return f"{apellidos}, {self.nombre}".strip(", ")
+
+    @property
+    def iniciales(self) -> str:
+        """Hasta dos iniciales para el avatar de la barra superior."""
+        partes = [p for p in (self.nombre, self.primer_apellido) if p]
+        return "".join(p[0].upper() for p in partes[:2])
+
+    @property
+    def primer_nombre(self) -> str:
+        """Solo el primer nombre de pila, para saludar sin recitarlo todo."""
+        partes = (self.nombre or "").split()
+        return partes[0] if partes else ""
 
     @property
     def es_administrativa(self):

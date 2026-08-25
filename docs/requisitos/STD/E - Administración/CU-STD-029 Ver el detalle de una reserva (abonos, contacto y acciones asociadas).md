@@ -39,7 +39,7 @@ Selección de una reserva para ver su detalle (vista A4).
 
 1. El sistema muestra la ficha de la reserva solicitada.
 2. El sistema despliega la información de la entidad `Reserva` y `Editorial` (expositor), incluyendo datos de contacto.
-3. El sistema muestra los stands reservados (`ReservaStand`) con sus dimensiones y costos (snapshot original).
+3. El sistema muestra los stands reservados (`ReservaStand`) con sus dimensiones y costos, **calculados con los valores vigentes** de `Stand` y `ConfiguracionSistema`. El importe que manda es el `monto_total` guardado en la reserva: si el mapa o el `costo_m2` cambiaron después de reservar, el desglose puede no sumar exactamente ese total (ver `Modelo de datos - Stands` §3.7).
 4. El sistema presenta el desglose financiero: monto total, descuentos aplicados (`DescuentoAplicado`), anticipo requerido, monto abonado y monto pendiente, así como las fechas clave límite y de corte.
 5. El sistema lista el historial de pagos y movimientos (`Movimiento`), indicando cuáles están validados y cuáles pendientes de revisión.
 6. A partir de esta vista, el administrador puede realizar distintas acciones sobre la reserva, como validar pagos (CU-STD-018), agregar abonos manuales (CU-STD-019), aplicar descuentos especiales (CU-STD-020), modificar fechas (CU-STD-036) o resolver vencimientos (CU-STD-035).

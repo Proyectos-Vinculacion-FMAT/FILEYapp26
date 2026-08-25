@@ -8,8 +8,10 @@ el OTP en sí se emite cuando entra al login administrativo
 (decisión 2026-07-22 del CU-REG-005).
 
 Uso:
-    python manage.py alta_admin hipolito@filey.org --nombre "Hipólito C." --modulo "*"
-    python manage.py alta_admin elvira@filey.org --nombre "Elvira" --modulo TAL --nivel edicion
+    python manage.py alta_admin hipolito@filey.org \
+        --nombre "Hipólito" --primer-apellido "Canto" --modulo "*"
+    python manage.py alta_admin elvira@filey.org \
+        --nombre "Elvira" --primer-apellido "Uc" --modulo TAL --nivel edicion
     python manage.py alta_admin elvira@filey.org --solo-aviso   # reenviar el correo
 """
 
@@ -24,8 +26,18 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("correo", help="Correo con el que entrará al panel admin")
-        parser.add_argument("--nombre", default="", help="Nombre completo")
+        parser.add_argument("--nombre", default="", help="Nombre(s) de pila")
+        parser.add_argument(
+            "--primer-apellido", default="", help="Primer apellido"
+        )
+        parser.add_argument(
+            "--segundo-apellido", default="", help="Segundo apellido (opcional)"
+        )
         parser.add_argument("--telefono", default="", help="Teléfono (opcional)")
+        # A diferencia del alta de un participante (CU-REG-001), aquí el
+        # país no se pide: quien da de alta a un administrador rara vez
+        # lo sabe, y ninguna pantalla administrativa lo usa. Queda vacío
+        # hasta que la propia persona lo complete.
         parser.add_argument(
             "--modulo",
             default=Modulo.TODOS.value,
@@ -70,15 +82,25 @@ class Command(BaseCommand):
         if persona is None:
             persona = Persona.objects.create_user(
                 correo=correo,
-                nombre_completo=opciones["nombre"],
+                nombre=opciones["nombre"],
+                primer_apellido=opciones["primer_apellido"],
+                segundo_apellido=opciones["segundo_apellido"],
                 telefono=opciones["telefono"],
             )
             self.stdout.write(f"Persona creada: {correo}")
         else:
             self.stdout.write(f"Persona existente reutilizada: {correo}")
-            if opciones["nombre"] and not persona.nombre_completo:
-                persona.nombre_completo = opciones["nombre"]
-                persona.save(update_fields=["nombre_completo"])
+            # Solo se rellena lo que está vacío: el comando da permisos,
+            # no corrige el nombre que la persona escribió al registrarse.
+            a_completar = [
+                campo
+                for campo in ("nombre", "primer_apellido", "segundo_apellido")
+                if opciones[campo] and not getattr(persona, campo)
+            ]
+            if a_completar:
+                for campo in a_completar:
+                    setattr(persona, campo, opciones[campo])
+                persona.save(update_fields=a_completar)
 
         # Paso 6 / E1: crear el RolPermiso o actualizar el nivel.
         rol, creado = RolPermiso.objects.update_or_create(

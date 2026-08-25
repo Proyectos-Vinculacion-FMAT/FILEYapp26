@@ -10,12 +10,20 @@ from datetime import timedelta
 
 import pytest
 from django.core import mail
+from django.core.mail.backends.base import BaseEmailBackend
 from django.utils import timezone
 
 from apps.registros.models import SesionOTP
 from apps.registros.services import otp as otp_service
 
 pytestmark = pytest.mark.django_db
+
+
+class BackendQueFalla(BaseEmailBackend):
+    """Backend de correo que siempre falla, para ejercitar E3."""
+
+    def send_messages(self, email_messages):
+        raise OSError("proveedor de correo caído")
 
 
 def test_emitir_guarda_el_codigo_hasheado_y_manda_correo(participante, codigo_fijo):
@@ -80,7 +88,7 @@ def test_emitir_invalida_los_codigos_anteriores(participante, codigo_fijo, setti
     otp_service.emitir(participante)
     primero = participante.sesiones_otp.first()
 
-    otp_service.emitir(participante, es_reenvio=True)
+    otp_service.emitir(participante)
 
     primero.refresh_from_db()
     assert primero.usado is True
@@ -123,12 +131,50 @@ def test_lockout_tras_demasiados_fallos_en_la_ventana(participante, codigo_fijo,
     assert resultado.segundos_bloqueo > 0
 
 
-def test_envio_fallido_anula_el_codigo(participante, codigo_fijo, monkeypatch):
-    """E3: si el correo no sale, no puede quedar un OTP utilizable."""
-    def revienta(*args, **kwargs):
-        raise OSError("SMTP caído")
+def test_un_acceso_exitoso_reinicia_el_contador_de_fallos(
+    participante, codigo_fijo, settings
+):
+    """E7: "un inicio de sesión exitoso reinicia el contador".
 
-    monkeypatch.setattr(otp_service, "_enviar_correo", revienta)
+    Alguien que falla nueve veces, acierta y entra, no debe arrastrar
+    esos nueve fallos a su siguiente sesión: ya demostró ser el dueño de
+    la cuenta. Sin el reinicio bastaba un fallo más, en cualquier momento
+    de los 15 minutos siguientes, para bloquear a quien acababa de entrar
+    bien.
+    """
+    settings.OTP_REENVIO_COOLDOWN_SEG = 0
+    settings.OTP_EMISIONES_MAX_VENTANA = 99
+
+    # Justo por debajo del tope, para que un fallo más lo dispararía.
+    fallos = 0
+    while fallos < settings.OTP_FALLOS_MAX_VENTANA - 1:
+        otp_service.emitir(participante)
+        for _ in range(settings.OTP_INTENTOS_MAX):
+            if fallos >= settings.OTP_FALLOS_MAX_VENTANA - 1:
+                break
+            otp_service.verificar(participante, "000000")
+            fallos += 1
+
+    # Entra bien: el historial de fallos queda saldado.
+    otp_service.emitir(participante)
+    assert otp_service.verificar(participante, codigo_fijo).ok
+
+    # Y ahora falla de nuevo: cuenta desde cero, no desde nueve.
+    otp_service.emitir(participante)
+    resultado = otp_service.verificar(participante, "000000")
+
+    assert resultado.incorrecto
+    assert not resultado.bloqueado
+
+
+def test_envio_fallido_anula_el_codigo(participante, codigo_fijo, settings):
+    """E3: si el correo no sale, no puede quedar un OTP utilizable.
+
+    Se rompe el envío por donde se rompería de verdad —el backend de
+    correo— y no parcheando una función interna del servicio: así la
+    prueba sigue valiendo aunque cambie el proveedor.
+    """
+    settings.EMAIL_BACKEND = "apps.registros.pruebas.test_otp.BackendQueFalla"
 
     otp_service.emitir(participante)
 

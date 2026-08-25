@@ -1,166 +1,72 @@
-# CLAUDE.md — FILEY
+# FILEY 2027
 
-Contexto y reglas de arquitectura para trabajar en este repositorio. Léelo antes de escribir o
-recomendar código para cualquier módulo del sistema FILEY (Feria Internacional de la Lectura
-Yucatán).
+Sistema de registro y gestión de la Feria Internacional de la Lectura Yucatán (UADY).
+Todo lo siguiente vive en esta rama:
 
-## Qué es este repositorio
+| Dónde | Qué es |
+| --- | --- |
+| `filey/` | El monolito Django real (ADR-0001). Hoy solo tiene construido el Core Registros. |
+| `prototipo/` | Mockup HTML estático. Es la **especificación visual** y el entregable que ve el cliente; se publica a GitHub Pages en cada push a `main` que lo toque. |
+| `docs/` | Requisitos por dominio (`CU-DOM-NNN`), ADRs y evidencia de juntas. |
 
-Dos cosas conviven aquí:
+La arquitectura la mandan `docs/adr/`; los detalles de cómo se construye una pantalla viven en
+los skills, no aquí.
 
-- **`docs/`** — especificación funcional: dominios, casos de uso (`CU-DOM-NNN`) y decisiones de
-  arquitectura (`docs/adr/`). Es la fuente de verdad de **qué** construye el sistema y **por
-  qué** se construye de cierta forma.
-- **`filey/`** — la implementación real en código: el **monolito Django**. Hoy contiene un solo
-  dominio, el Core de Registros (`apps/registros/`): alta de cuenta, login por OTP, roles
-  administrativos. `EVT`, `STD`, `TAL`, `VIS` todavía no existen como código, solo como
-  especificación en `docs/requisitos/`.
+## Qué skill aplica
 
-Empieza por [`Filey.md`](<Filey.md>) (portada) si necesitas orientarte en la estructura completa.
+| Vas a… | Skill |
+| --- | --- |
+| Elegir color, tipografía, radio, tono, o cuántos pasos/campos lleva una pantalla | `filey-identidad` |
+| Escribir o editar CSS/markup, buscar si una clase ya existe | `filey-ui-componentes` |
+| Tocar plantillas, vistas, URLs, estáticos, o portar del prototipo a Django | `filey-render` |
 
-## Arquitectura: monolito Django
+Cada hecho vive en **un solo** skill; los demás enlazan. No dupliques contenido entre ellos.
 
-> [!important] Decisión vigente — [ADR-0001](<docs/adr/0001-arquitectura-monolito-vs-separado.md>)
-> **Todo el sistema se construye como un monolito Django**: un solo proyecto, un solo
-> lenguaje, backend y frontend servidos desde la misma aplicación Django (templates +
-> HTMX/Alpine.js para interactividad). **No se separa frontend y backend en proyectos
-> distintos** — nada de API REST + SPA aparte, salvo que un ADR posterior lo autorice
-> explícitamente para un caso puntual.
+## Reglas de arquitectura
 
-**Estado real:** la migración **ya está hecha** — [ADR-0002](<docs/adr/0002-migracion-de-registro-al-monolito.md>).
-El Core de Registros se reconstruyó como proyecto nuevo `filey/` y la carpeta `registro/`
-(DRF + JWT + Angular) ya no existe. En `filey/` no hay `rest_framework`, `simplejwt` ni
-`corsheaders`: la autenticación es sesión de Django con cookie `HttpOnly` y las pantallas son
-plantillas Django con HTMX/Alpine.
+Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/README.md`).
 
-**Todo módulo nuevo** (`EVT`, `STD`, `TAL`, `VIS`) se construye ya bajo el patrón monolito desde
-su primera línea de código: sin DRF, sin JWT, sin proyecto Angular propio. Autenticación por
-sesión de Django con cookie `HttpOnly`, reutilizando lo que ya expone `apps/registros/`.
+1. **Monolito Django** (ADR-0001). Un solo proyecto, un solo despliegue. Sin API REST ni SPA
+   separada; la interactividad es htmx + Alpine servidos desde `filey/estaticos/js/`.
+2. **La sesión es la de Django** (ADR-0002), cookie `HttpOnly` con estado en el servidor. No
+   hay JWT, ni tokens en el cliente, ni CORS. Ningún módulo implementa su propia autenticación:
+   importa los decoradores de `apps/registros/permisos.py`.
+3. **Capas por app:** `models.py` (datos e invariantes, modelos gordos) → `services/` (reglas de
+   negocio) → `views.py` (traduce HTTP ↔ servicio, vistas delgadas) → plantillas.
+   Si una regla no se puede llamar desde un comando de `manage.py` sin pasar por HTTP, está en
+   el lugar equivocado: va a `services/`.
+4. **Las dependencias van en una sola dirección.** Los dominios verticales (`eventos`,
+   `talleres`, `stands`, `visitas`) importan de `registros` —que es la base de identidad—,
+   nunca al revés, y nunca en círculo entre hermanos.
+5. **Toda pantalla funciona sin JavaScript**, y **nada se carga de un CDN**.
+6. Nombres en español, consistentes, tanto en código como en rutas de archivo.
 
-## Estructura de capas
+## Estado actual
 
-Cada app de dominio (`apps/registros/`, y las que se abran para `EVT`/`STD`/`TAL`/`VIS`) sigue
-las mismas capas, cada una con una única responsabilidad:
+- **Construido:** `REG` (Core Registros) — acceso por OTP de participante y de administrador,
+  alta de cuenta, convocatorias y selección de módulo. `apps/registros/` es la app de
+  referencia; `apps/notificaciones/` encapsula el envío de correo (Resend).
+- **Solo documentado:** `EVT`, `TAL`, `STD`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
+  Ningún panel de módulo está conectado todavía.
+- **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`.
 
-```text
-filey/
-├── config/          → settings, urls raíz, wsgi/asgi
-├── comun/           → código transversal, de ningún dominio (htmx.py, limites.py)
-├── plantillas/      → base.html + layouts compartidos por todos los módulos
-├── estaticos/       → css, js (HTMX y Alpine versionados aquí), imágenes
-└── apps/<dominio>/
-    ├── models.py       → datos + invariantes que la BD debe garantizar (fat models)
-    ├── services/        → casos de uso y reglas de negocio — aquí vive la lógica de cada CU
-    ├── views.py         → traduce HTTP ↔ servicio. Sin lógica de negocio (thin views)
-    ├── urls.py          → rutas de la app
-    └── templates/<dominio>/  → presentación (Django templates + fragmentos HTMX)
+## Comandos
+
+```bash
+cd filey && python manage.py check && python manage.py runserver
+cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, no en tests.py
+./scripts/gen-inventario.sh         # reindexa el inventario CSS tras tocar un styles.css
+./scripts/check-ui.sh               # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)
+./scripts/preview-vis.sh            # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)
 ```
 
-Ya está así en `apps/registros/` — sigue siendo el ejemplo de referencia:
-`services/otp.py` y `services/notificaciones.py` tienen las reglas (cool-down, lockout,
-generación/verificación de OTP); `views.py` solo valida el request, llama al servicio y
-traduce el resultado a una respuesta; `models.py` (`Persona`, `RolPermiso`, `SesionOTP`) trae
-la lógica de dominio que le pertenece a los datos (`es_administrativa`,
-`modulos_administrables`, `codigo_coincide`).
+> [!note] Todo el correo sale por `django.core.mail`
+> Resend está detrás de un backend de correo (`apps/notificaciones/backends.py`), así que quién
+> entrega lo decide `EMAIL_BACKEND`. En pruebas Django lo sustituye por `locmem`: ninguna prueba
+> puede salir a la red aunque haya `RESEND_API_KEY` en el entorno. Si escribes un envío nuevo,
+> hazlo con `EmailMultiAlternatives`, nunca llamando a Resend directamente.
 
-**Regla dura:** la lógica de negocio **nunca** vive en `views.py` ni en un template. Si una
-regla no se puede llamar desde un comando de `manage.py` sin pasar por HTTP, está en el lugar
-equivocado — debe estar en `services/`.
-
-## Regla de dependencias
-
-Las dependencias entre apps de dominio van **en una sola dirección**, nunca al revés:
-
-```text
-apps/registros/  ←  apps/eventos/, apps/stands/, apps/talleres/, apps/visitas/
-     (base: Persona, RolPermiso, sesión)      (dominios verticales)
-```
-
-- `apps/registros/` no importa de ningún módulo de dominio. Es la base (identidad, sesión,
-  permisos) de la que todos los demás dependen.
-- Los módulos de dominio (`eventos`, `stands`, `talleres`, `visitas`) pueden depender de
-  `registros`, nunca al revés.
-- **Entre hermanos** (p. ej. `talleres` necesitando algo de `eventos`, como ya ocurre porque un
-  taller se anexa al calendario maestro de `EVT` — ver `docs/requisitos/README.md`, sección
-  "Relación entre dominios"): la dependencia debe ser explícita y en una sola dirección
-  declarada, nunca circular. Si dos módulos necesitan depender mutuamente, esa lógica
-  compartida se saca a un módulo común, no se referencian entre sí.
-- **Sin imports circulares**, nunca. Es la regla que más fácil rompe un agente de IA al
-  resolver una tarea aislada sin ver el grafo completo — por eso queda escrita aquí.
-
-## Cómo se conecta un módulo nuevo (EVT, TAL, STD, VIS)
-
-Los puntos de enganche ya existen. Un módulo nuevo **no inventa** identidad, sesión, permisos
-ni maquetación: los toma de aquí.
-
-1. **Permisos — `apps/registros/permisos.py`.** Es el contrato. Ningún módulo implementa su
-   propia autenticación; importa los decoradores:
-
-   ```python
-   from apps.registros.models import NivelPermiso
-   from apps.registros.permisos import requiere_modulo, requiere_participante
-
-   @requiere_participante
-   def convocatoria(peticion): ...              # zona del participante
-
-   @requiere_modulo("EVT")                       # basta con poder leer
-   def panel(peticion): ...
-
-   @requiere_modulo("EVT", NivelPermiso.EDICION)
-   def dictaminar(peticion, propuesta_id): ...
-   ```
-
-2. **Maquetación — `plantillas/layouts/panel.html`.** Toda pantalla posterior al login extiende
-   este layout y hereda barra superior y pie. Se renderiza con `{"zona_admin": True}` para la
-   variante administrativa.
-
-3. **Rutas — `config/urls.py`.** Cada dominio se monta bajo su propio prefijo (`eventos/`,
-   `talleres/`…). `registros` va en la raíz por ser la puerta de entrada.
-
-4. **Registrar la app** en `INSTALLED_APPS` (`config/settings.py`) y añadir su código de módulo
-   a `Modulo` en `apps/registros/models.py` si aún no está.
-
-5. **`apps/registros/catalogo.py` es temporal.** Hoy declara a mano las convocatorias y los
-   módulos que se pintan tras el login. Cuando un dominio tenga backend propio, **su** estado de
-   convocatoria sale de ahí y se retira del catálogo — REG no es dueño de ese contenido.
-
-Y las dos reglas de frontend que aplican a todo el monolito, no solo a REG:
-
-- **Toda pantalla funciona sin JavaScript.** La vista responde página completa o fragmento según
-  la cabecera `HX-Request` (helpers en `comun/htmx.py`). HTMX mejora la experiencia; no es
-  requisito para poder usar el sistema.
-- **Nada se carga de un CDN.** HTMX y Alpine viven en `estaticos/js/`.
-
-## Dónde vive cada tipo de decisión
-
-- **Qué hace el sistema** (por dominio, casos de uso) → `docs/requisitos/`.
-- **Cómo se construye** (arquitectura, stack, decisiones técnicas transversales y su porqué) →
-  `docs/adr/`. Antes de proponer un cambio de arquitectura, revisa si ya hay un ADR sobre eso —
-  y si lo hay y sigue `Aceptado`, no se contradice sin escribir uno nuevo que lo reemplace (ver
-  regla de inmutabilidad en `docs/adr/README.md`).
-
-## Contexto y actualizaciones recientes
-
-> [!note] Mantener esta sección al día
-> Cuando se cierre un ADR nuevo o cambie algo de arquitectura, añade una línea aquí — es lo que
-> le da a cualquiera que abra este archivo el estado actual sin tener que leer todo `docs/adr/`.
-
-- **2026-07-20** — Backend del sistema: **Django**, no NestJS (recomendación inicial descartada).
-- **2026-08-05** — Junta con asesor externo: se descarta Supabase; se plantea arquitectura
-  monolítica.
-- **2026-08-06** — [ADR-0001](<docs/adr/0001-arquitectura-monolito-vs-separado.md>) `Aceptado`:
-  el sistema se construye como **monolito Django** (templates + HTMX/Alpine, sin Angular
-  separado).
-- **2026-08-07** — [ADR-0002](<docs/adr/0002-migracion-de-registro-al-monolito.md>) `Aceptado`
-  y ejecutado: el Core de Registros se **reconstruyó** como proyecto nuevo `filey/`; `registro/`
-  (DRF + JWT + Angular) desapareció. Se reimplantaron por cuenta propia las piezas que aportaba
-  DRF (el throttling por IP, ahora en `comun/limites.py`), la sesión dura 12 h desde la última
-  actividad, y WhiteNoise sirve los estáticos para que el despliegue sea un solo servicio.
-  **75 pruebas** pasando.
-
-> [!warning] Antes de desplegar
-> `filey/` corre con **SQLite** y **`LocMemCache`**. Con varios workers, la caché local parte en
-> pedazos el límite por IP (`comun/limites.py`) y el estado señuelo del acceso administrativo
-> (`services/senuelo.py`): cada proceso lleva su propia cuenta y el límite efectivo se
-> multiplica. Hay que configurar una caché compartida (Redis/Memcached) y una base de datos de
-> producción antes de exponer esto.
+> [!warning] La caché por defecto no vale para producción
+> El límite por IP de `comun/limites.py` cuenta en la caché. Con `LocMemCache` cada worker lleva
+> su cuenta y el límite se multiplica por el número de procesos. `manage.py check --deploy` lo
+> rechaza (`comun.E001`): en producción hay que configurar `REDIS_URL`.

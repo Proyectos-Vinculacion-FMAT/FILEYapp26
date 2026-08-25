@@ -15,6 +15,13 @@ Portada del repositorio de requisitos de **FILEY**. Empieza aquí.
 
 ### Índices de casos de uso por dominio
 
+**Globales** — fuera de toda feria:
+
+- [FER — Ferias (ediciones y acceso administrativo)](<docs/requisitos/FER/CU-FER Índice.md>)
+- [REG — Registros (identidad y acceso por OTP)](<docs/requisitos/REG/CU-REG Índice.md>)
+
+**Dentro de una feria:**
+
 - [STD — Stands / Expositores](<docs/requisitos/STD/CU-STD Índice.md>)
 - [PRG — Programa General](<docs/requisitos/PRG/CU-PRG Índice.md>)
 - [SAL — Salas y salones](<docs/requisitos/SAL/CU-SAL Índice.md>)
