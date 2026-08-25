@@ -1,6 +1,6 @@
 ---
-estado: aprobado
-version: 0.3
+estado: reemplazado
+version: 0.4
 tags:
   - caso-de-uso
   - autenticacion
@@ -8,16 +8,37 @@ tags:
   - admin
   - otp
 fecha: 2026-06-22
-fecha_actualizacion: 2026-08-05
+fecha_actualizacion: 2026-08-21
 id: CU-REG-005
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
+reemplazado_por: CU-FER-003
 reglas_de_negocio: []
 diagramas_relacionados: []
 trazabilidad:
   ddr: []
 ---
 # CU-REG-005 Crear cuenta de usuario administrativo y asignar permisos de módulo
+
+> [!danger] Reemplazado el 2026-08-21 por [CU-FER-003](<../FER/CU-FER-003 Dar de alta un administrador en mi feria.md>) — no implementar lo de abajo
+> Este caso de uso asigna permisos de **módulo y nivel** sobre el sistema entero, y permite
+> ejecutarlo a cualquier cuenta con `modulo = *`. Las dos cosas dejaron de ser válidas con
+> [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>): el acceso se otorga **por
+> feria**, sin módulo ni nivel, y solo lo concede **el dueño de esa feria**.
+>
+> **Qué sobrevive** (y por eso conviene leer este documento): la mecánica de provisión, que
+> CU-FER-003 hereda tal cual — reutilizar la cuenta si el correo ya existe (A1), no duplicar el
+> permiso (E1), enviar un aviso de alta que **no** lleva token ni caduca, y que el OTP no se
+> emita en el alta sino cuando la persona entra al login.
+>
+> **Qué se va:** el modelo de permisos (módulo `EVT`/`TAL`/`STD`/`VIS`/`*`, nivel
+> `lectura`/`edicion`), el supervisor de solo lectura de A2 —que **no tiene sustituto**, es una
+> capacidad que se pierde a sabiendas— y que un administrador pueda crear administradores.
+>
+> Se conserva sin borrar porque el código desplegado todavía implementa **esto**, no CU-FER-003:
+> el comando `alta_admin` y la tabla `RolPermiso` siguen existiendo en
+> `filey/apps/registros/`. Mientras esa migración no se ejecute, este documento describe lo que
+> el sistema hace y CU-FER-003 lo que debe hacer.
 
 > [!important] Cambio de decisión (2026-07-22) — provisión por OTP, sin contraseña ni enlace de activación
 > En la versión 0.1 este CU enviaba al nuevo administrador un **enlace de activación para

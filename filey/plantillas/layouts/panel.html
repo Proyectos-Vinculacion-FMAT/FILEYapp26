@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static personas %}
+{% load static %}
 
 {% comment %} ===========================================================
    Layout de todo lo que hay DESPUÉS del login: barra superior con
@@ -38,7 +38,7 @@
       {% endif %}
 
       <div class="user-chip">
-        <span class="avatar {% if zona_admin %}is-admin{% endif %}">{{ user.nombre_completo|iniciales }}</span>
+        <span class="avatar {% if zona_admin %}is-admin{% endif %}">{{ user.iniciales }}</span>
         {{ user.nombre_completo }}
       </div>
 
@@ -56,7 +56,7 @@
 <main class="page">
   {% block encabezado %}
     <div class="page-head">
-      <h1>{% block encabezado_titulo %}Hola, {{ user.nombre_completo|primer_nombre }} 👋{% endblock %}</h1>
+      <h1>{% block encabezado_titulo %}Hola, {{ user.primer_nombre }} 👋{% endblock %}</h1>
       <p>{% block encabezado_texto %}{% endblock %}</p>
     </div>
   {% endblock %}

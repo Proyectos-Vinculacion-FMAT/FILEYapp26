@@ -3,9 +3,18 @@ Acceso administrativo (CU-REG-003) y anti-enumeración de administradores.
 
 Saber **quién es administrador** es lo que un atacante quiere para
 dirigir phishing o fuerza bruta. Por eso lo que más se prueba aquí no es
-que un admin entre —eso es lo fácil— sino que las tres situaciones
-(admin real, participante sin permisos, correo inexistente) sean
-indistinguibles desde fuera.
+que un admin entre —eso es lo fácil— sino **dónde** se comprueba el
+permiso.
+
+La regla que sostienen estas pruebas: el acceso administrativo puede
+revelar si un correo **tiene cuenta** (es el mismo dato que ya revela el
+acceso público, y evita dejar a alguien esperando un correo que no va a
+llegar), pero **nunca** si esa cuenta administra. Para eso hay que
+superar el OTP, es decir, hay que poder leer ese buzón.
+
+Traducido a pruebas: un administrador y un participante —dos cuentas que
+existen— tienen que ser indistinguibles al pedir el código. Se separan
+después, y solo para quien acertó el código.
 """
 
 import pytest
@@ -67,95 +76,101 @@ def _respuesta_comparable(respuesta):
     )
 
 
-def test_pedir_codigo_responde_igual_para_los_tres_casos(
-    client, django_user_model, admin_general, participante, codigo_fijo
+def test_admin_y_participante_responden_igual_al_pedir_codigo(
+    client, admin_general, participante, codigo_fijo
 ):
-    """Admin real, participante sin permisos y correo inexistente.
+    """La prueba que sostiene todo el diseño de CU-REG-003 A3.
 
-    Si estas tres respuestas se distinguen en algo, el acceso admin se
-    convierte en un oráculo: una petición por correo y se tiene la lista
-    de administradores.
+    Dos cuentas que existen, una administradora y otra no. Si estas dos
+    respuestas se distinguen en algo, esta pantalla vuelve a ser un
+    oráculo: una petición por correo y se tiene la lista de
+    administradores.
     """
     observadas = {
-        correo: _respuesta_comparable(_entrar(client, correo))
-        for correo in (admin_general.correo, participante.correo, DESCONOCIDO)
+        correo: _respuesta_comparable(_entrar(client.__class__(), correo))
+        for correo in (admin_general.correo, participante.correo)
     }
 
     assert len(set(observadas.values())) == 1
 
 
-def test_solo_al_administrador_real_le_llega_el_correo(
+def test_a_las_dos_cuentas_les_llega_su_codigo(
     client, admin_general, participante, codigo_fijo
 ):
-    """La respuesta es la misma; lo que cambia es la bandeja de entrada."""
-    _entrar(client, participante.correo)
-    _entrar(client, DESCONOCIDO)
+    """El participante también recibe código: es lo que iguala el camino.
 
-    assert mail.outbox == []
+    Cuesta un correo de más y compra que la pantalla no distinga a un
+    administrador. La separación ocurre después, al validar el código.
+    """
+    _entrar(client.__class__(), participante.correo)
+    _entrar(client.__class__(), admin_general.correo)
 
-    _entrar(client, admin_general.correo)
-
-    assert len(mail.outbox) == 1
-    assert mail.outbox[0].to == [admin_general.correo]
-
-
-def test_verificar_responde_igual_para_los_tres_casos(
-    client, admin_general, participante, codigo_fijo
-):
-    def intento(correo):
-        cliente = client.__class__()
-        cliente.post(reverse("registros:admin_acceso"), {"correo": correo})
-        return _respuesta_comparable(
-            cliente.post(reverse("registros:admin_codigo"), {"codigo": "000000"})
-        )
-
-    observadas = {
-        correo: intento(correo)
-        for correo in (admin_general.correo, participante.correo, DESCONOCIDO)
-    }
-
-    assert len(set(observadas.values())) == 1
+    destinatarios = {m.to[0] for m in mail.outbox}
+    assert destinatarios == {participante.correo, admin_general.correo}
 
 
-def test_un_correo_desconocido_nunca_acierta(client, codigo_fijo):
-    """El señuelo cuenta intentos, pero ningún código puede entrar."""
-    _entrar(client, DESCONOCIDO)
+def test_un_correo_sin_cuenta_recibe_correo_incorrecto(client, codigo_fijo):
+    """A3: la cuenta no existe → se dice, y no se avanza.
 
-    respuesta = client.post(reverse("registros:admin_codigo"), {"codigo": codigo_fijo})
+    Es el dato que esta pantalla sí revela, a propósito: el mismo que ya
+    revela el acceso público al bifurcar entre entrar y registrarse.
+    """
+    respuesta = _entrar(client, DESCONOCIDO)
 
     assert respuesta.status_code == 200
-    assert "_auth_user_id" not in client.session
+    assert "Correo incorrecto" in respuesta.content.decode()
+    assert mail.outbox == []
+
+
+def test_un_correo_sin_cuenta_no_llega_a_la_pantalla_de_codigo(client):
+    """Sin cuenta no se guarda flujo, así que la pantalla del código rebota."""
+    _entrar(client, DESCONOCIDO)
+
+    respuesta = client.get(reverse("registros:admin_codigo"))
+
+    assert respuesta["Location"] == reverse("registros:admin_acceso")
 
 
 def test_un_participante_no_entra_por_la_puerta_administrativa(
     client, participante, codigo_fijo
 ):
-    """Tiene cuenta y su OTP real existe, pero no en este contexto.
+    """E3: código correcto, pero la cuenta no administra nada.
 
-    El código que se le emitió en el flujo público no debe servirle
-    aquí: al no ser administrador, lo atiende el señuelo.
+    Recibe su código y lo acierta —es su cuenta—, pero no obtiene sesión
+    administrativa: se le manda al portal que sí le corresponde, con una
+    explicación. Decírselo aquí no revela nada, porque ya demostró ser
+    dueño del buzón.
     """
-    from apps.registros.services import otp as otp_service
-
-    otp_service.emitir(participante)  # código real, del flujo público
     _entrar(client, participante.correo)
 
     respuesta = client.post(reverse("registros:admin_codigo"), {"codigo": codigo_fijo})
 
     assert "_auth_user_id" not in client.session
-    assert respuesta.status_code == 200
+    assert respuesta["Location"] == reverse("registros:acceso")
 
 
-@pytest.mark.con_pisos_reales
-def test_los_pisos_de_tiempo_estan_configurados(settings):
-    """El tiempo tampoco debe delatar quién es administrador.
+def test_el_rechazo_llega_igual_por_htmx(client, participante, codigo_fijo):
+    """La pantalla real manda el código por htmx, que no sigue un 302."""
+    _entrar(client, participante.correo)
 
-    El resto de las pruebas los desactiva para no tardar; esta comprueba
-    que en la configuración real siguen puestos y por encima de lo que
-    tarda el camino largo (hashear el código y encolar el correo).
-    """
-    assert settings.ADMIN_PISO_IDENTIFICAR_SEG >= 0.3
-    assert settings.ADMIN_PISO_OTP_SEG >= 1.5
+    respuesta = client.post(
+        reverse("registros:admin_codigo"),
+        {"codigo": codigo_fijo},
+        headers={"hx-request": "true"},
+    )
+
+    assert "_auth_user_id" not in client.session
+    assert respuesta["HX-Redirect"] == reverse("registros:acceso")
+
+
+def test_el_codigo_del_participante_queda_quemado_tras_el_rechazo(
+    client, participante, codigo_fijo
+):
+    """El código se gastó al validarlo, aunque no abriera sesión."""
+    _entrar(client, participante.correo)
+    client.post(reverse("registros:admin_codigo"), {"codigo": codigo_fijo})
+
+    assert participante.sesiones_otp.get().usado is True
 
 
 # ── Protección de las pantallas ───────────────────────────────

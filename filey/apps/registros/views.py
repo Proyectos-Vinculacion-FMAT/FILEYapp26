@@ -10,20 +10,20 @@ Mapa pantalla → caso de uso:
 - /admin/acceso          → CU-REG-003 (paso 1-3: correo administrativo)
 - /admin/acceso/codigo   → CU-REG-003 (verificar y abrir sesión admin)
 - /admin/modulos         → CU-REG-006 (módulos según RolPermiso)
+
+Nota: CU-REG-005/006 están en revisión — el acceso administrativo pasa a
+otorgarse por feria (ADR-0004). Este archivo todavía implementa RolPermiso.
 - /salir                 → CU-REG-004 (cerrar sesión)
 
 Estas vistas son **delgadas**: validan el formulario, llaman al servicio
 y traducen el resultado a una página o a un fragmento. Toda regla de
-negocio —cool-down, topes, lockout, señuelo— vive en `services/`, donde
-se puede probar y llamar sin pasar por HTTP.
+negocio —cool-down, topes, lockout— vive en `services/`, donde se puede
+probar y llamar sin pasar por HTTP.
 
 Cada pantalla funciona **sin JavaScript**: HTMX evita la recarga, pero
 si no carga, el mismo POST devuelve la página completa.
 """
 
-import time
-
-from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -37,7 +37,6 @@ from .forms import CodigoForm, IdentificarForm, RegistroForm
 from .models import Modulo, Persona
 from .permisos import requiere_admin, requiere_participante
 from .services import otp as otp_service
-from .services import senuelo as senuelo_service
 from .services import sesion as sesion_service
 from .services.sesion import CONTEXTO_ADMIN, CONTEXTO_PUBLICO, FlujoAcceso
 
@@ -58,35 +57,13 @@ def _es_admin(persona) -> bool:
     return persona is not None and persona.es_administrativa
 
 
-def _piso_temporal(t0: float, segundos: float) -> None:
-    """Retiene la respuesta hasta cumplir una duración mínima.
+def _emitir(persona):
+    """Emite un OTP y traduce sus errores a algo que la pantalla entiende.
 
-    Sin esto, el camino real (hashear el código y hablar con el SMTP)
-    tarda mucho más que el señuelo, y esa diferencia de tiempo vuelve a
-    delatar quién es administrador aunque lo que se devuelva sea
-    idéntico. El piso iguala el caso común; lo que exceda el piso (un
-    SMTP inusualmente lento) queda como fuga residual, acotada por el
-    límite de peticiones que restringe cuántas muestras puede tomar un
-    atacante.
-    """
-    restante = segundos - (time.monotonic() - t0)
-    if restante > 0:
-        time.sleep(restante)
-
-
-def _emitir(*, persona=None, correo=None, es_reenvio=False):
-    """Emite un OTP (real si hay ``persona``, señuelo si solo hay correo).
-
-    Devuelve ``(meta, mensaje_error, segundos_espera)``. Los dos caminos
-    pasan por el mismo traductor de errores a propósito: es lo que hace
-    que el cool-down y el tope se vean idénticos desde fuera, exista o
-    no la cuenta.
+    Devuelve ``(meta, mensaje_error, segundos_espera)``.
     """
     try:
-        if persona is not None:
-            meta = otp_service.emitir(persona, es_reenvio=es_reenvio)
-        else:
-            meta = senuelo_service.emitir(correo)
+        meta = otp_service.emitir(persona)
     except otp_service.CooldownActivo as exc:
         return None, "Espera antes de solicitar un nuevo código.", exc.segundos_restantes
     except otp_service.CuentaBloqueada as exc:
@@ -100,10 +77,10 @@ def _emitir(*, persona=None, correo=None, es_reenvio=False):
         )
     except otp_service.EnvioCorreoFallido:
         # E3: el correo no pudo enviarse; no queda OTP utilizable.
-        # Desde que el envío pasó a segundo plano (para que su latencia
-        # no delate a los administradores), este camino ya no se alcanza
-        # en la práctica: el fallo se maneja dentro del hilo, que anula
-        # el código. Se conserva por si vuelve a haber envío síncrono.
+        # Desde que el envío pasó a segundo plano, este camino ya no se
+        # alcanza en la práctica: el fallo se maneja dentro del hilo, que
+        # anula el código. Se conserva por si vuelve a haber envío
+        # síncrono.
         return (
             None,
             "No pudimos enviar el correo. Intenta de nuevo en unos minutos.",
@@ -115,8 +92,8 @@ def _emitir(*, persona=None, correo=None, es_reenvio=False):
 def _mensaje_de_verificacion(resultado) -> tuple[str, bool]:
     """Traduce un resultado fallido a ``(texto, requiere_codigo_nuevo)``.
 
-    Compartido por el camino real y el señuelo: es lo que garantiza que
-    ambos digan exactamente lo mismo ante el mismo error.
+    Compartido por el acceso público y el administrativo: los dos dicen
+    exactamente lo mismo ante el mismo error.
     """
     if resultado.bloqueado:
         # Lockout por fallos acumulados en la ventana (fuerza bruta
@@ -192,9 +169,10 @@ def acceso(peticion):
     """Paso 1-2: se pide el correo y se bifurca según exista o no.
 
     La bifurcación nueva/existente es la UX aprobada del prototipo REG
-    (CU-REG-001) y se mantiene a propósito; el riesgo de enumeración de
-    correos aquí es asumido. En el acceso administrativo —donde saber
-    quién es admin sí es valioso para un atacante— no se hace.
+    (CU-REG-001) y se mantiene a propósito: el riesgo de enumeración de
+    correos aquí es asumido. Es el mismo dato —y solo ese— que revela el
+    acceso administrativo; lo que ninguno de los dos revela es quién
+    administra (ver `admin_acceso`).
     """
     if peticion.method == "GET":
         return render(
@@ -218,7 +196,7 @@ def acceso(peticion):
         )
         return redirigir(peticion, "registros:registro")
 
-    meta, error, espera = _emitir(persona=persona)
+    meta, error, espera = _emitir(persona)
     if error:
         messages.error(peticion, error)
         respuesta = _pantalla_acceso(peticion, CONTEXTO_PUBLICO, formulario)
@@ -282,12 +260,15 @@ def registro(peticion):
 
     persona = Persona.objects.create_user(
         correo=flujo.correo,
-        nombre_completo=datos["nombre_completo"],
+        nombre=datos["nombre"],
+        primer_apellido=datos["primer_apellido"],
+        segundo_apellido=datos["segundo_apellido"],
         telefono=datos["telefono"],
+        pais=datos["pais"],
     )
 
     # Paso 8: continúa automáticamente en CU-REG-002.
-    meta, error, espera = _emitir(persona=persona)
+    meta, error, espera = _emitir(persona)
     if error:
         messages.error(peticion, error)
         respuesta = _render_registro(peticion, formulario, contexto_plantilla)
@@ -313,7 +294,7 @@ def _continuar_con_cuenta_existente(peticion, flujo):
         messages.error(peticion, MENSAJE_GENERICO)
         return redirigir(peticion, "registros:acceso")
 
-    meta, error, espera = _emitir(persona=persona)
+    meta, error, espera = _emitir(persona)
     if error:
         messages.error(peticion, error)
         respuesta = redirigir(peticion, "registros:acceso")
@@ -343,13 +324,31 @@ def _guardar_flujo_con_otp(peticion, correo, contexto, origen, meta):
 @require_http_methods(["GET", "POST"])
 @limitar("auth-identificar")
 def admin_acceso(peticion):
-    """Paso 1-3 del acceso admin, con respuesta uniforme.
+    """Paso 1-3 del acceso admin (CU-REG-003 A3).
 
-    Exista o no el correo, y tenga o no RolPermiso, esta pantalla hace
-    y responde lo mismo: siempre se avanza a pedir el código. Bifurcar
-    aquí convertía la pantalla en un oráculo para enumerar la lista de
-    administradores —el blanco valioso— a razón de un intento por
-    correo. Quien no sea admin simplemente nunca recibirá el código.
+    Esta pantalla responde "Correo incorrecto." cuando la cuenta no
+    existe, y en cualquier otro caso emite el código y avanza — sin
+    mirar todavía si la cuenta administra algo. Eso se comprueba en
+    `_pantalla_codigo`, **después** de acertar el OTP.
+
+    Dónde se hace esa comprobación es justo lo que decide si esta
+    pantalla es o no un oráculo para enumerar administradores:
+
+    - Comprobándolo aquí (como se hizo hasta el 2026-08-19), la
+      respuesta distinguía a un administrador de quien no lo era, y
+      bastaba un intento por correo para levantar la lista de cuentas
+      con más poder del sistema.
+    - Comprobándolo después del código, esta pantalla solo revela si un
+      correo TIENE CUENTA — lo mismo que ya revela por diseño el acceso
+      público al bifurcar entre entrar y registrarse (CU-REG-001). Para
+      saber si esa cuenta administra hay que superar el OTP, es decir,
+      hay que poder leer ese buzón.
+
+    Entre agosto de 2026 y esta versión, el hueco se tapaba con un
+    señuelo que simulaba un OTP inexistente. Funcionaba, pero dejaba a
+    quien se equivocaba de pantalla esperando un correo que nunca
+    llegaba. Esta versión conserva la garantía y devuelve un error que
+    la persona entiende.
     """
     if peticion.method == "GET":
         return render(
@@ -358,7 +357,6 @@ def admin_acceso(peticion):
             {"form": IdentificarForm(), "contexto": CONTEXTO_ADMIN, "es_admin": True},
         )
 
-    t0 = time.monotonic()
     formulario = IdentificarForm(peticion.POST)
     if not formulario.is_valid():
         return _pantalla_acceso(peticion, CONTEXTO_ADMIN, formulario)
@@ -366,14 +364,13 @@ def admin_acceso(peticion):
     correo = formulario.cleaned_data["correo"]
     persona = _persona_por_correo(correo)
 
-    if not _es_admin(persona):
-        _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
+    # A3: solo se comprueba que la cuenta EXISTA. Si además administra
+    # algo se decide después del código, no aquí.
+    if persona is None:
         messages.error(peticion, "Correo incorrecto.")
         return _pantalla_acceso(peticion, CONTEXTO_ADMIN, formulario)
 
-    meta, error, espera = _emitir(persona=persona)
-
-    _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
+    meta, error, espera = _emitir(persona)
 
     if error:
         messages.error(peticion, error)
@@ -431,25 +428,11 @@ def _pantalla_codigo(peticion, contexto: str):
             },
         )
 
-    t0 = time.monotonic()
-
     formulario = CodigoForm(_codigo_enviado(peticion))
     if not formulario.is_valid():
-        if es_admin_contexto:
-            _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
         return _estado_otp(peticion, "El código son 6 dígitos.")
 
     persona = _persona_por_correo(flujo.correo)
-
-    # Señuelo: cuenta el intento y responde como cualquier código
-    # incorrecto. Sin esto, bastaba un intento más para volver a
-    # distinguir quién es administrador.
-    if es_admin_contexto and not _es_admin(persona):
-        resultado = senuelo_service.verificar(
-            flujo.correo, formulario.cleaned_data["codigo"]
-        )
-        _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
-        return _fallo_de_codigo(peticion, resultado)
 
     if persona is None:
         # La cuenta desapareció a medio flujo (baja o borrado).
@@ -460,9 +443,24 @@ def _pantalla_codigo(peticion, contexto: str):
     resultado = otp_service.verificar(persona, formulario.cleaned_data["codigo"])
 
     if not resultado.ok:
-        if es_admin_contexto:
-            _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
         return _fallo_de_codigo(peticion, resultado)
+
+    # E3 de CU-REG-003: el código es correcto, pero la cuenta no
+    # administra nada. Se comprueba aquí y no en la pantalla del correo
+    # —ver `admin_acceso`— porque es lo que impide enumerar
+    # administradores. Aquí el mensaje sí puede ser explícito: quien
+    # llega hasta este punto ya demostró ser dueño del buzón, así que
+    # decirle qué permisos tiene su propia cuenta no revela nada.
+    #
+    # El código ya quedó quemado en `verificar`, y así se queda.
+    if es_admin_contexto and not _es_admin(persona):
+        sesion_service.limpiar_flujo(peticion)
+        messages.error(
+            peticion,
+            "Tu cuenta no tiene permisos administrativos. "
+            "Puedes entrar al portal de participante con este mismo correo.",
+        )
+        return redirigir(peticion, "registros:acceso")
 
     # Éxito — paso 10-12: sesión, último acceso y destino.
     sesion_service.iniciar(peticion, persona)
@@ -500,21 +498,16 @@ def _reenviar(peticion, contexto: str):
     if flujo is None:
         return redirigir(peticion, _acceso_de(contexto))
 
-    t0 = time.monotonic()
-    es_admin_contexto = contexto == CONTEXTO_ADMIN
     persona = _persona_por_correo(flujo.correo)
 
-    if es_admin_contexto and not _es_admin(persona):
-        meta, error, espera = _emitir(correo=flujo.correo)
-    elif persona is None:
+    if persona is None:
         sesion_service.limpiar_flujo(peticion)
         messages.error(peticion, MENSAJE_GENERICO)
         return redirigir(peticion, _acceso_de(contexto))
-    else:
-        meta, error, espera = _emitir(persona=persona, es_reenvio=True)
 
-    if es_admin_contexto:
-        _piso_temporal(t0, settings.ADMIN_PISO_OTP_SEG)
+    # No se mira aquí si la cuenta administra algo: reenviar es reenviar,
+    # y el permiso se comprueba al validar el código (CU-REG-003 E3).
+    meta, error, espera = _emitir(persona)
 
     if error:
         respuesta = _estado_otp(peticion, error)

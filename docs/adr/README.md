@@ -97,6 +97,9 @@ convención de equipo normal, no aquí.
 | # | Título | Estado | Fecha |
 | - | ------ | ------ | ----- |
 | [0001](<0001-arquitectura-monolito-vs-separado.md>) | Arquitectura: monolito Django vs. Django API + Angular separado | Aceptado | 2026-08-06 |
+| [0002](<0002-migracion-de-registro-al-monolito.md>) | Migrar el Core Registros al monolito y sustituir el JWT por sesión de Django | Aceptado | 2026-08-11 |
+| [0003](<0003-una-feria-por-schema.md>) | Aislar cada feria en su propio schema de PostgreSQL | Aceptado | 2026-08-21 |
+| [0004](<0004-acceso-administrativo-por-feria.md>) | El acceso administrativo se otorga por feria, con un dueño por feria | Aceptado | 2026-08-21 |
 
 
 ## Estructura de la carpeta
@@ -107,6 +110,8 @@ adr/
 ├── 0000-template.md        ← plantilla vacía; copiar para cada ADR nuevo
 ├── 0001-arquitectura-monolito-vs-separado.md
 ├── 0002-migracion-de-registro-al-monolito.md
+├── 0003-una-feria-por-schema.md
+├── 0004-acceso-administrativo-por-feria.md
 └── 000N-....md
 ```
 

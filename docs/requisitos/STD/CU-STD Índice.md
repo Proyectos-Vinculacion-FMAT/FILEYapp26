@@ -13,7 +13,25 @@ Inventario preliminar de casos de uso del dominio **Stands** (`STD`): proceso de
 (actores, flujo principal y alternos) se hará tras la revisión con el equipo.
 
 **Actores:** Aplicante (editorial/entidad expositora) · Administrador (coordinador del
-showfloor) · Sistema (procesos automáticos y temporizados).
+showfloor, con acceso a esta feria) · Sistema (procesos automáticos y temporizados).
+
+> [!important] Actualización 2026-08-21 — `STD` ocurre **dentro de una feria**
+> El modelo de datos se corrigió a la v2.0 para extraer lo que no le pertenecía:
+>
+> - **`Cuenta` ya no existe en `STD`.** La identidad es `Persona`, global y única para todo el
+>   sistema ([`REG`](<../REG/Modelo de datos - Registros.md>)). Donde estos casos de uso dicen
+>   "la cuenta" o "la editorial/cuenta" en prosa, la entidad concreta es `Persona` para la
+>   persona y `Editorial` para la empresa: son dos cosas distintas desde la v2.0.
+> - **`Evento` ya no existe en `STD`.** La edición de la feria es `Feria`
+>   ([`FER`](<../FER/Modelo de datos - Ferias.md>)) y **no se referencia con una FK**: cada feria
+>   vive en su propio schema, así que la edición es implícita
+>   ([ADR-0003](<../../adr/0003-una-feria-por-schema.md>)).
+> - **Ser administrador ya no es un rol de la cuenta**, sino tener acceso a esta feria
+>   (`AdminFeria`, [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>)). Quien
+>   administra una feria puede operar todo su contenido, stands incluidos.
+>
+> Lo que estos casos de uso describen no cambia; cambia dónde viven los datos que tocan. Ver
+> [`Modelo de datos - Stands`](<Modelo de datos - Stands.md>) §2.
 
 > [!note]
 > Cada caso de uso tiene su propio archivo dentro de la carpeta de

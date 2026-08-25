@@ -34,7 +34,7 @@ Creación exitosa de la reserva, o una prórroga otorgada por el administrador (
 
 ## Flujo principal
 
-1. Al crearse la reserva (CU-STD-012), el sistema lee el parámetro de plazo (30 días por defecto) desde `ParametrosSistema`.
+1. Al crearse la reserva (CU-STD-012), el sistema lee el parámetro de plazo (30 días por defecto) desde `ConfiguracionSistema`.
 2. El sistema calcula la `fecha_vencimiento_anticipo` sumando los días a la fecha actual y la guarda en la entidad `Reserva` (RN-03).
 3. Diariamente (o mediante una tarea programada), el sistema monitorea todas las reservas en estado `Por confirmar`.
 4. Cuando el sistema detecta que la fecha actual ha superado la `fecha_vencimiento_anticipo` de una reserva, verifica el `monto_abonado`.
