@@ -107,13 +107,12 @@ actividad sin modificar las tablas existentes.
 erDiagram
     Persona {
         bigint id PK
-        string nombres
-        string apellidos
+        string nombre
+        string primer_apellido
+        string segundo_apellido
         string correo
         string celular
         string pais
-        string estado_pais
-        string ciudad
     }
 
     RouterSolicitudes {
@@ -247,16 +246,23 @@ Entidad del core de Registros (`REG`); se referencia aquí, no se define. Su det
 —incluido el acceso por código de un solo uso— está en
 [`REG/Modelo de datos - Registros.md`](<../REG/Modelo%20de%20datos%20-%20Registros.md>).
 
-Guarda la identidad y la **procedencia geográfica** (`pais`, `estado_pais`, `ciudad`), que son
-datos de perfil: se capturan una vez y se reutilizan en cualquier convocatoria. La institución
-y el cargo, en cambio, se capturan por solicitud (§2.3), porque una misma persona puede aplicar
-representando a instituciones distintas.
+Guarda la identidad y el **país de procedencia**, que son datos de perfil: se capturan una vez
+y se reutilizan en cualquier convocatoria de cualquier feria. La institución y el cargo, en
+cambio, se capturan por solicitud (§2.3), porque una misma persona puede aplicar representando
+a instituciones distintas.
 
 Al no existir copia de la procedencia dentro de la solicitud, el modelo refleja siempre el
 valor vigente del perfil, no el que tenía la persona al enviar.
 
-> El formulario del prototipo captura "Ciudad / Estado" en un solo campo de texto; al portarlo
-> habrá que dividirlo en los tres campos que define esta entidad.
+> [!warning] Cambio 2026-08-25 — `EVT` deja de definir atributos de `Persona`
+> Este documento describía una procedencia de **tres** campos (`pais`, `estado_pais`, `ciudad`)
+> sobre una entidad que no le pertenece, y que en `REG` no tenía ninguno de los tres. `pais`
+> sube ahora a [`REG`](<../REG/Modelo de datos - Registros.md>) §2.1, que es su único dueño; el
+> nombre pasa además a tres campos (`nombre`, `primer_apellido`, `segundo_apellido`).
+>
+> **`estado_pais` y `ciudad` quedan sin dueño y sin decidir**: no están en `REG` y ya no se
+> definen aquí. Hasta que se resuelva, el formulario del prototipo pide un "Ciudad / Estado"
+> que ninguna tabla guarda. Ver `REG` §5.
 
 ### 2.2 RouterSolicitudes
 

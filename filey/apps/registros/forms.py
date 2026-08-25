@@ -12,6 +12,8 @@ import re
 
 from django import forms
 
+from .paises import PAIS_POR_DEFECTO, PAISES
+
 
 class IdentificarForm(forms.Form):
     """Paso 1-2 de CU-REG-001/002/003: el correo con el que se entra."""
@@ -36,23 +38,58 @@ class RegistroForm(forms.Form):
     de identificación mandando otro correo en el POST.
     """
 
-    nombre_completo = forms.CharField(
-        label="Nombre completo",
-        max_length=180,
-        min_length=3,
+    nombre = forms.CharField(
+        label="Nombre(s)",
+        max_length=80,
+        min_length=2,
         error_messages={
-            "required": "Escribe tu nombre completo.",
-            "min_length": "El nombre debe tener al menos 3 caracteres.",
+            "required": "Escribe tu nombre.",
+            "min_length": "El nombre debe tener al menos 2 caracteres.",
         },
+    )
+    primer_apellido = forms.CharField(
+        label="Primer apellido",
+        max_length=80,
+        min_length=2,
+        error_messages={
+            "required": "Escribe tu primer apellido.",
+            "min_length": "El apellido debe tener al menos 2 caracteres.",
+        },
+    )
+    # `required=False` no es un descuido: hay personas que no tienen
+    # segundo apellido y la mayoría de los participantes extranjeros usan
+    # uno solo (CU-REG-001, E1). Exigirlo dejaría fuera a quien el
+    # sistema quiere dentro.
+    segundo_apellido = forms.CharField(
+        label="Segundo apellido",
+        max_length=80,
+        required=False,
     )
     telefono = forms.CharField(
         label="Número telefónico",
         max_length=20,
         error_messages={"required": "Escribe tu número telefónico."},
     )
+    pais = forms.ChoiceField(
+        label="País",
+        choices=PAISES,
+        initial=PAIS_POR_DEFECTO,
+        error_messages={
+            "required": "Elige tu país.",
+            # Un valor fuera del catálogo no llega de un formulario
+            # normal: llega de un POST fabricado a mano.
+            "invalid_choice": "Ese país no está en la lista.",
+        },
+    )
 
-    def clean_nombre_completo(self):
-        return self.cleaned_data["nombre_completo"].strip()
+    def clean_nombre(self):
+        return self.cleaned_data["nombre"].strip()
+
+    def clean_primer_apellido(self):
+        return self.cleaned_data["primer_apellido"].strip()
+
+    def clean_segundo_apellido(self):
+        return self.cleaned_data["segundo_apellido"].strip()
 
     def clean_telefono(self):
         """E1: teléfono de al menos 10 dígitos (criterio del prototipo).

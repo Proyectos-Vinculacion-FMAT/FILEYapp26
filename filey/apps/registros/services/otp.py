@@ -203,7 +203,7 @@ def emitir(persona: Persona) -> dict:
         persona.sesiones_otp.filter(usado=False).update(usado=True)
         sesion.save()
 
-    _despachar_correo(persona.correo, persona.nombre_completo, codigo, sesion.pk)
+    _despachar_correo(persona.correo, persona.primer_nombre, codigo, sesion.pk)
 
     return {
         "vigencia_segundos": settings.OTP_VIGENCIA_MINUTOS * 60,

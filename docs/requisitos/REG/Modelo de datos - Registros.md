@@ -1,10 +1,11 @@
 ---
 estado: propuesta
-version: 0.1
+version: "0.2"
 tags:
   - tipo/modelo-de-datos
   - dom/reg
 fecha: 2026-08-19
+fecha_actualizacion: 2026-08-25
 ---
 # Modelo de datos — Registros (REG)
 
@@ -35,10 +36,14 @@ fecha: 2026-08-19
 > `filey/apps/registros/models.py` (en `main`), implementando `CU-REG-001`/`002`/`003`/`005`.
 > Este documento describe el modelo **objetivo**; donde diverge de lo desplegado, se marca
 > explícitamente. Migrar el código real a este modelo es trabajo aparte, no un efecto de editar
-> este documento. Hay **dos divergencias abiertas**, ambas en §5:
+> este documento. Queda **una divergencia abierta**, en §5:
 >
-> 1. `nombre_completo` desplegado vs. `nombres`/`apellidos` decididos el 2026-08-19.
+> 1. ~~`nombre_completo` desplegado vs. el nombre en tres campos.~~ **Cerrada el 2026-08-25:**
+>    el código ya lleva `nombre` / `primer_apellido` / `segundo_apellido` + `pais`
+>    (migración `0003_persona_nombre_en_tres_campos_y_pais`).
 > 2. `RolPermiso` desplegado vs. derogado el 2026-08-21 en favor de `AdminFeria` (`FER`).
+>    **Sigue abierta**, y no por descuido: retirarlo deja el panel sin ningún control de acceso
+>    mientras `AdminFeria` no exista como código, y `FER` no tiene aplicación Django todavía.
 
 ---
 
@@ -66,13 +71,23 @@ todo el sistema, con independencia de cuántas ferias existan
 | Atributo         | Descripción                                                                                                                                                    |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | id                | Identificador único.                                                                                                                                          |
-| nombres           | Nombre(s) de pila. **Decisión 2026-08-19:** separado de `apellidos` de forma definitiva. Lo desplegado hoy tiene un solo campo `nombre_completo` — pendiente de migración (ver sección 5). |
-| apellidos         | Apellido(s). Ver nota de `nombres`.                                                                                                                           |
+| nombre            | Nombre(s) de pila. **Decisión 2026-08-25:** el nombre se guarda en tres campos, no en uno ni en dos. **Ya implementado.** |
+| primer_apellido   | Apellido paterno. Obligatorio. |
+| segundo_apellido  | Apellido materno. **Opcional**: hay personas que no lo tienen, y buena parte de los participantes extranjeros usan un solo apellido. Ninguna validación puede exigirlo. |
 | correo            | Único en todo el sistema (`unique=True`). Es el `USERNAME_FIELD` de autenticación.                                                                            |
 | telefono          | Teléfono de contacto.                                                                                                                                         |
+| pais              | País de procedencia. Es un dato de **perfil**: se captura una vez y se reutiliza en cualquier convocatoria de cualquier feria. Se trasladó desde el modelo de `EVT`, que lo documentaba sobre esta misma entidad sin que existiera aquí (ver §5). Se guarda el **código ISO 3166-1 de dos letras**, no el nombre: el nombre de un país cambia y se escribe de varias formas, el código no. El catálogo vive en `filey/apps/registros/paises.py`. |
 | estado            | `activa` / `inactiva`.                                                                                                                                        |
 | fecha_registro    | Alta de la cuenta.                                                                                                                                             |
 | ultimo_acceso     | Última vez que inició sesión (nulo si nunca).                                                                                                                 |
+
+> [!note] Por qué tres campos y no uno
+> Un solo `nombre_completo` no permite ordenar por apellido, saludar por el nombre de pila en un
+> correo, ni imprimir constancias con el formato que pida cada documento. Separar en dos
+> (`nombres`/`apellidos`, la decisión del 2026-08-19) tampoco basta: los dos apellidos son datos
+> distintos y con frecuencia hay que tratarlos por separado. La contrapartida es que el
+> formulario de alta pasa de un campo a tres, y que **`segundo_apellido` no puede ser
+> obligatorio** — ver `CU-REG-001`.
 
 > *Nota:* no hay contraseña para el flujo de usuario externo — el acceso es 100% por OTP
 > (`SesionOTP`, 2.3). Lo desplegado usa la infraestructura de `AbstractBaseUser` de Django
@@ -144,6 +159,7 @@ todo el sistema, con independencia de cuántas ferias existan
 ## 3. Relaciones principales
 
 - **Persona** 1—N **SesionOTP** (historial de códigos emitidos; en la práctica, 0 o 1 vigente a la vez).
+- **Persona** 1—N **RegistroConvocatoria** (`FER`) — a qué convocatorias se inscribió, en cada feria. Es el punto del que cuelga su expediente en cada módulo.
 - **Persona** 1—N **AdminFeria** (`FER`) — una persona puede administrar varias ferias, y ser dueña de unas y administradora de otras.
 - **Persona** 1—N *(entidad de solicitud de cada dominio)* — ver `EVT/Modelo de datos - Eventos.md` (`Propuesta.participante_id`) y equivalentes en `TAL`/`STD`/`VIS`. Esas entidades viven en el schema de una feria; `Persona` no.
 
@@ -161,10 +177,28 @@ todo el sistema, con independencia de cuántas ferias existan
 
 ## 5. Temas abiertos del modelo
 
-- **Migración pendiente de código:** lo desplegado en `feature/registro-otp` tiene
-  `Persona.nombre_completo` (un solo campo). Este documento fija `nombres`/`apellidos`
-  separados como decisión definitiva (2026-08-19) — falta la migración de schema (y de datos,
-  si ya hay registros de desarrollo cargados) para alinear el código real con este modelo.
+- ~~**Migración pendiente de código**~~ — **hecha el 2026-08-25.** El código ya lleva
+  `nombre` / `primer_apellido` / `segundo_apellido` + `pais`
+  (`registros/migrations/0003_persona_nombre_en_tres_campos_y_pais.py`).
+
+  > [!warning] Lo migrado de un `nombre_completo` anterior hay que revisarlo a mano
+  > Partir un nombre escrito en un solo campo **no es automatizable con fiabilidad**: "Ana María
+  > Pech" (nombre compuesto, un apellido) y "Ana Pech Uc" (nombre simple, dos apellidos) tienen
+  > la misma forma. La migración usa una heurística —las dos últimas palabras son los
+  > apellidos— e **imprime en el log lo que decidió para cada fila**, porque después borra el
+  > campo de origen y ya no hay contra qué comparar. Los casos donde falla están documentados en
+  > `apps/registros/pruebas/test_persona.py`, no como aprobación sino como advertencia.
+
+  `nombre_completo` **sigue existiendo**, pero como **propiedad derivada** de los tres campos,
+  no como columna: las plantillas y los correos que ya lo pedían no tuvieron que reescribirse.
+  Por lo mismo no se puede buscar ni ordenar por él en SQL — el admin de Django busca sobre los
+  tres campos reales.
+- **`estado_pais` y `ciudad` quedan sin dueño.** `EVT` documentaba sobre `Persona` una
+  procedencia de tres campos (`pais`, `estado_pais`, `ciudad`). El cambio del 2026-08-25 sube
+  **solo `pais`** a este modelo. Falta decidir si los otros dos suben también —y entonces `EVT`
+  deja de mencionarlos— o si se capturan por solicitud, que es lo que `EVT` ya hace con
+  `institucion` y `cargo`. Mientras no se decida, el formulario de `EVT` pide un dato que
+  ninguna tabla guarda.
 - ~~**Reconciliar `admin`(usuario, feria) con `RolPermiso`(modulo, nivel)**~~ — **resuelto el
   2026-08-21**: `RolPermiso` se deroga y lo sustituye `AdminFeria`. Ver §2.2 y
   [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>). Queda como trabajo de código

@@ -1,12 +1,12 @@
 ---
 estado: aceptado
-version: 0.2
+version: "0.3"
 tags:
   - caso-de-uso
   - autenticacion
   - core-registros
 fecha: 2026-06-22
-fecha_actualizacion: 2026-08-05
+fecha_actualizacion: 2026-08-25
 id: CU-REG-001
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -19,7 +19,14 @@ trazabilidad:
 
 ## Objetivo
 
-Permitir que una persona que nunca ha usado el sistema FILEY cree su cuenta con datos mínimos (correo, teléfono, nombre), quedando lista para autenticarse con OTP y acceder al módulo correspondiente.
+Permitir que una persona que nunca ha usado el sistema FILEY cree su cuenta con datos mínimos (correo, teléfono, nombre y apellidos, país), quedando lista para autenticarse con OTP y acceder al módulo correspondiente.
+
+> [!success] Implementado el 2026-08-25
+> El formulario de alta pide ya los cinco campos (`nombre`, `primer_apellido`,
+> `segundo_apellido`, `telefono`, `pais`) y los guarda por separado. El país es un `<select>`
+> con el catálogo ISO 3166-1 (`filey/apps/registros/paises.py`) renderizado en el servidor, así
+> que la pantalla sigue funcionando sin JavaScript. Lo único de este CU que **no** está
+> implementado es la segunda precondición — ver el aviso más abajo.
 
 ## Alcance
 
@@ -62,8 +69,8 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 
 1. El usuario ingresa su correo electrónico en la pantalla de acceso.
 2. El sistema verifica que el correo no existe en `Persona`.
-3. El sistema presenta el formulario de registro con los campos: nombre completo y teléfono (el correo ya está precargado del paso 1).
-4. El usuario completa nombre completo y teléfono y confirma.
+3. El sistema presenta el formulario de registro con los campos: nombre, primer apellido, segundo apellido, teléfono y país (el correo ya está precargado del paso 1).
+4. El usuario completa esos campos y confirma. **El segundo apellido es opcional**; el resto es obligatorio.
 5. El sistema valida formato de correo y teléfono.
 6. El sistema verifica que el teléfono no esté ya asociado a otra cuenta.
 7. El sistema crea el registro en `Persona` (`estado = activa`, `fecha_registro = ahora`).
@@ -84,12 +91,15 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 2. El sistema resalta el campo en error con un mensaje descriptivo.
 3. El flujo no avanza hasta que el campo sea válido.
 
-**Criterios de validación vigentes** (los tres campos son obligatorios):
+**Criterios de validación vigentes** (todo es obligatorio salvo el segundo apellido):
 
 | Campo | Regla |
 | --- | --- |
 | Correo | Formato de correo válido; se normaliza a minúsculas y sin espacios sobrantes. Es la identidad única de la cuenta. |
-| Nombre completo | Mínimo 3 caracteres. |
+| Nombre | Mínimo 2 caracteres. Obligatorio. |
+| Primer apellido | Mínimo 2 caracteres. Obligatorio. |
+| Segundo apellido | **Opcional.** No puede exigirse: hay personas que no lo tienen y la mayoría de los participantes extranjeros usan un solo apellido. |
+| País | Obligatorio. Dato de perfil, se reutiliza en cualquier convocatoria de cualquier feria. |
 | Teléfono | Al menos 10 dígitos; se guardan solo los dígitos, descartando espacios, guiones y paréntesis. |
 
 > [!note] Correo y teléfono son **ambos** obligatorios
@@ -109,12 +119,13 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 ### Entradas
 
 - Correo electrónico
-- Nombre completo
+- Nombre, primer apellido y segundo apellido (este último opcional)
+- País
 - Teléfono
 
 ### Salidas
 
-- Registro `Persona` creado (id, correo, teléfono, nombre_completo, fecha_registro, estado)
+- Registro `Persona` creado (id, correo, teléfono, nombre, primer_apellido, segundo_apellido, pais, fecha_registro, estado)
 - Disparo de CU-REG-002
 
 > [!note] No existe un campo `tipo` en la cuenta

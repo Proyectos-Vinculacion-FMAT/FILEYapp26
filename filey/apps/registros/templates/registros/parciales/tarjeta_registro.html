@@ -23,17 +23,51 @@
     </div>
 
     <div class="field">
-      <label for="id_nombre_completo">Nombre completo <span class="req">*</span></label>
+      <label for="id_nombre">Nombre(s) <span class="req">*</span></label>
       <input type="text"
-             id="id_nombre_completo"
-             name="nombre_completo"
-             value="{{ form.nombre_completo.value|default:'' }}"
-             placeholder="Nombre(s) y apellidos"
-             autocomplete="name"
+             id="id_nombre"
+             name="nombre"
+             value="{{ form.nombre.value|default:'' }}"
+             placeholder="María del Carmen"
+             autocomplete="given-name"
              x-init="nombre = $el.value"
              x-model="nombre"
-             class="{% if form.nombre_completo.errors %}is-invalid{% endif %}">
-      {% for error in form.nombre_completo.errors %}
+             class="{% if form.nombre.errors %}is-invalid{% endif %}">
+      {% for error in form.nombre.errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="id_primer_apellido">Primer apellido <span class="req">*</span></label>
+      <input type="text"
+             id="id_primer_apellido"
+             name="primer_apellido"
+             value="{{ form.primer_apellido.value|default:'' }}"
+             placeholder="Pech"
+             autocomplete="family-name"
+             x-init="primerApellido = $el.value"
+             x-model="primerApellido"
+             class="{% if form.primer_apellido.errors %}is-invalid{% endif %}">
+      {% for error in form.primer_apellido.errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    {% comment %} Sin asterisco y rotulado "opcional" a la vista: hay
+       personas que no tienen segundo apellido, y la mayoría de los
+       participantes extranjeros usan uno solo. Que el formulario lo diga
+       evita que alguien invente un apellido para poder continuar. {% endcomment %}
+    <div class="field">
+      <label for="id_segundo_apellido">Segundo apellido <span class="opt">(opcional)</span></label>
+      <input type="text"
+             id="id_segundo_apellido"
+             name="segundo_apellido"
+             value="{{ form.segundo_apellido.value|default:'' }}"
+             placeholder="Uc"
+             autocomplete="additional-name"
+             class="{% if form.segundo_apellido.errors %}is-invalid{% endif %}">
+      {% for error in form.segundo_apellido.errors %}
         <p class="msg-error">{{ error }}</p>
       {% endfor %}
     </div>
@@ -50,6 +84,28 @@
              x-model="telefono"
              class="{% if form.telefono.errors %}is-invalid{% endif %}">
       {% for error in form.telefono.errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    {% comment %} Desplegable y no texto libre: lo que se guarda es el código
+       ISO de dos letras, así que "Mexico", "México" y "MX" no pueden acabar
+       siendo tres países distintos en el mismo informe. Un `<select>` nativo
+       funciona sin JavaScript. {% endcomment %}
+    <div class="field">
+      <label for="id_pais">País <span class="req">*</span></label>
+      <div class="select-wrap">
+        <select id="id_pais"
+                name="pais"
+                autocomplete="country"
+                class="{% if form.pais.errors %}is-invalid{% endif %}">
+          {% for codigo, nombre in form.pais.field.choices %}
+            <option value="{{ codigo }}"
+                    {% if form.pais.value|stringformat:"s" == codigo %}selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% for error in form.pais.errors %}
         <p class="msg-error">{{ error }}</p>
       {% endfor %}
     </div>

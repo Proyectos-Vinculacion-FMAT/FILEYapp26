@@ -53,10 +53,19 @@ document.addEventListener('alpine:init', () => {
   /* ---- Pantalla de registro: habilita el botón con los datos completos ---- */
   Alpine.data('formularioRegistro', () => ({
     nombre: '',
+    primerApellido: '',
     telefono: '',
 
+    // El segundo apellido y el país no entran en la validación: el
+    // primero es opcional (CU-REG-001, E1) y el segundo es un <select>
+    // que siempre trae un valor válido. Estas comprobaciones solo
+    // encienden el botón antes de tiempo; quien decide es el servidor.
     get nombreValido() {
-      return this.nombre.trim().length >= 3;
+      return this.nombre.trim().length >= 2;
+    },
+
+    get apellidoValido() {
+      return this.primerApellido.trim().length >= 2;
     },
 
     get telefonoValido() {
@@ -64,7 +73,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     get completo() {
-      return this.nombreValido && this.telefonoValido;
+      return this.nombreValido && this.apellidoValido && this.telefonoValido;
     },
   }));
 

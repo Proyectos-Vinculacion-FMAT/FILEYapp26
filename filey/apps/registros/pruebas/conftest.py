@@ -79,8 +79,11 @@ def codigo_fijo(monkeypatch):
 def participante(db):
     return Persona.objects.create_user(
         correo="ana@ejemplo.com",
-        nombre_completo="Ana María Pech",
+        nombre="Ana María",
+        primer_apellido="Pech",
+        segundo_apellido="Uc",
         telefono="9990000001",
+        pais="MX",
     )
 
 
@@ -89,7 +92,8 @@ def admin_general(db):
     """Administrador con el rol ``*``: puede con todos los módulos."""
     persona = Persona.objects.create_user(
         correo="hipolito@filey.org",
-        nombre_completo="Hipólito Canto",
+        nombre="Hipólito",
+        primer_apellido="Canto",
         telefono="9990000002",
     )
     RolPermiso.objects.create(
@@ -103,7 +107,8 @@ def admin_evt(db):
     """Administrador de un solo módulo, con permiso de solo lectura."""
     persona = Persona.objects.create_user(
         correo="revisor@filey.org",
-        nombre_completo="Rita Uc",
+        nombre="Rita",
+        primer_apellido="Uc",
         telefono="9990000003",
     )
     RolPermiso.objects.create(

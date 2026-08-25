@@ -18,9 +18,26 @@ class RolPermisoInline(admin.TabularInline):
 
 @admin.register(Persona)
 class PersonaAdmin(admin.ModelAdmin):
-    list_display = ("correo", "nombre_completo", "telefono", "estado", "ultimo_acceso")
-    search_fields = ("correo", "nombre_completo", "telefono")
-    list_filter = ("estado",)
+    # `nombre_completo` es una propiedad derivada, no una columna: sirve
+    # para mostrar (`list_display`) pero no para buscar ni filtrar, que
+    # se traducen a SQL. La búsqueda va sobre los tres campos reales.
+    list_display = (
+        "correo",
+        "nombre_completo",
+        "telefono",
+        "pais",
+        "estado",
+        "ultimo_acceso",
+    )
+    search_fields = (
+        "correo",
+        "nombre",
+        "primer_apellido",
+        "segundo_apellido",
+        "telefono",
+    )
+    list_filter = ("estado", "pais")
+    ordering = ("primer_apellido", "segundo_apellido", "nombre")
     inlines = [RolPermisoInline]
     readonly_fields = ("fecha_registro", "ultimo_acceso")
     exclude = ("password",)

@@ -1,38 +1,66 @@
 """
-Management command to create a superuser non-interactively using environment variables.
-Designed for CI/CD pipelines (e.g., GitHub Actions).
+Alta no interactiva del superusuario, para el despliegue (GitHub Actions).
+
+Crea la cuenta del equipo técnico a partir de variables de entorno y le
+da acceso irrestricto al panel administrativo FILEY. Es idempotente: si
+la cuenta ya existe no la toca, así que se puede ejecutar en cada
+despliegue sin efectos acumulativos.
 """
 
 import os
-from django.core.management.base import BaseCommand
+
 from django.contrib.auth import get_user_model
-from apps.registros.models import Modulo, RolPermiso, NivelPermiso
+from django.core.management.base import BaseCommand
+
+from apps.registros.models import Modulo, NivelPermiso, RolPermiso
+
 
 class Command(BaseCommand):
-    help = 'Creates a superuser if it does not exist, using credentials from env vars.'
+    help = "Crea el superusuario si no existe, con credenciales del entorno."
 
     def handle(self, *args, **options):
-        User = get_user_model()
-        email = os.environ.get('SUPERUSER_EMAIL')
-        password = os.environ.get('SUPERUSER_PASSWORD')
+        Usuario = get_user_model()
+        correo = os.environ.get("SUPERUSER_EMAIL")
+        contrasena = os.environ.get("SUPERUSER_PASSWORD")
 
-        if not email or not password:
-            self.stdout.write(self.style.ERROR('SUPERUSER_EMAIL or SUPERUSER_PASSWORD environment variable is missing.'))
+        if not correo or not contrasena:
+            self.stdout.write(
+                self.style.ERROR(
+                    "Falta SUPERUSER_EMAIL o SUPERUSER_PASSWORD en el entorno."
+                )
+            )
             return
 
-        # Comprobar si el usuario ya existe
-        if User.objects.filter(correo=email).exists():
-            self.stdout.write(self.style.SUCCESS(f'Superuser {email} already exists.'))
+        correo = correo.lower().strip()
+
+        if Usuario.objects.filter(correo=correo).exists():
+            self.stdout.write(self.style.SUCCESS(f"El superusuario {correo} ya existe."))
             return
 
-        # Crear el superusuario
-        user = User.objects.create_superuser(correo=email, password=password)
-        
-        # Darle acceso irrestricto al sistema administrativo FILEY (Modulo.TODOS)
-        RolPermiso.objects.get_or_create(
-            persona=user,
-            modulo=Modulo.TODOS,
-            defaults={'nivel': NivelPermiso.EDICION}
+        # El nombre va en tres campos desde el 2026-08-25. Son opcionales
+        # aquí —una cuenta técnica puede no tener nombre de persona—, pero
+        # si no se dan, la barra superior del panel saluda a nadie y el
+        # avatar sale vacío. De ahí los valores por defecto.
+        usuario = Usuario.objects.create_superuser(
+            correo=correo,
+            password=contrasena,
+            # `or` y no el default de `get`: GitHub Actions define la
+            # variable *vacía* cuando el secreto no existe, así que el
+            # default nunca llegaría a aplicarse.
+            nombre=os.environ.get("SUPERUSER_NOMBRE") or "Equipo",
+            primer_apellido=os.environ.get("SUPERUSER_PRIMER_APELLIDO") or "FILEY",
+            segundo_apellido=os.environ.get("SUPERUSER_SEGUNDO_APELLIDO") or "",
         )
 
-        self.stdout.write(self.style.SUCCESS(f'Successfully created superuser {email} with full admin access.'))
+        # Acceso irrestricto al panel administrativo FILEY (Modulo.TODOS).
+        RolPermiso.objects.get_or_create(
+            persona=usuario,
+            modulo=Modulo.TODOS,
+            defaults={"nivel": NivelPermiso.EDICION},
+        )
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Superusuario {correo} creado con acceso administrativo completo."
+            )
+        )

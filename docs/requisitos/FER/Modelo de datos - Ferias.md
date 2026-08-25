@@ -1,13 +1,13 @@
 ---
 estado: propuesta
-version: "0.1"
+version: "0.3"
 tags:
   - tipo/modelo-de-datos
   - dom/fer
   - tema/permisos
   - tema/arquitectura
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-25
 ---
 # Modelo de datos — Ferias (FER)
 
@@ -52,10 +52,24 @@ La distinción que organiza todo el modelo:
 
 ## 2. Resumen de entidades
 
-| Entidad | Propósito |
-| --- | --- |
-| Feria | Una edición de la feria (FILEY 2027, FILEY 2028…), y el schema donde vive su contenido. |
-| AdminFeria | Quién administra una feria, y cuál de ellos es su dueño. |
+| Entidad | Capa | Propósito |
+| --- | --- | --- |
+| Feria | `public` | Una edición de la feria (FILEY 2027, FILEY 2028…), y el schema donde vive su contenido. |
+| AdminFeria | `public` | Quién administra una feria, y cuál de ellos es su dueño. |
+| Convocatoria | schema de la feria | Un llamado abierto dentro de una feria: eventos, venta de stands o visitas escolares. |
+| RegistroConvocatoria | schema de la feria | Que una persona se inscribió a una convocatoria. Es el punto del que cuelga el expediente de cada módulo. |
+| BitacoraFER | schema de la feria | Rastro de las acciones sensibles sobre la feria y sus convocatorias. |
+
+> [!important] `FER` es el primer módulo con tablas en **las dos** capas
+> `Feria` y `AdminFeria` son globales porque responden preguntas que cruzan ediciones
+> ("¿qué ferias administra esta persona?"). `Convocatoria` y `RegistroConvocatoria`, en cambio,
+> **son contenido de una feria**: sus fechas, sus cupos y quién se inscribió cambian en cada
+> edición y no deben poder mezclarse entre ellas. Por eso viven en el schema de la feria y
+> **no llevan `feria_id`**, igual que el resto del contenido
+> ([ADR-0003](<../../adr/0003-una-feria-por-schema.md>)).
+>
+> El costo de esta decisión está en §6: preguntar "¿qué convocatorias hay abiertas ahora mismo
+> en todo el sistema?" exige recorrer schemas.
 
 ---
 
@@ -114,11 +128,13 @@ La distinción que organiza todo el modelo:
 - Toda feria tiene al menos una fila, y es la de su dueño: una feria sin dueño no se puede
   crear (CU-FER-001) y no debe poder quedarse sin él (ver §6).
 
-> [!important] Tener acceso a una feria habilita **todo el contenido de esa feria**
+> [!important] Tener acceso a una feria habilita **casi todo el contenido de esa feria**
 > No hay permiso por módulo ni nivel de solo lectura: un administrador de una feria puede
-> operar sus convocatorias, dictaminar, programar, y ver stands y visitas. Lo único reservado
-> al dueño es dar de alta y retirar administradores. Es una decisión tomada a sabiendas, con
-> sus contras, en [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>).
+> dictaminar, programar, operar stands y visitas, y todo lo que cuelga de una convocatoria.
+> Reservado al dueño queda **dar de alta y retirar administradores** (CU-FER-003, CU-FER-004)
+> **y administrar las convocatorias mismas** (CU-FER-005, 007, 008, 009) — esto último es una
+> enmienda del 2026-08-25 a [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>),
+> registrada en el propio ADR. Consultar el catálogo sí queda abierto a cualquiera (CU-FER-006).
 
 <!-- -->
 
@@ -129,6 +145,193 @@ La distinción que organiza todo el modelo:
 > `requiere_modulo`. Mientras la migración no se ejecute, el código y este documento no
 > coinciden; manda este documento.
 
+### 3.3 Convocatoria
+
+> Un llamado abierto dentro de una feria. Una feria tiene varias: la de eventos, la de venta de
+> stands, la de visitas escolares. Vive **en el schema de la feria**.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| tipo | `EVT` (actividades) / `STD` (venta de stands) / `VIS` (visitas escolares). Determina **qué módulo** gobierna el expediente de quien se registra (§3.4). |
+| nombre | Nombre visible (p. ej. "Convocatoria de actividades FILEY 2027"). |
+| estado | `borrador` / `abierta` / `cerrada`. Es lo que decide si el formulario público admite registros. |
+| fecha_apertura | Desde cuándo se admiten registros. |
+| fecha_cierre | Hasta cuándo. |
+| creada_en | Alta del registro. |
+
+**Restricciones:**
+
+- Ninguna sobre `tipo`. **Una feria puede tener varias convocatorias del mismo tipo**
+  (decisión 2026-08-25): dos convocatorias de actividades con públicos distintos, o una de stands
+  general y otra para un pabellón concreto.
+
+> [!warning] Que haya varias del mismo tipo obliga a cada módulo a saber en cuál está
+> Antes se asumía una convocatoria por tipo, y de ahí colgaban dos atajos que **ya no valen**:
+>
+> | Atajo que se cae | Qué hay que hacer en su lugar |
+> | --- | --- |
+> | `ConfiguracionSistema` de `STD` era "una tabla de una sola fila". | Es **una fila por convocatoria de stands**. Sigue funcionando porque cuelga de `convocatoria_id`, pero ninguna consulta puede volver a asumir que hay exactamente una. |
+> | "La solicitud de esta persona en esta feria" era una sola cosa. | Es una **por convocatoria**: la misma editorial puede aplicar a dos convocatorias de stands de la misma feria y tener dos solicitudes, dos reservas y dos saldos. |
+>
+> El precio de la flexibilidad se paga aquí: cualquier pantalla o servicio de módulo que hoy diga
+> "la convocatoria" tiene que decir **cuál**.
+
+> [!important] Cómo sabe una convocatoria a qué feria pertenece — **no lo sabe, y no le hace falta**
+> Es la pregunta que más se repite sobre este modelo, así que en concreto:
+>
+> ```
+> GET /f/2027/convocatorias
+>        │
+>        ├─ middleware: slug "2027" → Feria(id=7, slug="2027")
+>        │              SET search_path = feria_2027, public
+>        │
+>        └─ vista:      SELECT * FROM convocatoria       ← sin WHERE feria_id
+>                       ↳ PostgreSQL resuelve "convocatoria" como
+>                         "feria_2027.convocatoria" por el search_path
+> ```
+>
+> La fila de `Convocatoria` **no contiene nada** que diga "2027". Lo que la ata a esa feria es
+> *en qué schema está guardada*. Una consulta desde `/f/2028/…` no puede verla, no porque el
+> filtro esté bien escrito, sino porque esa tabla no está en su camino de búsqueda.
+>
+> **Lo que esto compra:** es imposible escribir el bug de mezclar ediciones. No hay `WHERE` que
+> olvidar. **Lo que cuesta:** no se puede hacer `JOIN` entre ferias, ni contestar "todas las
+> convocatorias abiertas del sistema" con una consulta (§6).
+>
+> Si en algún momento se quisiera un `feria_id` explícito en su lugar, eso **no es un ajuste de
+> este modelo**: es reemplazar [ADR-0003](<../../adr/0003-una-feria-por-schema.md>), y afecta a
+> todas las tablas de todos los dominios, no solo a esta.
+
+<!-- -->
+
+> [!important] Y el permiso sí cruza la frontera
+> Hay una excepción a "la feria no es una columna", y conviene tenerla presente al implementar:
+> **la comprobación de permiso**. "¿Es dueño de esta feria?" se responde con `AdminFeria`, que
+> vive en `public` y sí lleva `feria_id`. Así que el middleware del `search_path` no puede
+> limitarse a fijar el schema: tiene que saber **qué `Feria.id`** corresponde al schema que acaba
+> de fijar, y pasárselo a la comprobación de permiso. Traducir `slug → Feria.id → search_path` es
+> una sola operación, y el `id` que sale de ahí es el que usan CU-FER-005 a CU-FER-009.
+>
+> Si el middleware fijara el schema sin conservar ese `id`, la única forma de comprobar el
+> permiso sería volver a resolver el slug — y un fallo ahí no daría un error, daría una respuesta
+> con los datos de otra feria.
+
+> [!important] Las convocatorias las administra el dueño de la feria
+> Crear, editar, abrir/cerrar y eliminar convocatorias es exclusivo del dueño (CU-FER-005 a
+> CU-FER-009). Cualquier administrador de la feria **consulta** el catálogo (CU-FER-006) y opera
+> todo lo que cuelga de una convocatoria, pero no la convocatoria misma. Es una enmienda a
+> [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>), registrada en el propio ADR.
+
+> [!note] `estado` manda sobre las fechas, no al revés
+> Que hoy esté entre `fecha_apertura` y `fecha_cierre` no abre la convocatoria por sí solo: el
+> administrador la abre y la cierra explícitamente. Las fechas son lo que se publica y lo que
+> permite programar el cierre, pero un cierre anticipado o una prórroga tienen que poder
+> hacerse sin mentir sobre las fechas anunciadas.
+
+<!-- -->
+
+> [!warning] `TAL` no aparece en `tipo` — **pendiente, y confirmado como pendiente**
+> Los tres tipos son los que el cambio de diseño del 2026-08-25 enumeró: eventos, stands y
+> visitas. `TAL` (actividades infantiles/juveniles) tiene modelo de datos propio y casos de uso
+> escritos, y **queda deliberadamente fuera hasta que se decida** si es un cuarto tipo o una
+> convocatoria de tipo `EVT` con otro público. No bloquea nada mientras `TAL` no se construya;
+> sí hay que resolverlo antes de empezarlo. Ver §6.
+>
+> Ahora que caben varias convocatorias del mismo tipo, la segunda opción sale más barata que
+> antes: `TAL` podría ser una convocatoria `EVT` más, sin necesidad de un tipo propio.
+
+### 3.4 RegistroConvocatoria
+
+> Que una persona se inscribió a una convocatoria de esta feria. Vive **en el schema de la
+> feria**, porque inscribirse es participar en una edición concreta.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| convocatoria_id | FK → Convocatoria. |
+| persona_id | FK → `Persona` (`REG`). Cruza a `public`: es la misma frontera que ya cruzan `Editorial` en `STD` y las solicitudes en `EVT`. |
+| estado | `activo` / `retirado`. El estado del **registro**, no el del expediente: si la solicitud fue aceptada o rechazada lo dice el módulo, no esta tabla. |
+| fecha_registro | Marca de tiempo de la inscripción. |
+
+**Restricciones:**
+
+- Único por (`convocatoria_id`, `persona_id`): una persona se registra una sola vez a cada
+  convocatoria.
+
+> [!important] Esta tabla es deliberadamente flaca — cada módulo define qué significa registrarse
+> `FER` no sabe ni tiene que saber qué es una propuesta de actividad, una ficha de expositor o
+> una solicitud de visita escolar. Lo único que afirma es **quién entró por qué puerta**. El
+> expediente cuelga del módulo correspondiente, apuntando de vuelta aquí:
+>
+> | Convocatoria `tipo` | Módulo | Qué cuelga del registro |
+> | --- | --- | --- |
+> | `EVT` | Eventos | `Solicitudes_EVT` — una propuesta de actividad (puede haber varias por persona). |
+> | `STD` | Stands | `Solicitud` — la aplicación a expositor, con su `Editorial` y su reserva detrás. Ver [`STD/Modelo de datos - Stands`](<../STD/Modelo de datos - Stands.md>) §3.3. |
+> | `VIS` | Visitas | La solicitud de visita escolar (modelo pendiente). |
+>
+> Esta es la razón de ser del patrón: agregar un tipo de convocatoria no obliga a tocar ninguna
+> tabla existente.
+
+<!-- -->
+
+> [!warning] Colisión con el `RouterSolicitudes` de `EVT`
+> `EVT` ya define un `RouterSolicitudes(usuario_django, convocatoria, solicitud_id)` descrito
+> como *"único para todo el sistema"*, donde `convocatoria` es un discriminador de **dominio**
+> (`EVT`/`TAL`/`STD`/`VIS`), no una convocatoria con identidad propia. Es la misma figura que
+> `RegistroConvocatoria`, resuelta de otra forma y con el nombre equivocado:
+>
+> - `RouterSolicitudes` liga persona ↔ solicitud con una referencia polimórfica que la base de
+>   datos no puede validar.
+> - `RegistroConvocatoria` liga persona ↔ convocatoria con claves foráneas reales, y deja que
+>   cada módulo apunte hacia aquí con su propia FK — también real.
+>
+> **No pueden coexistir.** Reconciliarlos es trabajo pendiente y toca el modelo de `EVT`; ver
+> §6 y el inventario de inconsistencias en
+> [`Modelo de datos - Sistema (ER)`](<../Modelo de datos - Sistema (ER).md>).
+
+### 3.5 BitacoraFER
+
+> Rastro de las acciones sensibles del dominio. Vive **en el schema de la feria**: la bitácora de
+> una edición es de esa edición.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| persona_id | FK → `Persona` (`REG`). Quién ejecutó la acción. Nunca nulo: toda acción registrada tiene un responsable con nombre. |
+| accion | Qué se hizo. Conjunto cerrado — ver la tabla de abajo. |
+| entidad_tipo | `convocatoria` / `admin_feria` / `feria`. |
+| entidad_id | Id de la fila afectada. Se conserva **aunque la fila se borre**: es un dato histórico, no una FK con integridad. |
+| detalle | Qué cambió: los valores antes y después, o los datos de lo que se creó o borró. |
+| fecha | Marca de tiempo. |
+
+**Qué se registra, y por qué solo eso:**
+
+| Acción | Caso de uso | Por qué deja rastro |
+| --- | --- | --- |
+| `convocatoria_creada` | CU-FER-005 | Contexto para leer el resto de la historia de esa convocatoria. |
+| `convocatoria_editada` | CU-FER-007 | **La más importante.** Mover la fecha de cierre de una convocatoria abierta cambia lo que se anunció públicamente, y hoy no había forma de saber quién lo hizo ni qué decía antes. |
+| `convocatoria_abierta` · `convocatoria_cerrada` · `convocatoria_reabierta` | CU-FER-008 | Es lo único que decide si se admiten registros. Una prórroga discutida después necesita una respuesta. |
+| `convocatoria_eliminada` | CU-FER-009 | Es el único borrado real del dominio. Sin esto, una convocatoria borrada no deja ni el hueco. |
+| `admin_alta` · `admin_baja` | CU-FER-003, CU-FER-004 | Quién dio acceso a quién, y cuándo se retiró. |
+
+> [!important] La bitácora no es un registro de cambios general
+> Solo entra lo que alguien podría **discutir después**: qué se anunció, quién lo cambió, quién
+> tenía acceso. Registrar cada lectura o cada consulta del catálogo la volvería ilegible justo
+> cuando haga falta leerla — y una bitácora que nadie lee no protege de nada.
+
+<!-- -->
+
+> [!warning] Esta bitácora no es la de `STD`, y no deberían ser dos
+> `STD` tiene su propia `Bitacora` (§3.12 de su modelo) con la misma forma —persona, acción,
+> entidad polimórfica, detalle, fecha— para sus acciones sensibles: validar un abono, aplicar un
+> descuento especial, prorrogar una reserva. Ahora hay **dos tablas idénticas en distinto
+> dominio**, y `EVT` define una tercera (`BitacoraEVT`).
+>
+> Unificarlas en una sola bitácora por feria es lo razonable, y es trabajo pendiente: hacerlo
+> ahora obligaría a tocar tres modelos y sus casos de uso. Lo que **no** debe pasar es que el
+> cuarto dominio añada la cuarta. Ver §6.
+
 ---
 
 ## 4. Relaciones principales
@@ -137,8 +340,16 @@ La distinción que organiza todo el modelo:
 - **Persona** (`REG`) 1—N **AdminFeria**: una persona puede administrar varias ferias, y ser
   dueña de unas y administradora de otras.
 - **Feria** 1—1 **schema de base de datos**, y dentro de él todas las entidades de `EVT`,
-  `TAL`, `STD`, `VIS`, `PRG` y `SAL`. Esa relación **no se expresa con claves foráneas**: la
-  hace el `search_path` de la conexión.
+  `TAL`, `STD`, `VIS`, `PRG` y `SAL` — más las propias `Convocatoria` y `RegistroConvocatoria`.
+  Esa relación **no se expresa con claves foráneas**: la hace el `search_path` de la conexión.
+- **Convocatoria** 1—N **RegistroConvocatoria**; como máximo una convocatoria por `tipo` en cada
+  feria.
+- **Persona** (`REG`) 1—N **RegistroConvocatoria**: una persona puede registrarse a la
+  convocatoria de eventos y a la de stands de la misma feria, a varias del mismo tipo, y a las de
+  varias ferias.
+- **Persona** (`REG`) 1—N **BitacoraFER**: quién ejecutó cada acción registrada.
+- **RegistroConvocatoria** 1—N *(expediente del módulo)*: `Solicitudes_EVT` en eventos,
+  `Solicitud` en stands (1—1 ahí), la solicitud de visita en `VIS`.
 
 ```mermaid
 flowchart TD
@@ -153,15 +364,22 @@ flowchart TD
     end
 
     subgraph F27["Schema feria_2027"]
-        C27[Convocatorias · Propuestas · Actividades<br/>Stands · Visitas · Programa · Salas]
+        CV27[Convocatoria<br/>tipo: EVT · STD · VIS]
+        RC27[RegistroConvocatoria]
+        C27[Propuestas · Actividades · Editoriales<br/>Stands · Reservas · Visitas · Programa]
+        CV27 --> RC27
+        RC27 --> C27
     end
 
     subgraph F28["Schema feria_2028"]
-        C28[Convocatorias · Propuestas · Actividades<br/>Stands · Visitas · Programa · Salas]
+        CV28[Convocatoria]
+        C28[Contenido de la edición 2028]
+        CV28 --> C28
     end
 
     F -.->|search_path| F27
     F -.->|search_path| F28
+    P -.->|persona_id| RC27
 ```
 
 ---
@@ -172,6 +390,9 @@ flowchart TD
 | --- | --- |
 | Feria | CU-FER-001, CU-FER-002 |
 | AdminFeria | CU-FER-001, CU-FER-002, CU-FER-003, CU-FER-004 |
+| Convocatoria | CU-FER-005 (alta), CU-FER-006 (catálogo), CU-FER-007 (edición), CU-FER-008 (abrir/cerrar), CU-FER-009 (borrado). La consulta **pública** sigue sin caso de uso — ver §6. |
+| RegistroConvocatoria | Se crea desde el primer caso de uso de cada módulo: CU-EVT-002, CU-STD-001, CU-VIS-001. |
+| BitacoraFER | CU-FER-003, CU-FER-004, CU-FER-005, CU-FER-007, CU-FER-008, CU-FER-009 |
 
 ---
 
@@ -193,6 +414,35 @@ flowchart TD
   `JOIN` bajo este modelo: hay que recorrer schemas o mantener una tabla global explícita en
   `public`. Cuando se implemente `es_recurrente`, esa tabla es parte de `FER`, no de un dominio
   de contenido.
+- ~~**Faltan los casos de uso de `Convocatoria`.**~~ **Resuelto el 2026-08-25** para el lado
+  administrativo: CU-FER-005 a CU-FER-009 cubren el alta, el catálogo, la edición, la
+  apertura/cierre y el borrado. **Sigue faltando la consulta pública** — cómo ve un participante
+  qué convocatorias están abiertas; ver el punto del portal público, más abajo.
+- **Administrar convocatorias quedó reservado al dueño** (2026-08-25), lo que **enmienda** a
+  [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>): la decisión original daba todo
+  el contenido de la feria a cualquier administrador. Consultar el catálogo sí sigue abierto a
+  cualquier administrador. Si la lista de lo reservado al dueño vuelve a crecer, deja de ser una
+  enmienda y hay que escribir el ADR que sustituya al 0004.
+- **Tres bitácoras idénticas.** `BitacoraFER` (§3.5), `Bitacora` de `STD` y `BitacoraEVT` tienen
+  la misma forma y resuelven el mismo problema. Unificarlas en una bitácora por feria es lo
+  razonable; hacerlo ahora obliga a tocar tres modelos y sus casos de uso. Lo urgente no es
+  unificarlas: es que el cuarto dominio no añada la cuarta.
+- **Varias convocatorias del mismo tipo: qué se rompió río abajo.** La decisión del 2026-08-25
+  (§3.3) invalida el supuesto de "una convocatoria de stands por feria". `STD` ya está corregido
+  —`ConfiguracionSistema` cuelga de `convocatoria_id`— pero **cualquier pantalla o servicio que
+  diga "la convocatoria" tiene que decir cuál**, y eso no está revisado en los casos de uso de
+  `STD`, que se escribieron asumiendo una sola.
+- **Dónde encaja `TAL`.** `Convocatoria.tipo` tiene tres valores y `TAL` no está entre ellos
+  (§3.3). Decidir si es un cuarto tipo o una convocatoria `EVT` con otro público, antes de
+  construir el módulo.
+- **Reconciliar `RegistroConvocatoria` con el `RouterSolicitudes` de `EVT`.** Son la misma figura
+  con dos soluciones incompatibles (§3.4). Hay que elegir una y corregir el modelo de `EVT`; el
+  discriminador `convocatoria` de ese router nombra un dominio, no una convocatoria, lo que hace
+  el conflicto más confuso de lo que es.
+- **El índice global de convocatorias abiertas.** Con `Convocatoria` dentro del schema de cada
+  feria, la pregunta "¿dónde puedo participar hoy?" no se responde con un `SELECT`: hay que
+  recorrer schemas o mantener un espejo en `public`. Es el mismo problema que el punto siguiente
+  y conviene resolverlos juntos.
 - **Portal público y feria.** Este modelo define quién administra una feria. Falta precisar
   cómo elige **el participante** la feria en la que quiere proponer: si el prefijo de URL basta,
   o si hace falta una portada que liste las ferias con convocatorias abiertas. Hoy el

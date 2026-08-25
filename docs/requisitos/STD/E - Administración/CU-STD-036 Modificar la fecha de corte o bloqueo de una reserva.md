@@ -35,7 +35,7 @@ El administrador requiere otorgar más tiempo a un expositor en particular para 
 
 1. El administrador ingresa a la vista de detalle de una reserva confirmada (A4).
 2. El administrador selecciona la acción "Modificar fecha de corte total".
-3. El sistema muestra la `fecha_corte_pago_total` actual asignada a la reserva (la cual pudo heredarse de los `ParametrosSistema`).
+3. El sistema muestra la `fecha_corte_pago_total` actual asignada a la reserva (la cual pudo heredarse de los `ConfiguracionSistema`).
 4. El administrador selecciona una nueva fecha desde el selector.
 5. El administrador confirma la acción.
 6. El sistema actualiza el registro de la `Reserva` con la nueva fecha de corte.

@@ -81,12 +81,17 @@ erDiagram
     PERSONA ||--o{ ADMIN_FERIA : "administra"
     FERIA   ||--o{ ADMIN_FERIA : "es administrada por"
     PERSONA ||--o{ ROL_PERMISO : "DEROGADO_pero_vive_en_codigo"
+    PERSONA ||--o{ REGISTRO_CONVOCATORIA_POR_FERIA : "se_registra_cruza_schema"
+    PERSONA ||--o{ BITACORA_FER : "ejecuta_cruza_schema"
 
     PERSONA {
         int id PK
         string correo UK "único global, no por feria"
-        string nombre_completo "decidido separar en nombres/apellidos, sin migrar"
+        string nombre "desplegado: nombre_completo, sin migrar"
+        string primer_apellido
+        string segundo_apellido "opcional"
         string telefono
+        string pais "perfil; vino de EVT"
         string estado "activa | inactiva"
         datetime fecha_registro
         datetime ultimo_acceso
@@ -125,6 +130,24 @@ erDiagram
         int creado_por FK "Persona; nulo para el dueño"
     }
 
+    BITACORA_FER {
+        int id PK "VIVE EN EL SCHEMA DE CADA FERIA"
+        int persona_id FK "cruza a public"
+        string accion "convocatoria_creada | editada | abierta | cerrada | eliminada | admin_alta | admin_baja"
+        string entidad_tipo "convocatoria | admin_feria | feria"
+        int entidad_id "historico, sin FK: sobrevive al borrado"
+        string detalle "antes y despues"
+        datetime fecha
+    }
+
+    REGISTRO_CONVOCATORIA_POR_FERIA {
+        int id PK "VIVE EN EL SCHEMA DE CADA FERIA"
+        int convocatoria_id FK
+        int persona_id FK "cruza a public"
+        string estado "activo | retirado"
+        datetime fecha_registro
+    }
+
     ROL_PERMISO {
         int id PK "DEROGADO en docs (ADR-0004)"
         int persona_id FK "sigue existiendo en filey/apps/registros/models.py"
@@ -141,10 +164,14 @@ erDiagram
 
 ---
 
-## 2. `STD` — Stands *(modelo v2.0, el único ya alineado con FER)*
+## 2. `STD` — Stands *(modelo v2.1, el único ya alineado con FER)*
 
 ```mermaid
 erDiagram
+    CONVOCATORIA ||--|| CONFIGURACION_SISTEMA : "se configura con"
+    CONVOCATORIA ||--o{ REGISTRO_CONVOCATORIA : "recibe"
+    PERSONA ||--o{ REGISTRO_CONVOCATORIA : "se registra"
+    REGISTRO_CONVOCATORIA ||--|| SOLICITUD_STD : "es la aplicación a expositor"
     PERSONA ||--o{ EDITORIAL : "representa"
     PERSONA ||--o{ NOTIFICACION_STD : "recibe"
     EDITORIAL ||--o{ SELLO_EDITORIAL : "representa"
@@ -156,11 +183,24 @@ erDiagram
     STAND ||--o{ RESERVA_STAND : "es reservado en"
     RESERVA ||--o{ MOVIMIENTO : "recibe abonos"
     MOVIMIENTO ||--|| DOCUMENTO : "comprobante"
-    RESERVA ||--o{ DESCUENTO_APLICADO : "aplica"
+    RESERVA ||--o{ DESCUENTO_APLICADO : "aplica; UK(reserva,tipo)"
     PERSONA ||--o{ BITACORA_STD : "ejecuta"
 
     PERSONA {
         int id PK "REG — global"
+    }
+    CONVOCATORIA {
+        int id PK "FER — schema de la feria"
+        string tipo "STD; varias del mismo tipo por feria"
+        string estado "borrador | abierta | cerrada"
+        date fecha_apertura
+        date fecha_cierre
+    }
+    REGISTRO_CONVOCATORIA {
+        int id PK "FER — schema de la feria"
+        int convocatoria_id FK
+        int persona_id FK "cruza a public"
+        string estado "activo | retirado"
     }
     EDITORIAL {
         int id PK
@@ -178,6 +218,7 @@ erDiagram
     }
     SOLICITUD_STD {
         int id PK
+        int registro_id FK "RegistroConvocatoria — el enganche v2.1"
         int editorial_id FK
         string estado "pendiente | aceptada | rechazada | cambios_solicitados"
         datetime fecha_envio
@@ -210,11 +251,9 @@ erDiagram
         money monto_abonado
     }
     RESERVA_STAND {
-        int id PK
+        int id PK "v2.1: tabla de unión pura"
         int reserva_id FK
         int stand_id FK
-        float metros_cuadrados_snapshot
-        money precio_snapshot
     }
     MOVIMIENTO {
         int id PK
@@ -238,7 +277,8 @@ erDiagram
         string tipo
         string estado "enviada | fallida"
     }
-    PARAMETROS_SISTEMA {
+    CONFIGURACION_SISTEMA {
+        int convocatoria_id FK,UK "v2.1: cuelga de la convocatoria"
         money costo_m2 "una fila por feria, pese al nombre"
         float porcentaje_anticipo "50"
         int plazo_reserva_dias "30"
@@ -279,7 +319,7 @@ erDiagram
     PROGRAMACION_ACTIVIDAD }o--|| PROGRAMA_MAESTRO_FANTASMA : "pertenece a"
 
     PERSONA {
-        int id PK "REG. EVT le supone pais/estado_pais/ciudad que REG no define"
+        int id PK "REG. pais ya subió a REG; estado_pais y ciudad siguen sin dueño"
     }
     ROUTER_SOLICITUDES {
         int id PK
@@ -539,13 +579,17 @@ Ninguna está corregida. Ordenadas por lo que cuesta arreglarlas.
 | **I-3** | `Notificacion.disparada_por` → `Cuenta`. | `PRG` §2.4 | Ya registrada |
 | **I-4** | **Dos modelos de programación coexistiendo.** `EVT` define `ProgramacionActividad` (con `sala_id`, `stand_id`, `bloque_id`, `programa_maestro_id`) y `PRG` define `Programación` (con `actividad_id`, `sala_id`). No es que uno referencie al otro: son dos diseños distintos del mismo hecho. `VIS` reserva contra el de `PRG`. | `EVT` §3.3 vs `PRG` §2.2 | **Nueva** |
 | **I-5** | `EVT` referencia `BloqueHorario` y `ProgramaMaestro` **situándolas en `PRG`**, y `PRG` no define ninguna de las dos. | `EVT` §3.3 | **Nueva** |
-| **I-6** | `EVT` afirma que `Persona` guarda `pais`, `estado_pais` y `ciudad`. El modelo de `REG` **no define esos atributos**. Un dominio le está poniendo campos a una entidad de otro. | `EVT` §2.1 vs `REG` §2.1 | **Nueva** |
+| **I-6** | `EVT` afirmaba que `Persona` guarda `pais`, `estado_pais` y `ciudad`, sin que `REG` definiera ninguno. **Resuelta a medias el 2026-08-25:** `pais` subió a `REG` §2.1 y `EVT` dejó de definir atributos ajenos; `estado_pais` y `ciudad` **quedaron sin dueño** y el formulario del prototipo sigue pidiéndolos. | `EVT` §2.1 vs `REG` §2.1, §5 | Parcial |
 | **I-7** | **`SAL` no tiene modelo de datos.** `Salón` y `Sala` son el catálogo del que depende toda la programación, y la única definición de `Sala` está dentro de `PRG` §2.3 — que a su vez la describe como "referencia al espacio de `SAL`". `Salón` no está definido en ninguna parte. | `SAL` | **Nueva** |
 | **I-8** | **Tres nombres para la unidad programable.** `EVT` la llama `SolicitudesAprobadas`, `TAL` la llama `Actividad`, y `PRG` la llama `Actividad` describiéndola como referencia a ambas. `PRG` no puede referenciar dos tablas distintas con una sola FK sin un discriminador, y no lo tiene. | `EVT` §3.2, `TAL` §2.4, `PRG` §2.1 | **Nueva** |
 | **I-9** | `EVT.ProgramacionActividad.stand_id` → `Stand` (`STD`). Es legítimo (actividades dentro de un stand), pero el modelo de `STD` no lo menciona: desde `STD`, sus stands solo los usa `ReservaStand`. | `EVT` §3.3 | **Nueva** |
 | **I-10** | `RolPermiso` derogado en la documentación, **vivo en el código**. Es la única entidad que existe solo en `filey/`. | `REG` §2.2 vs código | Ya registrada |
-| **I-11** | `Persona.nombre_completo` desplegado vs. `nombres`/`apellidos` decididos el 2026-08-19. | `REG` §5 | Ya registrada |
-| **I-12** | Tres nombres para la configuración de una convocatoria: `ParametrosSistema` (`STD`), `ParametrosConvocatoria` (`EVT`), `ParametrosConvocatoriaTAL` (`TAL`). Misma figura, tres nombres. | `STD` §3.11, `EVT` §3.6, `TAL` §2.5 | Ya registrada |
+| **I-11** | `Persona.nombre_completo` desplegado vs. `nombre` / `primer_apellido` / `segundo_apellido` decididos el 2026-08-25 (que sustituyen a `nombres`/`apellidos` del 2026-08-19). La migración de datos no es automatizable: partir un nombre completo en tres campos falla en cuanto hay apellidos compuestos. | `REG` §5 | Ya registrada, **empeorada** |
+| **I-12** | Tres nombres para la configuración de una convocatoria: `ConfiguracionSistema` (`STD`), `ParametrosConvocatoria` (`EVT`), `ParametrosConvocatoriaTAL` (`TAL`). Misma figura, tres nombres; el renombrado del 2026-08-25 cambió el de `STD` pero no lo homologó. | `STD` §3.11, `EVT` §3.6, `TAL` §2.5 | Ya registrada |
+| **I-13** | **Dos mecanismos incompatibles para "una persona se registra a una convocatoria".** `FER` define `RegistroConvocatoria(convocatoria_id, persona_id)` con FKs reales; `EVT` define `RouterSolicitudes(usuario_django, convocatoria, solicitud_id)` con una referencia polimórfica que la base de datos no valida, donde `convocatoria` es un discriminador de **dominio**, no una convocatoria. Se declara "único para todo el sistema", así que no pueden coexistir. | `FER` §3.4 vs `EVT` §2.2 | **Nueva (2026-08-25)** |
+| **I-14** | **`Convocatoria.tipo` no contempla `TAL`.** Los tres tipos son `EVT`, `STD` y `VIS`; `TAL` tiene modelo y casos de uso propios y no encaja en ninguno. Confirmado como **pendiente deliberado** el 2026-08-25: no bloquea nada mientras `TAL` no se construya. | `FER` §3.3 | Aplazada a propósito |
+| **I-15** | **Tres bitácoras idénticas.** `BitacoraFER`, `Bitacora` (`STD`) y `BitacoraEVT` tienen la misma forma —persona, acción, entidad polimórfica, detalle, fecha— y el mismo propósito. Deberían ser una sola por feria. | `FER` §3.5, `STD` §3.12, `EVT` §3.7 | **Nueva (2026-08-25)** |
+| **I-16** | **Los casos de uso de `STD` asumen una sola convocatoria de stands por feria.** Esa restricción se retiró el 2026-08-25: pueden ser varias, con precios y saldos independientes. Los CU hablan de "la convocatoria" en singular y las pantallas de administración listarían solicitudes de todas mezcladas. | `STD` §3.11, §6 | **Nueva (2026-08-25)** |
 
 > [!important] Las cinco nuevas se concentran en la frontera `EVT` ↔ `PRG` ↔ `SAL`
 > I-4, I-5, I-7 y I-8 son **el mismo problema visto desde cuatro ángulos**: nadie ha decidido

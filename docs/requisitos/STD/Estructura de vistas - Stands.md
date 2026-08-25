@@ -101,7 +101,7 @@ flowchart LR
   de detalle** con dimensiones, m², precio (m² × costo m²) y qué incluye, con acción
   *Agregar al carrito*.
 - **CU involucrados:** CU-STD-009 (visualizar mapa), CU-STD-010 (detalle de stand).
-- **Entidades:** Stand, ParametrosSistema (costo m²). La edición de la feria es el contexto
+- **Entidades:** Stand, ConfiguracionSistema (costo m²). La edición de la feria es el contexto
   de la sesión, no una entidad que esta vista consulte.
 
 ### U3 · Carrito de stands
@@ -139,7 +139,7 @@ flowchart LR
   3. **Historial de movimientos** con su estado de validación.
 - **CU involucrados:** CU-STD-015 (instrucciones), CU-STD-016 (registrar pago con
   comprobante), CU-STD-017 (historial).
-- **Entidades:** Movimiento, Documento (comprobante), ParametrosSistema (datos bancarios).
+- **Entidades:** Movimiento, Documento (comprobante), ConfiguracionSistema (datos bancarios).
 
 ---
 
@@ -218,7 +218,7 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Contenido:** costo por m², porcentaje de anticipo, descuento por pronto pago,
   fechas límite (pronto pago, corte) e instrucciones/datos bancarios de pago.
 - **CU involucrados:** CU-STD-034.
-- **Entidades:** ParametrosSistema.
+- **Entidades:** ConfiguracionSistema.
 
 ---
 

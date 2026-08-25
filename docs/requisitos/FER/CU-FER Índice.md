@@ -1,13 +1,13 @@
 ---
 estado: propuesta
-version: "0.1"
+version: "0.3"
 tags:
   - tipo/indice
   - dom/fer
   - tema/permisos
   - tema/arquitectura
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-25
 ---
 # CU-FER — Índice de casos de uso (Core Ferias)
 
@@ -27,25 +27,51 @@ feria.
 - **Operador de la plataforma** — el equipo técnico. Crea ferias y designa a su dueño. No es un
   rol dentro de ninguna feria (CU-FER-001).
 - **Dueño de la feria** — una persona por feria. Puede todo lo de la feria **y además** dar de
-  alta y retirar a sus administradores (CU-FER-003, CU-FER-004).
-- **Administrador de la feria** — puede todo el contenido de la feria; **no** puede administrar
-  accesos.
+  alta y retirar a sus administradores (CU-FER-003, CU-FER-004) y administrar el catálogo de
+  convocatorias (CU-FER-005 a CU-FER-009).
+- **Administrador de la feria** — puede todo el contenido de la feria y todo lo que cuelga de una
+  convocatoria; **no** puede administrar accesos **ni convocatorias**, aunque sí consultarlas.
 
 ---
 
 ## Casos de uso
+
+### La feria y sus accesos
 
 - **CU-FER-001** Crear una feria y designar a su dueño — *Operador de la plataforma*
 - **CU-FER-002** Consultar las ferias que administro y entrar a una — *Usuario administrativo*
 - **CU-FER-003** Dar de alta un administrador en mi feria — *Dueño de la feria*
 - **CU-FER-004** Retirar el acceso de un administrador de mi feria — *Dueño de la feria*
 
+### Catálogo de convocatorias
+
+- **CU-FER-005** Dar de alta una convocatoria en mi feria — *Dueño de la feria*
+- **CU-FER-006** Consultar el catálogo de convocatorias de una feria — *Participante · Administrador · Dueño*
+- **CU-FER-007** Editar una convocatoria — *Dueño de la feria*
+- **CU-FER-008** Abrir y cerrar una convocatoria — *Dueño de la feria*
+- **CU-FER-009** Eliminar una convocatoria — *Dueño de la feria*
+
+> [!important] CU-FER-008 es el que importa; los otros cuatro mantienen una fila
+> Abrir y cerrar es **lo único que decide si `EVT`, `STD` y `VIS` admiten registros**. Está
+> separado del alta y de la edición a propósito: las fechas son lo que se anuncia, `estado` es lo
+> que abre la puerta. Adelantar la fecha de cierre no cierra nada.
+
+<!-- -->
+
+> [!warning] Enmienda a ADR-0004 — las convocatorias son del dueño
+> [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>) daba todo el contenido de la
+> feria a cualquier administrador. Desde el 2026-08-25, **administrar convocatorias es exclusivo
+> del dueño**: solo él da de alta, edita, abre, cierra y elimina. Cualquier administrador sigue
+> viendo el catálogo (CU-FER-006, sin eso no podría operar su módulo) y sigue operando todo lo
+> que cuelga de una convocatoria. La enmienda está registrada en el propio ADR.
+
 ---
 
 ## Artefactos del dominio
 
-- [`Modelo de datos - Ferias`](<Modelo de datos - Ferias.md>) — `Feria` y `AdminFeria`, y qué
-  vive en el schema global frente a qué vive en el de cada feria.
+- [`Modelo de datos - Ferias`](<Modelo de datos - Ferias.md>) — `Feria`, `AdminFeria`,
+  `Convocatoria` y `RegistroConvocatoria`, y qué vive en el schema global frente a qué vive en el
+  de cada feria.
 - [ADR-0003](<../../adr/0003-una-feria-por-schema.md>) — por qué cada feria tiene su propio
   schema y cómo Django resuelve cuál usar en cada petición.
 - [ADR-0004](<../../adr/0004-acceso-administrativo-por-feria.md>) — por qué el permiso es por
@@ -87,7 +113,7 @@ Este dominio no se añade en el vacío: reemplaza el modelo de permisos con el q
 - **Transferencia de propiedad de una feria.** Con exactamente un dueño y solo él pudiendo
   administrar accesos, una feria cuyo dueño deja el proyecto queda bloqueada. Hoy la salida es
   que el operador de la plataforma reasigne la propiedad por comando. Falta decidir si se
-  formaliza como caso de uso ejecutable por el propio dueño (CU-FER-005) — es lo que quitaría
+  formaliza como un caso de uso nuevo, ejecutable por el propio dueño — es lo que quitaría
   la dependencia del equipo técnico. Ver `Modelo de datos - Ferias` §6 y CU-FER-004 E2.
 - **Cómo elige la feria un participante.** `FER` define quién administra una feria; falta
   precisar cómo llega el **aplicante** a la feria en la que quiere proponer: si basta el prefijo
@@ -99,3 +125,24 @@ Este dominio no se añade en el vacío: reemplaza el modelo de permisos con el q
 - **Nivel de solo lectura.** ADR-0004 lo elimina a sabiendas (no hay supervisor que solo
   observe). Conviene confirmarlo con el cliente antes de que haya administradores operando: si
   lo pide de vuelta, se recupera con columnas en `AdminFeria` y un ADR que reemplace al 0004.
+- **Revisar los casos de uso de `STD`, que dicen "la convocatoria" en singular.** Desde el
+  2026-08-25 una feria puede tener **varias convocatorias del mismo tipo**, así que dos stands de
+  la misma edición pueden valer distinto y una editorial puede tener dos reservas con saldos
+  independientes. Los CU de `STD` se escribieron asumiendo una sola. Es la deuda más concreta que
+  dejó ese cambio — ver `STD/Modelo de datos - Stands` §6.
+- **Dónde encaja `TAL`.** `Convocatoria.tipo` admite `EVT`, `STD` y `VIS`. `TAL` tiene modelo de
+  datos y casos de uso propios y **queda pendiente a propósito**: o es un cuarto tipo, o es una
+  convocatoria `EVT` con otro público. No bloquea nada mientras `TAL` no se construya. Ahora que
+  caben varias convocatorias del mismo tipo, la segunda opción sale más barata.
+- **Nadie avisa de que una convocatoria abre o cierra.** CU-FER-008 cambia un estado y deja
+  rastro en `BitacoraFER`, pero **no envía ningún correo**. Anunciar la apertura, o avisar a quien
+  dejó una solicitud a medias de que quedan dos días, no existe en ningún dominio.
+- **Tres bitácoras idénticas.** `BitacoraFER` se suma a la `Bitacora` de `STD` y a `BitacoraEVT`:
+  misma forma, mismo propósito, tres tablas. Unificarlas en una bitácora por feria es lo
+  razonable; lo urgente es que el cuarto dominio no añada la cuarta.
+- **La vista pública que cruza ferias.** CU-FER-006 resuelve "¿qué hay en **esta** feria?". La
+  pregunta "¿dónde puedo participar hoy?" cruza todas, y con `Convocatoria` en el schema de cada
+  una no se responde con una consulta: hay que recorrer schemas o mantener un espejo en `public`.
+- **`RegistroConvocatoria` choca con el `RouterSolicitudes` de `EVT`.** Son la misma figura con
+  dos soluciones incompatibles, y `EVT` declara la suya "única para todo el sistema". Hay que
+  elegir una antes de construir `EVT`. Ver `Modelo de datos - Ferias` §3.4.

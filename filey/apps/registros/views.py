@@ -260,8 +260,11 @@ def registro(peticion):
 
     persona = Persona.objects.create_user(
         correo=flujo.correo,
-        nombre_completo=datos["nombre_completo"],
+        nombre=datos["nombre"],
+        primer_apellido=datos["primer_apellido"],
+        segundo_apellido=datos["segundo_apellido"],
         telefono=datos["telefono"],
+        pais=datos["pais"],
     )
 
     # Paso 8: continúa automáticamente en CU-REG-002.

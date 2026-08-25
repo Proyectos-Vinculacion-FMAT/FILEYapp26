@@ -1,6 +1,6 @@
 ---
 estado: aceptada
-version: "1.0"
+version: "1.1"
 tags:
   - tipo/adr
   - dom/fer
@@ -8,7 +8,7 @@ tags:
   - tema/arquitectura
   - tema/permisos
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-25
 id: ADR-0004
 responsable: Hugo Janssen
 supersede:
@@ -21,6 +21,26 @@ reemplazado_por:
 `Aceptado` — 2026-08-21. Reemplaza el modelo de permisos por módulo y nivel (`RolPermiso`) que
 implementan hoy CU-REG-003, CU-REG-005 y CU-REG-006. Ver "Consecuencias" para lo que eso
 implica en esos tres casos de uso.
+
+> [!warning] Enmendado el 2026-08-25 — administrar convocatorias también queda reservado al dueño
+> La decisión original daba **todo** el contenido de la feria a cualquier administrador, y
+> reservaba al dueño únicamente el alta y la baja de administradores. Al escribirse el CRUD de
+> convocatorias (CU-FER-005 a CU-FER-009) se decidió que **crear, editar, abrir/cerrar y
+> eliminar convocatorias es también exclusivo del dueño**.
+>
+> El motivo: una convocatoria no es contenido corriente. Define qué puertas están abiertas y
+> hasta cuándo, y de ella cuelga el expediente entero de cada módulo — borrarla arrastraría
+> solicitudes, editoriales, reservas y comprobantes de pago.
+>
+> **Lo que no cambia:** cualquier administrador sigue viendo el catálogo (CU-FER-006 — sin eso no
+> podría operar su módulo) y sigue operando todo lo que cuelga de una convocatoria: dictaminar,
+> revisar solicitudes, programar, validar abonos.
+>
+> Se registra como enmienda y no como ADR nuevo porque no cambia el modelo de datos ni el
+> mecanismo: `AdminFeria(feria, persona, es_dueño)` sigue igual, solo crece la lista de lo
+> reservado al dueño. **Si esa lista vuelve a crecer**, deja de ser una enmienda y toca escribir
+> el ADR que sustituya a este: sería señal de que "el administrador puede todo el contenido" ya
+> no describe el sistema.
 
 ## Contexto
 
@@ -128,8 +148,8 @@ El sistema queda con tres niveles de acceso, y no más:
 | Nivel | Quién | Qué puede |
 | --- | --- | --- |
 | Operador de la plataforma | Equipo técnico, por comando en el servidor | Crear una feria y designar a su dueño (CU-FER-001). No es un rol dentro de ninguna feria. |
-| Dueño de la feria | Una persona por feria | Todo lo de la feria **más** dar de alta y retirar a sus administradores (CU-FER-003, CU-FER-004). |
-| Administrador de la feria | Cero o más por feria | Todo el contenido de la feria: convocatorias, dictamen, programa, stands, visitas. **No** puede crear ni retirar administradores. |
+| Dueño de la feria | Una persona por feria | Todo lo de la feria **más** dar de alta y retirar a sus administradores (CU-FER-003, CU-FER-004) **y administrar sus convocatorias** (CU-FER-005 a CU-FER-009, enmienda 2026-08-25). |
+| Administrador de la feria | Cero o más por feria | Todo el contenido de la feria: dictamen, programa, stands, visitas, y todo lo que cuelga de una convocatoria. **No** puede crear ni retirar administradores, **ni administrar las convocatorias** — aunque sí consultarlas (CU-FER-006). |
 
 Quien no tiene fila en `AdminFeria` para una feria es, respecto de esa feria, un participante:
 puede entrar al portal público a proponer, pero no al panel. La identidad sigue siendo global —

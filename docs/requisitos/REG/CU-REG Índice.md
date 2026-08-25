@@ -69,6 +69,15 @@ Inventario de casos de uso del **Core Registros**: creación de cuenta, inicio d
 
 ---
 
+## Artefactos relacionados
+
+- [`Modelo de datos - Registros`](<Modelo de datos - Registros.md>) — `Persona` y `SesionOTP`.
+- [`Mecanismo de sesión y control de acceso`](<Mecanismo de sesion y control de acceso.md>) — qué
+  ocurre **después** del OTP: la cookie de sesión, qué manda el navegador en cada petición, quién
+  decide si pasa, y los huecos conocidos de lo que rodea a ese mecanismo.
+
+---
+
 ## Relación con otros dominios
 
 | Dominio                       | Cuándo llega aquí                                                                                |

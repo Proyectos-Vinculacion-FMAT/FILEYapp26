@@ -82,12 +82,21 @@ def test_crear_cuenta_manda_el_codigo(client, codigo_fijo):
 
     respuesta = client.post(
         reverse("registros:registro"),
-        {"nombre_completo": "Nueva Persona", "telefono": "999 000 1234"},
+        {
+            "nombre": "Nueva",
+            "primer_apellido": "Persona",
+            "segundo_apellido": "Ejemplo",
+            "telefono": "999 000 1234",
+            "pais": "MX",
+        },
     )
 
     assert respuesta["Location"] == reverse("registros:codigo")
     persona = Persona.objects.get(correo="nueva@ejemplo.com")
-    assert persona.nombre_completo == "Nueva Persona"
+    assert persona.nombre == "Nueva"
+    assert persona.primer_apellido == "Persona"
+    assert persona.segundo_apellido == "Ejemplo"
+    assert persona.pais == "MX"
     # El teléfono se guarda solo con dígitos, para que dos formas de
     # escribir el mismo número no pasen como números distintos.
     assert persona.telefono == "9990001234"
@@ -101,8 +110,10 @@ def test_el_correo_del_registro_sale_de_la_sesion_no_del_formulario(client, codi
     client.post(
         reverse("registros:registro"),
         {
-            "nombre_completo": "Impostora",
+            "nombre": "Impostora",
+            "primer_apellido": "Anónima",
             "telefono": "9990009999",
+            "pais": "MX",
             "correo": "victima@ejemplo.com",
         },
     )
@@ -116,7 +127,12 @@ def test_un_telefono_ya_usado_se_reporta_en_su_campo(client, participante, codig
 
     respuesta = client.post(
         reverse("registros:registro"),
-        {"nombre_completo": "Otra Persona", "telefono": participante.telefono},
+        {
+            "nombre": "Otra",
+            "primer_apellido": "Persona",
+            "telefono": participante.telefono,
+            "pais": "MX",
+        },
     )
 
     assert respuesta.status_code == 200
@@ -129,7 +145,12 @@ def test_un_telefono_corto_no_pasa(client, codigo_fijo):
 
     respuesta = client.post(
         reverse("registros:registro"),
-        {"nombre_completo": "Nueva Persona", "telefono": "12345"},
+        {
+            "nombre": "Nueva",
+            "primer_apellido": "Persona",
+            "telefono": "12345",
+            "pais": "MX",
+        },
     )
 
     assert "al menos 10 dígitos" in respuesta.content.decode()
@@ -250,3 +271,73 @@ def test_cerrar_sesion_no_se_puede_por_GET(client, participante):
 
     assert client.get(reverse("registros:salir")).status_code == 405
     assert "_auth_user_id" in client.session
+
+
+# ── El nombre en tres campos y el país (decisión 2026-08-25) ──
+
+
+def test_el_segundo_apellido_se_puede_dejar_vacio(client, codigo_fijo):
+    """CU-REG-001 E1: exigirlo dejaría fuera a casi todo participante extranjero."""
+    client.post(reverse("registros:acceso"), {"correo": "jane@ejemplo.com"})
+
+    respuesta = client.post(
+        reverse("registros:registro"),
+        {
+            "nombre": "Jane",
+            "primer_apellido": "Doe",
+            "telefono": "9990005555",
+            "pais": "US",
+        },
+    )
+
+    assert respuesta["Location"] == reverse("registros:codigo")
+    persona = Persona.objects.get(correo="jane@ejemplo.com")
+    assert persona.segundo_apellido == ""
+    assert persona.nombre_completo == "Jane Doe"
+    assert persona.pais == "US"
+
+
+def test_sin_primer_apellido_no_se_crea_la_cuenta(client, codigo_fijo):
+    client.post(reverse("registros:acceso"), {"correo": "nueva@ejemplo.com"})
+
+    respuesta = client.post(
+        reverse("registros:registro"),
+        {"nombre": "Nueva", "telefono": "9990006666", "pais": "MX"},
+    )
+
+    assert "Escribe tu primer apellido" in respuesta.content.decode()
+    assert not Persona.objects.filter(correo="nueva@ejemplo.com").exists()
+
+
+def test_un_pais_fuera_del_catalogo_no_se_guarda(client, codigo_fijo):
+    """El valor no llega de un desplegable: llega de un POST fabricado."""
+    client.post(reverse("registros:acceso"), {"correo": "nueva@ejemplo.com"})
+
+    respuesta = client.post(
+        reverse("registros:registro"),
+        {
+            "nombre": "Nueva",
+            "primer_apellido": "Persona",
+            "telefono": "9990007777",
+            "pais": "Wakanda",
+        },
+    )
+
+    assert respuesta.status_code == 200
+    assert not Persona.objects.filter(correo="nueva@ejemplo.com").exists()
+
+
+def test_el_formulario_de_registro_ofrece_el_desplegable_de_paises(client):
+    """Sin JavaScript: un <select> nativo con el catálogo ya renderizado."""
+    client.post(reverse("registros:acceso"), {"correo": "nueva@ejemplo.com"})
+
+    html = client.get(reverse("registros:registro")).content.decode()
+
+    assert 'name="pais"' in html
+    assert '<option value="MX"' in html
+    # México viene preseleccionado (PAIS_POR_DEFECTO). Se comprueba sobre
+    # el HTML sin saltos ni sangría para no atarse a cómo esté formateada
+    # la plantilla.
+    compacto = " ".join(html.split())
+    assert '<option value="MX" selected>México</option>' in compacto
+    assert '<option value="ES" >España</option>' in compacto
