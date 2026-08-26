@@ -21,7 +21,8 @@ entorno (ver ``apps/notificaciones/backends.py``).
 import pytest
 from django.core.cache import cache
 
-from apps.ferias.models import AdminFeria, Feria
+from apps.ferias.models import AdminFeria
+from apps.ferias.pruebas.fabricas import feria_sin_schema
 from apps.registros.models import Persona
 from apps.registros.services import otp as otp_service
 
@@ -88,33 +89,15 @@ def participante(db):
     )
 
 
-def _feria_sin_schema(nombre, slug):
-    """Una `Feria` que NO crea su schema.
-
-    Crear el schema dispara las migraciones de contenido y tarda
-    segundos; estas pruebas solo miran permisos, así que no lo pagan.
-    Las que necesitan un schema de verdad viven en
-    `apps/ferias/pruebas/`.
-
-    `auto_create_schema` se pone en la instancia y no se pasa al
-    constructor porque es un **atributo de clase** de `TenantMixin`, no
-    una columna: como kwarg, `Model.__init__` lo rechaza.
-    """
-    feria = Feria(nombre=nombre, slug=slug, schema_name=f"feria_{slug}")
-    feria.auto_create_schema = False
-    feria.save()
-    return feria
-
-
 @pytest.fixture
 def feria(db):
-    return _feria_sin_schema("FILEY 2027", "2027")
+    return feria_sin_schema("FILEY 2027", "2027")
 
 
 @pytest.fixture
 def otra_feria(db):
     """Una segunda feria, para comprobar que el acceso no se contagia."""
-    return _feria_sin_schema("FILEY 2028", "2028")
+    return feria_sin_schema("FILEY 2028", "2028")
 
 
 @pytest.fixture

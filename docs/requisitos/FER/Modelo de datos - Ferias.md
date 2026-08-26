@@ -1,13 +1,13 @@
 ---
 estado: propuesta
-version: "0.4"
+version: "0.5"
 tags:
   - tipo/modelo-de-datos
   - dom/fer
   - tema/permisos
   - tema/arquitectura
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-25
+fecha_actualizacion: 2026-08-26
 ---
 # Modelo de datos — Ferias (FER)
 
@@ -485,8 +485,11 @@ flowchart TD
   feria, la pregunta "¿dónde puedo participar hoy?" no se responde con un `SELECT`: hay que
   recorrer schemas o mantener un espejo en `public`. Es el mismo problema que el punto siguiente
   y conviene resolverlos juntos.
-- **Portal público y feria.** Este modelo define quién administra una feria. Falta precisar
-  cómo elige **el participante** la feria en la que quiere proponer: si el prefijo de URL basta,
-  o si hace falta una portada que liste las ferias con convocatorias abiertas. Hoy el
-  participante llega a `/convocatorias` sin feria de por medio (catálogo provisional
-  hardcodeado en `filey/apps/registros/catalogo.py`).
+- ~~**Portal público y feria.**~~ **Resuelto el 2026-08-26** por
+  [CU-FER-010](<CU-FER-010 Elegir la feria en la que quiero participar.md>): el participante
+  elige entre las ediciones `activa` justo después de identificarse, y con una sola el paso se
+  salta. El prefijo de URL **no bastaba** —quien acaba de entrar no tiene ningún slug que
+  escribir— pero tampoco hizo falta una portada que cruce ferias: se elige edición, y el
+  catálogo es de la edición elegida. El catálogo provisional hardcodeado desapareció con esto.
+  Sigue abierto el punto de arriba, el índice global: elegir entre ediciones no es lo mismo que
+  buscar en todas a la vez.

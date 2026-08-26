@@ -4,11 +4,12 @@
 
    Sustituye a `registros/admin_modulos.html`, que listaba módulos sobre
    un sistema de una sola feria. Ahora lo primero que se elige es la
-   edición; el módulo se elige ya dentro de ella. {% endcomment %}
+   edición; el módulo se elige ya dentro de ella.
+
+   Igual que la del participante, **no se ve cuando solo se administra
+   una feria**: la vista entra directo a ella. {% endcomment %}
 
 {% block titulo %}FILEY — Mis ferias{% endblock %}
-
-{% block url_inicio %}{% url 'ferias:mis_ferias' %}{% endblock %}
 
 {% block encabezado_titulo %}Mis ferias{% endblock %}
 

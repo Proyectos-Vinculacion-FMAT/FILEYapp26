@@ -1,0 +1,16 @@
+{% comment %} ===========================================================
+   Pie de página. No espera contexto: se incluye tal cual con
+   `{% include "componentes/pie.html" %}`.
+
+   Está separado del layout por la misma razón que la barra: en cuanto
+   una pantalla nueva no extiende `layouts/panel.html` —el catálogo de
+   una feria vista sin sesión, por ejemplo— sigue necesitando el mismo
+   pie, y volverlo a maquetar es como se acaba con dos direcciones
+   distintas de la Coordinación en el mismo sistema.
+   =========================================================== {% endcomment %}
+<footer class="footer">
+  <div class="footer-inner">
+    <div><strong>FILEY</strong> — Coordinación General de Contenidos · UADY</div>
+    <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos&#64;filey.org</div>
+  </div>
+</footer>

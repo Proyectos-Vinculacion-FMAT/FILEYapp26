@@ -7,17 +7,17 @@ prefijo. La contrapartida buena es que `{% url %}` y `reverse()`
 normales ya devuelven la URL con su feria; no hay que pasar el slug a
 mano por ninguna plantilla.
 
-Aquí se montarán los dominios de contenido (`eventos/`, `talleres/`,
-`stands/`, `visitas/`) conforme se construyan: todos son contenido de
-una edición, y ninguno vive fuera de una.
+La portada de una feria es su catálogo de convocatorias (`CU-FER-006`),
+que sirve `apps.convocatorias`. Aquí se montarán los dominios de
+contenido (`eventos/`, `talleres/`, `stands/`, `visitas/`) conforme se
+construyan: todos son contenido de una edición, y ninguno vive fuera de
+una.
 """
 
-from django.urls import path
-
-from apps.ferias import views
+from django.urls import include, path
 
 urlpatterns = [
-    path("", views.portada, name="feria_portada"),
+    path("", include("apps.convocatorias.urls")),
 ]
 
 # Estos cuatro parecen redundantes —son los de fábrica de Django— y no lo

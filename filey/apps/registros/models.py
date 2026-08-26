@@ -22,24 +22,12 @@ from django.utils import timezone
 from .paises import PAISES
 
 
-class Modulo(models.TextChoices):
-    """Los módulos del sistema FILEY.
-
-    Sobrevivió a la retirada de ``RolPermiso`` porque ya no es una
-    etiqueta de permiso: es el conjunto de módulos que existen, y lo
-    usan el catálogo provisional del participante (``catalogo.py``) y
-    ``Convocatoria.tipo``.
-
-    ``TODOS`` se conserva solo para el catálogo. Ya no significa
-    "administrador general": ese concepto murió con ``RolPermiso``
-    —el acceso se otorga por feria, no por módulo (ADR-0004)—.
-    """
-
-    EVT = "EVT", "Actividades FILEY (Eventos)"
-    TAL = "TAL", "Actividades Infantiles/Juveniles"
-    STD = "STD", "Stands"
-    VIS = "VIS", "Visitas Escolares"
-    TODOS = "*", "Todos los módulos"
+# `Modulo` vivía aquí y se retiró el 2026-08-26, con el catálogo
+# inventado que era su último consumidor. Sobrevivía a `RolPermiso` como
+# "el conjunto de módulos que existen", pero ese conjunto no es de
+# `registros`: quien lo necesita es la convocatoria, y lo declara por su
+# cuenta en `apps/convocatorias/models.py::TipoConvocatoria`. Ningún
+# campo lo referenciaba, así que su retirada no lleva migración.
 
 
 class PersonaManager(BaseUserManager):

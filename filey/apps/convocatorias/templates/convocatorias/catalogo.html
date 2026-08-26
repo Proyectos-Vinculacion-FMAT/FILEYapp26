@@ -1,0 +1,61 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} El catálogo de convocatorias de una feria (CU-FER-006).
+
+   Es la portada de `/f/<slug>/`, y se ve **con o sin sesión**: la barra
+   superior sabe no tener a nadie detrás. {% endcomment %}
+
+{% block titulo %}{{ feria.nombre }} — Convocatorias{% endblock %}
+
+{% block encabezado_titulo %}{{ feria.nombre }}{% endblock %}
+
+{% block encabezado_texto %}
+  {% if feria.sede %}{{ feria.sede }}{% endif %}
+  {% if feria.edicion %} · Edición {{ feria.edicion }}{% endif %}
+  {% if zona_admin %}
+    · Estás viendo el catálogo como administrador, con los borradores incluidos.
+  {% endif %}
+{% endblock %}
+
+{% block contenido %}
+{% if convocatorias %}
+  <div class="conv-grid">
+    {% for convocatoria in convocatorias %}
+      {% include "convocatorias/parciales/tarjeta_convocatoria.html" %}
+    {% endfor %}
+  </div>
+
+  {% if feria.estado == 'archivada' %}
+    {% comment %} E1: una edición archivada se consulta, no se opera. {% endcomment %}
+    <div class="note note-info" style="margin-top: 26px">
+      <div class="ico">🗄️</div>
+      <div>
+        Esta edición está <strong>archivada</strong>: su catálogo queda como
+        referencia y ya no admite registros nuevos.
+      </div>
+    </div>
+  {% else %}
+    <div class="note note-info" style="margin-top: 26px">
+      <div class="ico">ℹ️</div>
+      <div>
+        Las convocatorias <strong>cerradas no desaparecen</strong>: quedan
+        visibles como referencia, pero ya no permiten enviar nuevas solicitudes.
+      </div>
+    </div>
+  {% endif %}
+{% else %}
+  {% comment %} A2: una tabla vacía sin explicación se lee como una avería. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">ℹ️</div>
+    <div>
+      {% if zona_admin %}
+        Esta feria todavía no tiene ninguna convocatoria. Como dueño podrás
+        crear la primera desde aquí en cuanto esté construida esa pantalla.
+      {% else %}
+        Esta edición todavía no tiene convocatorias publicadas. Vuelve pronto:
+        aquí aparecerán en cuanto se abran.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

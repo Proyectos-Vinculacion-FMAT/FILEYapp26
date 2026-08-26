@@ -1,0 +1,61 @@
+{% load convocatorias_extra %}
+
+{% comment %} ===========================================================
+   Una convocatoria del catálogo (CU-FER-006).
+
+   Contexto que espera:
+
+     convocatoria   la Convocatoria a pintar
+     zona_admin     ¿la mira quien administra esta feria?
+
+   La misma tarjeta para los dos públicos. El estado `borrador` solo
+   llega hasta aquí si quien mira administra la feria —se filtra en la
+   consulta, no en este `{% if %}`— así que pintarlo no descubre nada.
+
+   El botón "Registrarme" todavía no existe: lleva al formulario del
+   módulo (CU-EVT-002, CU-STD-001, CU-VIS-001) y ninguno está
+   construido. Cuando lo esté, es el único punto que hay que tocar.
+   =========================================================== {% endcomment %}
+<article class="conv-card {% if convocatoria.estado == 'cerrada' %}is-closed{% endif %}">
+
+  <div class="conv-banner {{ convocatoria.tipo|banner_de }}">
+    <span class="ico">{{ convocatoria.tipo|icono_de }}</span>
+    <h3>{{ convocatoria.nombre }}</h3>
+  </div>
+
+  <div class="conv-body">
+    {% if convocatoria.estado == 'abierta' %}
+      <span class="badge badge-open">Abierta</span>
+    {% elif convocatoria.estado == 'cerrada' %}
+      <span class="badge badge-closed">Convocatoria cerrada</span>
+    {% else %}
+      <span class="badge badge-soon">Borrador</span>
+    {% endif %}
+
+    <p>{{ convocatoria.get_tipo_display }}</p>
+
+    <div class="conv-dates">
+      {% if convocatoria.fecha_cierre %}
+        📅 Cierra el {{ convocatoria.fecha_cierre }}
+      {% elif convocatoria.fecha_apertura %}
+        📅 Abre el {{ convocatoria.fecha_apertura }}
+      {% else %}
+        📅 Fechas por anunciar
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="conv-foot">
+    {% if convocatoria.estado == 'abierta' and not zona_admin %}
+      <button class="btn btn-primary btn-block" type="button" x-data
+              @click="$store.avisos.agregar('El formulario de {{ convocatoria.nombre|escapejs }} se conecta con su módulo en una siguiente entrega.')">
+        Registrarme
+      </button>
+    {% else %}
+      <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
+        {% if zona_admin %}Sin acciones todavía{% else %}Cerrada{% endif %}
+      </button>
+    {% endif %}
+  </div>
+
+</article>
