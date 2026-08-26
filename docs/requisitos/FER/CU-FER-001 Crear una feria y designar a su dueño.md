@@ -172,3 +172,14 @@ CU-REG-002 E3, donde el correo **es** la credencial y por eso sí anula el códi
 > Crear la feria no abre ninguna convocatoria. El estado `en_preparacion` deja entrar a sus
 > administradores pero no la publica; cada dominio abre su propia convocatoria por separado, ya
 > dentro de la feria.
+
+<!-- -->
+
+> [!warning] Activarla es un paso aparte, y si se olvida no lo avisa nada
+> Desde [CU-FER-010](<CU-FER-010 Elegir la feria en la que quiero participar.md>) el participante
+> solo ve las ediciones `activa`. Una feria recién creada está `en_preparacion`, así que **no la
+> ve nadie de fuera** hasta que alguien la pase a `activa` desde `/django-admin/`.
+>
+> El síntoma de olvidarlo no es una tarjeta de menos: como la pantalla de elegir feria se salta
+> cuando hay una sola activa, con cero activas lo que ve el participante al entrar es "no hay
+> ninguna edición abierta". Activar la edición es el último paso de ponerla en marcha.

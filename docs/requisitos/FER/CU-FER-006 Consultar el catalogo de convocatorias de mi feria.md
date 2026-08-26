@@ -1,13 +1,13 @@
 ---
-estado: propuesta
-version: "0.2"
+estado: implementado
+version: "1.0"
 tags:
   - tipo/caso-de-uso
   - dom/fer
   - tema/alcance
   - tema/usuarios
 fecha: 2026-08-25
-fecha_actualizacion: 2026-08-25
+fecha_actualizacion: 2026-08-26
 id: CU-FER-006
 dominio: FER
 responsable: Hugo Janssen
@@ -20,9 +20,9 @@ trazabilidad:
 
 > [!important] Este catálogo es **la fuente de la pantalla del participante**
 > No es una pantalla administrativa que además se enseña fuera: es la consulta que el frontend
-> lee para pintarle a cualquiera las convocatorias abiertas de una feria. Sustituye al catálogo
-> hardcodeado que hoy vive en `filey/apps/registros/catalogo.py` — ver "Estado de implementación"
-> al final.
+> lee para pintarle a cualquiera las convocatorias abiertas de una feria. Sustituyó al catálogo
+> hardcodeado que vivía en `filey/apps/registros/catalogo.py`, retirado el 2026-08-26 — ver
+> "Estado de implementación" al final.
 
 <!-- -->
 
@@ -223,19 +223,27 @@ Es el corazón de este caso de uso. La misma consulta, filtrada y enriquecida se
 
 ## Estado de implementación
 
-> [!warning] Esta pantalla ya existe en el código, con datos inventados
-> `filey/apps/registros/catalogo.py` tiene hoy un catálogo **hardcodeado** que alimenta
-> `/convocatorias`, con exactamente los campos que este caso de uso define: título, descripción,
-> estado, fechas y si es navegable. Su propio docstring dice que es temporal y que se
-> reemplazará "por una consulta real" cuando los dominios tengan backend.
->
-> **La consulta real es esta.** Dos diferencias que hay que resolver al portarlo:
->
-> - El catálogo hardcodeado **no cuelga de ninguna feria**: se llega a `/convocatorias` sin feria
->   de por medio. Con `Convocatoria` viviendo en el schema de cada feria, la ruta pasa a ser
->   `/f/<slug>/convocatorias`.
-> - Enumera **cuatro** tipos (`EVT`, `TAL`, `STD`, `VIS`) y `Convocatoria.tipo` admite tres.
->   `TAL` sigue sin decidirse — ver el índice de `FER`.
+El **flujo del participante** se construyó el 2026-08-26. Con él desapareció el catálogo
+hardcodeado de `filey/apps/registros/catalogo.py` y la ruta `/convocatorias` que alimentaba: el
+catálogo es ahora la portada de `/f/<slug>/` y sale de la base.
+
+| Pieza | Dónde |
+| --- | --- |
+| El filtro por público | `filey/apps/convocatorias/servicios/catalogo.py` |
+| La pantalla | `filey/apps/convocatorias/views.py::catalogo_de_la_feria` |
+| Quién administra ésta | `filey/apps/ferias/permisos.py::acceso_a` |
+| Las pruebas | `filey/apps/convocatorias/pruebas/test_catalogo.py` |
+
+**Lo que ve el participante está completo**: abiertas y cerradas, nunca los borradores, y el
+aviso de A2/A4 cuando no hay nada. Lo que **falta** de este caso de uso:
+
+- El **conteo de registros** por convocatoria, que necesita `RegistroConvocatoria` — todavía no
+  existe como modelo.
+- Las **acciones del dueño** (Nueva · Editar · Abrir/Cerrar · Eliminar), que son CU-FER-005,
+  007, 008 y 009.
+- El botón **"Registrarme"**, que lleva al formulario del módulo (CU-EVT-002, CU-STD-001,
+  CU-VIS-001). Ninguno de los tres módulos está construido, así que hoy avisa y no navega.
+- `TAL` sigue sin decidirse (`Convocatoria.tipo` admite tres tipos) — ver el índice de `FER`.
 
 > [!warning] Falta la vista que cruza ferias, y no es esta
 > Este caso de uso responde "¿qué hay en **esta** feria?". La pregunta "¿dónde puedo participar

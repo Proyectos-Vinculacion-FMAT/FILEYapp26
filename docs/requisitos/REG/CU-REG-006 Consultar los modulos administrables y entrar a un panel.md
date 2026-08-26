@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: 0.3
+version: 0.4
 tags:
   - caso-de-uso
   - autenticacion
@@ -8,7 +8,7 @@ tags:
   - admin
   - navegacion
 fecha: 2026-06-30
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-26
 id: CU-REG-006
 dominio: CORE-REG
 responsable: Juan Manuel Hernandez Miranda
@@ -32,6 +32,19 @@ trazabilidad:
 > flujos A1 y A2 de la v0.2 —saltar la pantalla si solo hay un módulo permitido, y mostrar
 > deshabilitados los módulos sin permiso— quedan **sin objeto**: todas las cuentas que llegan
 > aquí ven los cuatro módulos y pueden entrar a los cuatro.
+
+<!-- -->
+
+> [!note] Actualización 2026-08-26 — el código llamaba «CU-REG-006» a otra cosa
+> `filey/apps/registros/views.py` etiquetaba con este identificador la pantalla `/convocatorias`
+> del **participante**, que no es lo que describe este documento. Esa pantalla —y el catálogo
+> inventado que la alimentaba— desapareció: la sustituye
+> [CU-FER-006](<../FER/CU-FER-006 Consultar el catalogo de convocatorias de mi feria.md>), que
+> cuelga de una feria, y a esa feria se llega por
+> [CU-FER-010](<../FER/CU-FER-010 Elegir la feria en la que quiero participar.md>).
+>
+> Lo que **este** documento describe —elegir módulo dentro de una feria— sigue sin construir: no
+> hay ningún panel de módulo todavía.
 
 ## Objetivo
 

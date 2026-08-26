@@ -1,13 +1,13 @@
 ---
 estado: propuesta
-version: "0.3"
+version: "0.4"
 tags:
   - tipo/indice
   - dom/fer
   - tema/permisos
   - tema/arquitectura
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-25
+fecha_actualizacion: 2026-08-26
 ---
 # CU-FER — Índice de casos de uso (Core Ferias)
 
@@ -21,6 +21,11 @@ feria.
 > La cuenta es global y no pertenece a ninguna feria: la misma `Persona`, con el mismo correo y
 > el mismo OTP, puede administrar FILEY 2027 y ser participante en FILEY 2028. Lo que se separa
 > por feria es el contenido, nunca la identidad.
+
+> [!note] CU-FER-002 y CU-FER-010 son la misma pantalla para dos públicos
+> Las dos preguntan "¿a qué edición entras?" y las dos **se saltan cuando solo hay una**. Lo que
+> cambia es qué ferias entran en la lista: el administrador ve aquellas en las que tiene acceso,
+> sin mirar su estado; el participante ve solo las `activa`.
 
 **Actores:**
 
@@ -40,6 +45,7 @@ feria.
 
 - **CU-FER-001** Crear una feria y designar a su dueño — *Operador de la plataforma*
 - **CU-FER-002** Consultar las ferias que administro y entrar a una — *Usuario administrativo*
+- **CU-FER-010** Elegir la feria en la que quiero participar — *Participante*
 - **CU-FER-003** Dar de alta un administrador en mi feria — *Dueño de la feria*
 - **CU-FER-004** Retirar el acceso de un administrador de mi feria — *Dueño de la feria*
 

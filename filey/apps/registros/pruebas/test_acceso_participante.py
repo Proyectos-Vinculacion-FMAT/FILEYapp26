@@ -170,7 +170,7 @@ def test_el_codigo_correcto_abre_la_sesion(client, participante, codigo_fijo):
 
     respuesta = client.post(reverse("registros:codigo"), {"codigo": codigo_fijo})
 
-    assert respuesta["Location"] == reverse("registros:convocatorias")
+    assert respuesta["Location"] == reverse("ferias:elegir")
     assert client.session["_auth_user_id"] == str(participante.pk)
 
 
@@ -182,7 +182,7 @@ def test_el_codigo_llega_repartido_en_seis_cajas(client, participante, codigo_fi
         reverse("registros:codigo"), {"digito": list(codigo_fijo)}
     )
 
-    assert respuesta["Location"] == reverse("registros:convocatorias")
+    assert respuesta["Location"] == reverse("ferias:elegir")
 
 
 def test_un_codigo_equivocado_dice_cuantos_intentos_quedan(
@@ -228,26 +228,16 @@ def test_el_reenvio_manda_un_codigo_nuevo(client, participante, codigo_fijo, set
 
 
 # ── Después del login ─────────────────────────────────────────
+#
+# El destino ya no es de `REG`: se entrega la sesión y se manda a elegir
+# feria. Lo que pasa a partir de ahí se prueba en
+# `apps/ferias/pruebas/test_seleccion_feria.py`.
 
 
-def test_las_convocatorias_piden_sesion(client):
-    respuesta = client.get(reverse("registros:convocatorias"))
+def test_elegir_feria_pide_sesion(client):
+    respuesta = client.get(reverse("ferias:elegir"))
 
     assert respuesta["Location"] == reverse("registros:acceso")
-
-
-def test_las_convocatorias_saludan_y_listan(client, participante):
-    client.force_login(participante)
-
-    respuesta = client.get(reverse("registros:convocatorias"))
-    cuerpo = respuesta.content.decode()
-
-    assert respuesta.status_code == 200
-    assert "Hola, Ana" in cuerpo
-    assert "Convocatoria de Stands" in cuerpo
-    assert "Actividades FILEY (Eventos)" in cuerpo
-    # La convocatoria cerrada sigue visible como referencia.
-    assert "Convocatoria cerrada" in cuerpo
 
 
 def test_un_participante_no_entra_al_panel_administrativo(client, participante):
