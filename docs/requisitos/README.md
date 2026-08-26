@@ -76,7 +76,8 @@ Homologado en
 
 | Código | Dominio | Ámbito | Responsable (equipo) | Necesidad de (cliente) | Artefactos |
 | ------ | ------- | ------ | --------------------- | ----------------------- | ---------- |
-| `REG` | Registros / Convocatorias | Transversal: solo la **captura** (formularios/convocatorias) de propuestas para `STD`/`EVT`/`TAL`/`VIS`; la **revisión** vive en cada dominio, no en `REG` (ver nota abajo) | Juan Manuel Miranda | — | Pendiente: aún sin carpeta en `requisitos/`; en desarrollo en otra rama |
+| `FER` | Ferias | Transversal y **global**: el registro de las ediciones de la feria y quién administra cada una. Todo lo demás ocurre dentro de una feria | Hugo Janssen | — | [`FER/CU-FER Índice.md`](<FER/CU-FER Índice.md>) · `Modelo de datos - Ferias.md` |
+| `REG` | Registros / Convocatorias | Transversal y **global**: identidad (`Persona`), acceso por OTP y la **captura** (formularios/convocatorias) de propuestas para `STD`/`EVT`/`TAL`/`VIS`; la **revisión** vive en cada dominio, no en `REG` (ver nota abajo) | Juan Manuel Miranda | — | [`REG/CU-REG Índice.md`](<REG/CU-REG Índice.md>) · `Modelo de datos - Registros.md` |
 | `STD` | Stands / Expositores | Renta, reserva, pago y confirmación de espacios en el showfloor | Hugo Janssen | Hipólito / Gilberto | [`STD/CU-STD Índice.md`](<STD/CU-STD Índice.md>) · `Modelo de datos - Stands.md` · `Proceso de alto nivel - Stands.md` |
 | `EVT` | Eventos | Actividades de público general (conversatorio, conferencia, charla, mesa redonda, presentación de libro/revista, lectura de obra, encuentro) | Juan Manuel Miranda | Hipólito | [`EVT/CU-EVT Índice.md`](<EVT/CU-EVT Índice.md>) · `Modelo de datos - Eventos.md` · `Proceso de alto nivel - Eventos.md` · `Estructura de vistas - Eventos.md` |
 | `TAL` | Talleres | Actividades de aforo reducido, normalmente infantil/juvenil | Juan Manuel Miranda | Elvira | [`TAL/CU-TAL Índice.md`](<TAL/CU-TAL Índice.md>) · `Modelo de datos - Talleres.md` · `Proceso de alto nivel - Talleres.md` |
@@ -125,6 +126,8 @@ Los requisitos **se dividen por dominio** y se documentan como **casos de uso** 
 requisitos/
 ├── README.md
 ├── CU-XX-NN Template.md
+├── FER/   → CU-FER-NNN  (ferias: ediciones y acceso administrativo; global)
+├── REG/   → CU-REG-NNN  (identidad y acceso por OTP; global)
 ├── EVT/   → CU-EVT-NNN  (eventos generales; ver EVT/CU-EVT Índice.md)
 ├── PRG/   → CU-PRG-NNN  (programa general; ver PRG/CU-PRG Índice.md)
 ├── SAL/   → CU-SAL-NNN  (salas y salones; ver SAL/CU-SAL Índice.md)
@@ -135,9 +138,21 @@ requisitos/
 
 > [!note]
 > `EVT` y `TAL` se trajeron y homologaron a esta convención el 2026-06-29 (antes en la rama
-> `main-juan`, responsabilidad de Juan Manuel Miranda). `REG` todavía no tiene carpeta en
-> este repositorio. Al abrirse, seguir la misma convención: carpeta `DOM/`, índice
-> `CU-DOM Índice.md` y un archivo por caso de uso a partir de [`CU-XX-NN Template.md`](<CU-XX-NN Template.md>).
+> `main-juan`, responsabilidad de Juan Manuel Miranda). `REG` ya tiene carpeta propia, y `FER`
+> se abrió el 2026-08-21. Al abrir un dominio nuevo, seguir la misma convención: carpeta
+> `DOM/`, índice `CU-DOM Índice.md` y un archivo por caso de uso a partir de
+> [`CU-XX-NN Template.md`](<CU-XX-NN Template.md>).
+
+<!-- -->
+
+> [!important] Dos dominios son **globales**; los demás viven dentro de una feria
+> `FER` y `REG` son la única capa que existe fuera de cualquier edición: `REG` responde *quién
+> eres* (la `Persona`, con correo único en todo el sistema) y `FER` responde *en qué feria estás
+> y qué puedes hacer ahí*. `EVT`, `TAL`, `STD`, `VIS`, `PRG` y `SAL` ocurren **dentro** de una
+> feria, y sus datos viven en el schema de esa feria
+> ([ADR-0003](<../adr/0003-una-feria-por-schema.md>)). Por eso ninguna de sus tablas guarda
+> identificador de edición — ver [`FER/CU-FER Índice.md`](<FER/CU-FER Índice.md>) para las
+> correcciones que esto deja pendientes en `TAL` y `STD`.
 
 <!-- -->
 
