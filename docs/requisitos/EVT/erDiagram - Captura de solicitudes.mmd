@@ -10,10 +10,24 @@ erDiagram
         string ciudad
     }
 
+    CatalogoConvocatorias {
+        bigint id PK
+        string nombre_convocatoria
+        string prefijo
+        date fecha_apertura
+        date fecha_cierre
+        boolean esta_activa
+    }
+
+    DetallesConvocatoria {
+        bigint id PK
+        bigint convocatoria_id FK
+    }
+
     RouterSolicitudes {
         bigint id PK
         bigint usuario_django FK
-        string convocatoria "DISCRIMINADOR"
+        bigint convocatoria_id FK "DISCRIMINADOR"
         bigint solicitud_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -25,16 +39,22 @@ erDiagram
         string nombre_moderador
         string nombre_organizador_organizacion
         string publico_objetivo
-        boolean tiene_semblanza
-        boolean tiene_sinopsis
+        string sinopsis
+        boolean es_uady
+        boolean requiere_constancia
         string comentarios
         timestamp fecha_de_solicitud
+    }
+
+    CatalogoActividades {
+        bigint id PK
+        string nombre
     }
 
     RouterActividades {
         bigint id PK
         bigint solicitud_id FK
-        string tipo_actividad "DISCRIMINADOR"
+        bigint tipo_actividad_id FK "DISCRIMINADOR"
         bigint detalle_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -48,27 +68,37 @@ erDiagram
     Actividad_Conversatorio {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_participante_3
+        string semblanza_participante_3
     }
 
     Actividad_Conferencia {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
     Actividad_Charla {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
     Actividad_MesaRedonda {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_participante_3
+        string semblanza_participante_3
     }
 
     Actividad_PresentacionLibro {
@@ -76,18 +106,22 @@ erDiagram
         string titulo_publicacion
         string tipo_presentador
         string nombre_autor_1
+        string semblanza_autor_1
         string nombre_autor_2
+        string semblanza_autor_2
         string nombre_autor_3
+        string semblanza_autor_3
         string nombre_autor_4
+        string semblanza_autor_4
         string nombre_autor_5
+        string semblanza_autor_5
         boolean autor_participa
         string nombres_de_autores_presentes
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_editorial
-        boolean tiene_foto_autor
-        boolean tiene_foto_portada
-        boolean ejemplar_fisico_entregado
     }
 
     Actividad_PresentacionRevista {
@@ -95,35 +129,45 @@ erDiagram
         string titulo_publicacion
         string tipo_presentador
         string nombre_editor_1
+        string semblanza_editor_1
         string nombre_editor_2
+        string semblanza_editor_2
         boolean editor_participa
         string nombres_de_editores_presentes
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_editorial
-        boolean tiene_foto_portada
-        boolean ejemplar_fisico_entregado
     }
 
     Actividad_LecturaObra {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
     Actividad_Encuentro {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
 
     Persona ||--o{ RouterSolicitudes : "tiene"
+    CatalogoConvocatorias ||--o{ RouterSolicitudes : "clasifica"
+    CatalogoConvocatorias ||--|| DetallesConvocatoria : "detalla"
 
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
     Solicitudes_EVT ||--o{ RouterActividades : "contiene"
     Solicitudes_EVT ||--o{ RouterDocumentos : "adjunta"
+
+    CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
     RouterActividades }o..|| Actividad_Conversatorio : "enruta"
     RouterActividades }o..|| Actividad_Conferencia : "enruta"
