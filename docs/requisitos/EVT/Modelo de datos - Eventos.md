@@ -44,9 +44,9 @@ lo obtiene por FK a una tabla configurable.
 
 | Tabla | Propósito |
 | --- | --- |
-| Router de solicitudes | Relaciona a la persona con las solicitudes que ha creado, y determina mediante `convocatoria_id` (FK a `CatalogoConvocatorias`, §2.2) a qué dominio pertenece cada una. Es único para todo el sistema: sirve a `EVT`, `TAL`, `STD` y `VIS`. |
-| Router de actividades | Relaciona una solicitud con su actividad específica, y determina mediante `tipo_actividad_id` (FK a `CatalogoActividades`, §2.5) cuál de las ocho tablas la contiene. |
-| Router de documentos | Relaciona los documentos adjuntos con la publicación que los requiere. Conecta directamente con `Actividad_PresentacionLibro` y `Actividad_PresentacionRevista` —las únicas actividades que llevan archivos adjuntos—, determinando mediante `tipo_publicacion` cuál de las dos. Permite uno o varios documentos por publicación y guarda la ubicación del archivo. |
+| Router de solicitudes | Relaciona a la persona con las solicitudes que ha creado. Su discriminador, `convocatoria_id`, es una FK a `CatalogoConvocatorias` (§2.2); la fila referida trae el `prefijo` (`EVT`, `TAL`, `STD` o `VIS`) con el que se resuelve a qué tabla pertenece la solicitud. Es único para todo el sistema: sirve a los cuatro dominios. |
+| Router de actividades | Relaciona una solicitud con su actividad específica. Su discriminador, `tipo_actividad_id`, es una FK a `CatalogoActividades` (§2.5); la fila referida trae el `nombre` con el que se resuelve cuál de las ocho tablas la contiene. |
+| Router de documentos | Relaciona los documentos adjuntos con la publicación que los requiere. Conecta directamente con `Actividad_PresentacionLibro` y `Actividad_PresentacionRevista` —las únicas actividades que llevan archivos adjuntos—; su discriminador, `tipo_publicacion`, sigue siendo un string literal porque no hay un catálogo detrás. Permite uno o varios documentos por publicación y guarda la ubicación del archivo. |
 
 Visualmente:
 
@@ -54,7 +54,8 @@ Visualmente:
 flowchart TD
     U[Persona<br/>registro global del sistema]
 
-    CC[(CatalogoConvocatorias<br/>dominio: EVT/TAL/STD/VIS)]
+    CC[(CatalogoConvocatorias<br/>prefijo: EVT/TAL/STD/VIS)]
+    DD[(DetallesConvocatoria)]
     RS{{Router de solicitudes<br/>discriminador: convocatoria_id}}
 
     S_EVT[Solicitudes EVT]
@@ -73,6 +74,7 @@ flowchart TD
 
     U --> RS
     CC --> RS
+    CC -.-> DD
     RS --> S_EVT
     RS --> S_TAL
     RS --> S_STD
@@ -93,17 +95,19 @@ flowchart TD
 ### Referencias polimórficas
 
 Los tres routers comparten un mecanismo: guardan un **discriminador** que nombra la tabla
-destino y un **identificador** de la fila dentro de esa tabla. En `RouterSolicitudes` y
-`RouterActividades` el discriminador ya no es un string suelto, sino el valor de un campo de
-catálogo obtenido por FK —`CatalogoConvocatorias.dominio` y `CatalogoActividades.nombre`
-respectivamente—, de modo que agregar una convocatoria o un tipo de actividad es dar de alta
-una fila de catálogo, no tocar un `enum` en código.
+destino y un **identificador** de la fila dentro de esa tabla. El discriminador vive **en la
+fila del router**, no en el catálogo: en `RouterSolicitudes` y `RouterActividades` ya no es un
+string suelto, sino una FK (`convocatoria_id`, `tipo_actividad_id`) hacia una tabla de catálogo.
+El catálogo referido no es el discriminador —es el que la aplicación consulta, ya siguió la FK,
+para resolver a qué tabla apunta—, a través de un campo propio de esa fila: `prefijo` en
+`CatalogoConvocatorias`, `nombre` en `CatalogoActividades`. Agregar una convocatoria o un tipo
+de actividad es entonces dar de alta una fila de catálogo, no tocar un `enum` en código.
 
-| Router | Discriminador | Identificador | Destinos posibles |
-| --- | --- | --- | --- |
-| `RouterSolicitudes` | `convocatoria_id` → `CatalogoConvocatorias.dominio` | `solicitud_id` | `Solicitudes_EVT`, `Solicitudes_TAL`, `Solicitudes_STD`, `Solicitudes_VIS` |
-| `RouterActividades` | `tipo_actividad_id` → `CatalogoActividades.nombre` | `detalle_id` | Las ocho tablas `Actividad_*` |
-| `RouterDocumentos` | `tipo_publicacion` | `publicacion_id` | `Actividad_PresentacionLibro`, `Actividad_PresentacionRevista` |
+| Router | Discriminador (en el router) | Se resuelve con | Identificador | Destinos posibles |
+| --- | --- | --- | --- | --- |
+| `RouterSolicitudes` | `convocatoria_id` (FK) | `CatalogoConvocatorias.prefijo` | `solicitud_id` | `Solicitudes_EVT`, `Solicitudes_TAL`, `Solicitudes_STD`, `Solicitudes_VIS` |
+| `RouterActividades` | `tipo_actividad_id` (FK) | `CatalogoActividades.nombre` | `detalle_id` | Las ocho tablas `Actividad_*` |
+| `RouterDocumentos` | `tipo_publicacion` (string) | — no hay catálogo, el valor ya es literal | `publicacion_id` | `Actividad_PresentacionLibro`, `Actividad_PresentacionRevista` |
 
 Como el identificador puede apuntar a tablas distintas según el discriminador, **no es una
 clave foránea con restricción**: la base de datos no puede validarlo. La integridad depende de
@@ -111,11 +115,15 @@ la capa de aplicación, y conviene resguardarla con pruebas o con el mecanismo d
 genéricas que ofrezca el ORM. A cambio, el patrón permite agregar convocatorias o tipos de
 actividad sin modificar las tablas existentes.
 
-> `CatalogoConvocatorias.dominio` no aparece en la lista de atributos que definió el pedido
+> `CatalogoConvocatorias.prefijo` no aparece en la lista de atributos que definió el pedido
 > original —solo `nombre_convocatoria`, las fechas y `esta_activa`—; se añade aquí porque el
-> router necesita distinguir `EVT`/`TAL`/`STD`/`VIS` de algún campo estable, y `nombre_convocatoria`
-> es texto editable por el administrador (pensado para mostrarse, no para enrutar). Revisar si
-> esta inferencia es correcta.
+> router necesita resolver a `EVT`/`TAL`/`STD`/`VIS` desde algún campo estable, y
+> `nombre_convocatoria` es texto editable por el administrador (pensado para mostrarse, no para
+> enrutar). Se nombra `prefijo` y no `dominio` porque `EVT`/`TAL`/`STD`/`VIS` ya funciona como
+> prefijo literal en el resto del sistema —nombres de tabla (`Solicitudes_EVT`,
+> `Actividad_*`), IDs de caso de uso (`CU-EVT-*`), tags (`dom/evt`)—, mientras que "dominio" es
+> el término de arquitectura que ya usa este documento para el concepto, no el nombre de un
+> campo. Revisar si esta inferencia es correcta.
 
 ---
 
@@ -137,16 +145,21 @@ erDiagram
     CatalogoConvocatorias {
         bigint id PK
         string nombre_convocatoria
-        string dominio "DISCRIMINADOR"
+        string prefijo
         date fecha_apertura
         date fecha_cierre
         boolean esta_activa
     }
 
+    DetallesConvocatoria {
+        bigint id PK
+        bigint convocatoria_id FK
+    }
+
     RouterSolicitudes {
         bigint id PK
         bigint usuario_django FK
-        bigint convocatoria_id FK
+        bigint convocatoria_id FK "DISCRIMINADOR"
         bigint solicitud_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -167,13 +180,13 @@ erDiagram
 
     CatalogoActividades {
         bigint id PK
-        string nombre "DISCRIMINADOR"
+        string nombre
     }
 
     RouterActividades {
         bigint id PK
         bigint solicitud_id FK
-        bigint tipo_actividad_id FK
+        bigint tipo_actividad_id FK "DISCRIMINADOR"
         bigint detalle_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -282,6 +295,7 @@ erDiagram
 
     Persona ||--o{ RouterSolicitudes : "tiene"
     CatalogoConvocatorias ||--o{ RouterSolicitudes : "clasifica"
+    CatalogoConvocatorias ||--|| DetallesConvocatoria : "detalla"
 
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
@@ -323,21 +337,24 @@ valor vigente del perfil, no el que tenía la persona al enviar.
 
 Catálogo del que cuelgan todas las convocatorias del sistema —una por dominio (`EVT`, `TAL`,
 `STD`, `VIS`), y potencialmente varias por dominio si en el futuro conviven ediciones—. Es la
-tabla que consulta `RouterSolicitudes` (§2.3) para saber a qué dominio pertenece cada solicitud
-y si esa convocatoria sigue aceptando envíos.
+tabla que referencia `RouterSolicitudes.convocatoria_id` (§2.3): el discriminador vive en esa
+FK del router, no aquí; esta tabla es la que la aplicación consulta, una vez seguida la FK, para
+saber a qué dominio pertenece la solicitud y si la convocatoria sigue aceptando envíos.
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| nombre_convocatoria | Nombre visible de la convocatoria (p. ej. "Convocatoria FILEY 2027 — Eventos generales"). Editable por el administrador; no es el discriminador de enrutamiento. |
-| dominio | Discriminador: `EVT`, `TAL`, `STD` o `VIS`. Determina a qué tabla de solicitudes enruta `RouterSolicitudes.solicitud_id` (§1). No forma parte del pedido original de campos; se agrega porque el router necesita un valor estable para enrutar, distinto del nombre editable. |
+| nombre_convocatoria | Nombre visible de la convocatoria (p. ej. "Convocatoria FILEY 2027 — Eventos generales"). Editable por el administrador; no participa en el enrutamiento. |
+| prefijo | `EVT`, `TAL`, `STD` o `VIS`. El campo que resuelve a qué tabla de solicitudes apunta `RouterSolicitudes.solicitud_id` una vez seguida la FK (§1). No forma parte del pedido original de campos; se agrega porque el enrutamiento necesita un valor estable, distinto del nombre editable. Se llama `prefijo` y no `dominio` porque así es como `EVT`/`TAL`/`STD`/`VIS` ya se usa en el resto del sistema (nombres de tabla, IDs de caso de uso, tags) — "dominio" queda para el concepto de arquitectura, no para el nombre del campo. |
 | fecha_apertura | Fecha en que la convocatoria empieza a aceptar solicitudes. |
 | fecha_cierre | Fecha en que deja de aceptarlas. |
 | esta_activa | Permite pausar la convocatoria en una emergencia sin tocar `fecha_cierre`: con `esta_activa = false`, aunque la fecha actual esté dentro del rango, no se aceptan envíos. |
 
 Los parámetros que no son comunes a cualquier convocatoria —cupos, prefijo de folio, fechas de
 notificación, etc.— no viven aquí: cada dominio los define en su propia tabla de detalle
-(`detalles` en el diagrama de §1). Para `EVT` esa tabla es `DetallesConvocatoria` (§3.6).
+(`detalles` en el diagrama de §1), enlazada uno a uno por `convocatoria_id`. Para `EVT` esa
+tabla es `DetallesConvocatoria` (§3.6); el diagrama de esta etapa la muestra como referencia
+mínima —su definición completa vive en la etapa 2, porque es el administrador quien la escribe.
 
 ### 2.3 RouterSolicitudes
 
@@ -349,8 +366,8 @@ creación es obligatoria al enviar.
 | --- | --- |
 | id | Identificador único. |
 | usuario_django | FK → Persona. Conserva el nombre `usuario_django` porque referencia la tabla de usuarios del framework. |
-| convocatoria_id | FK → CatalogoConvocatorias (§2.2). Su campo `dominio` determina a qué tabla apunta `solicitud_id`. |
-| solicitud_id | Referencia polimórfica a la solicitud, en la tabla que indique `CatalogoConvocatorias.dominio` (§1). |
+| convocatoria_id | Discriminador. FK → CatalogoConvocatorias (§2.2); su campo `prefijo` determina a qué tabla apunta `solicitud_id`. |
+| solicitud_id | Referencia polimórfica a la solicitud, en la tabla que indique `CatalogoConvocatorias.prefijo` (§1). |
 
 ### 2.4 Solicitudes_EVT
 
@@ -379,13 +396,14 @@ participante, y por eso se definen junto a cada `nombre_participante_*` en las t
 
 ### 2.5 CatalogoActividades
 
-Catálogo de los ocho tipos de actividad. Reemplaza el valor de texto que antes guardaba
-`RouterActividades.tipo_actividad` directamente: ahora ese campo es una FK hacia aquí.
+Catálogo de los ocho tipos de actividad. Antes `RouterActividades.tipo_actividad` guardaba el
+valor de texto directamente; ahora ese campo es una FK hacia aquí, y esta tabla es la que la
+aplicación consulta, una vez seguida la FK, para saber a qué tabla `Actividad_*` corresponde.
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| nombre | Discriminador: `conversatorio`, `conferencia`, `charla`, `mesa_redonda`, `presentacion_libro`, `presentacion_revista`, `lectura_obra` o `encuentro`. Determina a qué tabla `Actividad_*` apunta `RouterActividades.detalle_id` (§1). |
+| nombre | `conversatorio`, `conferencia`, `charla`, `mesa_redonda`, `presentacion_libro`, `presentacion_revista`, `lectura_obra` o `encuentro`. El campo que resuelve a qué tabla `Actividad_*` apunta `RouterActividades.detalle_id` una vez seguida la FK (§1). |
 
 Ocho filas fijas, una por tipo. Mover el valor a una tabla no cambia el conjunto cerrado de
 tipos —siguen siendo ocho—, pero permite listarlos, ordenarlos o describirlos para la interfaz
@@ -400,7 +418,7 @@ solicitud.
 | --- | --- |
 | id | Identificador único. |
 | solicitud_id | FK → Solicitudes_EVT. |
-| tipo_actividad_id | FK → CatalogoActividades (§2.5). Su campo `nombre` determina a qué tabla `Actividad_*` apunta `detalle_id`. |
+| tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.5); su campo `nombre` determina a qué tabla `Actividad_*` apunta `detalle_id`. |
 | detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda (§1). |
 
 ### 2.7 Tablas `Actividad_*`
@@ -656,7 +674,7 @@ Es la tabla `detalles` que cuelga de `CatalogoConvocatorias` (§2.2) para el dom
 parámetros comunes a cualquier convocatoria (nombre, fechas de apertura/cierre, `esta_activa`)
 ya viven en el catálogo; lo que es específico de `EVT` —cupos, duración, prefijo de folio, y el
 resto del calendario posterior al cierre— vive aquí. Relación uno a uno con la fila de
-`CatalogoConvocatorias` cuyo `dominio = EVT`.
+`CatalogoConvocatorias` cuyo `prefijo = EVT`.
 
 Antes se llamaba `ParametrosConvocatoria` y era una tabla de una sola fila para toda la base de
 datos, bajo la premisa de que cada edición de la feria vive en su propia instancia. Esa premisa
@@ -667,7 +685,7 @@ de asumida.
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| convocatoria_id | FK → CatalogoConvocatorias (§2.2), fila con `dominio = EVT`. |
+| convocatoria_id | FK → CatalogoConvocatorias (§2.2), fila con `prefijo = EVT`. |
 | prefijo_folio | Prefijo con el que se compone el folio visible de una solicitud (§2.4). Constante por convocatoria, modificable en el módulo; no se edita desde una pantalla de administración. |
 | duracion_maxima_actividad | Duración máxima por actividad. Cincuenta minutos en la edición 2027. |
 | fecha_notificacion_seleccion | Fecha en que se enviará el lote con los resultados del dictamen. |
