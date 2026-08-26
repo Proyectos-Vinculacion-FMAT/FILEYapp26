@@ -58,23 +58,6 @@ def cache_limpia():
 
 
 @pytest.fixture(autouse=True)
-def estaticos_sin_manifiesto(settings):
-    """Sirve los estáticos sin el manifiesto de hashes.
-
-    Django corre las pruebas con DEBUG=False, que en producción activa
-    el almacenamiento versionado por hash — y ese exige un
-    `collectstatic` previo. Sin esta línea, cualquier plantilla con
-    `{% static %}` reventaría en pruebas por un motivo de despliegue.
-    """
-    settings.STORAGES = {
-        **settings.STORAGES,
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
-        },
-    }
-
-
-@pytest.fixture(autouse=True)
 def sin_hilo_de_correo(monkeypatch):
     """Envía el correo en el mismo hilo, para poder revisar el buzón."""
     monkeypatch.setattr(
