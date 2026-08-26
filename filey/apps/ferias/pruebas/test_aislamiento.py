@@ -100,7 +100,7 @@ def test_el_schema_no_se_filtra_entre_peticiones(client, feria_2027, feria_2028)
 
     cuerpo_2028 = client.get(feria_2028.url).content.decode()
     assert "Solo en 2027" not in cuerpo_2028
-    assert "Todavía no hay convocatorias" in cuerpo_2028
+    assert "todavía no tiene convocatorias publicadas" in cuerpo_2028
 
     # Y de vuelta: no es que la segunda petición "apague" la primera.
     assert "Solo en 2027" in client.get(feria_2027.url).content.decode()

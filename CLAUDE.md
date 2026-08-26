@@ -57,11 +57,13 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 ## Estado actual
 
 - **Construido:** `REG` (Core Registros) — acceso por OTP de participante y de administrador,
-  alta de cuenta y convocatorias. `apps/registros/` es la app de referencia;
-  `apps/notificaciones/` encapsula el envío de correo (Resend).
+  y alta de cuenta. `apps/registros/` es la app de referencia; `apps/notificaciones/` encapsula
+  el envío de correo (Resend). `REG` acaba en cuanto hay sesión: lo que se ve después es de
+  `FER`.
 - **Construido:** `FER` (Core Ferias) — `apps/ferias/` (capa `public`: `Feria`, `AdminFeria`,
-  el alta desde `/django-admin/` y la lista de "mis ferias") y `apps/convocatorias/` (capa por
-  feria: `Convocatoria`). Falta el CRUD de convocatorias, `RegistroConvocatoria` y `BitacoraFER`.
+  el alta desde `/django-admin/` y las dos pantallas de elegir feria) y `apps/convocatorias/`
+  (capa por feria: `Convocatoria` y su catálogo, que es la portada de `/f/<slug>/`). Falta el
+  CRUD de convocatorias, `RegistroConvocatoria` y `BitacoraFER`.
 - **Solo documentado:** `EVT`, `TAL`, `STD`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
   Ningún panel de módulo está conectado todavía.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`.
@@ -78,11 +80,26 @@ cd filey && python manage.py alta_feria --help      # crear una feria por consol
 ./scripts/preview-vis.sh            # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)
 ```
 
+> [!warning] Una feria recién creada no la ve nadie de fuera
+> Nace `en_preparacion`, y el participante solo ve las `activa` (CU-FER-010). Hay que activarla
+> desde `/django-admin/`. Como la pantalla de elegir feria se salta cuando hay una sola activa,
+> el síntoma de olvidarlo no es una tarjeta de menos: es que al entrar dice que no hay ninguna
+> edición abierta.
+
 > [!note] Todo el correo sale por `django.core.mail`
 > Resend está detrás de un backend de correo (`apps/notificaciones/backends.py`), así que quién
 > entrega lo decide `EMAIL_BACKEND`. En pruebas Django lo sustituye por `locmem`: ninguna prueba
 > puede salir a la red aunque haya `RESEND_API_KEY` en el entorno. Si escribes un envío nuevo,
 > hazlo con `EmailMultiAlternatives`, nunca llamando a Resend directamente.
+
+> [!note] El chasis de las pantallas está en `plantillas/componentes/`
+> La barra superior no se incluye a mano: la dibuja `{% topbar %}`
+> (`apps/ferias/templatetags/chasis.py`), que decide sus tres variantes —anónimo, participante,
+> administrador— y resuelve sus enlaces contra el urlconf público. Una pantalla nueva extiende
+> `layouts/panel.html` y no vuelve a maquetarla. Para enlazar fuera de la feria desde cualquier
+> otra plantilla está `{% load enlaces %}{% url_publica '...' %}`.
+
+<!-- -->
 
 > [!warning] Dos trampas del aislamiento por feria
 > **`Feria.objects` incluye una fila que no es una feria.** `django-tenants` exige un tenant con
@@ -91,8 +108,9 @@ cd filey && python manage.py alta_feria --help      # crear una feria por consol
 >
 > **Dentro de `/f/<slug>/` el urlconf activo es `config/urls_feria.py`**, así que
 > `reverse("registros:acceso")` falla ahí: ese nombre vive en el urlconf público. Para enlazar
-> de una feria hacia fuera está `comun.urls.url_publica()`. El acceso es global —la cuenta no
-> pertenece a ninguna feria— y su URL no debe llevar prefijo de edición.
+> de una feria hacia fuera está `comun.urls.url_publica()` en Python y `{% url_publica %}` en
+> plantillas. El acceso es global —la cuenta no pertenece a ninguna feria— y su URL no debe
+> llevar prefijo de edición.
 
 > [!warning] La caché por defecto no vale para producción
 > El límite por IP de `comun/limites.py` cuenta en la caché. Con `LocMemCache` cada worker lleva

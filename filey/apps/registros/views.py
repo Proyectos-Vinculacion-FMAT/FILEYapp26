@@ -6,14 +6,16 @@ Mapa pantalla → caso de uso:
 - /acceso                → CU-REG-001/002 (paso 1-2: correo y bifurcación)
 - /acceso/registro       → CU-REG-001 (crear Persona + dispara OTP)
 - /acceso/codigo         → CU-REG-002 (verificar y abrir sesión)
-- /convocatorias         → CU-REG-006 (convocatorias del participante)
 - /admin/acceso          → CU-REG-003 (paso 1-3: correo administrativo)
 - /admin/acceso/codigo   → CU-REG-003 (verificar y abrir sesión admin)
-
-Nota: CU-REG-005/006 están en revisión — el acceso administrativo pasa a
-otorgarse por feria (ADR-0004). La selección de feria vive ahora en
-`apps/ferias/views.py::mis_ferias` (CU-FER-002).
 - /salir                 → CU-REG-004 (cerrar sesión)
+
+`REG` termina en el momento en que hay sesión. Lo que se ve después ya
+no es suyo: elegir feria es de `FER` (`apps/ferias/views.py`, CU-FER-002
+y CU-FER-010) y las convocatorias son de la feria elegida
+(`apps/convocatorias/`, CU-FER-006). CU-REG-005 y CU-REG-006 quedaron
+reemplazados por esos: el acceso se otorga por feria (ADR-0004) y el
+catálogo cuelga de una edición, no del sistema.
 
 Estas vistas son **delgadas**: validan el formulario, llaman al servicio
 y traducen el resultado a una página o a un fragmento. Toda regla de
@@ -32,10 +34,8 @@ from django.views.decorators.http import require_http_methods, require_POST
 from comun.htmx import disparar, es_htmx, redirigir, reintentar_en
 from comun.limites import limitar
 
-from . import catalogo
 from .forms import CodigoForm, IdentificarForm, RegistroForm
-from .models import Modulo, Persona
-from .permisos import requiere_admin, requiere_participante
+from .models import Persona
 from .services import otp as otp_service
 from .services import sesion as sesion_service
 from .services.sesion import CONTEXTO_ADMIN, CONTEXTO_PUBLICO, FlujoAcceso
@@ -464,9 +464,10 @@ def _pantalla_codigo(peticion, contexto: str):
 
     # Éxito — paso 10-12: sesión, último acceso y destino.
     sesion_service.iniciar(peticion, persona)
-    destino = (
-        "ferias:mis_ferias" if es_admin_contexto else "registros:convocatorias"
-    )
+    # Las dos son pantallas de elegir feria, y las dos se saltan solas
+    # cuando solo hay una (CU-FER-002, CU-FER-010). REG no sabe cuántas
+    # hay ni tiene por qué: entrega la sesión y manda a elegir.
+    destino = "ferias:mis_ferias" if es_admin_contexto else "ferias:elegir"
     return redirigir(peticion, destino)
 
 
@@ -538,17 +539,7 @@ def _acceso_de(contexto: str) -> str:
     )
 
 
-# ── Después del login (CU-REG-006) ────────────────────────────
-
-
-@requiere_participante
-def convocatorias(peticion):
-    """Convocatorias del participante."""
-    return render(
-        peticion,
-        "registros/convocatorias.html",
-        {"tarjetas": catalogo.CONVOCATORIAS_PARTICIPANTE},
-    )
+# ── Cerrar sesión (CU-REG-004) ────────────────────────────────
 
 
 @require_POST

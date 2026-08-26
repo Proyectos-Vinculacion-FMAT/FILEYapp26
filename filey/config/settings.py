@@ -75,6 +75,10 @@ SHARED_APPS = [
     # participa en FILEY 2027 y administra FILEY 2028 (ADR-0003).
     "apps.registros",
     "apps.notificaciones",
+    # Sin modelos: está aquí porque Django solo descubre `templatetags/`
+    # dentro de las apps instaladas, y en `comun/templatetags/chasis.py`
+    # vive la barra superior de todo el sistema.
+    "comun",
 ]
 
 TENANT_APPS = [

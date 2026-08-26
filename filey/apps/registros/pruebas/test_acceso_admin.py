@@ -47,34 +47,9 @@ def test_un_administrador_entra_a_sus_ferias(client, dueno_feria, codigo_fijo):
     assert client.session["_auth_user_id"] == str(dueno_feria.pk)
 
 
-def test_el_panel_lista_las_ferias_que_administro(client, dueno_feria, feria):
-    client.force_login(dueno_feria)
-
-    cuerpo = client.get(reverse("ferias:mis_ferias")).content.decode()
-
-    assert feria.nombre in cuerpo
-    assert "Dueño" in cuerpo
-    assert feria.url in cuerpo
-
-
-def test_el_panel_no_lista_las_ferias_de_otro(client, admin_feria, otra_feria):
-    """Administrar una feria no la asoma en la lista de otra persona."""
-    client.force_login(admin_feria)
-
-    cuerpo = client.get(reverse("ferias:mis_ferias")).content.decode()
-
-    assert otra_feria.nombre not in cuerpo
-    # Y quien no es dueño no se anuncia como tal.
-    assert "Administrador" in cuerpo
-
-
-def test_el_panel_no_lista_la_feria_de_sistema(client, dueno_feria):
-    """La fila `public` no es una feria; ver `apps/ferias/models.py`."""
-    client.force_login(dueno_feria)
-
-    cuerpo = client.get(reverse("ferias:mis_ferias")).content.decode()
-
-    assert "(sistema)" not in cuerpo
+# Qué se ve *después* de ese redirect —la lista, el salto cuando solo se
+# administra una feria, qué ferias entran— ya no es de `REG`: se prueba
+# en `apps/ferias/pruebas/test_seleccion_feria.py`.
 
 
 # ── Anti-enumeración ──────────────────────────────────────────

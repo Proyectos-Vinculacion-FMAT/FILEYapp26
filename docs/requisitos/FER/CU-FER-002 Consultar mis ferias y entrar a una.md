@@ -1,13 +1,13 @@
 ---
-estado: propuesta
-version: "0.1"
+estado: implementado
+version: "1.0"
 tags:
   - tipo/caso-de-uso
   - dom/fer
   - tema/permisos
   - tema/navegacion
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-26
 id: CU-FER-002
 dominio: FER
 responsable: Hugo Janssen
@@ -136,3 +136,27 @@ feria decide cambiar a otra.
 
 - Contexto de feria fijado en la sesión.
 - Panel de la feria elegida, abierto.
+
+---
+
+## Estado de implementación
+
+Construido el 2026-08-26, con dos correcciones sobre lo que decía esta versión:
+
+- **"Fijar la feria como contexto de la sesión" no ocurre.** La feria es el prefijo de la URL,
+  no un estado guardado ([ADR-0003](<../../adr/0003-una-feria-por-schema.md>)). La diferencia se
+  nota: dos pestañas pueden estar en dos ediciones a la vez, y cerrar sesión no "sale" de ninguna
+  feria.
+- **El salto de A1 ya está**, y su contrapartida también: con más de una feria administrada, la
+  barra superior ofrece volver a esta lista. Con una sola, el enlace no aparece porque rebotaría
+  a donde ya se está.
+
+| Pieza | Dónde |
+| --- | --- |
+| La consulta | `filey/apps/ferias/servicios/seleccion.py::ferias_administradas` |
+| La pantalla y el salto | `filey/apps/ferias/views.py::mis_ferias` (`/admin/ferias/`) |
+| E2 (pedir una feria ajena) | `filey/apps/ferias/permisos.py` |
+| Las pruebas | `filey/apps/ferias/pruebas/test_seleccion_feria.py` |
+
+Ver también [CU-FER-010](<CU-FER-010 Elegir la feria en la que quiero participar.md>), que es
+esta misma pantalla para el participante.

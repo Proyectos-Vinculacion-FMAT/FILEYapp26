@@ -1,0 +1,60 @@
+{% load static %}
+
+{% comment %} ===========================================================
+   Barra superior. No se incluye a mano: la dibuja `{% topbar %}`
+   (`apps/ferias/templatetags/chasis.py`), que es quien arma su
+   contexto. Incluirla con `{% include %}` la deja sin datos.
+
+   Contexto que espera, todo del tag:
+
+     autenticada   ¿hay sesión?
+     zona_admin    ¿se está mirando como administrador de esta feria?
+     usuario       la Persona (o AnonymousUser)
+     feria         la edición actual, o None si estamos fuera de una
+     titulo        qué dice la marca en grande
+     subtitulo     y en pequeño
+     url_inicio    a dónde lleva la marca
+     url_salir     cerrar sesión (POST)
+     url_acceso    entrar, para quien no tiene sesión
+     cambio        {texto, url} para volver a la lista de ferias, o None
+
+   Las tres direcciones vienen resueltas contra el urlconf público: la
+   barra sale también dentro de `/f/<slug>/`, donde `{% url %}` no
+   encuentra esos nombres.
+   =========================================================== {% endcomment %}
+<header class="topbar {% if zona_admin %}is-admin{% endif %}">
+  <div class="topbar-inner">
+    <a class="home" href="{{ url_inicio }}">
+      <img class="logo" src="{% static 'img/filey-logotipo-azul.svg' %}" alt="FILEY">
+      <div class="brand-text">
+        <strong>{{ titulo }}</strong>
+        <small>{{ subtitulo }}</small>
+      </div>
+    </a>
+
+    <nav class="topnav">
+      {% if cambio %}
+        <a href="{{ cambio.url }}">{{ cambio.texto }}</a>
+      {% endif %}
+
+      {% if autenticada %}
+        <div class="user-chip">
+          <span class="avatar {% if zona_admin %}is-admin{% endif %}">{{ usuario.iniciales }}</span>
+          {{ usuario.nombre_completo }}
+        </div>
+
+        {% comment %} Cerrar sesión es un POST con CSRF, no un enlace: si fuera un
+           GET, bastaría con que alguien cargara una imagen apuntando a
+           esa dirección para sacar a la persona del sistema. {% endcomment %}
+        <form method="post" action="{{ url_salir }}">
+          {% csrf_token %}
+          <button class="btn-salir" type="submit">Cerrar sesión</button>
+        </form>
+      {% else %}
+        {% comment %} El catálogo de una feria se mira sin cuenta (CU-FER-006, A1),
+           así que esta barra tiene que saber no tener a nadie detrás. {% endcomment %}
+        <a class="btn btn-primary" href="{{ url_acceso }}">Entrar</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>

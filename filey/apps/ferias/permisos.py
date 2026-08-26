@@ -35,18 +35,32 @@ from comun.urls import url_publica
 from .models import AdminFeria
 
 
-def _acceso_a(peticion):
+def acceso_a(peticion):
     """La fila `AdminFeria` de quien pide sobre la feria de la URL, o None.
 
     La feria sale de ``peticion.tenant``, que puso el middleware al
     resolver el prefijo. No se recibe por parámetro ni se re-resuelve el
     slug: si esas dos fuentes divergieran, el permiso se comprobaría
     contra una feria y los datos saldrían de otra.
+
+    Es pública —y no privada, como fue hasta el 2026-08-26— porque la
+    usan también las pantallas que **no** exigen permiso pero enseñan
+    cosas distintas según quién mire: el catálogo de convocatorias, que
+    es público y sin embargo le muestra los borradores a quien
+    administra la feria (CU-FER-006). Que haya una sola respuesta a
+    "¿administra ésta?" es lo que impide que la pantalla y el decorador
+    discrepen.
+
+    Por eso también tolera a quien no ha iniciado sesión: esas pantallas
+    la llaman antes de saber si hay alguien detrás.
     """
     feria = getattr(peticion, "tenant", None)
     if feria is None or feria.es_la_de_sistema:
         return None
-    return AdminFeria.objects.filter(feria=feria, persona=peticion.user).first()
+    usuario = getattr(peticion, "user", None)
+    if usuario is None or not usuario.is_authenticated:
+        return None
+    return AdminFeria.objects.filter(feria=feria, persona=usuario).first()
 
 
 def requiere_admin_feria(vista):
@@ -56,7 +70,7 @@ def requiere_admin_feria(vista):
     def envoltura(peticion, *args, **kwargs):
         if not peticion.user.is_authenticated:
             return redirect(url_publica("registros:admin_acceso"))
-        if _acceso_a(peticion) is None:
+        if acceso_a(peticion) is None:
             # Administrar otra feria no da acceso a ésta. Se dice sin
             # rodeos: quien llega aquí ya demostró su identidad, así que
             # el mensaje no revela nada que no sepa.
@@ -73,7 +87,7 @@ def requiere_dueno_feria(vista):
     def envoltura(peticion, *args, **kwargs):
         if not peticion.user.is_authenticated:
             return redirect(url_publica("registros:admin_acceso"))
-        acceso = _acceso_a(peticion)
+        acceso = acceso_a(peticion)
         if acceso is None:
             raise PermissionDenied("Tu cuenta no administra esta feria.")
         if not acceso.es_dueno:

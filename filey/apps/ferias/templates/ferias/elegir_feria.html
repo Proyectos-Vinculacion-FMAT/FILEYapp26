@@ -1,0 +1,67 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} Elegir la edición en la que participar (CU-FER-010).
+
+   Esta pantalla **no se ve cuando solo hay una feria abierta**: la
+   vista entra directo. Que llegue a verse significa que hay más de una
+   edición viva a la vez, o ninguna. {% endcomment %}
+
+{% block titulo %}FILEY — Elegir feria{% endblock %}
+
+{% block encabezado_titulo %}¿En qué edición quieres participar?{% endblock %}
+
+{% block encabezado_texto %}
+  Cada edición tiene sus propias convocatorias y sus propias fechas.
+  Entra a una para ver a qué puedes registrarte.
+{% endblock %}
+
+{% block contenido %}
+{% if ferias %}
+  <div class="conv-grid">
+    {% for feria in ferias %}
+      <article class="conv-card">
+
+        <div class="conv-banner banner-eventos">
+          <span class="ico">🎪</span>
+          <h3>{{ feria.nombre }}</h3>
+        </div>
+
+        <div class="conv-body">
+          <span class="badge badge-open">Abierta</span>
+
+          <p>
+            {% if feria.sede %}{{ feria.sede }}{% else %}Sede por definir{% endif %}
+            {% if feria.edicion %} · Edición {{ feria.edicion }}{% endif %}
+          </p>
+
+          <div class="conv-dates">
+            {% if feria.fecha_inicio %}
+              📅 {{ feria.fecha_inicio }} — {{ feria.fecha_fin|default:"?" }}
+            {% else %}
+              📅 Fechas por definir
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="conv-foot">
+          <a class="btn btn-primary btn-block" href="{{ feria.url }}">
+            Ver sus convocatorias →
+          </a>
+        </div>
+
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  {% comment %} Una feria recién creada nace «en preparación» y no sale aquí
+     hasta que se activa (ver `servicios/seleccion.py`). Este aviso es
+     lo que evita que eso parezca una avería. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">ℹ️</div>
+    <div>
+      Ahora mismo no hay ninguna edición abierta al público. Cuando la
+      próxima FILEY abra sus convocatorias, aparecerá aquí.
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

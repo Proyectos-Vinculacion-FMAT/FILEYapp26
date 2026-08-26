@@ -1,41 +1,45 @@
 """
-Vistas del Core Ferias.
+Vistas del Core Ferias que viven **fuera** de una feria.
 
-Por ahora solo la portada de una feria, que es la ruta mínima que hace
-falta para que `/f/<slug>/` exista y para poder comprobar de punta a
-punta que el aislamiento por schema funciona. Las pantallas de verdad
-(catálogo, alta de convocatorias, panel) llegan con CU-FER-002 y
-CU-FER-005…009.
+Las dos son la misma pregunta hecha por dos públicos: *¿a qué edición
+entro?*. El participante elige entre las ferias abiertas (CU-FER-010) y
+el administrador entre las que administra (CU-FER-002).
+
+Corren sobre el schema `public` a propósito: son lo que se ve **antes**
+de haber elegido feria, así que no pueden colgar de `/f/<slug>/`. Son
+también las únicas consultas del sistema que cruzan ediciones, y pueden
+hacerlo porque `Feria` y `AdminFeria` son globales (`ADR-0003`).
+
+Lo que pasa **dentro** de una feria no está aquí: el catálogo de
+convocatorias lo sirve `apps/convocatorias`.
 """
 
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
-from apps.convocatorias.models import Convocatoria
-from apps.registros.permisos import requiere_admin
+from apps.registros.permisos import requiere_admin, requiere_participante
 
-from .models import AdminFeria
+from .servicios import seleccion
 
 
-def portada(peticion):
-    """Portada pública de una feria.
+@requiere_participante
+def elegir_feria(peticion):
+    """En qué edición quiero participar (`CU-FER-010`).
 
-    No pide sesión: mirar qué hay convocado es lo que trae a la gente al
-    sistema, y exigir cuenta para eso rompe el embudo (CU-FER-006, A1).
-    Registrarse a una convocatoria sí la pedirá.
+    Con **una sola** feria abierta la pantalla no se enseña: se entra
+    directo. Preguntar entre una opción no es elegir, es un clic de
+    peaje —y hoy, con una sola edición viva, es el caso normal—.
 
-    Nótese que la consulta **no filtra por feria**. No es un descuido: la
-    feria es el schema en el que el middleware dejó apuntando la
-    conexión, así que esta misma línea devuelve cosas distintas según se
-    llegue por `/f/2027/` o por `/f/2028/` (ADR-0003).
+    El salto vive aquí y no en el destino del acceso para que llegar a
+    esta dirección a mano se comporte igual que acabar de identificarse.
+    La puerta de vuelta, cuando aparece la segunda feria, la pone la
+    barra superior (`templatetags/chasis.py`).
     """
-    convocatorias = Convocatoria.objects.exclude(
-        estado=Convocatoria.Estado.BORRADOR
-    )
-    return render(
-        peticion,
-        "ferias/portada.html",
-        {"feria": peticion.tenant, "convocatorias": convocatorias},
-    )
+    ferias = seleccion.ferias_para_participante()
+
+    if len(ferias) == 1:
+        return redirect(ferias[0].url)
+
+    return render(peticion, "ferias/elegir_feria.html", {"ferias": ferias})
 
 
 @requiere_admin
@@ -47,25 +51,25 @@ def mis_ferias(peticion):
     de una sola feria; ahora se elige **feria**, y el módulo se elige ya
     dentro de ella.
 
-    Vive fuera de `/f/<slug>/` a propósito: es la pantalla que se ve
-    justo cuando todavía no se ha elegido feria, así que corre sobre el
-    schema `public` y es la única consulta del sistema que cruza
-    ediciones legítimamente — puede hacerlo porque `AdminFeria` es
-    global (ADR-0003).
+    Mismo salto que en el lado del participante, y por el mismo motivo.
+    Lo que no se comparte es el filtro: aquí **no** se descartan las
+    ferias inactivas —montar una edición en preparación o consultar una
+    archivada son cosas que un administrador hace—; ver
+    ``servicios/seleccion.py``.
     """
-    accesos = (
-        AdminFeria.objects.filter(persona=peticion.user)
-        .select_related("feria")
-        .exclude(feria__schema_name="public")
-        .order_by("-feria__creada_en")
-    )
+    accesos = seleccion.ferias_administradas(peticion.user)
+
+    if len(accesos) == 1:
+        return redirect(accesos[0].feria.url)
+
     return render(
         peticion,
         "ferias/mis_ferias.html",
         {
             "accesos": accesos,
-            # `zona_admin` le dice al layout compartido que pinte la
-            # variante administrativa (ver layouts/panel.html).
+            # `zona_admin` le dice al chasis compartido que pinte la
+            # variante administrativa. Fuera de una feria hace falta
+            # decírselo: no hay `tenant` contra el que comprobarlo.
             "zona_admin": True,
         },
     )
