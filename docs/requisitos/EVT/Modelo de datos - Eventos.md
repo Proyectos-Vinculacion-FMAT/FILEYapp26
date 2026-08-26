@@ -1,11 +1,11 @@
 ---
 estado: propuesta
-version: "3.0"
+version: "4.0"
 tags:
   - tipo/modelo-de-datos
   - dom/evt
 fecha: 2026-06-23
-fecha_actualizacion: 2026-08-20
+fecha_actualizacion: 2026-08-25
 ---
 # Modelo de datos — Eventos generales (EVT)
 
@@ -38,13 +38,15 @@ dato queda en ambos lados.
 ### Elementos de asociación y enrutamiento
 
 Tres tablas intermedias resuelven las relaciones. Ninguna guarda datos de negocio: solo
-conectan entidades y, cuando hace falta, indican **a qué tabla** apunta la conexión.
+conectan entidades y, cuando hace falta, indican **a qué tabla** apunta la conexión. Dos
+catálogos las alimentan: en vez de guardar el discriminador como un string suelto, el router
+lo obtiene por FK a una tabla configurable.
 
 | Tabla | Propósito |
 | --- | --- |
-| Router de solicitudes | Relaciona a la persona con las solicitudes que ha creado, y determina mediante `convocatoria` a qué dominio pertenece cada una. Es único para todo el sistema: sirve a `EVT`, `TAL`, `STD` y `VIS`. |
-| Router de actividades | Relaciona una solicitud con su actividad específica, y determina mediante `tipo_actividad` cuál de las ocho tablas la contiene. |
-| Router de documentos | Relaciona los documentos adjuntos con su solicitud. Permite uno o varios por solicitud y guarda la ubicación del archivo. |
+| Router de solicitudes | Relaciona a la persona con las solicitudes que ha creado, y determina mediante `convocatoria_id` (FK a `CatalogoConvocatorias`, §2.2) a qué dominio pertenece cada una. Es único para todo el sistema: sirve a `EVT`, `TAL`, `STD` y `VIS`. |
+| Router de actividades | Relaciona una solicitud con su actividad específica, y determina mediante `tipo_actividad_id` (FK a `CatalogoActividades`, §2.5) cuál de las ocho tablas la contiene. |
+| Router de documentos | Relaciona los documentos adjuntos con la publicación que los requiere. Conecta directamente con `Actividad_PresentacionLibro` y `Actividad_PresentacionRevista` —las únicas actividades que llevan archivos adjuntos—, determinando mediante `tipo_publicacion` cuál de las dos. Permite uno o varios documentos por publicación y guarda la ubicación del archivo. |
 
 Visualmente:
 
@@ -52,52 +54,68 @@ Visualmente:
 flowchart TD
     U[Persona<br/>registro global del sistema]
 
-    RS{{Router de solicitudes<br/>discriminador: convocatoria}}
+    CC[(CatalogoConvocatorias<br/>dominio: EVT/TAL/STD/VIS)]
+    RS{{Router de solicitudes<br/>discriminador: convocatoria_id}}
 
     S_EVT[Solicitudes EVT]
     S_TAL[Solicitudes TAL]
     S_STD[Solicitudes STD]
     S_VIS[Solicitudes VIS]
 
-    RD{{Router de documentos<br/>tipo_documento + storage_key}}
-    RA{{Router de actividades<br/>discriminador: tipo_actividad}}
+    CA[(CatalogoActividades<br/>8 tipos)]
+    RA{{Router de actividades<br/>discriminador: tipo_actividad_id}}
 
-    A_1[Actividad tipo 1]
+    A_1[Actividad: Presentación de libro/revista]
     A_2[Actividad tipo 2]
     A_n[Actividad tipo N]
 
+    RD{{Router de documentos<br/>discriminador: tipo_publicacion}}
+
     U --> RS
+    CC --> RS
     RS --> S_EVT
     RS --> S_TAL
     RS --> S_STD
     RS --> S_VIS
 
-    S_EVT --> RD
     S_EVT --> RA
+    CA --> RA
 
     RA -.->|solo una| A_1
     RA -.-> A_2
     RA -.-> A_n
+
+    A_1 --> RD
 
     style S_EVT fill:#2C4C8C , stroke:#01457C
 ```
 
 ### Referencias polimórficas
 
-Los routers de solicitudes y de actividades comparten un mecanismo: guardan un
-**discriminador** que nombra la tabla destino y un **identificador** de la fila dentro de esa
-tabla.
+Los tres routers comparten un mecanismo: guardan un **discriminador** que nombra la tabla
+destino y un **identificador** de la fila dentro de esa tabla. En `RouterSolicitudes` y
+`RouterActividades` el discriminador ya no es un string suelto, sino el valor de un campo de
+catálogo obtenido por FK —`CatalogoConvocatorias.dominio` y `CatalogoActividades.nombre`
+respectivamente—, de modo que agregar una convocatoria o un tipo de actividad es dar de alta
+una fila de catálogo, no tocar un `enum` en código.
 
 | Router | Discriminador | Identificador | Destinos posibles |
 | --- | --- | --- | --- |
-| `RouterSolicitudes` | `convocatoria` | `solicitud_id` | `Solicitudes_EVT`, `Solicitudes_TAL`, `Solicitudes_STD`, `Solicitudes_VIS` |
-| `RouterActividades` | `tipo_actividad` | `detalle_id` | Las ocho tablas `Actividad_*` |
+| `RouterSolicitudes` | `convocatoria_id` → `CatalogoConvocatorias.dominio` | `solicitud_id` | `Solicitudes_EVT`, `Solicitudes_TAL`, `Solicitudes_STD`, `Solicitudes_VIS` |
+| `RouterActividades` | `tipo_actividad_id` → `CatalogoActividades.nombre` | `detalle_id` | Las ocho tablas `Actividad_*` |
+| `RouterDocumentos` | `tipo_publicacion` | `publicacion_id` | `Actividad_PresentacionLibro`, `Actividad_PresentacionRevista` |
 
 Como el identificador puede apuntar a tablas distintas según el discriminador, **no es una
 clave foránea con restricción**: la base de datos no puede validarlo. La integridad depende de
 la capa de aplicación, y conviene resguardarla con pruebas o con el mecanismo de relaciones
 genéricas que ofrezca el ORM. A cambio, el patrón permite agregar convocatorias o tipos de
 actividad sin modificar las tablas existentes.
+
+> `CatalogoConvocatorias.dominio` no aparece en la lista de atributos que definió el pedido
+> original —solo `nombre_convocatoria`, las fechas y `esta_activa`—; se añade aquí porque el
+> router necesita distinguir `EVT`/`TAL`/`STD`/`VIS` de algún campo estable, y `nombre_convocatoria`
+> es texto editable por el administrador (pensado para mostrarse, no para enrutar). Revisar si
+> esta inferencia es correcta.
 
 ---
 
@@ -115,10 +133,19 @@ erDiagram
         string pais
     }
 
+    CatalogoConvocatorias {
+        bigint id PK
+        string nombre_convocatoria
+        string dominio "DISCRIMINADOR"
+        date fecha_apertura
+        date fecha_cierre
+        boolean esta_activa
+    }
+
     RouterSolicitudes {
         bigint id PK
         bigint usuario_django FK
-        string convocatoria "DISCRIMINADOR"
+        bigint convocatoria_id FK
         bigint solicitud_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -130,22 +157,29 @@ erDiagram
         string nombre_moderador
         string nombre_organizador_organizacion
         string publico_objetivo
-        boolean tiene_semblanza
-        boolean tiene_sinopsis
+        string sinopsis
+        boolean es_uady
+        boolean requiere_constancia
         string comentarios
         timestamp fecha_de_solicitud
+    }
+
+    CatalogoActividades {
+        bigint id PK
+        string nombre "DISCRIMINADOR"
     }
 
     RouterActividades {
         bigint id PK
         bigint solicitud_id FK
-        string tipo_actividad "DISCRIMINADOR"
+        bigint tipo_actividad_id FK
         bigint detalle_id FK "REFERENCIA POLIMORFICA"
     }
 
     RouterDocumentos {
         bigint id PK
-        bigint solicitud_id FK
+        string tipo_publicacion "DISCRIMINADOR"
+        bigint publicacion_id FK "REFERENCIA POLIMORFICA"
         string tipo_documento
         string storage_key
     }
@@ -153,27 +187,37 @@ erDiagram
     Actividad_Conversatorio {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_participante_3
+        string semblanza_participante_3
     }
 
     Actividad_Conferencia {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
     Actividad_Charla {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
     Actividad_MesaRedonda {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_participante_3
+        string semblanza_participante_3
     }
 
     Actividad_PresentacionLibro {
@@ -181,17 +225,22 @@ erDiagram
         string titulo_publicacion
         string tipo_presentador
         string nombre_autor_1
+        string semblanza_autor_1
         string nombre_autor_2
+        string semblanza_autor_2
         string nombre_autor_3
+        string semblanza_autor_3
         string nombre_autor_4
+        string semblanza_autor_4
         string nombre_autor_5
+        string semblanza_autor_5
         boolean autor_participa
         string nombres_de_autores_presentes
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_editorial
-        boolean tiene_foto_autor
-        boolean tiene_foto_portada
         boolean ejemplar_fisico_entregado
     }
 
@@ -200,35 +249,44 @@ erDiagram
         string titulo_publicacion
         string tipo_presentador
         string nombre_editor_1
+        string semblanza_editor_1
         string nombre_editor_2
+        string semblanza_editor_2
         boolean editor_participa
         string nombres_de_editores_presentes
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
         string nombre_editorial
-        boolean tiene_foto_portada
         boolean ejemplar_fisico_entregado
     }
 
     Actividad_LecturaObra {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
     Actividad_Encuentro {
         bigint id PK
         string nombre_participante_1
+        string semblanza_participante_1
         string nombre_participante_2
+        string semblanza_participante_2
     }
 
 
     Persona ||--o{ RouterSolicitudes : "tiene"
+    CatalogoConvocatorias ||--o{ RouterSolicitudes : "clasifica"
 
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
     Solicitudes_EVT ||--o{ RouterActividades : "contiene"
-    Solicitudes_EVT ||--o{ RouterDocumentos : "adjunta"
+
+    CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
     RouterActividades }o..|| Actividad_Conversatorio : "enruta"
     RouterActividades }o..|| Actividad_Conferencia : "enruta"
@@ -238,6 +296,9 @@ erDiagram
     RouterActividades }o..|| Actividad_PresentacionRevista : "enruta"
     RouterActividades }o..|| Actividad_LecturaObra : "enruta"
     RouterActividades }o..|| Actividad_Encuentro : "enruta"
+
+    Actividad_PresentacionLibro ||--o{ RouterDocumentos : "adjunta"
+    Actividad_PresentacionRevista ||--o{ RouterDocumentos : "adjunta"
 ```
 
 ### 2.1 Persona
@@ -248,7 +309,7 @@ Entidad del core de Registros (`REG`); se referencia aquí, no se define. Su det
 
 Guarda la identidad y el **país de procedencia**, que son datos de perfil: se capturan una vez
 y se reutilizan en cualquier convocatoria de cualquier feria. La institución y el cargo, en
-cambio, se capturan por solicitud (§2.3), porque una misma persona puede aplicar representando
+cambio, se capturan por solicitud (§2.4), porque una misma persona puede aplicar representando
 a instituciones distintas.
 
 Al no existir copia de la procedencia dentro de la solicitud, el modelo refleja siempre el
@@ -264,7 +325,27 @@ valor vigente del perfil, no el que tenía la persona al enviar.
 > definen aquí. Hasta que se resuelva, el formulario del prototipo pide un "Ciudad / Estado"
 > que ninguna tabla guarda. Ver `REG` §5.
 
-### 2.2 RouterSolicitudes
+### 2.2 CatalogoConvocatorias
+
+Catálogo del que cuelgan todas las convocatorias del sistema —una por dominio (`EVT`, `TAL`,
+`STD`, `VIS`), y potencialmente varias por dominio si en el futuro conviven ediciones—. Es la
+tabla que consulta `RouterSolicitudes` (§2.3) para saber a qué dominio pertenece cada solicitud
+y si esa convocatoria sigue aceptando envíos.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| nombre_convocatoria | Nombre visible de la convocatoria (p. ej. "Convocatoria FILEY 2027 — Eventos generales"). Editable por el administrador; no es el discriminador de enrutamiento. |
+| dominio | Discriminador: `EVT`, `TAL`, `STD` o `VIS`. Determina a qué tabla de solicitudes enruta `RouterSolicitudes.solicitud_id` (§1). No forma parte del pedido original de campos; se agrega porque el router necesita un valor estable para enrutar, distinto del nombre editable. |
+| fecha_apertura | Fecha en que la convocatoria empieza a aceptar solicitudes. |
+| fecha_cierre | Fecha en que deja de aceptarlas. |
+| esta_activa | Permite pausar la convocatoria en una emergencia sin tocar `fecha_cierre`: con `esta_activa = false`, aunque la fecha actual esté dentro del rango, no se aceptan envíos. |
+
+Los parámetros que no son comunes a cualquier convocatoria —cupos, prefijo de folio, fechas de
+notificación, etc.— no viven aquí: cada dominio los define en su propia tabla de detalle
+(`detalles` en el diagrama de §1). Para `EVT` esa tabla es `DetallesConvocatoria` (§3.6).
+
+### 2.3 RouterSolicitudes
 
 Único vínculo entre una persona y sus solicitudes: `Solicitudes_EVT` no tiene clave foránea
 hacia `Persona`. Sin una fila aquí, la solicitud no tiene dueño conocido, por lo que su
@@ -274,35 +355,49 @@ creación es obligatoria al enviar.
 | --- | --- |
 | id | Identificador único. |
 | usuario_django | FK → Persona. Conserva el nombre `usuario_django` porque referencia la tabla de usuarios del framework. |
-| convocatoria | Discriminador: `EVT`, `TAL`, `STD` o `VIS`. Determina a qué tabla apunta `solicitud_id`. |
-| solicitud_id | Referencia polimórfica a la solicitud, en la tabla que indique `convocatoria` (§1). |
+| convocatoria_id | FK → CatalogoConvocatorias (§2.2). Su campo `dominio` determina a qué tabla apunta `solicitud_id`. |
+| solicitud_id | Referencia polimórfica a la solicitud, en la tabla que indique `CatalogoConvocatorias.dominio` (§1). |
 
-### 2.3 Solicitudes_EVT
+### 2.4 Solicitudes_EVT
 
 Los datos que el aplicante captura y que son **comunes a los ocho tipos de actividad**. Lo que
-varía entre tipos vive en las tablas `Actividad_*` (§2.5); lo que decide el administrador vive
+varía entre tipos vive en las tablas `Actividad_*` (§2.7); lo que decide el administrador vive
 en la etapa 2 (§3).
 
 | Atributo | Descripción |
 | --- | --- |
-| id | Identificador único, `bigint`. Es la base del folio: el folio visible **no se almacena**, se compone como `{prefijo_folio}-{id}` con el prefijo de `ParametrosConvocatoria` (§3.6). |
+| id | Identificador único, `bigint`. Es la base del folio: el folio visible **no se almacena**, se compone como `{prefijo_folio}-{id}` con el prefijo de `DetallesConvocatoria` (§3.6). |
 | institucion | Dependencia o institución que representa. Obligatorio. |
 | cargo | Cargo dentro de esa institución. Opcional. |
 | titulo_actividad | Título de la actividad tal como lo propone el aplicante. Si el administrador lo modifica tras la revisión, el valor definitivo queda en `DetallesAdminSolicitud.titulo_final` (§3.1). |
 | nombre_moderador | Moderador de la actividad. Opcional, uno como máximo. |
 | nombre_organizador_organizacion | Persona u organización que organiza. Obligatorio. |
 | publico_objetivo | Público al que va dirigida. Lista de valores separados sobre el conjunto cerrado `publico_general`, `academico`, `estudiantil`, `infantil`, `familias`; al menos uno. Al no estar normalizado, filtrar por público exige recorrer el texto. |
-| tiene_semblanza | Indica si se adjuntó la semblanza de los participantes (PDF). |
-| tiene_sinopsis | Indica si se adjuntó la sinopsis de la actividad (PDF). |
+| sinopsis | Sinopsis de la actividad, capturada como texto. Antes era un PDF adjunto marcado por `tiene_sinopsis`; ahora el aplicante escribe el contenido directamente y no hay archivo que administrar. |
+| es_uady | Indica si el aplicante se declara parte de la UADY. Es la autodeclaración en la captura; el administrador la valida (o la corrige) en `DetallesAdminSolicitud.is_participante_uady` (§3.1), que es el valor que consume el cupo. |
+| requiere_constancia | Indica si el aplicante solicita constancia de participación. Precondición de CU-EVT-005 (descargar constancia); antes no existía en el modelo (§5). |
 | comentarios | Observaciones libres del aplicante. Opcional. |
 | fecha_de_solicitud | Marca de tiempo del momento en que la solicitud se envía y se guarda. |
 
-Los campos `tiene_*` duplican información que ya está en `RouterDocumentos` (§2.6): si existe
-una fila con el `tipo_documento` correspondiente, el documento fue adjuntado. Se conservan como
-caché para validar el formulario sin consultar el router, con la condición de que un solo
-servicio sea responsable de escribir ambos; de lo contrario pueden desincronizarse.
+Las semblanzas ya no viven aquí como un booleano único: son un campo de texto por cada
+participante, y por eso se definen junto a cada `nombre_participante_*` en las tablas
+`Actividad_*` (§2.7) —una persona, una semblanza—.
 
-### 2.4 RouterActividades
+### 2.5 CatalogoActividades
+
+Catálogo de los ocho tipos de actividad. Reemplaza el valor de texto que antes guardaba
+`RouterActividades.tipo_actividad` directamente: ahora ese campo es una FK hacia aquí.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| nombre | Discriminador: `conversatorio`, `conferencia`, `charla`, `mesa_redonda`, `presentacion_libro`, `presentacion_revista`, `lectura_obra` o `encuentro`. Determina a qué tabla `Actividad_*` apunta `RouterActividades.detalle_id` (§1). |
+
+Ocho filas fijas, una por tipo. Mover el valor a una tabla no cambia el conjunto cerrado de
+tipos —siguen siendo ocho—, pero permite listarlos, ordenarlos o describirlos para la interfaz
+sin tocar código.
+
+### 2.6 RouterActividades
 
 Conecta la solicitud con su actividad específica y determina de qué tipo es. Una fila por
 solicitud.
@@ -311,21 +406,22 @@ solicitud.
 | --- | --- |
 | id | Identificador único. |
 | solicitud_id | FK → Solicitudes_EVT. |
-| tipo_actividad | Discriminador: `conversatorio`, `conferencia`, `charla`, `mesa_redonda`, `presentacion_libro`, `presentacion_revista`, `lectura_obra` o `encuentro`. |
+| tipo_actividad_id | FK → CatalogoActividades (§2.5). Su campo `nombre` determina a qué tabla `Actividad_*` apunta `detalle_id`. |
 | detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda (§1). |
 
-### 2.5 Tablas `Actividad_*`
+### 2.7 Tablas `Actividad_*`
 
 Ocho tablas, una por tipo de actividad. Contienen únicamente lo que distingue a ese tipo: los
-campos que comparten los ocho ya viven en `Solicitudes_EVT` (§2.3).
+campos que comparten los ocho ya viven en `Solicitudes_EVT` (§2.4).
 
 Hoy varios tipos coinciden en su estructura —Conversatorio y Mesa redonda por un lado;
 Conferencia, Charla, Lectura de obra y Encuentro por otro—, pero se mantienen separados a
 propósito. Cada tipo corresponde a un formulario distinto, y tener su propia tabla permite que
 evolucione sin arrastrar a los demás; agruparlos por coincidencia actual cerraría esa puerta.
 
-Los campos `tiene_*` siguen la misma lógica descrita en §2.3: son un indicador de que el
-documento fue adjuntado, mientras el archivo se registra en `RouterDocumentos`.
+Cada nombre de participante va acompañado de su propia `semblanza_*`: un campo de texto libre,
+capturado por el aplicante junto con el nombre. Ya no hay un booleano `tiene_semblanza` a nivel
+de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo—.
 
 #### Actividad_Conversatorio · Actividad_MesaRedonda
 
@@ -333,6 +429,7 @@ documento fue adjuntado, mientras el archivo se registra en `RouterDocumentos`.
 | --- | --- |
 | id | Identificador único. |
 | nombre_participante_1 … 3 | Nombres de los participantes. Obligatorio el primero; hasta tres. |
+| semblanza_participante_1 … 3 | Semblanza de cada participante, en el mismo orden. |
 
 #### Actividad_Conferencia · Actividad_Charla · Actividad_LecturaObra · Actividad_Encuentro
 
@@ -340,6 +437,7 @@ documento fue adjuntado, mientras el archivo se registra en `RouterDocumentos`.
 | --- | --- |
 | id | Identificador único. |
 | nombre_participante_1 … 2 | Nombre de quien imparte. Obligatorio el primero; hasta dos. |
+| semblanza_participante_1 … 2 | Semblanza de cada participante, en el mismo orden. |
 
 #### Actividad_PresentacionLibro
 
@@ -349,13 +447,17 @@ documento fue adjuntado, mientras el archivo se registra en `RouterDocumentos`.
 | titulo_publicacion | Título del libro. Obligatorio. |
 | tipo_presentador | Rol del proponente respecto a la publicación: `autor`, `editor`, `antologador`, `compilador` o `coordinador`. |
 | nombre_autor_1 … 5 | Nombres tal como aparecen en la portada. Obligatorio el primero; hasta cinco. |
+| semblanza_autor_1 … 5 | Semblanza de cada autor, en el mismo orden. |
 | autor_participa | Indica si el autor estará presente en la actividad. |
 | nombres_de_autores_presentes | Nombres de quienes sí asistirán, cuando no todos los autores participan. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
+| semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial. Obligatorio; si la publicación es independiente, se anota así. |
-| tiene_foto_autor | Indica si se adjuntó la fotografía del autor en alta resolución. |
-| tiene_foto_portada | Indica si se adjuntó la portada del libro. |
 | ejemplar_fisico_entregado | Indica si FILEY recibió el ejemplar físico que exige este tipo de actividad. Lo marca el administrador, pero reside aquí por ser un dato inherente a la publicación. |
+
+Las fotografías del autor y de la portada dejaron de tener un booleano `tiene_foto_*` en esta
+tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), que conecta con esta tabla
+sin pasar por `Solicitudes_EVT`.
 
 #### Actividad_PresentacionRevista
 
@@ -365,23 +467,33 @@ documento fue adjuntado, mientras el archivo se registra en `RouterDocumentos`.
 | titulo_publicacion | Título de la revista. Obligatorio. |
 | tipo_presentador | Rol del proponente respecto a la publicación. Mismo conjunto de valores que en `Actividad_PresentacionLibro`. |
 | nombre_editor_1 … 2 | Nombres de los editores. Obligatorio el primero; hasta dos. |
+| semblanza_editor_1 … 2 | Semblanza de cada editor, en el mismo orden. |
 | editor_participa | Indica si el editor estará presente en la actividad. |
 | nombres_de_editores_presentes | Nombres de quienes sí asistirán, cuando no todos los editores participan. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
+| semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial responsable de la revista. |
-| tiene_foto_portada | Indica si se adjuntó la portada de la revista. |
 | ejemplar_fisico_entregado | Indica si FILEY recibió el ejemplar físico. Ver la nota equivalente en `Actividad_PresentacionLibro`. |
 
-### 2.6 RouterDocumentos
+La portada de la revista sigue la misma lógica que en `Actividad_PresentacionLibro`: sin
+booleano de caché, se consulta en `RouterDocumentos` (§2.8).
 
-Registro de los archivos que acompañan a una solicitud. Una fila por documento, de modo que
-una solicitud puede tener tantos como requiera su tipo de actividad sin columnas fijas.
+### 2.8 RouterDocumentos
+
+Registro de los archivos que acompañan a una **publicación**, no a la solicitud en general.
+Antes conectaba con `Solicitudes_EVT`; hoy conecta directamente con las dos únicas actividades
+que llevan adjuntos —`Actividad_PresentacionLibro` y `Actividad_PresentacionRevista`—, porque
+semblanza y sinopsis dejaron de ser archivos (§2.4, §2.7) y lo único que queda por adjuntar son
+las fotografías propias de esas dos publicaciones. Sigue el mismo patrón polimórfico que
+`RouterSolicitudes` y `RouterActividades` (§1): una fila por documento, de modo que una
+publicación puede tener tantos como requiera sin columnas fijas.
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| solicitud_id | FK → Solicitudes_EVT. |
-| tipo_documento | Qué documento es: semblanza, sinopsis de la actividad, sinopsis de la publicación, fotografía del autor o portada. |
+| tipo_publicacion | Discriminador: `libro` o `revista`. Determina a qué tabla apunta `publicacion_id`. |
+| publicacion_id | Referencia polimórfica a `Actividad_PresentacionLibro` o `Actividad_PresentacionRevista`, según `tipo_publicacion`. |
+| tipo_documento | Qué documento es: fotografía del autor (solo `libro`) o portada de la publicación. |
 | storage_key | Ubicación del archivo almacenado. El formato —clave de almacenamiento, ruta o URL— está por definir. |
 
 ---
@@ -450,7 +562,7 @@ inicio permite consultar las solicitudes pendientes sin interpretar la ausencia 
 | solicitud_id | FK → Solicitudes_EVT. |
 | estado | `pendiente`, `cambios_solicitados`, `aceptada`, `rechazada` o `cancelada`. `cancelada` solo aplica después de `aceptada`. |
 | categoria | `literaria` o `academica`. La asigna el administrador durante el dictamen. |
-| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Junto con `categoria` decide qué cupo consume (§3.6). |
+| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que decide junto con `categoria` qué cupo consume (§3.6); el administrador puede confirmarlo o corregirlo. |
 | titulo_final | Título definitivo de la actividad si el administrador lo modifica; nulo significa que vale `Solicitudes_EVT.titulo_actividad`. |
 | organizador_final | Organizador definitivo; nulo significa que vale `Solicitudes_EVT.nombre_organizador_organizacion`. |
 | es_apta_juvenil | Marca la actividad como apta para el catálogo escolar y juvenil de `VIS`. |
@@ -544,19 +656,26 @@ revisión.
 | total_enviadas | Número de notificaciones que incluyó el lote. |
 | estado | `enviada` o `fallida_parcial`. |
 
-### 3.6 ParametrosConvocatoria
+### 3.6 DetallesConvocatoria
 
-Configuración de la convocatoria. Cambia en cada edición, por lo que no puede quedar fija en
-código. Es una tabla de **una sola fila**: cada edición de la feria vive en su propia instancia
-de base de datos, de modo que la edición es implícita y ninguna tabla del modelo guarda un
-identificador de edición.
+Es la tabla `detalles` que cuelga de `CatalogoConvocatorias` (§2.2) para el dominio `EVT`: los
+parámetros comunes a cualquier convocatoria (nombre, fechas de apertura/cierre, `esta_activa`)
+ya viven en el catálogo; lo que es específico de `EVT` —cupos, duración, prefijo de folio, y el
+resto del calendario posterior al cierre— vive aquí. Relación uno a uno con la fila de
+`CatalogoConvocatorias` cuyo `dominio = EVT`.
+
+Antes se llamaba `ParametrosConvocatoria` y era una tabla de una sola fila para toda la base de
+datos, bajo la premisa de que cada edición de la feria vive en su propia instancia. Esa premisa
+no cambia dentro de `EVT` —sigue habiendo una sola fila vigente aquí—, pero ahora es una fila
+**por convocatoria** en vez de una fila fija de sistema, enlazada explícitamente por FK en lugar
+de asumida.
 
 | Atributo | Descripción |
 | --- | --- |
-| prefijo_folio | Prefijo con el que se compone el folio visible de una solicitud (§2.3). Constante por convocatoria, modificable en el módulo; no se edita desde una pantalla de administración. |
+| id | Identificador único. |
+| convocatoria_id | FK → CatalogoConvocatorias (§2.2), fila con `dominio = EVT`. |
+| prefijo_folio | Prefijo con el que se compone el folio visible de una solicitud (§2.4). Constante por convocatoria, modificable en el módulo; no se edita desde una pantalla de administración. |
 | duracion_maxima_actividad | Duración máxima por actividad. Cincuenta minutos en la edición 2027. |
-| fecha_apertura_convocatoria | Fecha de lanzamiento de la convocatoria pública. |
-| fecha_cierre_convocatoria | Fecha y hora en que deja de recibirse solicitudes. |
 | fecha_notificacion_seleccion | Fecha en que se enviará el lote con los resultados del dictamen. |
 | fecha_cierre_ajustes_aplicante | Fecha límite para que el aplicante solicite cambios de horario. |
 | fecha_asignacion_horario | Fecha a partir de la cual los aplicantes ven su sala y hora asignadas. |
@@ -596,14 +715,17 @@ ventana normal, ediciones manuales del programa y similares.
 
 ## 4. Relaciones principales
 
-**Etapa 1 — captura**
+### Etapa 1 — captura
 
+- **CatalogoConvocatorias** 1—N **RouterSolicitudes**. Cada solicitud enruta a través de una convocatoria vigente.
 - **Persona** (`REG`) 1—N **RouterSolicitudes** 1—1 **Solicitudes_EVT**. Único camino entre una persona y sus solicitudes.
-- **Solicitudes_EVT** 1—1 **RouterActividades** →(polimórfica) **Actividad_\***. Una de las ocho, según `tipo_actividad`.
-- **Solicitudes_EVT** 1—N **RouterDocumentos**.
+- **CatalogoActividades** 1—N **RouterActividades**. Cada fila de enrutamiento clasifica contra un tipo del catálogo.
+- **Solicitudes_EVT** 1—1 **RouterActividades** →(polimórfica) **Actividad_\***. Una de las ocho, según `tipo_actividad_id`.
+- **Actividad_PresentacionLibro** 1—N **RouterDocumentos** y **Actividad_PresentacionRevista** 1—N **RouterDocumentos** (polimórfica). Las únicas dos actividades con adjuntos.
 
-**Etapa 2 — administración y programación**
+### Etapa 2 — administración y programación
 
+- **CatalogoConvocatorias** 1—1 **DetallesConvocatoria**. Los parámetros específicos de la convocatoria `EVT`.
 - **Solicitudes_EVT** 1—1 **DetallesAdminSolicitud**. Se crea al enviarse la solicitud.
 - **Solicitudes_EVT** 0/1—1 **SolicitudesAprobadas**. Solo si el dictamen fue `aceptada`.
 - **SolicitudesAprobadas** 1—N **ProgramacionActividad**. Más de una cuando la actividad se repite.
@@ -620,19 +742,21 @@ como archivo; se listan como referencia, no como requisitos vigentes.
 
 | Entidad | Casos de uso |
 | --- | --- |
+| CatalogoConvocatorias | CU-EVT-001, CU-EVT-002, CU-EVT-005, CU-EVT-011, CU-EVT-026 |
 | RouterSolicitudes | CU-REG-001, CU-EVT-002 |
-| Solicitudes_EVT · RouterActividades · Actividad_* | CU-EVT-002, CU-EVT-003, CU-EVT-004, CU-EVT-006, CU-EVT-007, CU-EVT-008, CU-EVT-012 |
+| Solicitudes_EVT · CatalogoActividades · RouterActividades · Actividad_* | CU-EVT-002, CU-EVT-003, CU-EVT-004, CU-EVT-006, CU-EVT-007, CU-EVT-008, CU-EVT-012 |
 | RouterDocumentos | CU-EVT-002, CU-EVT-004 |
 | DetallesAdminSolicitud | CU-EVT-003, CU-EVT-007 a CU-EVT-011, CU-EVT-012 |
 | SolicitudesAprobadas | CU-EVT-009; CU-PRG-001 a CU-PRG-004 |
 | ProgramacionActividad | CU-EVT-006, CU-EVT-014 a CU-EVT-017, CU-EVT-019, CU-EVT-020, CU-EVT-022 |
 | ConfirmacionAplicante | CU-EVT-005, CU-EVT-022, CU-EVT-023 |
 | NotificacionLote | CU-EVT-010, CU-EVT-022 |
-| ParametrosConvocatoria | CU-EVT-001, CU-EVT-005, CU-EVT-011, CU-EVT-026 |
+| DetallesConvocatoria | CU-EVT-001, CU-EVT-005, CU-EVT-011, CU-EVT-026 |
 | BitacoraEVT | CU-EVT-025, CU-EVT-026, CU-EVT-034 |
 
-Cobertura de los doce casos de uso vigentes: todos quedan cubiertos por al menos una entidad,
-salvo una dependencia sin resolver. **CU-EVT-005 (descargar constancia)** exige como
-precondición que la actividad tenga `requiere_constancia = true`, y ese campo no existe en el
-modelo: `ParametrosConvocatoria.fecha_constancias` define desde cuándo se descargan las
-constancias, pero nada registra quién las solicitó.
+Cobertura de los doce casos de uso vigentes: todos quedan cubiertos por al menos una entidad.
+**CU-EVT-005 (descargar constancia)** exigía como precondición que la actividad tuviera
+`requiere_constancia = true`, campo que antes no existía en el modelo —solo estaba
+`DetallesConvocatoria.fecha_constancias`, que define desde cuándo se descargan las constancias,
+pero nada registraba quién las había solicitado—. Esa brecha queda cerrada con
+`Solicitudes_EVT.requiere_constancia` (§2.4).
