@@ -13,16 +13,21 @@ erDiagram
     CatalogoConvocatorias {
         bigint id PK
         string nombre_convocatoria
-        string dominio "DISCRIMINADOR"
+        string prefijo
         date fecha_apertura
         date fecha_cierre
         boolean esta_activa
     }
 
+    DetallesConvocatoria {
+        bigint id PK
+        bigint convocatoria_id FK
+    }
+
     RouterSolicitudes {
         bigint id PK
         bigint usuario_django FK
-        bigint convocatoria_id FK
+        bigint convocatoria_id FK "DISCRIMINADOR"
         bigint solicitud_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -43,13 +48,13 @@ erDiagram
 
     CatalogoActividades {
         bigint id PK
-        string nombre "DISCRIMINADOR"
+        string nombre
     }
 
     RouterActividades {
         bigint id PK
         bigint solicitud_id FK
-        bigint tipo_actividad_id FK
+        bigint tipo_actividad_id FK "DISCRIMINADOR"
         bigint detalle_id FK "REFERENCIA POLIMORFICA"
     }
 
@@ -158,6 +163,7 @@ erDiagram
 
     Persona ||--o{ RouterSolicitudes : "tiene"
     CatalogoConvocatorias ||--o{ RouterSolicitudes : "clasifica"
+    CatalogoConvocatorias ||--|| DetallesConvocatoria : "detalla"
 
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
