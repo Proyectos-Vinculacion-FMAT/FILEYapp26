@@ -1,12 +1,12 @@
 ---
 estado: aceptada
-version: "1.0"
+version: "1.1"
 tags:
   - tipo/adr
   - dom/fer
   - tema/arquitectura
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-25
 id: ADR-0003
 responsable: Hugo Janssen
 supersede:
@@ -16,7 +16,8 @@ reemplazado_por:
 
 ## Estado
 
-`Aceptado` — 2026-08-21.
+`Aceptado` — 2026-08-21. **Enmendado el 2026-08-25 al implementarse** (v1.1): ver
+"Enmienda" al final. La decisión no cambia; cambian dos detalles de *cómo* se cumple.
 
 ## Contexto
 
@@ -182,6 +183,73 @@ anterior serviría datos cruzados.
 - Añadir `feria_id` a cualquier tabla de dominio nueva.
 - Que una consulta de dominio reciba la feria como parámetro: la feria es contexto de la
   conexión, no argumento de la consulta.
+
+## Enmienda del 2026-08-25 — lo que se aprendió al implementarlo
+
+Esta decisión se llevó a código ese día. La decisión de fondo —un schema por feria,
+resuelto por petición— queda intacta. Tres cosas hay que corregir de lo escrito arriba.
+
+### 1. El aislamiento lo implementa `django-tenants`, no código propio
+
+Este ADR describía el "policía de tránsito" como código nuestro. Se adoptó
+[`django-tenants`](https://django-tenants.readthedocs.io/) 3.14 en su lugar, con
+`TenantSubfolderMiddleware` y `TENANT_SUBFOLDER_PREFIX = "f"`, que da exactamente el
+`/f/<slug>/…` que este ADR eligió.
+
+El argumento no fue ahorrar líneas: fue que **el modo de fallo de equivocarse no da
+error**. Este mismo ADR lo registra como su riesgo principal aceptado, y un fallo así
+puede vivir meses —una feria al año— antes de que alguien note que un conteo está
+inflado. Contra eso pesa más código probado por mucha gente que código propio bien
+comentado.
+
+Lo que la librería resuelve y no hubo que escribir: la creación del schema, la tabla
+`django_migrations` **por schema**, y `migrate_schemas`, que aplica las migraciones a
+todas las ferias. Ese último es el que evita que una edición se quede con el esquema
+viejo, que este ADR ya anticipaba como "un paso que no se puede olvidar".
+
+**Cómo protege el `search_path`:** el middleware **no lo restaura al terminar** la
+petición; empieza **cada** petición con `set_schema_to_public()`. Para el tráfico HTTP
+la garantía es la misma —ninguna petición puede heredar el schema de la anterior— pero
+deja la conexión apuntando a la última feria visitada. Lo que corre fuera de una
+petición sobre esa misma conexión sí lo vería. Hoy no hay nada así: el envío del OTP
+abre su propia conexión (que nace en `public`, y hay una prueba de ello) y los comandos
+de `manage.py` son otro proceso. **Es la condición que hay que revisar antes de añadir
+la primera tarea en segundo plano.**
+
+### 2. El middleware **no** comprueba permisos
+
+Este ADR decía que el middleware "comprueba que quien pide tiene acceso a esa feria
+(ADR-0004)" antes de fijar el `search_path`. **No lo hace, y no puede.** Va primero en
+la pila —tiene que fijar el schema antes de que nada toque la base—, y eso es antes de
+`AuthenticationMiddleware`: cuando corre, `request.user` todavía no existe.
+
+El permiso lo deciden los decoradores de `filey/apps/ferias/permisos.py`
+(`requiere_admin_feria`, `requiere_dueno_feria`), sobre la feria que el middleware dejó
+en `request.tenant`.
+
+No es solo una limitación técnica: **hay pantallas de feria que son públicas**. El
+catálogo de convocatorias se consulta sin cuenta a propósito (CU-FER-006, A1), así que
+resolver la feria y exigir permiso tienen que ser dos decisiones separadas de todos
+modos.
+
+### 3. Dos verrugas de la librería que hay que conocer
+
+| Qué | Por qué | Dónde muerde |
+| --- | --- | --- |
+| **Una fila `Feria` que no es una feria** | El middleware resuelve toda ruta que no empiece por `/f/` buscando el tenant con `schema_name="public"`, y responde 404 si no existe. La crea la migración `ferias/0002`. | `Feria.objects` **no puede** filtrarla —la librería la busca ahí—, así que todo listado usa `Feria.reales`. Usar `objects` saca una feria fantasma en la pantalla de alguien. |
+| **`Feria.slug` y `Domain.domain` duplican el mismo valor** | En modo subfolder la librería resuelve la feria por su modelo `Domain`, cuyo campo `domain` guarda el segmento de URL (`2027`), no un host. | Solo los escribe `servicios/altas.py`, y hay una prueba de que no divergen. Si se separaran, la feria existiría con una URL y sería alcanzable por otra. |
+
+### Lo que sí se cumplió tal cual
+
+- Ninguna tabla de contenido lleva `feria_id`, y las consultas de `apps/convocatorias`
+  no llevan filtro de feria. Hay pruebas de que aun así no cruzan
+  (`apps/ferias/pruebas/test_aislamiento.py`).
+- El schema de una feria contiene **solo** sus tablas de contenido: `Persona`, `Feria` y
+  `AdminFeria` viven una sola vez en `public`.
+- Se adoptó PostgreSQL también en desarrollo y en las pruebas. SQLite dejó de ser una
+  opción: `config/settings.py` aborta el arranque si `DATABASE_URL` no apunta a Postgres.
+
+---
 
 ## Referencias
 

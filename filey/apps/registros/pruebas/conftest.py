@@ -21,10 +21,28 @@ entorno (ver ``apps/notificaciones/backends.py``).
 import pytest
 from django.core.cache import cache
 
-from apps.registros.models import Modulo, NivelPermiso, Persona, RolPermiso
+from apps.ferias.models import AdminFeria, Feria
+from apps.registros.models import Persona
 from apps.registros.services import otp as otp_service
 
 CODIGO = "123456"
+
+
+@pytest.fixture(autouse=True)
+def urlconf_publico(settings):
+    """Resuelve nombres de URL contra el urlconf de **fuera** de una feria.
+
+    `ROOT_URLCONF` apunta al urlconf de dentro de una feria porque es de
+    donde `django-tenants` saca los patrones que prefija con
+    `/f/<slug>/`. Fuera de una petición —que es donde estas pruebas
+    llaman a `reverse()`— Django resuelve contra `ROOT_URLCONF`, y ahí
+    `registros:` no existe.
+
+    Todo lo que se prueba en este paquete es la zona pública, así que se
+    apunta al urlconf que de verdad la sirve. Las pruebas de dentro de
+    una feria viven en `apps/ferias/pruebas/`.
+    """
+    settings.ROOT_URLCONF = settings.PUBLIC_SCHEMA_URLCONF
 
 
 @pytest.fixture(autouse=True)
@@ -87,31 +105,58 @@ def participante(db):
     )
 
 
+def _feria_sin_schema(nombre, slug):
+    """Una `Feria` que NO crea su schema.
+
+    Crear el schema dispara las migraciones de contenido y tarda
+    segundos; estas pruebas solo miran permisos, así que no lo pagan.
+    Las que necesitan un schema de verdad viven en
+    `apps/ferias/pruebas/`.
+
+    `auto_create_schema` se pone en la instancia y no se pasa al
+    constructor porque es un **atributo de clase** de `TenantMixin`, no
+    una columna: como kwarg, `Model.__init__` lo rechaza.
+    """
+    feria = Feria(nombre=nombre, slug=slug, schema_name=f"feria_{slug}")
+    feria.auto_create_schema = False
+    feria.save()
+    return feria
+
+
 @pytest.fixture
-def admin_general(db):
-    """Administrador con el rol ``*``: puede con todos los módulos."""
+def feria(db):
+    return _feria_sin_schema("FILEY 2027", "2027")
+
+
+@pytest.fixture
+def otra_feria(db):
+    """Una segunda feria, para comprobar que el acceso no se contagia."""
+    return _feria_sin_schema("FILEY 2028", "2028")
+
+
+@pytest.fixture
+def dueno_feria(db, feria):
+    """Dueña de una feria: administra su contenido **y** sus accesos."""
     persona = Persona.objects.create_user(
         correo="hipolito@filey.org",
         nombre="Hipólito",
         primer_apellido="Canto",
         telefono="9990000002",
     )
-    RolPermiso.objects.create(
-        persona=persona, modulo=Modulo.TODOS, nivel=NivelPermiso.EDICION
-    )
+    AdminFeria.objects.create(feria=feria, persona=persona, es_dueno=True)
     return persona
 
 
 @pytest.fixture
-def admin_evt(db):
-    """Administrador de un solo módulo, con permiso de solo lectura."""
+def admin_feria(db, feria, dueno_feria):
+    """Administradora de la misma feria, sin ser su dueña."""
     persona = Persona.objects.create_user(
         correo="revisor@filey.org",
         nombre="Rita",
         primer_apellido="Uc",
         telefono="9990000003",
     )
-    RolPermiso.objects.create(
-        persona=persona, modulo=Modulo.EVT, nivel=NivelPermiso.LECTURA
+    AdminFeria.objects.create(
+        feria=feria, persona=persona, es_dueno=False, creado_por=dueno_feria
     )
     return persona

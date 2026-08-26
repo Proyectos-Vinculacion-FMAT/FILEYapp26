@@ -9,10 +9,10 @@ Mapa pantalla → caso de uso:
 - /convocatorias         → CU-REG-006 (convocatorias del participante)
 - /admin/acceso          → CU-REG-003 (paso 1-3: correo administrativo)
 - /admin/acceso/codigo   → CU-REG-003 (verificar y abrir sesión admin)
-- /admin/modulos         → CU-REG-006 (módulos según RolPermiso)
 
 Nota: CU-REG-005/006 están en revisión — el acceso administrativo pasa a
-otorgarse por feria (ADR-0004). Este archivo todavía implementa RolPermiso.
+otorgarse por feria (ADR-0004). La selección de feria vive ahora en
+`apps/ferias/views.py::mis_ferias` (CU-FER-002).
 - /salir                 → CU-REG-004 (cerrar sesión)
 
 Estas vistas son **delgadas**: validan el formulario, llaman al servicio
@@ -53,7 +53,7 @@ def _persona_por_correo(correo: str):
 
 
 def _es_admin(persona) -> bool:
-    """True solo si la cuenta existe, está activa y tiene RolPermiso."""
+    """True solo si la cuenta existe, está activa y administra alguna feria."""
     return persona is not None and persona.es_administrativa
 
 
@@ -465,7 +465,7 @@ def _pantalla_codigo(peticion, contexto: str):
     # Éxito — paso 10-12: sesión, último acceso y destino.
     sesion_service.iniciar(peticion, persona)
     destino = (
-        "registros:admin_modulos" if es_admin_contexto else "registros:convocatorias"
+        "ferias:mis_ferias" if es_admin_contexto else "registros:convocatorias"
     )
     return redirigir(peticion, destino)
 
@@ -548,33 +548,6 @@ def convocatorias(peticion):
         peticion,
         "registros/convocatorias.html",
         {"tarjetas": catalogo.CONVOCATORIAS_PARTICIPANTE},
-    )
-
-
-@requiere_admin
-def admin_modulos(peticion):
-    """Módulos administrables según RolPermiso.
-
-    Los que quedan fuera del permiso se muestran igual pero no
-    navegables (decisión A2 del CU-REG-006): el panel no oculta que
-    existen, solo que no son suyos.
-    """
-    permitidos = {m.value for m in peticion.user.modulos_administrables()}
-    tarjetas = [
-        {**t, "navegable": t["navegable"] and t["modulo"] in permitidos}
-        for t in catalogo.MODULOS_ADMIN
-    ]
-    return render(
-        peticion,
-        "registros/admin_modulos.html",
-        {
-            "tarjetas": tarjetas,
-            # `zona_admin` es lo que le dice al layout compartido que
-            # pinte la variante administrativa. Todo módulo que sirva
-            # pantallas de panel tiene que mandarlo (ver layouts/panel.html).
-            "zona_admin": True,
-            "es_admin_general": peticion.user.puede_administrar(Modulo.TODOS),
-        },
     )
 
 

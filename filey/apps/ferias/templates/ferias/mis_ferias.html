@@ -1,0 +1,80 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} Las ferias que administro (CU-FER-002).
+
+   Sustituye a `registros/admin_modulos.html`, que listaba módulos sobre
+   un sistema de una sola feria. Ahora lo primero que se elige es la
+   edición; el módulo se elige ya dentro de ella. {% endcomment %}
+
+{% block titulo %}FILEY — Mis ferias{% endblock %}
+
+{% block url_inicio %}{% url 'ferias:mis_ferias' %}{% endblock %}
+
+{% block encabezado_titulo %}Mis ferias{% endblock %}
+
+{% block encabezado_texto %}
+  Estas son las ediciones de FILEY que administras. Entra a una para
+  gestionar sus convocatorias y su contenido.
+{% endblock %}
+
+{% block contenido %}
+{% if accesos %}
+  <div class="conv-grid">
+    {% for acceso in accesos %}
+      <article class="conv-card {% if acceso.feria.estado == 'archivada' %}is-closed{% endif %}">
+
+        <div class="conv-banner banner-eventos">
+          <span class="ico">🎪</span>
+          <h3>{{ acceso.feria.nombre }}</h3>
+        </div>
+
+        <div class="conv-body">
+          {% if acceso.es_dueno %}
+            <span class="badge badge-open">Dueño</span>
+          {% else %}
+            <span class="badge badge-soon">Administrador</span>
+          {% endif %}
+
+          <p>
+            {% if acceso.feria.sede %}{{ acceso.feria.sede }}{% else %}Sede por definir{% endif %}
+            {% if acceso.feria.edicion %} · Edición {{ acceso.feria.edicion }}{% endif %}
+          </p>
+
+          <div class="conv-dates">
+            {% if acceso.feria.fecha_inicio %}
+              📅 {{ acceso.feria.fecha_inicio }} — {{ acceso.feria.fecha_fin|default:"?" }}
+            {% else %}
+              📅 Fechas por definir · {{ acceso.feria.get_estado_display }}
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="conv-foot">
+          <a class="btn btn-gold btn-block" href="{{ acceso.feria.url }}">
+            Entrar a {{ acceso.feria.nombre }} →
+          </a>
+        </div>
+
+      </article>
+    {% endfor %}
+  </div>
+
+  {% comment %} Reservado al dueño desde el 2026-08-25 — enmienda a ADR-0004. {% endcomment %}
+  <div class="note note-info" style="margin-top: 26px">
+    <div class="ico">ℹ️</div>
+    <div>
+      Como <strong>dueño</strong> de una feria puedes además dar de alta a sus
+      administradores y abrir o cerrar sus convocatorias. Como
+      <strong>administrador</strong> operas todo su contenido.
+    </div>
+  </div>
+{% else %}
+  <div class="note note-info">
+    <div class="ico">ℹ️</div>
+    <div>
+      Todavía no administras ninguna feria. Quien puede darte acceso es el
+      dueño de la edición en la que vayas a trabajar.
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

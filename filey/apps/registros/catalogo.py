@@ -1,7 +1,9 @@
 """
-Catálogo temporal de convocatorias/módulos para las pantallas
-posteriores al login (convocatorias del participante y selección
-de módulo del administrador, CU-REG-006).
+Catálogo temporal de convocatorias para el portal del participante.
+
+Ya no incluye el catálogo del administrador: esa pantalla dejó de
+listar módulos y pasó a listar **ferias** (CU-FER-002,
+`apps/ferias/views.py`), que sí sale de datos reales.
 
 REG no es dueño de este contenido: cuando los dominios EVT/TAL/
 STD/VIS tengan su propio backend, cada uno expondrá su estado de
@@ -69,57 +71,3 @@ CONVOCATORIAS_PARTICIPANTE = [
 ]
 
 # Tarjetas del panel administrativo (admin-convocatorias.html del prototipo)
-MODULOS_ADMIN = [
-    {
-        "modulo": Modulo.STD,
-        "titulo": "Convocatoria de Stands",
-        "descripcion": (
-            "Renta de espacios y stands para editoriales, distribuidores "
-            "y expositores comerciales."
-        ),
-        "icono": "🏬",
-        "banner": "stand",
-        "estado": "activo",
-        "fechas": "Convocatoria abierta · cierra el 31 de agosto de 2027",
-        "navegable": True,
-    },
-    {
-        "modulo": Modulo.TAL,
-        "titulo": "Actividades Infantiles / Juveniles",
-        "descripcion": (
-            "Talleres, cuentacuentos y actividades del programa infantil "
-            "y juvenil (TAL)."
-        ),
-        "icono": "🎨",
-        "banner": "infantil",
-        "estado": "proximamente",
-        "fechas": "Panel en construcción",
-        "navegable": False,
-    },
-    {
-        "modulo": Modulo.EVT,
-        "titulo": "Actividades FILEY (Eventos)",
-        "descripcion": (
-            "Revisa y dictamina propuestas de conversatorios, conferencias, "
-            "charlas y presentaciones de libro."
-        ),
-        "icono": "🎤",
-        "banner": "eventos",
-        "estado": "activo",
-        "fechas": "Convocatoria abierta · cierra el 31 de agosto de 2027",
-        "navegable": True,
-    },
-    {
-        "modulo": Modulo.VIS,
-        "titulo": "Visitas Escolares",
-        "descripcion": (
-            "Revisa propuestas de visita escolar, acepta o solicita cambios, "
-            "y supervisa las reservaciones de talleres."
-        ),
-        "icono": "🚌",
-        "banner": "visitas",
-        "estado": "activo",
-        "fechas": "Convocatoria abierta · cierra el 31 de agosto de 2027",
-        "navegable": True,
-    },
-]

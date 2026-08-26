@@ -194,6 +194,27 @@ la `Persona` no pertenece a ninguna feria (ADR-0003).
 - El decorador `requiere_modulo(modulo, nivel)`.
 - Que cualquier administrador pueda provisionar otros administradores.
 
+## Estado de implementación — 2026-08-25
+
+`AdminFeria` existe como código en `filey/apps/ferias/models.py`, y **`RolPermiso` se
+retiró del código** ese mismo día (migración `registros/0004_retirar_rolpermiso`), junto
+con `NivelPermiso`, `Persona.puede_administrar` y el decorador `requiere_modulo`. La
+divergencia entre este ADR y lo desplegado, que llevaba abierta desde el 2026-08-21,
+queda cerrada.
+
+Lo que cambió de facto en las pantallas:
+
+| Antes (`RolPermiso`) | Ahora (`AdminFeria`) |
+| --- | --- |
+| `Persona.es_administrativa` = "¿tiene algún rol?" | "¿administra alguna feria?" — se responde por la relación inversa `ferias_admin`, para que `registros` no dependa de `ferias` |
+| `/admin/modulos/` listaba módulos | `/admin/ferias/` lista **ferias** (CU-FER-002). Lo primero que se elige es la edición; el módulo se elige dentro |
+| `manage.py alta_admin --modulo EVT` | `manage.py alta_admin_feria --feria 2027` — el acceso necesita saber *a qué feria* |
+| `requiere_modulo("EVT", nivel)` | `requiere_admin_feria` / `requiere_dueno_feria`, en `apps/ferias/permisos.py` |
+
+El nivel de solo lectura no tiene sustituto, tal como este ADR decidió a sabiendas.
+
+---
+
 ## Referencias
 
 - [ADR-0003](<0003-una-feria-por-schema.md>) — el aislamiento por schema que obliga a decidir

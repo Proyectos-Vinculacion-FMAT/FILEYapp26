@@ -14,3 +14,10 @@ resend>=2.0
 psycopg2-binary>=2.9.9
 dj-database-url>=2.1
 gunicorn>=22.0
+
+# Aísla cada feria en su propio schema de PostgreSQL (ADR-0003). Aporta
+# el backend de base de datos, el middleware que resuelve la feria del
+# prefijo `/f/<slug>/` y `migrate_schemas`. Se prefirió a escribirlo a
+# mano porque el modo de fallo de hacerlo mal —servir datos de otra
+# feria— no da error: hay que mirarlo para verlo.
+django-tenants>=3.14
