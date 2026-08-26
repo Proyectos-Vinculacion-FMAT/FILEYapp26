@@ -38,15 +38,15 @@ dato queda en ambos lados.
 ### Elementos de asociación y enrutamiento
 
 Tres tablas intermedias resuelven las relaciones. Ninguna guarda datos de negocio: solo
-conectan entidades y, cuando hace falta, indican **a qué tabla** apunta la conexión. Dos
-catálogos las alimentan: en vez de guardar el discriminador como un string suelto, el router
-lo obtiene por FK a una tabla configurable.
+conectan entidades y, cuando hace falta, indican **a qué tabla** apunta la conexión. Dos de
+ellas son polimórficas y las alimenta un catálogo, en vez de guardar el discriminador como un
+string suelto; la tercera no lo necesita, porque siempre apunta al mismo destino.
 
 | Tabla | Propósito |
 | --- | --- |
 | Router de solicitudes | Relaciona a la persona con las solicitudes que ha creado. Su discriminador, `convocatoria_id`, es una FK a `CatalogoConvocatorias` (§2.2); la fila referida trae el `prefijo` (`EVT`, `TAL`, `STD` o `VIS`) con el que se resuelve a qué tabla pertenece la solicitud. Es único para todo el sistema: sirve a los cuatro dominios. |
 | Router de actividades | Relaciona una solicitud con su actividad específica. Su discriminador, `tipo_actividad_id`, es una FK a `CatalogoActividades` (§2.5); la fila referida trae el `nombre` con el que se resuelve cuál de las ocho tablas la contiene. |
-| Router de documentos | Relaciona los documentos adjuntos con la publicación que los requiere. Conecta directamente con `Actividad_PresentacionLibro` y `Actividad_PresentacionRevista` —las únicas actividades que llevan archivos adjuntos—; su discriminador, `tipo_publicacion`, sigue siendo un string literal porque no hay un catálogo detrás. Permite uno o varios documentos por publicación y guarda la ubicación del archivo. |
+| Router de documentos | Relaciona los archivos adjuntos con la solicitud que los requiere. FK directa a `Solicitudes_EVT` —no polimórfica: el objeto que tiene folio propio es la solicitud, no la actividad específica, y `RouterActividades` ya garantiza que cada solicitud resuelve a un único tipo—. `tipo_documento` queda limitado a `portada_libro`, `portada_revista` y `retrato_autor`, los únicos adjuntos que existen hoy y que solo aplican cuando el tipo de actividad de la solicitud es presentación de libro o revista. |
 
 Visualmente:
 
@@ -66,11 +66,11 @@ flowchart TD
     CA[(CatalogoActividades<br/>8 tipos)]
     RA{{Router de actividades<br/>discriminador: tipo_actividad_id}}
 
-    A_1[Actividad: Presentación de libro/revista]
+    A_1[Actividad tipo 1]
     A_2[Actividad tipo 2]
     A_n[Actividad tipo N]
 
-    RD{{Router de documentos<br/>discriminador: tipo_publicacion}}
+    RD{{Router de documentos<br/>tipo_documento + storage_key}}
 
     U --> RS
     CC --> RS
@@ -82,24 +82,23 @@ flowchart TD
 
     S_EVT --> RA
     CA --> RA
+    S_EVT --> RD
 
     RA -.->|solo una| A_1
     RA -.-> A_2
     RA -.-> A_n
-
-    A_1 --> RD
 
     style S_EVT fill:#2C4C8C , stroke:#01457C
 ```
 
 ### Referencias polimórficas
 
-Los tres routers comparten un mecanismo: guardan un **discriminador** que nombra la tabla
-destino y un **identificador** de la fila dentro de esa tabla. El discriminador vive **en la
-fila del router**, no en el catálogo: en `RouterSolicitudes` y `RouterActividades` ya no es un
-string suelto, sino una FK (`convocatoria_id`, `tipo_actividad_id`) hacia una tabla de catálogo.
-El catálogo referido no es el discriminador —es el que la aplicación consulta, ya siguió la FK,
-para resolver a qué tabla apunta—, a través de un campo propio de esa fila: `prefijo` en
+`RouterSolicitudes` y `RouterActividades` comparten un mecanismo: guardan un **discriminador**
+que nombra la tabla destino y un **identificador** de la fila dentro de esa tabla. El
+discriminador vive **en la fila del router**, no en el catálogo: ya no es un string suelto,
+sino una FK (`convocatoria_id`, `tipo_actividad_id`) hacia una tabla de catálogo. El catálogo
+referido no es el discriminador —es el que la aplicación consulta, ya siguió la FK, para
+resolver a qué tabla apunta—, a través de un campo propio de esa fila: `prefijo` en
 `CatalogoConvocatorias`, `nombre` en `CatalogoActividades`. Agregar una convocatoria o un tipo
 de actividad es entonces dar de alta una fila de catálogo, no tocar un `enum` en código.
 
@@ -107,7 +106,10 @@ de actividad es entonces dar de alta una fila de catálogo, no tocar un `enum` e
 | --- | --- | --- | --- | --- |
 | `RouterSolicitudes` | `convocatoria_id` (FK) | `CatalogoConvocatorias.prefijo` | `solicitud_id` | `Solicitudes_EVT`, `Solicitudes_TAL`, `Solicitudes_STD`, `Solicitudes_VIS` |
 | `RouterActividades` | `tipo_actividad_id` (FK) | `CatalogoActividades.nombre` | `detalle_id` | Las ocho tablas `Actividad_*` |
-| `RouterDocumentos` | `tipo_publicacion` (string) | — no hay catálogo, el valor ya es literal | `publicacion_id` | `Actividad_PresentacionLibro`, `Actividad_PresentacionRevista` |
+
+`RouterDocumentos` (§2.8) queda fuera de esta tabla a propósito: no es polimórfico. Apunta
+siempre a `Solicitudes_EVT` mediante una FK normal, así que no necesita discriminador ni
+identificador polimórfico.
 
 Como el identificador puede apuntar a tablas distintas según el discriminador, **no es una
 clave foránea con restricción**: la base de datos no puede validarlo. La integridad depende de
@@ -191,8 +193,7 @@ erDiagram
 
     RouterDocumentos {
         bigint id PK
-        string tipo_publicacion "DISCRIMINADOR"
-        bigint publicacion_id FK "REFERENCIA POLIMORFICA"
+        bigint solicitud_id FK
         string tipo_documento
         string storage_key
     }
@@ -254,7 +255,6 @@ erDiagram
         string nombre_participante_2
         string semblanza_participante_2
         string nombre_editorial
-        boolean ejemplar_fisico_entregado
     }
 
     Actividad_PresentacionRevista {
@@ -272,7 +272,6 @@ erDiagram
         string nombre_participante_2
         string semblanza_participante_2
         string nombre_editorial
-        boolean ejemplar_fisico_entregado
     }
 
     Actividad_LecturaObra {
@@ -299,6 +298,7 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
     Solicitudes_EVT ||--o{ RouterActividades : "contiene"
+    Solicitudes_EVT ||--o{ RouterDocumentos : "adjunta"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
@@ -310,9 +310,6 @@ erDiagram
     RouterActividades }o..|| Actividad_PresentacionRevista : "enruta"
     RouterActividades }o..|| Actividad_LecturaObra : "enruta"
     RouterActividades }o..|| Actividad_Encuentro : "enruta"
-
-    Actividad_PresentacionLibro ||--o{ RouterDocumentos : "adjunta"
-    Actividad_PresentacionRevista ||--o{ RouterDocumentos : "adjunta"
 ```
 
 ### 2.1 Persona
@@ -471,11 +468,13 @@ de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial. Obligatorio; si la publicación es independiente, se anota así. |
-| ejemplar_fisico_entregado | Indica si FILEY recibió el ejemplar físico que exige este tipo de actividad. Lo marca el administrador, pero reside aquí por ser un dato inherente a la publicación. |
+
+`ejemplar_fisico_entregado` ya no vive en esta tabla: al ser un dato que **solo el
+administrador escribe**, se movió a `DetallesAdminSolicitud` (§3.1), con nota de que aplica
+únicamente a solicitudes de este tipo o de `Actividad_PresentacionRevista`.
 
 Las fotografías del autor y de la portada dejaron de tener un booleano `tiene_foto_*` en esta
-tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), que conecta con esta tabla
-sin pasar por `Solicitudes_EVT`.
+tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), anclado a la solicitud.
 
 #### Actividad_PresentacionRevista
 
@@ -491,27 +490,34 @@ sin pasar por `Solicitudes_EVT`.
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial responsable de la revista. |
-| ejemplar_fisico_entregado | Indica si FILEY recibió el ejemplar físico. Ver la nota equivalente en `Actividad_PresentacionLibro`. |
+
+`ejemplar_fisico_entregado` sigue la misma lógica que en `Actividad_PresentacionLibro`: vive en
+`DetallesAdminSolicitud` (§3.1), no aquí.
 
 La portada de la revista sigue la misma lógica que en `Actividad_PresentacionLibro`: sin
 booleano de caché, se consulta en `RouterDocumentos` (§2.8).
 
 ### 2.8 RouterDocumentos
 
-Registro de los archivos que acompañan a una **publicación**, no a la solicitud en general.
-Antes conectaba con `Solicitudes_EVT`; hoy conecta directamente con las dos únicas actividades
-que llevan adjuntos —`Actividad_PresentacionLibro` y `Actividad_PresentacionRevista`—, porque
-semblanza y sinopsis dejaron de ser archivos (§2.4, §2.7) y lo único que queda por adjuntar son
-las fotografías propias de esas dos publicaciones. Sigue el mismo patrón polimórfico que
-`RouterSolicitudes` y `RouterActividades` (§1): una fila por documento, de modo que una
-publicación puede tener tantos como requiera sin columnas fijas.
+Registro de los archivos que acompañan a una solicitud. FK directa a `Solicitudes_EVT`, **no
+polimórfica**: el objeto que tiene folio propio y existencia única es la solicitud, no la
+actividad específica, y esa relación ya la resuelve `RouterActividades` (§2.6) —una solicitud
+apunta exactamente a una de las ocho tablas `Actividad_*`—. Anclar los documentos ahí otra vez
+habría sido introducir un segundo enrutamiento polimórfico para un caso que no lo necesita:
+`tipo_documento` ya distingue de sobra a qué publicación pertenece cada archivo, sin tener que
+apuntar a una tabla distinta.
+
+En la práctica solo existen filas aquí para solicitudes cuyo tipo de actividad (§2.6) es
+presentación de libro o revista; para el resto, la tabla queda vacía. Esa restricción no la
+impone la base de datos —la FK es válida contra cualquier `Solicitudes_EVT`—, la impone la capa
+de aplicación, igual que ya ocurre con la relación entre discriminador e identificador de los
+routers polimórficos (§1).
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| tipo_publicacion | Discriminador: `libro` o `revista`. Determina a qué tabla apunta `publicacion_id`. |
-| publicacion_id | Referencia polimórfica a `Actividad_PresentacionLibro` o `Actividad_PresentacionRevista`, según `tipo_publicacion`. |
-| tipo_documento | Qué documento es: fotografía del autor (solo `libro`) o portada de la publicación. |
+| solicitud_id | FK → Solicitudes_EVT. |
+| tipo_documento | Qué documento es, sobre el conjunto cerrado `portada_libro`, `portada_revista` o `retrato_autor` (este último solo aplica a libro). |
 | storage_key | Ubicación del archivo almacenado. El formato —clave de almacenamiento, ruta o URL— está por definir. |
 
 ---
@@ -585,6 +591,7 @@ inicio permite consultar las solicitudes pendientes sin interpretar la ausencia 
 | organizador_final | Organizador definitivo; nulo significa que vale `Solicitudes_EVT.nombre_organizador_organizacion`. |
 | es_apta_juvenil | Marca la actividad como apta para el catálogo escolar y juvenil de `VIS`. |
 | en_cartelera_informal | Indica que la actividad aparece solo en cartelera informativa, sin horario fijo comprometido. |
+| ejemplar_fisico_entregado | Indica si FILEY recibió el ejemplar físico de la publicación. **Específico de las solicitudes cuyo tipo de actividad (§2.6) es presentación de libro o revista**; nulo o sin sentido en las otras seis. Lo marca el administrador, por lo que vive aquí y no en `Actividad_PresentacionLibro` / `Actividad_PresentacionRevista` (§2.7), aunque el dato sea inherente a esas dos publicaciones. |
 | fecha_revision | Fecha en que el administrador emitió el dictamen. |
 | revisado_por | FK → Persona (administrador). |
 | motivo_rechazo | Motivo registrado cuando `estado = rechazada`. |
@@ -739,7 +746,7 @@ ventana normal, ediciones manuales del programa y similares.
 - **Persona** (`REG`) 1—N **RouterSolicitudes** 1—1 **Solicitudes_EVT**. Único camino entre una persona y sus solicitudes.
 - **CatalogoActividades** 1—N **RouterActividades**. Cada fila de enrutamiento clasifica contra un tipo del catálogo.
 - **Solicitudes_EVT** 1—1 **RouterActividades** →(polimórfica) **Actividad_\***. Una de las ocho, según `tipo_actividad_id`.
-- **Actividad_PresentacionLibro** 1—N **RouterDocumentos** y **Actividad_PresentacionRevista** 1—N **RouterDocumentos** (polimórfica). Las únicas dos actividades con adjuntos.
+- **Solicitudes_EVT** 1—N **RouterDocumentos** (no polimórfica). En la práctica solo hay filas cuando el tipo de actividad es presentación de libro o revista.
 
 ### Etapa 2 — administración y programación
 
