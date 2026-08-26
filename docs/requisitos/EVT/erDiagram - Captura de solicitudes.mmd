@@ -60,8 +60,7 @@ erDiagram
 
     RouterDocumentos {
         bigint id PK
-        string tipo_publicacion "DISCRIMINADOR"
-        bigint publicacion_id FK "REFERENCIA POLIMORFICA"
+        bigint solicitud_id FK
         string tipo_documento
         string storage_key
     }
@@ -123,7 +122,6 @@ erDiagram
         string nombre_participante_2
         string semblanza_participante_2
         string nombre_editorial
-        boolean ejemplar_fisico_entregado
     }
 
     Actividad_PresentacionRevista {
@@ -141,7 +139,6 @@ erDiagram
         string nombre_participante_2
         string semblanza_participante_2
         string nombre_editorial
-        boolean ejemplar_fisico_entregado
     }
 
     Actividad_LecturaObra {
@@ -168,6 +165,7 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
     Solicitudes_EVT ||--o{ RouterActividades : "contiene"
+    Solicitudes_EVT ||--o{ RouterDocumentos : "adjunta"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
@@ -179,6 +177,3 @@ erDiagram
     RouterActividades }o..|| Actividad_PresentacionRevista : "enruta"
     RouterActividades }o..|| Actividad_LecturaObra : "enruta"
     RouterActividades }o..|| Actividad_Encuentro : "enruta"
-
-    Actividad_PresentacionLibro ||--o{ RouterDocumentos : "adjunta"
-    Actividad_PresentacionRevista ||--o{ RouterDocumentos : "adjunta"
