@@ -8,12 +8,7 @@ inspeccionar datos.)
 
 from django.contrib import admin
 
-from .models import Persona, RolPermiso, SesionOTP
-
-
-class RolPermisoInline(admin.TabularInline):
-    model = RolPermiso
-    extra = 0
+from .models import Persona, SesionOTP
 
 
 @admin.register(Persona)
@@ -38,15 +33,8 @@ class PersonaAdmin(admin.ModelAdmin):
     )
     list_filter = ("estado", "pais")
     ordering = ("primer_apellido", "segundo_apellido", "nombre")
-    inlines = [RolPermisoInline]
     readonly_fields = ("fecha_registro", "ultimo_acceso")
     exclude = ("password",)
-
-
-@admin.register(RolPermiso)
-class RolPermisoAdmin(admin.ModelAdmin):
-    list_display = ("persona", "modulo", "nivel", "creado_en")
-    list_filter = ("modulo", "nivel")
 
 
 @admin.register(SesionOTP)

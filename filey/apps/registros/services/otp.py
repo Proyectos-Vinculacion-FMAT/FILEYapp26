@@ -215,12 +215,31 @@ def emitir(persona: Persona) -> dict:
 def _despachar_correo(correo: str, nombre: str, codigo: str, sesion_id: int):
     """Envía el OTP fuera de la respuesta HTTP (ver ``emitir``)."""
     hilo = threading.Thread(
-        target=_tarea_envio,
+        target=_hilo_de_envio,
         args=(correo, nombre, codigo, sesion_id),
         daemon=True,
         name=f"envio-otp-{sesion_id}",
     )
     hilo.start()
+
+
+def _hilo_de_envio(correo: str, nombre: str, codigo: str, sesion_id: int):
+    """Lo que corre en el hilo: el envío, y limpiar tras de sí.
+
+    Cerrar la conexión es responsabilidad **del hilo**, no del envío, y
+    por eso vive aquí y no dentro de ``_tarea_envio``. Cada hilo abre su
+    propia conexión y hay que cerrarla o se acumulan; pero cuando
+    ``_tarea_envio`` corre en el hilo de la petición —como en las
+    pruebas, que lo vuelven síncrono para poder mirar el buzón— cerrar
+    ahí tumbaría la conexión que esa petición está usando.
+
+    Con SQLite eso pasaba desapercibido. Con PostgreSQL (ADR-0003) la
+    petición muere con ``InterfaceError: connection already closed``.
+    """
+    try:
+        _tarea_envio(correo, nombre, codigo, sesion_id)
+    finally:
+        connections.close_all()
 
 
 def _tarea_envio(correo: str, nombre: str, codigo: str, sesion_id: int):
@@ -240,9 +259,6 @@ def _tarea_envio(correo: str, nombre: str, codigo: str, sesion_id: int):
         # solo existe aquí: sin este log el fallo es invisible.
         logger.exception("OTP no enviado a %s — el código queda anulado", correo)
         SesionOTP.objects.filter(pk=sesion_id).update(usado=True)
-    finally:
-        # Cada hilo abre su propia conexión: cerrarla o se acumulan.
-        connections.close_all()
 
 
 def verificar(persona: Persona, codigo: str) -> ResultadoVerificacion:

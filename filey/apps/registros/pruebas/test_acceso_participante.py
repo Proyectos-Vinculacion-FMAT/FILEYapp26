@@ -253,7 +253,7 @@ def test_las_convocatorias_saludan_y_listan(client, participante):
 def test_un_participante_no_entra_al_panel_administrativo(client, participante):
     client.force_login(participante)
 
-    assert client.get(reverse("registros:admin_modulos")).status_code == 403
+    assert client.get(reverse("ferias:mis_ferias")).status_code == 403
 
 
 def test_cerrar_sesion_vacia_la_sesion(client, participante):

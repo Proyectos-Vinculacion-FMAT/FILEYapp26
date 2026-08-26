@@ -29,8 +29,12 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 1. **Monolito Django** (ADR-0001). Un solo proyecto, un solo despliegue. Sin API REST ni SPA
    separada; la interactividad es htmx + Alpine servidos desde `filey/estaticos/js/`.
 2. **La sesión es la de Django** (ADR-0002), cookie `HttpOnly` con estado en el servidor. No
-   hay JWT, ni tokens en el cliente, ni CORS. Ningún módulo implementa su propia autenticación:
-   importa los decoradores de `apps/registros/permisos.py`.
+   hay JWT, ni tokens en el cliente, ni CORS. Ningún módulo implementa su propia autenticación
+   ni su propio control de acceso: importa los decoradores. Quién decide qué:
+   `apps/registros/permisos.py` para lo de fuera de una feria (`requiere_participante`,
+   `requiere_admin`) y `apps/ferias/permisos.py` para lo de dentro (`requiere_admin_feria`,
+   `requiere_dueno_feria`). El middleware de feria **no comprueba permisos** —corre antes de
+   `AuthenticationMiddleware`, así que no hay `request.user`—: solo fija el schema.
 3. **Capas por app:** `models.py` (datos e invariantes, modelos gordos) → `services/` (reglas de
    negocio) → `views.py` (traduce HTTP ↔ servicio, vistas delgadas) → plantillas.
    Si una regla no se puede llamar desde un comando de `manage.py` sin pasar por HTTP, está en
@@ -38,14 +42,26 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 4. **Las dependencias van en una sola dirección.** Los dominios verticales (`eventos`,
    `talleres`, `stands`, `visitas`) importan de `registros` —que es la base de identidad—,
    nunca al revés, y nunca en círculo entre hermanos.
-5. **Toda pantalla funciona sin JavaScript**, y **nada se carga de un CDN**.
-6. Nombres en español, consistentes, tanto en código como en rutas de archivo.
+5. **Cada feria vive en su propio schema de PostgreSQL** (ADR-0003), y la feria es el
+   contexto de la conexión, **no una columna**: ninguna tabla de contenido lleva `feria_id` ni
+   ninguna consulta un filtro de feria. Se implementa con `django-tenants`; lo que decide dónde
+   va la tabla de una app es en cuál de las dos listas de `settings.py` esté —`SHARED_APPS`
+   (schema `public`) o `TENANT_APPS` (uno por feria)—. Una app en las dos duplica sus tablas en
+   todos los schemas. **PostgreSQL es obligatorio, también en desarrollo**: SQLite no tiene
+   schemas y el arranque aborta si `DATABASE_URL` no apunta a Postgres.
+6. **Toda pantalla funciona sin JavaScript**, y **nada se carga de un CDN**.
+7. Nombres en español, consistentes, tanto en código como en rutas de archivo. Sin eñes en
+   identificadores ni nombres de columna (`es_dueno`, `contrasena`): la eñe arrastra
+   fricción de codificación en cada herramienta que toque la base.
 
 ## Estado actual
 
 - **Construido:** `REG` (Core Registros) — acceso por OTP de participante y de administrador,
-  alta de cuenta, convocatorias y selección de módulo. `apps/registros/` es la app de
-  referencia; `apps/notificaciones/` encapsula el envío de correo (Resend).
+  alta de cuenta y convocatorias. `apps/registros/` es la app de referencia;
+  `apps/notificaciones/` encapsula el envío de correo (Resend).
+- **Construido:** `FER` (Core Ferias) — `apps/ferias/` (capa `public`: `Feria`, `AdminFeria`,
+  el alta desde `/django-admin/` y la lista de "mis ferias") y `apps/convocatorias/` (capa por
+  feria: `Convocatoria`). Falta el CRUD de convocatorias, `RegistroConvocatoria` y `BitacoraFER`.
 - **Solo documentado:** `EVT`, `TAL`, `STD`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
   Ningún panel de módulo está conectado todavía.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`.
@@ -55,6 +71,8 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 ```bash
 cd filey && python manage.py check && python manage.py runserver
 cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, no en tests.py
+cd filey && python manage.py migrate_schemas        # migra `public` Y cada feria
+cd filey && python manage.py alta_feria --help      # crear una feria por consola (CU-FER-001)
 ./scripts/gen-inventario.sh         # reindexa el inventario CSS tras tocar un styles.css
 ./scripts/check-ui.sh               # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)
 ./scripts/preview-vis.sh            # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)
@@ -65,6 +83,16 @@ cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, 
 > entrega lo decide `EMAIL_BACKEND`. En pruebas Django lo sustituye por `locmem`: ninguna prueba
 > puede salir a la red aunque haya `RESEND_API_KEY` en el entorno. Si escribes un envío nuevo,
 > hazlo con `EmailMultiAlternatives`, nunca llamando a Resend directamente.
+
+> [!warning] Dos trampas del aislamiento por feria
+> **`Feria.objects` incluye una fila que no es una feria.** `django-tenants` exige un tenant con
+> `schema_name="public"` para servir todo lo que no cuelga de `/f/<slug>/`. Cualquier listado de
+> ferias usa **`Feria.reales`**; con `objects` sale una feria fantasma en pantalla.
+>
+> **Dentro de `/f/<slug>/` el urlconf activo es `config/urls_feria.py`**, así que
+> `reverse("registros:acceso")` falla ahí: ese nombre vive en el urlconf público. Para enlazar
+> de una feria hacia fuera está `comun.urls.url_publica()`. El acceso es global —la cuenta no
+> pertenece a ninguna feria— y su URL no debe llevar prefijo de edición.
 
 > [!warning] La caché por defecto no vale para producción
 > El límite por IP de `comun/limites.py` cuenta en la caché. Con `LocMemCache` cada worker lleva

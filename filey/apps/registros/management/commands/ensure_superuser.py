@@ -1,18 +1,23 @@
 """
 Alta no interactiva del superusuario, para el despliegue (GitHub Actions).
 
-Crea la cuenta del equipo técnico a partir de variables de entorno y le
-da acceso irrestricto al panel administrativo FILEY. Es idempotente: si
-la cuenta ya existe no la toca, así que se puede ejecutar en cada
-despliegue sin efectos acumulativos.
+Crea la cuenta del equipo técnico a partir de variables de entorno. Es
+idempotente: si la cuenta ya existe no la toca, así que se puede
+ejecutar en cada despliegue sin efectos acumulativos.
+
+.. note:: Esto da acceso a ``/django-admin/``, no al panel FILEY
+
+   Hasta el 2026-08-25 el comando otorgaba además un ``RolPermiso`` ``*``
+   que abría el panel administrativo entero. Ese modelo ya no existe: el
+   acceso se otorga **por feria** (ADR-0004) y al correr esto todavía no
+   hay ninguna. Quien crea la primera feria entra por ``/django-admin/``
+   y ahí designa a su dueño (CU-FER-001).
 """
 
 import os
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-
-from apps.registros.models import Modulo, NivelPermiso, RolPermiso
 
 
 class Command(BaseCommand):
@@ -41,7 +46,7 @@ class Command(BaseCommand):
         # aquí —una cuenta técnica puede no tener nombre de persona—, pero
         # si no se dan, la barra superior del panel saluda a nadie y el
         # avatar sale vacío. De ahí los valores por defecto.
-        usuario = Usuario.objects.create_superuser(
+        Usuario.objects.create_superuser(
             correo=correo,
             password=contrasena,
             # `or` y no el default de `get`: GitHub Actions define la
@@ -52,15 +57,9 @@ class Command(BaseCommand):
             segundo_apellido=os.environ.get("SUPERUSER_SEGUNDO_APELLIDO") or "",
         )
 
-        # Acceso irrestricto al panel administrativo FILEY (Modulo.TODOS).
-        RolPermiso.objects.get_or_create(
-            persona=usuario,
-            modulo=Modulo.TODOS,
-            defaults={"nivel": NivelPermiso.EDICION},
-        )
-
         self.stdout.write(
             self.style.SUCCESS(
-                f"Superusuario {correo} creado con acceso administrativo completo."
+                f"Superusuario {correo} creado. Entra por /django-admin/ para "
+                "dar de alta la primera feria (CU-FER-001)."
             )
         )

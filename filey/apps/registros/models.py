@@ -4,8 +4,12 @@ Modelos del Core Registros (REG).
 Entidades definidas por los CU-REG-001…006:
 
 - ``Persona``   — la cuenta única del sistema (externos y administrativos).
-- ``RolPermiso`` — lo que distingue a un administrador: tener al menos uno.
 - ``SesionOTP`` — código de un solo uso, guardado hasheado (CU-REG-002).
+
+Lo que distingue a una cuenta administrativa **ya no vive aquí**: hasta
+el 2026-08-25 era tener al menos un ``RolPermiso`` (módulo + nivel), y
+ahora es administrar al menos una feria — ``AdminFeria``, en
+``apps/ferias`` (ADR-0004). Ver ``Persona.es_administrativa``.
 """
 
 from django.conf import settings
@@ -19,24 +23,23 @@ from .paises import PAISES
 
 
 class Modulo(models.TextChoices):
-    """Módulos administrables del sistema FILEY."""
+    """Los módulos del sistema FILEY.
+
+    Sobrevivió a la retirada de ``RolPermiso`` porque ya no es una
+    etiqueta de permiso: es el conjunto de módulos que existen, y lo
+    usan el catálogo provisional del participante (``catalogo.py``) y
+    ``Convocatoria.tipo``.
+
+    ``TODOS`` se conserva solo para el catálogo. Ya no significa
+    "administrador general": ese concepto murió con ``RolPermiso``
+    —el acceso se otorga por feria, no por módulo (ADR-0004)—.
+    """
 
     EVT = "EVT", "Actividades FILEY (Eventos)"
     TAL = "TAL", "Actividades Infantiles/Juveniles"
     STD = "STD", "Stands"
     VIS = "VIS", "Visitas Escolares"
-    TODOS = "*", "Todos los módulos (administrador general)"
-
-
-class NivelPermiso(models.TextChoices):
-    LECTURA = "lectura", "Solo lectura"
-    EDICION = "edicion", "Edición"
-
-
-# Los niveles se acumulan: quien puede editar también puede leer. El
-# orden se declara aquí, una sola vez, para que ningún módulo lo
-# reinvente al comprobar permisos.
-FUERZA_NIVEL = {NivelPermiso.LECTURA: 1, NivelPermiso.EDICION: 2}
+    TODOS = "*", "Todos los módulos"
 
 
 class PersonaManager(BaseUserManager):
@@ -84,8 +87,9 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     """Cuenta única del sistema (CU-REG-001).
 
     Integra el sistema de roles/permisos de Django vía
-    ``PermissionsMixin`` (groups, user_permissions, is_superuser);
-    los permisos de negocio por módulo viven en ``RolPermiso``.
+    ``PermissionsMixin`` (groups, user_permissions, is_superuser), que
+    es lo que gobierna ``/django-admin/``. El permiso de negocio —qué
+    ferias administra— vive en ``AdminFeria`` (``apps/ferias``).
     """
 
     class Estado(models.TextChoices):
@@ -175,59 +179,18 @@ class Persona(AbstractBaseUser, PermissionsMixin):
 
     @property
     def es_administrativa(self):
-        """Un administrador es quien tiene al menos un RolPermiso (CU-REG-003)."""
-        return self.roles.exists()
+        """¿Administra alguna feria? (CU-REG-003, ADR-0004)
 
-    def modulos_administrables(self):
-        """Módulos a los que puede entrar en el panel admin (CU-REG-006)."""
-        roles = list(self.roles.all())
-        if any(r.modulo == Modulo.TODOS for r in roles):
-            return [m for m in Modulo if m != Modulo.TODOS]
-        return [Modulo(r.modulo) for r in roles]
+        Hasta el 2026-08-25 la pregunta era "¿tiene algún ``RolPermiso``?".
+        Ahora el acceso administrativo se otorga **por feria**, así que
+        es administrativa quien administre al menos una.
 
-    def puede_administrar(self, modulo, nivel=NivelPermiso.LECTURA) -> bool:
-        """¿Tiene permiso sobre este módulo, al menos con este nivel?
-
-        Es la pregunta que hará cada módulo de dominio (EVT, TAL, STD,
-        VIS) antes de dejar entrar a una pantalla suya, a través de
-        ``permisos.requiere_modulo``. Vive en el modelo —y no en cada
-        vista— porque la respuesta depende solo de los datos de la
-        cuenta: el rol ``*`` cubre todos los módulos, y ``edicion``
-        cubre también lo que solo pide ``lectura``.
+        Se responde por la relación inversa (``ferias_admin``) y no
+        importando ``AdminFeria``: ``registros`` es la base de identidad
+        y no puede depender de ``ferias``, que depende de ella (regla 4
+        de CLAUDE.md).
         """
-        requerido = FUERZA_NIVEL[NivelPermiso(nivel)]
-        modulo = Modulo(modulo).value
-        for rol in self.roles.all():
-            if rol.modulo in (modulo, Modulo.TODOS):
-                if FUERZA_NIVEL[NivelPermiso(rol.nivel)] >= requerido:
-                    return True
-        return False
-
-
-class RolPermiso(models.Model):
-    """Permiso de módulo de una cuenta administrativa (CU-REG-005)."""
-
-    persona = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="roles"
-    )
-    modulo = models.CharField(max_length=3, choices=Modulo.choices)
-    nivel = models.CharField(
-        max_length=10, choices=NivelPermiso.choices, default=NivelPermiso.EDICION
-    )
-    creado_en = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = "rol/permiso"
-        verbose_name_plural = "roles/permisos"
-        constraints = [
-            # E1 de CU-REG-005: no duplicar permiso del mismo módulo
-            models.UniqueConstraint(
-                fields=["persona", "modulo"], name="unico_permiso_por_modulo"
-            )
-        ]
-
-    def __str__(self):
-        return f"{self.persona} · {self.modulo} ({self.nivel})"
+        return self.ferias_admin.exists()
 
 
 class SesionOTPQuerySet(models.QuerySet):
