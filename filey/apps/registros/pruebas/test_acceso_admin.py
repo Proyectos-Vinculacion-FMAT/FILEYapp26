@@ -33,35 +33,48 @@ def _entrar(client, correo):
 # ── Camino feliz ──────────────────────────────────────────────
 
 
-def test_un_administrador_entra_al_panel(client, admin_general, codigo_fijo):
-    _entrar(client, admin_general.correo)
+def test_un_administrador_entra_a_sus_ferias(client, dueno_feria, codigo_fijo):
+    """Tras el OTP se cae en la lista de ferias, no en un panel de módulos.
+
+    Es el cambio de CU-REG-006 a CU-FER-002: lo primero que se elige ya
+    no es módulo, es **edición**.
+    """
+    _entrar(client, dueno_feria.correo)
 
     respuesta = client.post(reverse("registros:admin_codigo"), {"codigo": codigo_fijo})
 
-    assert respuesta["Location"] == reverse("registros:admin_modulos")
-    assert client.session["_auth_user_id"] == str(admin_general.pk)
+    assert respuesta["Location"] == reverse("ferias:mis_ferias")
+    assert client.session["_auth_user_id"] == str(dueno_feria.pk)
 
 
-def test_el_panel_muestra_el_chip_de_administrador_general(client, admin_general):
-    client.force_login(admin_general)
+def test_el_panel_lista_las_ferias_que_administro(client, dueno_feria, feria):
+    client.force_login(dueno_feria)
 
-    cuerpo = client.get(reverse("registros:admin_modulos")).content.decode()
+    cuerpo = client.get(reverse("ferias:mis_ferias")).content.decode()
 
-    assert "Administrador general" in cuerpo
-    assert "Entrar al panel" in cuerpo
+    assert feria.nombre in cuerpo
+    assert "Dueño" in cuerpo
+    assert feria.url in cuerpo
 
 
-def test_el_admin_de_un_modulo_solo_ve_navegable_el_suyo(client, admin_evt):
-    client.force_login(admin_evt)
+def test_el_panel_no_lista_las_ferias_de_otro(client, admin_feria, otra_feria):
+    """Administrar una feria no la asoma en la lista de otra persona."""
+    client.force_login(admin_feria)
 
-    cuerpo = client.get(reverse("registros:admin_modulos")).content.decode()
+    cuerpo = client.get(reverse("ferias:mis_ferias")).content.decode()
 
-    # Los demás módulos siguen visibles (decisión A2 del CU-REG-006),
-    # pero sin botón para entrar.
-    assert "Actividades FILEY (Eventos)" in cuerpo
-    assert "Convocatoria de Stands" in cuerpo
-    assert "Disponible en una próxima versión" in cuerpo
-    assert "Administrador general" not in cuerpo
+    assert otra_feria.nombre not in cuerpo
+    # Y quien no es dueño no se anuncia como tal.
+    assert "Administrador" in cuerpo
+
+
+def test_el_panel_no_lista_la_feria_de_sistema(client, dueno_feria):
+    """La fila `public` no es una feria; ver `apps/ferias/models.py`."""
+    client.force_login(dueno_feria)
+
+    cuerpo = client.get(reverse("ferias:mis_ferias")).content.decode()
+
+    assert "(sistema)" not in cuerpo
 
 
 # ── Anti-enumeración ──────────────────────────────────────────
@@ -77,7 +90,7 @@ def _respuesta_comparable(respuesta):
 
 
 def test_admin_y_participante_responden_igual_al_pedir_codigo(
-    client, admin_general, participante, codigo_fijo
+    client, dueno_feria, participante, codigo_fijo
 ):
     """La prueba que sostiene todo el diseño de CU-REG-003 A3.
 
@@ -88,14 +101,14 @@ def test_admin_y_participante_responden_igual_al_pedir_codigo(
     """
     observadas = {
         correo: _respuesta_comparable(_entrar(client.__class__(), correo))
-        for correo in (admin_general.correo, participante.correo)
+        for correo in (dueno_feria.correo, participante.correo)
     }
 
     assert len(set(observadas.values())) == 1
 
 
 def test_a_las_dos_cuentas_les_llega_su_codigo(
-    client, admin_general, participante, codigo_fijo
+    client, dueno_feria, participante, codigo_fijo
 ):
     """El participante también recibe código: es lo que iguala el camino.
 
@@ -103,10 +116,10 @@ def test_a_las_dos_cuentas_les_llega_su_codigo(
     administrador. La separación ocurre después, al validar el código.
     """
     _entrar(client.__class__(), participante.correo)
-    _entrar(client.__class__(), admin_general.correo)
+    _entrar(client.__class__(), dueno_feria.correo)
 
     destinatarios = {m.to[0] for m in mail.outbox}
-    assert destinatarios == {participante.correo, admin_general.correo}
+    assert destinatarios == {participante.correo, dueno_feria.correo}
 
 
 def test_un_correo_sin_cuenta_recibe_correo_incorrecto(client, codigo_fijo):
@@ -177,7 +190,7 @@ def test_el_codigo_del_participante_queda_quemado_tras_el_rechazo(
 
 
 def test_el_panel_pide_sesion(client):
-    respuesta = client.get(reverse("registros:admin_modulos"))
+    respuesta = client.get(reverse("ferias:mis_ferias"))
 
     assert respuesta["Location"] == reverse("registros:admin_acceso")
 
@@ -203,8 +216,8 @@ def test_el_flujo_publico_no_sirve_para_el_codigo_admin(
     assert respuesta["Location"] == reverse("registros:admin_acceso")
 
 
-def test_cerrar_sesion_del_admin_regresa_a_su_acceso(client, admin_general):
-    client.force_login(admin_general)
+def test_cerrar_sesion_del_admin_regresa_a_su_acceso(client, dueno_feria):
+    client.force_login(dueno_feria)
 
     respuesta = client.post(reverse("registros:salir"))
 

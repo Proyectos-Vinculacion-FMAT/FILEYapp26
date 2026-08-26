@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: "0.3"
+version: "0.4"
 tags:
   - tipo/modelo-de-datos
   - dom/fer
@@ -14,6 +14,48 @@ fecha_actualizacion: 2026-08-25
 > Modelo conceptual del core `FER`: el registro de las ediciones de la feria (`Feria`) y de
 > quién puede administrar cada una (`AdminFeria`). Es, junto con `REG`, una de las dos capas
 > globales del sistema: **todo lo demás vive dentro de una feria.**
+
+<!-- -->
+
+> [!success] Construido el 2026-08-25 — `Feria`, `AdminFeria` y `Convocatoria` existen como código
+> Están en `filey/apps/ferias/` (capa `public`) y `filey/apps/convocatorias/` (capa por feria).
+> El alta de una feria se hace desde `/django-admin/` (CU-FER-001). Lo que **no** existe todavía:
+> `RegistroConvocatoria`, `BitacoraFER` y el CRUD de convocatorias (CU-FER-005…009).
+>
+> Tres cosas del código que este documento no predecía, y conviene saber antes de leerlo:
+
+<!-- -->
+
+> [!warning] `FER` son **dos apps de Django**, no una
+> Este modelo dice —con razón— que `FER` es el primer módulo con tablas en las dos capas.
+> `django-tenants` separa **por app, no por modelo**: una app listada a la vez en `SHARED_APPS`
+> y en `TENANT_APPS` duplicaría *todas* sus tablas en *todos* los schemas, y tendríamos una
+> copia de `Feria` dentro de cada feria. Por eso el dominio se parte en `apps/ferias` (global)
+> y `apps/convocatorias` (por feria). Conceptualmente sigue siendo un solo dominio.
+
+<!-- -->
+
+> [!warning] En el código el atributo se llama `es_dueno`, sin eñe
+> Este documento escribe `es_dueño` y así se queda: es el nombre conceptual. El código usa
+> `es_dueno` porque ningún identificador del repositorio lleva eñe, y una columna con eñe
+> arrastra fricción de codificación en cada herramienta que toque la base. Misma decisión que
+> `contrasena`.
+
+<!-- -->
+
+> [!warning] Existe una fila `Feria` que **no es una feria**
+> `TenantSubfolderMiddleware` resuelve toda ruta que no empiece por `/f/` buscando el tenant
+> con `schema_name = "public"`, y responde 404 si no lo encuentra: sin esa fila, la pantalla de
+> acceso y `/django-admin/` dejan de responder. La crea la migración `ferias/0002`, se llama
+> `(sistema)` y no tiene fila `Domain`, así que no es navegable.
+>
+> **`Feria.objects` no puede excluirla** —la librería la busca ahí—, así que existe
+> `Feria.reales` y **todo listado usa `reales`**. Es el error más fácil de cometer en este
+> modelo, y se manifiesta como una feria de más en la pantalla de alguien.
+>
+> Por lo mismo, `Feria.slug` y `Domain.domain` guardan el mismo valor: el primero es del modelo
+> de dominio, el segundo es cómo la librería resuelve el segmento de URL. Solo los escribe
+> `servicios/altas.py`, y hay una prueba de que no divergen.
 
 <!-- -->
 

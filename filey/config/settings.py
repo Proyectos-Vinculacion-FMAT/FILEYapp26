@@ -46,20 +46,65 @@ ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split("
 # base (identidad, sesión, permisos); los módulos verticales
 # (EVT/TAL/STD/VIS) se agregan aquí conforme se construyan y
 # dependen de `registros`, nunca al revés (ver CLAUDE.md).
+#
+# Desde ADR-0003 la lista está partida en dos, y la partición **es** la
+# arquitectura: `django-tenants` decide dónde crea las tablas de una app
+# según en cuál de las dos esté.
+#
+#   SHARED_APPS  → schema `public`. Una sola copia para todo el sistema.
+#   TENANT_APPS  → schema `feria_<slug>`. Una copia por edición.
+#
+# Una app que esté en las dos duplica *todas* sus tablas en *todos* los
+# schemas. Por eso `FER` está partido en dos apps de Django
+# (`apps.ferias` global, `apps.convocatorias` por feria) en vez de ser
+# una sola con modelos de las dos capas.
 
-INSTALLED_APPS = [
+SHARED_APPS = [
+    # Obligatoria y primera: aporta el backend, el middleware y
+    # `migrate_schemas`.
+    "django_tenants",
+    # Tiene que ir en `public` porque es donde vive el modelo tenant.
+    "apps.ferias",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # FILEY
+    # La identidad es global: la misma Persona con el mismo correo
+    # participa en FILEY 2027 y administra FILEY 2028 (ADR-0003).
     "apps.registros",
     "apps.notificaciones",
 ]
 
+TENANT_APPS = [
+    "apps.convocatorias",
+    # Aquí se añaden EVT, TAL, STD, VIS, PRG y SAL conforme se
+    # construyan: todos son contenido de una feria.
+]
+
+INSTALLED_APPS = SHARED_APPS + [a for a in TENANT_APPS if a not in SHARED_APPS]
+
+TENANT_MODEL = "ferias.Feria"
+TENANT_DOMAIN_MODEL = "ferias.Domain"
+
+# `/f/<slug>/…` — el prefijo por feria que fija ADR-0003. Se eligió
+# sobre el subdominio porque no exige configurar DNS ni un certificado
+# por edición.
+TENANT_SUBFOLDER_PREFIX = "f"
+
 MIDDLEWARE = [
+    # PRIMERO, antes que nada: resuelve la feria del prefijo de la URL y
+    # fija el `search_path` de la conexión. Empieza cada petición con un
+    # `set_schema_to_public()`, que es lo que impide que el schema de una
+    # petición se filtre a la siguiente sobre una conexión reutilizada.
+    #
+    # Correr aquí tiene una consecuencia que hay que tener presente: es
+    # ANTES de `AuthenticationMiddleware`, así que no hay `request.user`
+    # y este middleware **no puede comprobar permisos**. Eso lo hacen los
+    # decoradores de `apps/ferias/permisos.py`. Enmienda a ADR-0003, que
+    # describía el middleware como el sitio de esa comprobación.
+    "django_tenants.middleware.TenantSubfolderMiddleware",
     "django.middleware.security.SecurityMiddleware",
     # Sirve los archivos de `estaticos/` en producción sin necesidad de
     # un servidor web aparte: es lo que permite desplegar el monolito
@@ -73,7 +118,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "config.urls"
+# Dos urlconfs, porque la librería usa uno u otro según el schema:
+# `ROOT_URLCONF` es lo que cuelga de `/f/<slug>/` y `PUBLIC_SCHEMA_URLCONF`
+# lo que se sirve fuera de toda feria (acceso, django-admin).
+ROOT_URLCONF = "config.urls_feria"
+PUBLIC_SCHEMA_URLCONF = "config.urls_publicas"
 
 TEMPLATES = [
     {
@@ -97,15 +146,37 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 import dj_database_url
 
-# ── Base de datos (Postgres en Producción / SQLite fallback) ──
+# ── Base de datos ─────────────────────────────────────────────
+# PostgreSQL, y no como preferencia: ADR-0003 aísla cada feria en su
+# propio schema, y SQLite no tiene schemas. Ya no hay respaldo a
+# SQLite ni en desarrollo — el entorno local dejaría fuera justo la
+# parte del sistema que más falta probar.
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR}/db.sqlite3",
+        # El default es el Postgres de `docker-compose.yml`. Quien use
+        # una instancia propia (otro puerto, otro usuario) lo declara en
+        # su `.env`; ver `.env.example`.
+        default="postgres://filey_user:filey_password@localhost:5432/filey_db",
         conn_max_age=600,
         conn_health_checks=True,
     )
 }
+
+if not DATABASES["default"].get("ENGINE", "").endswith("postgresql"):
+    raise ImproperlyConfigured(
+        "FILEY requiere PostgreSQL: cada feria vive en su propio schema "
+        "(ADR-0003) y SQLite no los soporta. Revisa DATABASE_URL."
+    )
+
+# `dj_database_url` devuelve el backend estándar de Django; se sustituye
+# por el de `django-tenants`, que es el mismo más la gestión del
+# `search_path` por petición.
+DATABASES["default"]["ENGINE"] = "django_tenants.postgresql_backend"
+
+# Decide en qué schema se crea la tabla de cada app al migrar, según esté
+# en SHARED_APPS o en TENANT_APPS.
+DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
 
 # ── Autenticación ─────────────────────────────────────────────

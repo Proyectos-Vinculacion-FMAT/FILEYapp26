@@ -22,7 +22,7 @@
 {% block cuerpo %}
 <header class="topbar {% if zona_admin %}is-admin{% endif %}">
   <div class="topbar-inner">
-    <a class="home" href="{% block url_inicio %}{% if zona_admin %}{% url 'registros:admin_modulos' %}{% else %}{% url 'registros:convocatorias' %}{% endif %}{% endblock %}">
+    <a class="home" href="{% block url_inicio %}{% if zona_admin %}{% url 'ferias:mis_ferias' %}{% else %}{% url 'registros:convocatorias' %}{% endif %}{% endblock %}">
       <img class="logo" src="{% static 'img/filey-logotipo-azul.svg' %}" alt="FILEY">
       <div class="brand-text">
         <strong>Edición 2027</strong>

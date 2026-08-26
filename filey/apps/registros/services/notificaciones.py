@@ -15,7 +15,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from ..models import Modulo, Persona
+from ..models import Persona
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +25,19 @@ class AvisoFallido(Exception):
 
 
 def _describir_acceso(persona: Persona) -> str:
-    """Texto legible de los módulos que administra la persona."""
-    roles = list(persona.roles.all())
-    if any(r.modulo == Modulo.TODOS for r in roles):
-        return "Todos los módulos"
-    return ", ".join(Modulo(r.modulo).label for r in roles)
+    """Texto legible de las ferias que administra la persona.
+
+    Se llega a ellas por la relación inversa y no importando
+    ``AdminFeria``: ``registros`` es la base de identidad y no puede
+    depender de ``ferias``, que depende de ella (regla 4 de CLAUDE.md).
+    """
+    nombres = [
+        acceso.feria.nombre
+        for acceso in persona.ferias_admin.select_related("feria")
+        # La fila de sistema no es una feria; ver `apps/ferias/models.py`.
+        if acceso.feria.schema_name != "public"
+    ]
+    return ", ".join(nombres) if nombres else "Ninguna feria todavía"
 
 
 def avisar_alta_admin(persona: Persona) -> None:

@@ -30,7 +30,6 @@ urlpatterns = [
         views.admin_reenviar,
         name="admin_reenviar",
     ),
-    path("admin/modulos/", views.admin_modulos, name="admin_modulos"),
     # ── Común ──
     path("salir/", views.salir, name="salir"),
 ]

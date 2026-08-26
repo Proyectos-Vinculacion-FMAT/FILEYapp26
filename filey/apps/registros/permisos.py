@@ -8,17 +8,17 @@ en una sola dirección (ver la regla de dependencias en CLAUDE.md).
 
 Cómo se usa desde un módulo nuevo::
 
-    from apps.registros.models import NivelPermiso
-    from apps.registros.permisos import requiere_modulo, requiere_participante
+    from apps.registros.permisos import requiere_participante
+    from apps.ferias.permisos import requiere_admin_feria, requiere_dueno_feria
 
     @requiere_participante
-    def convocatoria(peticion): ...          # zona del participante
+    def convocatoria(peticion): ...      # zona del participante
 
-    @requiere_modulo("EVT")                  # basta con poder leer
+    @requiere_admin_feria                # dentro de /f/<slug>/
     def panel(peticion): ...
 
-    @requiere_modulo("EVT", NivelPermiso.EDICION)
-    def dictaminar(peticion, propuesta_id): ...
+    @requiere_dueno_feria                # solo el dueño de la feria
+    def abrir_convocatoria(peticion, convocatoria_id): ...
 
 Reglas que imponen estos decoradores, iguales para todos los módulos:
 
@@ -26,16 +26,19 @@ Reglas que imponen estos decoradores, iguales para todos los módulos:
   pública o la administrativa), no a un 403 sin salida.
 - Con sesión pero sin el permiso → 403. Es un techo real, no una
   invitación a volver a intentarlo con otra cuenta.
-- Quien tiene el rol ``*`` administra todos los módulos, y ``edicion``
-  cubre lo que solo pide ``lectura`` (ver ``Persona.puede_administrar``).
+
+> [!note] Aquí ya no hay permisos por módulo
+> Hasta el 2026-08-25 existía ``requiere_modulo("EVT", nivel)``, que
+> leía ``RolPermiso``. El acceso se otorga ahora **por feria** y sin
+> niveles (ADR-0004), y quien decide es ``apps/ferias/permisos.py``:
+> necesita saber **en qué feria** se está, y eso solo existe dentro de
+> ``/f/<slug>/``.
 """
 
 import functools
 
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
-
-from .models import NivelPermiso
 
 
 def requiere_participante(vista):
@@ -51,7 +54,13 @@ def requiere_participante(vista):
 
 
 def requiere_admin(vista):
-    """Panel administrativo: sesión con al menos un permiso de módulo."""
+    """Zona administrativa **fuera** de una feria concreta.
+
+    Sirve para lo que hay antes de elegir feria: la lista de "mis
+    ferias" (CU-FER-002). Dentro de una feria no basta —administrar
+    *alguna* no es administrar *ésta*— y ahí manda
+    ``apps/ferias/permisos.py``.
+    """
 
     @functools.wraps(vista)
     def envoltura(peticion, *args, **kwargs):
@@ -60,32 +69,7 @@ def requiere_admin(vista):
         if not peticion.user.es_administrativa:
             # Tiene sesión de participante e intenta entrar al panel:
             # no es un problema de identidad, es falta de permiso.
-            raise PermissionDenied(
-                "Tu cuenta no tiene permisos administrativos."
-            )
+            raise PermissionDenied("Tu cuenta no administra ninguna feria.")
         return vista(peticion, *args, **kwargs)
 
     return envoltura
-
-
-def requiere_modulo(modulo, nivel=NivelPermiso.LECTURA):
-    """Panel de un módulo concreto (EVT, TAL, STD, VIS).
-
-    ``modulo`` es la clave de ``Modulo`` ("EVT", "TAL", …) y ``nivel``
-    el mínimo exigido para esa pantalla.
-    """
-
-    def decorador(vista):
-        @functools.wraps(vista)
-        @requiere_admin
-        def envoltura(peticion, *args, **kwargs):
-            if not peticion.user.puede_administrar(modulo, nivel):
-                raise PermissionDenied(
-                    f"Tu cuenta no tiene permiso de {NivelPermiso(nivel).label} "
-                    f"sobre el módulo {modulo}."
-                )
-            return vista(peticion, *args, **kwargs)
-
-        return envoltura
-
-    return decorador

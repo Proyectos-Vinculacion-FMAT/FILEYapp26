@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: "0.2"
+version: "0.3"
 tags:
   - tipo/modelo-de-datos
   - dom/reg
@@ -41,9 +41,12 @@ fecha_actualizacion: 2026-08-25
 > 1. ~~`nombre_completo` desplegado vs. el nombre en tres campos.~~ **Cerrada el 2026-08-25:**
 >    el código ya lleva `nombre` / `primer_apellido` / `segundo_apellido` + `pais`
 >    (migración `0003_persona_nombre_en_tres_campos_y_pais`).
-> 2. `RolPermiso` desplegado vs. derogado el 2026-08-21 en favor de `AdminFeria` (`FER`).
->    **Sigue abierta**, y no por descuido: retirarlo deja el panel sin ningún control de acceso
->    mientras `AdminFeria` no exista como código, y `FER` no tiene aplicación Django todavía.
+> 2. ~~`RolPermiso` desplegado vs. derogado el 2026-08-21.~~ **Cerrada el 2026-08-25:**
+>    `AdminFeria` existe como código (`filey/apps/ferias/`) y `RolPermiso` se retiró en la
+>    migración `registros/0004_retirar_rolpermiso`, junto con `NivelPermiso`,
+>    `Persona.puede_administrar` y el decorador `requiere_modulo`.
+>
+> **Este core ya no diverge de lo desplegado.**
 
 ---
 

@@ -12,6 +12,25 @@ jobs:
       run:
         working-directory: ./filey
 
+    # Las pruebas necesitan un PostgreSQL de verdad: desde ADR-0003 cada
+    # feria vive en su propio schema y SQLite no los tiene, así que ya no
+    # sirve como respaldo. El `health-cmd` no es adorno — sin él el paso
+    # de pruebas arranca antes de que Postgres acepte conexiones.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: filey_db
+          POSTGRES_USER: filey_user
+          POSTGRES_PASSWORD: filey_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U filey_user -d filey_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -41,6 +60,9 @@ jobs:
       # tuviera credenciales.
       - name: Run Tests
         env:
+          # El Postgres del `services` de arriba, no el de producción:
+          # pytest crea y destruye `test_filey_db` sobre esta instancia.
+          DATABASE_URL: "postgres://filey_user:filey_password@localhost:5432/filey_db"
           DJANGO_SECRET_KEY: "dummy-key-for-tests"
           # Se prueba con la configuración endurecida (DEBUG=false), que es
           # la que se despliega: cookies `Secure`, nosniff, referrer-policy.
@@ -64,13 +86,21 @@ jobs:
         run: |
           python manage.py makemigrations --check --dry-run
 
+      # `migrate_schemas` y no `migrate`: desde ADR-0003 hay un schema por
+      # feria, cada uno con su propia tabla `django_migrations`. Un
+      # `migrate` a secas solo tocaría `public` y dejaría a cada edición
+      # con el esquema de la versión anterior — sus tablas de contenido
+      # se quedarían atrás sin que nada avise.
+      #
+      # Sin `--shared` ni `--tenant`, aplica a los dos: primero `public`,
+      # después cada feria. Es idempotente.
       - name: Run Database Migrations
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
           DJANGO_SECRET_KEY: "dummy-key-for-migrations"
           DJANGO_DEBUG: "false"
         run: |
-          python manage.py migrate --noinput
+          python manage.py migrate_schemas --noinput
 
       - name: Ensure Django Superuser Exists
         env:

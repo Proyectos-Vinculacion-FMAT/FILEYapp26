@@ -1,13 +1,13 @@
 ---
 estado: propuesta
-version: "0.1"
+version: "0.2"
 tags:
   - tipo/caso-de-uso
   - dom/fer
   - tema/permisos
   - tema/arquitectura
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-25
 id: CU-FER-001
 dominio: FER
 responsable: Hugo Janssen
@@ -42,12 +42,20 @@ CU-STD-034) ni el alta de los demás administradores (CU-FER-003).
 
 - **Sistema de correo** — avisa a la persona designada como dueña de que ya tiene acceso.
 
-> [!warning] Estado de implementación — este caso de uso no tiene interfaz, y probablemente no la tenga
-> Crear una feria no es insertar una fila: implica crear su schema y aplicarle las migraciones
-> (ver Flujo principal). Se ejecuta con un **comando de administración en el servidor**, igual
-> que hoy se dan de alta los administradores. A diferencia de CU-FER-003, aquí **no está
-> previsto construir pantalla**: es una operación de infraestructura, poco frecuente (una al
-> año) y que requiere acceso al servidor de todos modos.
+> [!success] Implementado el 2026-08-25 — y **sí tiene pantalla**
+> La v0.1 decía que este caso de uso no tendría interfaz por ser una operación de
+> infraestructura. Se decidió lo contrario: **el alta se hace desde `/django-admin/`**
+> (`filey/apps/ferias/admin.py`), donde se capturan la edición y su dueño en un solo
+> formulario. Guardar tarda segundos —crea el schema y le aplica las migraciones— y eso es
+> aceptable para algo que pasa una vez al año.
+>
+> El comando `manage.py alta_feria` **sigue existiendo**, y no como redundancia: es la vía
+> cuando el admin es justo lo que no está disponible (una base recién creada sin superusuario,
+> un entorno reconstruyéndose, un despliegue automatizado).
+>
+> Los dos llaman al mismo servicio, `apps/ferias/servicios/altas.py::crear_feria`, así que
+> hacen exactamente lo mismo. Si el admin escribiera la fila por su cuenta, una de las dos
+> rutas acabaría dejando ferias sin schema.
 
 ## Disparador
 
