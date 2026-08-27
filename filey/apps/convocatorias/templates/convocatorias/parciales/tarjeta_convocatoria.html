@@ -5,55 +5,83 @@
 
    Contexto que espera:
 
-     convocatoria   la Convocatoria a pintar
-     zona_admin     ¿la mira quien administra esta feria?
+     entrada      una EntradaCatalogo (servicios/catalogo.py), con:
+                    .convocatoria      la Convocatoria a pintar
+                    .etiqueta_modulo   cómo se llama el módulo, o None
+                    .url_aplicar       el formulario del módulo, o None
+                    .ya_registrada     ¿quien mira ya se inscribió?
+                    .admite_registro   ¿se puede entrar hoy?
+                    .registros_activos conteo, solo para quien administra
+     zona_admin   ¿la mira quien administra esta feria?
 
    La misma tarjeta para los dos públicos. El estado `borrador` solo
    llega hasta aquí si quien mira administra la feria —se filtra en la
-   consulta, no en este `{% if %}`— así que pintarlo no descubre nada.
+   consulta, no en este `{% templatetag openblock %} if {% templatetag closeblock %}`—
+   así que pintarlo no descubre nada.
 
-   El botón "Registrarme" todavía no existe: lleva al formulario del
-   módulo (CU-EVT-002, CU-STD-001, CU-VIS-001) y ninguno está
-   construido. Cuando lo esté, es el único punto que hay que tocar.
+   El pie es la matriz de ADR-0006. Su orden importa: «ya registrada»
+   va antes que «admite registro» porque ver el propio expediente sigue
+   siendo legítimo después de que la convocatoria cierre; lo que se veta
+   al cerrar es inscribirse, no volver a mirar lo que uno mandó.
    =========================================================== {% endcomment %}
-<article class="conv-card {% if convocatoria.estado == 'cerrada' %}is-closed{% endif %}">
+<article class="conv-card {% if entrada.convocatoria.estado == 'cerrada' %}is-closed{% endif %}">
 
-  <div class="conv-banner {{ convocatoria.tipo|banner_de }}">
-    <span class="ico">{{ convocatoria.tipo|icono_de }}</span>
-    <h3>{{ convocatoria.nombre }}</h3>
+  <div class="conv-banner {{ entrada.convocatoria.tipo|banner_de }}">
+    <span class="ico">{{ entrada.convocatoria.tipo|icono_de }}</span>
+    <h3>{{ entrada.convocatoria.nombre }}</h3>
   </div>
 
   <div class="conv-body">
-    {% if convocatoria.estado == 'abierta' %}
+    {% if entrada.convocatoria.estado == 'abierta' %}
       <span class="badge badge-open">Abierta</span>
-    {% elif convocatoria.estado == 'cerrada' %}
+    {% elif entrada.convocatoria.estado == 'cerrada' %}
       <span class="badge badge-closed">Convocatoria cerrada</span>
     {% else %}
       <span class="badge badge-soon">Borrador</span>
     {% endif %}
 
-    <p>{{ convocatoria.get_tipo_display }}</p>
+    <p>{{ entrada.convocatoria.get_tipo_display }}</p>
 
     <div class="conv-dates">
-      {% if convocatoria.fecha_cierre %}
-        📅 Cierra el {{ convocatoria.fecha_cierre }}
-      {% elif convocatoria.fecha_apertura %}
-        📅 Abre el {{ convocatoria.fecha_apertura }}
+      {% if entrada.convocatoria.fecha_cierre %}
+        📅 Cierra el {{ entrada.convocatoria.fecha_cierre }}
+      {% elif entrada.convocatoria.fecha_apertura %}
+        📅 Abre el {{ entrada.convocatoria.fecha_apertura }}
       {% else %}
         📅 Fechas por anunciar
       {% endif %}
     </div>
+
+    {% if zona_admin %}
+      {% comment %} El conteo no es dato del participante (CU-FER-006). {% endcomment %}
+      <div class="conv-dates">
+        👤 {{ entrada.registros_activos }} registro{{ entrada.registros_activos|pluralize }}
+      </div>
+    {% endif %}
   </div>
 
   <div class="conv-foot">
-    {% if convocatoria.estado == 'abierta' and not zona_admin %}
-      <button class="btn btn-primary btn-block" type="button" x-data
-              @click="$store.avisos.agregar('El formulario de {{ convocatoria.nombre|escapejs }} se conecta con su módulo en una siguiente entrega.')">
+    {% if zona_admin %}
+      <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
+        Sin acciones todavía
+      </button>
+    {% elif entrada.ya_registrada %}
+      <a class="btn btn-ghost btn-block" href="{{ entrada.url_aplicar }}">
+        Ver mi solicitud
+      </a>
+    {% elif entrada.admite_registro %}
+      <a class="btn btn-primary btn-block" href="{{ entrada.url_aplicar }}">
         Registrarme
+      </a>
+    {% elif not entrada.url_aplicar %}
+      {% comment %} Nadie sirve este tipo todavía. No es un error: es el
+         estado normal de cinco de los seis módulos. {% endcomment %}
+      <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
+        Próximamente
       </button>
     {% else %}
       <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
-        {% if zona_admin %}Sin acciones todavía{% else %}Cerrada{% endif %}
+        Cerrada
       </button>
     {% endif %}
   </div>

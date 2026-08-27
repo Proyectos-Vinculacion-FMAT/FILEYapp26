@@ -25,10 +25,11 @@ panel cuando exista, y el mismo reparto que ya usa `FeriaAdmin`—.
 
 from django import forms
 from django.contrib import admin
+from django.shortcuts import redirect
 
 from comun.admin_feria import admin_feria
 
-from .models import Convocatoria
+from .models import Convocatoria, RegistroConvocatoria
 from .servicios import altas
 
 
@@ -83,6 +84,25 @@ class ConvocatoriaAdmin(admin.ModelAdmin):
             return False
         return True
 
+    def add_view(self, peticion, form_url="", extra_context=None):
+        """Convierte el fallo de E1 en un mensaje, no en un 500.
+
+        `CU-FER-005` E1 pide dos cosas cuando el módulo no puede crear su
+        configuración: que no quede nada, y que el sistema lo informe. Lo
+        primero lo garantiza la transacción del servicio; lo segundo no
+        lo da el admin por su cuenta, porque `save_model` no tiene forma
+        de abortar el guardado y volver al formulario con un error.
+
+        Se captura aquí, fuera del `atomic` con el que el admin envuelve
+        `changeform_view`, así que para cuando llega el mensaje la
+        transacción ya se deshizo.
+        """
+        try:
+            return super().add_view(peticion, form_url, extra_context)
+        except altas.ConfiguracionDelModuloFallo as exc:
+            self.message_user(peticion, str(exc), level="ERROR")
+            return redirect(peticion.path)
+
     def get_fields(self, peticion, obj=None):
         """En el alta no se elige el estado: nace en `borrador`.
 
@@ -136,3 +156,34 @@ class ConvocatoriaAdmin(admin.ModelAdmin):
                 "distingue en el catálogo.",
                 level="WARNING",
             )
+
+
+@admin.register(RegistroConvocatoria, site=admin_feria)
+class RegistroConvocatoriaAdmin(admin.ModelAdmin):
+    """Quién se inscribió a qué, en solo lectura.
+
+    **No se puede crear ni editar desde aquí, y es deliberado.** Un
+    registro nace al guardarse el expediente del módulo, dentro de la
+    misma transacción y pasando por
+    ``servicios/registros.py::obtener_o_crear_registro`` — que es el
+    único sitio donde se comprueba que el módulo corresponda al tipo de
+    la convocatoria, invariante que la base no puede sostener
+    (`ADR-0006`). Un alta a mano desde el admin se saltaría esa
+    comprobación y dejaría un registro huérfano, sin expediente, contando
+    en los totales de la convocatoria.
+
+    Está para consultar: hoy es la única forma de ver quién entró por qué
+    puerta, mientras el panel de la feria no exista.
+    """
+
+    list_display = ("persona", "convocatoria", "estado", "fecha_registro")
+    list_filter = ("estado", "convocatoria")
+    search_fields = ("persona__correo", "convocatoria__nombre")
+    ordering = ("-fecha_registro",)
+    list_select_related = ("convocatoria", "persona")
+
+    def has_add_permission(self, peticion):
+        return False
+
+    def has_change_permission(self, peticion, obj=None):
+        return False
