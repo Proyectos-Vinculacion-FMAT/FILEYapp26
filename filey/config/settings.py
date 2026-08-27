@@ -243,8 +243,77 @@ STATIC_URL = "estaticos/"
 STATICFILES_DIRS = [BASE_DIR / "estaticos"]
 STATIC_ROOT = BASE_DIR / "estaticos_recolectados"
 
+# ── Archivos que sube la gente ────────────────────────────────
+# Distintos de los estáticos y en casi todo lo contrario: los
+# estáticos son parte del despliegue, públicos y cacheables para
+# siempre; esto son actas constitutivas, RFC y comprobantes de pago
+# de personas concretas (`ADR-0007`).
+#
+# **Nada de esto se sirve por una URL.** No hay ruta para `MEDIA_URL`
+# en ningún urlconf, y es deliberado: cada módulo entrega sus archivos
+# por una vista que comprueba quién pregunta. `MEDIA_URL` existe
+# porque `FileField.url` la usa para componer, no porque algo la
+# resuelva.
+
+MEDIA_URL = "medios/"
+
+# Dónde caen los archivos con el almacenamiento local. Se saca del
+# entorno para que en Render apunte al disco montado y no al sistema de
+# archivos del contenedor, que se borra en cada despliegue.
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "medios"))
+
+# `local` (por omisión) o `s3`. Cambiar de uno a otro es cambiar esta
+# variable y las cuatro de abajo: no se toca código. Ver `ADR-0007`.
+ALMACENAMIENTO = os.getenv("ALMACENAMIENTO", "local").lower()
+
+if ALMACENAMIENTO == "s3":
+    # Sirve para cualquier almacén compatible con S3 —Supabase Storage,
+    # Cloudflare R2, AWS— porque lo único que los distingue es el
+    # endpoint. Requiere `django-storages[s3]` en requirements.txt, que
+    # no está instalado mientras nadie use esta rama.
+    _opciones_s3 = {
+        "bucket_name": os.getenv("S3_BUCKET"),
+        "endpoint_url": os.getenv("S3_ENDPOINT_URL"),
+        "access_key": os.getenv("S3_ACCESS_KEY"),
+        "secret_key": os.getenv("S3_SECRET_KEY"),
+    }
+    _VARIABLE_DE = {
+        "bucket_name": "S3_BUCKET",
+        "endpoint_url": "S3_ENDPOINT_URL",
+        "access_key": "S3_ACCESS_KEY",
+        "secret_key": "S3_SECRET_KEY",
+    }
+    _faltantes = sorted(_VARIABLE_DE[k] for k, v in _opciones_s3.items() if not v)
+    if _faltantes:
+        raise ImproperlyConfigured(
+            "ALMACENAMIENTO=s3 pero faltan estas variables: "
+            + ", ".join(_faltantes)
+            + ". Abortar es lo correcto: sin ellas el sistema arrancaría y "
+            "perdería en silencio todo lo que alguien subiera."
+        )
+    _almacen_por_defecto = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            **_opciones_s3,
+            # Privado, y con URL firmada de vida corta. Aun así, quien
+            # entrega el archivo sigue siendo la vista del módulo: el
+            # bucket no es la puerta.
+            "default_acl": "private",
+            "querystring_auth": True,
+            # Nunca pisar un archivo existente. Con nombres aleatorios no
+            # debería pasar, y si pasara sería un choque de UUID que
+            # preferimos ver como archivo nuevo y no como uno perdido.
+            "file_overwrite": False,
+        },
+    }
+else:
+    _almacen_por_defecto = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
+
+# ── Los dos almacenes ─────────────────────────────────────────
+
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": _almacen_por_defecto,
     "staticfiles": {
         # En producción se comprime y se versiona por hash: el navegador
         # puede cachear para siempre y aun así ver el CSS nuevo tras cada

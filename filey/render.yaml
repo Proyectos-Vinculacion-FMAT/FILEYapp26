@@ -18,3 +18,27 @@ services:
         value: "*" # Actualizar a tu dominio final luego
       - key: DJANGO_SSL_REDIRECT
         value: "true"
+
+      # ── Archivos que sube la gente (ADR-0007) ──────────────
+      # Mientras no haya almacén de objetos, van a disco. `MEDIA_ROOT`
+      # tiene que apuntar al `disk.mountPath` de abajo: sin eso caen en
+      # el sistema de archivos del contenedor y se pierden en cada
+      # despliegue, sin dar ningún síntoma hasta que alguien intenta
+      # abrir un acta constitutiva. `check --deploy` lo avisa
+      # (comun.W001).
+      - key: ALMACENAMIENTO
+        value: "local"
+      - key: MEDIA_ROOT
+        value: "/var/data/medios"
+
+    # El disco NO existe en el plan `free`: hay que subir a `starter`
+    # para montarlo. Mientras el plan siga en `free`, esto no tiene
+    # efecto y los archivos son efímeros — es la deuda que cierra el
+    # paso a un almacén de objetos.
+    #
+    # Con `ALMACENAMIENTO=s3` y sus cuatro variables, este bloque sobra
+    # y se puede volver a un servicio sin disco.
+    disk:
+      name: medios
+      mountPath: /var/data/medios
+      sizeGB: 1

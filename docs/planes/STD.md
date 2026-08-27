@@ -44,9 +44,13 @@ siguiente.
 - [`Reglas de negocio - Stands`](<../requisitos/STD/Reglas de negocio - Stands.md>) — `RN-01` a `RN-22`.
 - `CU-STD-037`, `CU-STD-038` y `CU-STD-039` — servir e importar el mapa.
 
+- [ADR-0007](<../adr/0007-los-archivos-empiezan-en-disco.md>) — dónde viven los archivos
+  subidos, **construido** el 2026-08-27: ajustes conmutables, `CarpetaDeLaFeria` y el aviso
+  `comun.W001`.
+
 ### Sin decidir
 
-Ver §4. Dos de ellas —almacenamiento de archivos y trabajos programados— bloquean fases.
+Ver §4. Queda una que bloquea una fase: los trabajos programados.
 
 > [!note] Qué cambió respecto del plan anterior
 > **El mapa dejó de ser la fase cara.** Era el riesgo mayor —editor dentro del sistema,
@@ -79,12 +83,22 @@ Ver §4. Dos de ellas —almacenamiento de archivos y trabajos programados— bl
 
 ### Fase 1 · Dos decisiones de infraestructura
 
-> **Sin código: son dos ADR.** Van en paralelo con la fase 0.
-
-| Decisión | Qué bloquea | Por qué no se puede posponer |
+| Decisión | Qué bloquea | Estado |
 | --- | --- | --- |
-| **Almacenamiento de archivos** | Fase 2 (`CU-STD-001`) | No hay `MEDIA_ROOT`, ni `MEDIA_URL`, ni un solo `FileField` en el proyecto. En Render el disco es efímero. |
-| **Trabajos programados** | Fase 6 | Seis casos de uso son temporales y no hay planificador. Lo coherente con ADR-0001 es un comando idempotente invocado por un cron de Render. |
+| **Almacenamiento de archivos** | Fase 2 (`CU-STD-001`) | ✅ [ADR-0007](<../adr/0007-los-archivos-empiezan-en-disco.md>) — 2026-08-27 |
+| **Trabajos programados** | Fase 6 | Pendiente |
+
+**Almacenamiento — decidido y construido.** Empieza en disco y el paso a un almacén de objetos
+es una variable de entorno, no código. Con eso la fase 2 deja de estar bloqueada. Lo que queda
+es una deuda con nombre: mientras Render siga en `plan: free` no hay disco persistente y los
+archivos se pierden en cada despliegue — `manage.py check --deploy` lo dice en voz alta
+(`comun.W001`) para que no se olvide.
+
+**Trabajos programados — sigue abierto.** Seis casos de uso son temporales y no hay
+planificador. Lo coherente con ADR-0001 es un comando idempotente de `manage.py` invocado desde
+fuera; **quién lo invoca** es lo que falta decidir, y depende del plan de Render: los Cron Jobs
+son un servicio de pago, mientras que los workflows programados de GitHub Actions ya están
+montados en el repositorio y no cuestan nada. No bloquea la fase 2.
 
 ### Fase 2 · Solicitud
 
@@ -186,8 +200,8 @@ Ver §4. Dos de ellas —almacenamiento de archivos y trabajos programados— bl
 
 | Pregunta | Bloquea | Quién decide |
 | --- | --- | --- |
-| Dónde viven los archivos subidos | Fase 2 | Equipo — es un ADR |
-| Cómo corren los trabajos programados | Fase 6 | Equipo — es un ADR |
+| Cómo corren los trabajos programados | Fase 6 | Equipo — es un ADR, y depende del plan de Render |
+| Subir Render a `starter` para tener disco persistente, o contratar almacén de objetos | Nada, pero hay archivos en juego | Equipo — ver ADR-0007 |
 | Retirar un descuento: ¿borra la fila o la marca? | Fase 5 | Equipo |
 | ¿Hace falta el desglose de una reserva vieja tal como se aceptó? | Fase 7 | Cliente |
 | ¿El correo de la editorial se prellena desde el de la persona? | Fase 2 | Cliente |
@@ -198,11 +212,11 @@ Ver §4. Dos de ellas —almacenamiento de archivos y trabajos programados— bl
 
 ## 5. Por dónde empezar
 
-**Las dos decisiones de la fase 1.** Con la fase 0 construida, son lo único que separa de
-arrancar la fase 2, y la bloquean de verdad: `CU-STD-001` sube documentos y hoy no hay
-`MEDIA_ROOT`, ni `MEDIA_URL`, ni un solo `FileField` en el proyecto.
+**La fase 2, que ya no está bloqueada.** Con la fase 0 y el almacenamiento resueltos, nada
+impide empezar `apps/stands`. La decisión que queda de la fase 1 —los trabajos programados— no
+la bloquea: hace falta en la fase 6.
 
-**Luego la fase 2, que es la que estrena el enganche.** `apps/stands` será la primera app en
+**Es la fase que estrena el enganche.** `apps/stands` será la primera app en
 inscribirse en el registro de módulos, y hasta que lo haga el mecanismo está probado pero sin
 usar: las tres tarjetas del catálogo dicen «próximamente».
 
