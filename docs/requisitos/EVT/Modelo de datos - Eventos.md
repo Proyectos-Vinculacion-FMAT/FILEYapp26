@@ -393,7 +393,7 @@ en la etapa 2 (§3).
 | nombre_organizador_organizacion | Persona u organización que organiza. Obligatorio. |
 | publico_objetivo | Público al que va dirigida. Lista de valores separados sobre el conjunto cerrado `publico_general`, `academico`, `estudiantil`, `infantil`, `familias`; al menos uno. Al no estar normalizado, filtrar por público exige recorrer el texto. |
 | sinopsis | Sinopsis de la actividad, capturada como texto. Antes era un PDF adjunto marcado por `tiene_sinopsis`; ahora el aplicante escribe el contenido directamente y no hay archivo que administrar. |
-| es_uady | Indica si el aplicante se declara parte de la UADY. Es la autodeclaración en la captura; el administrador la valida (o la corrige) en `DetallesAdminSolicitud.is_participante_uady` (§3.1), que es el valor que consume el cupo. |
+| es_uady | Indica si el aplicante se declara parte de la UADY. Es la autodeclaración en la captura; el administrador la valida (o la corrige) en `DetallesAdminSolicitud.is_participante_uady` (§3.1), que es el valor que cuenta para el conteo por categoría de `DetallesConvocatoria` (§3.6). |
 | requiere_constancia | Indica si el aplicante solicita constancia de participación. Precondición de CU-EVT-005 (descargar constancia); antes no existía en el modelo (§5). |
 | comentarios | Observaciones libres del aplicante. Opcional. |
 | fecha_de_solicitud | Marca de tiempo del momento en que la solicitud se envía y se guarda. |
@@ -599,7 +599,7 @@ inicio permite consultar las solicitudes pendientes sin interpretar la ausencia 
 | solicitud_id | FK → Solicitudes_EVT. |
 | estado | `pendiente`, `cambios_solicitados`, `aceptada`, `rechazada` o `cancelada`. `cancelada` solo aplica después de `aceptada`. |
 | categoria | `literaria` o `academica`. La asigna el administrador durante el dictamen. |
-| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que decide junto con `categoria` qué cupo consume (§3.6); el administrador puede confirmarlo o corregirlo. |
+| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que se usa junto con `categoria` para el conteo por categoría de `DetallesConvocatoria` (§3.6); el administrador puede confirmarlo o corregirlo. |
 | titulo_final | Título definitivo de la actividad si el administrador lo modifica; nulo significa que vale `Solicitudes_EVT.titulo_actividad`. |
 | organizador_final | Organizador definitivo; nulo significa que vale `Solicitudes_EVT.nombre_organizador_organizacion`. |
 | es_apta_juvenil | Marca la actividad como apta para el catálogo escolar y juvenil de `VIS`. |
@@ -718,20 +718,23 @@ de asumida.
 | fecha_cierre_ajustes_aplicante | Fecha límite para que el aplicante solicite cambios de horario. |
 | fecha_asignacion_horario | Fecha a partir de la cual los aplicantes ven su sala y hora asignadas. |
 | fecha_constancias | Fecha a partir de la cual pueden descargarse las constancias. |
-| cupo_literario_uady | Número máximo de actividades literarias de la UADY. |
-| cupo_literario_externo | Número máximo de actividades literarias externas. |
-| cupo_academico_uady | Número máximo de actividades académicas de la UADY. |
-| cupo_academico_externo | Número máximo de actividades académicas externas. |
+| cupo_literario_uady | Meta de actividades literarias de la UADY para esta convocatoria. Es una referencia de planeación, no un tope que la aplicación haga cumplir. |
+| cupo_literario_externo | Meta de actividades literarias externas. Misma naturaleza que `cupo_literario_uady`. |
+| cupo_academico_uady | Meta de actividades académicas de la UADY. Misma naturaleza que `cupo_literario_uady`. |
+| cupo_academico_externo | Meta de actividades académicas externas. Misma naturaleza que `cupo_literario_uady`. |
 | programa_archivado | Indica si el programa se cerró definitivamente. |
 | fecha_archivado | Fecha y hora del cierre definitivo. |
 | archivado_por | FK → Persona (administrador que ejecutó el cierre). |
 | motivo_archivado | Motivo registrado al archivar. Obligatorio. |
 
-Los cuatro cupos se consumen **al aceptar una solicitud**, en la etapa de administración. El
-administrador asigna `categoria` e `is_participante_uady` (§3.1) y la combinación de ambos
-determina cuál de los cuatro contadores se decrementa: una solicitud literaria marcada como
-UADY resta uno a `cupo_literario_uady`, una académica no marcada resta uno a
-`cupo_academico_externo`, y así con el resto.
+Los cuatro `cupo_*` **no se consumen ni se hacen cumplir**: cuántas solicitudes de cada
+categoría se aceptan es una decisión 100% del administrador, sin límite impuesto por el sistema.
+Son la meta que se fijó al planear la convocatoria, y sirven de referencia frente a un **conteo
+derivado** —no una columna, se calcula agrupando `DetallesAdminSolicitud` (§3.1) con
+`estado = aceptada` por `categoria` × `is_participante_uady`— que la pantalla de revisión le
+muestra al administrador para que sepa, en cualquier momento del dictamen, cuántas lleva
+aceptadas de cada tipo frente a la meta. La decisión de seguir aceptando por encima o por debajo
+de esa meta es suya.
 
 ### 3.7 BitacoraEVT
 
