@@ -1,0 +1,88 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   A1 · La cola de revisión (CU-STD-004).
+
+   El filtro va en la consulta, no aquí: lo que no se pide no llega a la
+   respuesta. Este formulario solo lo expresa, y por GET para que un
+   filtro se pueda compartir y volver atrás sin reenviar nada.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Solicitudes — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Solicitudes de expositor{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+<form class="toolbar-row" method="get">
+  <div class="field">
+    <label for="filtro-estado">Estado</label>
+    <select id="filtro-estado" name="estado">
+      <option value="">Todos</option>
+      {% for valor, etiqueta in estados %}
+        <option value="{{ valor }}" {% if valor == estado_activo %}selected{% endif %}>{{ etiqueta }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="filtro-q">Editorial</label>
+    <input id="filtro-q" type="search" name="q" value="{{ busqueda }}" placeholder="Nombre de la editorial">
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Filtrar</button>
+    {% if hay_filtros %}
+      <a class="btn btn-ghost" href="{% url 'stands:solicitudes' convocatoria_id=convocatoria.pk %}">Quitar filtros</a>
+    {% endif %}
+  </div>
+</form>
+
+{% if solicitudes %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Editorial</th>
+        <th>Estado</th>
+        <th>Enviada</th>
+        <th>Revisada</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in solicitudes %}
+        <tr>
+          <td>
+            {% comment %} La fotografía, para que la lista y el detalle no
+               digan nombres distintos de la misma solicitud. {% endcomment %}
+            <strong>{{ s.datos_editorial.nombre }}</strong><br>
+            <span class="hint">{{ s.registro.persona.correo }}</span>
+          </td>
+          <td>{% include "stands/parciales/badge_estado.html" with solicitud=s %}</td>
+          <td>{{ s.fecha_envio|date:"j M Y" }}</td>
+          <td>{% if s.fecha_revision %}{{ s.fecha_revision|date:"j M Y" }}{% else %}—{% endif %}</td>
+          <td>
+            <a class="btn btn-ghost btn-row" href="{% url 'stands:detalle_solicitud' solicitud_id=s.pk %}">
+              Revisar
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  {% comment %} E1: la lista vacía conserva los filtros para poder ajustarlos.
+     Se distingue de "todavía no llega ninguna", que es otra cosa. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">📭</div>
+    <div>
+      {% if hay_filtros %}
+        Ninguna solicitud cumple estos filtros. Ajústalos o quítalos para ver
+        todas.
+      {% else %}
+        Esta convocatoria todavía no ha recibido solicitudes.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

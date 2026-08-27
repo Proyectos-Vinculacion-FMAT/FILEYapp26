@@ -83,8 +83,13 @@ SHARED_APPS = [
 
 TENANT_APPS = [
     "apps.convocatorias",
-    # Aquí se añaden EVT, TAL, STD, VIS, PRG y SAL conforme se
-    # construyan: todos son contenido de una feria.
+    # Cada dominio vertical es **su propia app**, con sus tablas y su
+    # namespace de URLs: no comparten modelos entre sí ni con
+    # `apps.convocatorias`, que es la mitad por feria de `FER`. La
+    # dependencia va en una sola dirección (`ADR-0006`).
+    "apps.stands",
+    # Aquí se añaden EVT, VIS, PRG y SAL conforme se construyan: todos
+    # son contenido de una feria.
 ]
 
 INSTALLED_APPS = SHARED_APPS + [a for a in TENANT_APPS if a not in SHARED_APPS]

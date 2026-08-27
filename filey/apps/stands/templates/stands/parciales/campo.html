@@ -1,0 +1,21 @@
+{% comment %} ===========================================================
+   Un campo de formulario, con su etiqueta, su ayuda y sus errores.
+
+   Contexto que espera:
+
+     campo   un BoundField
+
+   Existe porque la ficha de expositor tiene 27 campos y escribirlos a
+   mano sería repetir el mismo bloque 27 veces — y equivocarse en dos.
+   Marca el obligatorio con `.req` y el opcional con `.opt`, que es lo
+   que el prototipo hace; no hay forma de saberlo mirando la caja.
+   =========================================================== {% endcomment %}
+<div class="field">
+  <label for="{{ campo.id_for_label }}">
+    {{ campo.label }}
+    {% if campo.field.required %}<span class="req">*</span>{% else %}<span class="opt">opcional</span>{% endif %}
+  </label>
+  {{ campo }}
+  {% if campo.help_text %}<span class="hint">{{ campo.help_text }}</span>{% endif %}
+  {% for error in campo.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
+</div>

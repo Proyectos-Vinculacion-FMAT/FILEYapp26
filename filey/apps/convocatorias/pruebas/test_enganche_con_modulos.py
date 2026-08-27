@@ -75,8 +75,9 @@ def _convocatoria(
 
 
 def test_un_tipo_sin_modulo_no_es_un_error():
-    """Es el estado normal de cinco de los seis tipos hoy."""
+    """Sigue siendo el estado de `EVT` y de `VIS`."""
     assert modulos.modulo_de(TipoConvocatoria.VIS) is None
+    assert modulos.modulo_de(TipoConvocatoria.EVT) is None
 
 
 def test_un_tipo_mal_escrito_no_se_inscribe():
@@ -102,16 +103,32 @@ def test_volver_a_inscribir_el_mismo_modulo_no_es_error():
     """`ready()` puede correr más de una vez y eso no es un síntoma."""
     with modulos.modulo_temporal(modulo_falso()):
         modulos.registrar(modulo_falso())
+        assert modulos.modulo_de(TipoConvocatoria.STD).etiqueta == "Venta de stands"
 
-    assert modulos.modulo_de(TipoConvocatoria.STD) is None
 
+def test_el_registro_vuelve_a_como_estaba_al_salir_del_bloque():
+    """La contrapartida de que sea estado global del proceso.
 
-def test_el_registro_no_se_queda_puesto_entre_pruebas():
-    """La contrapartida de que sea estado global del proceso."""
-    with modulos.modulo_temporal(modulo_falso()):
-        assert modulos.modulo_de(TipoConvocatoria.STD) is not None
+    Se comprueba contra los dos casos, porque son distintos: `STD` tiene
+    un módulo de verdad detrás —`apps.stands` se inscribe en su
+    ``ready()``— y `VIS` no tiene ninguno. Restaurar mal el primero
+    dejaría a las pruebas siguientes con un módulo de mentira; restaurar
+    mal el segundo, con uno que no existe.
+    """
+    real = modulos.modulo_de(TipoConvocatoria.STD)
+    assert real is not None, "apps.stands debería estar inscrito"
 
-    assert modulos.modulo_de(TipoConvocatoria.STD) is None
+    with modulos.modulo_temporal(
+        modulos.Modulo(
+            tipo=TipoConvocatoria.STD, etiqueta="De mentira", url_aplicar=RUTA_DE_MENTIRA
+        )
+    ):
+        assert modulos.modulo_de(TipoConvocatoria.STD).etiqueta == "De mentira"
+    assert modulos.modulo_de(TipoConvocatoria.STD) == real
+
+    with modulos.modulo_temporal(modulo_falso(tipo=TipoConvocatoria.VIS)):
+        assert modulos.modulo_de(TipoConvocatoria.VIS) is not None
+    assert modulos.modulo_de(TipoConvocatoria.VIS) is None
 
 
 # ── Paso 6 y E1 de CU-FER-005 ─────────────────────────────────

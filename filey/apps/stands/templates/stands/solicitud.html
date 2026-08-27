@@ -1,0 +1,135 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   U1 · Mi solicitud de expositor (CU-STD-001, 002, 003).
+
+   Una sola pantalla para los cinco estados, y no cinco pantallas: para
+   quien aplica esto es una sola cosa —"mi solicitud"— y lo que cambia es
+   qué puede hacer con ella. CU-STD-003 la describe como un ruteador; el
+   ruteo aquí es qué se pinta, no un redirect.
+
+     sin solicitud         formulario en blanco
+     pendiente             solo lectura, "en revisión"
+     cambios_solicitados   formulario con el motivo arriba, reenvía
+     aceptada              solo lectura, habilitada para reservar
+     rechazada             formulario otra vez (RN-22: se reaplica)
+
+   Funciona sin JavaScript: un POST normal, con las cajas de sello
+   pintadas de antemano porque no se pueden añadir filas sin JS.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mi solicitud — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}{{ convocatoria.nombre }}{% endblock %}
+{% block encabezado_texto %}
+  Solicitud para participar como expositor.
+{% endblock %}
+
+{% block contenido %}
+
+{% comment %} El estado, arriba del todo: es lo primero que alguien viene a
+   mirar cuando vuelve a esta pantalla (CU-STD-003). {% endcomment %}
+{% if solicitud %}
+  <div class="note {% if solicitud.estado == 'aceptada' %}note-info{% elif solicitud.estado == 'rechazada' %}note-warn{% elif solicitud.estado == 'cambios_solicitados' %}note-warn{% else %}note-info{% endif %}">
+    <div class="ico">
+      {% if solicitud.estado == 'aceptada' %}✅{% elif solicitud.estado == 'rechazada' %}❌{% elif solicitud.estado == 'cambios_solicitados' %}✏️{% else %}⏳{% endif %}
+    </div>
+    <div>
+      {% if solicitud.estado == 'pendiente' %}
+        <strong>Tu solicitud está en revisión.</strong>
+        La enviaste el {{ solicitud.fecha_envio|date:"j \d\e F \d\e Y" }}.
+        Te avisaremos por correo en cuanto haya respuesta.
+      {% elif solicitud.estado == 'aceptada' %}
+        <strong>Tu solicitud fue aceptada.</strong>
+        Ya puedes elegir tus espacios en el mapa del showfloor.
+        {% comment %} El enlace al mapa llega con U2; hasta entonces esto
+           informa y no navega. {% endcomment %}
+      {% elif solicitud.estado == 'rechazada' %}
+        <strong>Tu solicitud no fue aceptada.</strong>
+        {% if solicitud.motivo_peticion %}{{ solicitud.motivo_peticion }}{% endif %}
+        {% if convocatoria_abierta %}
+          Puedes corregir lo que haga falta y volver a enviarla.
+        {% endif %}
+      {% else %}
+        <strong>Hacen falta algunos cambios.</strong>
+        {{ solicitud.motivo_peticion }}
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% if not convocatoria_abierta %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div>
+      Esta convocatoria <strong>no está abierta</strong>: puedes consultar lo que
+      enviaste, pero no enviar ni corregir nada.
+    </div>
+  </div>
+{% endif %}
+
+{% if editable %}
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% include "stands/parciales/campos_editorial.html" %}
+
+    <div class="section-card card">
+      <div class="section-head"><h3>Sellos editoriales</h3>
+        <p>Si representas a otras casas editoras, decláralas aquí. Cada una
+           necesita su carta de representación.</p></div>
+      <div class="section-body">
+        <div class="multi-input">
+          {% for campo in form_sellos %}
+            <div class="field">
+              <label for="{{ campo.id_for_label }}">{{ campo.label }} <span class="opt">opcional</span></label>
+              {{ campo }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card card">
+      <div class="section-head"><h3>Documentos</h3>
+        <p>{% if documentos %}Los que ya subiste siguen adjuntos; sube uno nuevo
+           solo si quieres reemplazarlo.{% else %}La constancia fiscal y la lista
+           de títulos son obligatorias.{% endif %}</p></div>
+      <div class="section-body">
+        {% if documentos %}
+          <div class="field">
+            <label>Ya adjuntaste</label>
+            <ul class="multi-input">
+              {% for doc in documentos %}
+                <li>{{ doc.get_tipo_display }} — {{ doc.nombre_original|default:"archivo" }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+        {% for campo in form_documentos %}
+          <div class="field">
+            <label for="{{ campo.id_for_label }}">
+              {{ campo.label }}
+              {% if campo.field.required %}<span class="req">*</span>{% else %}<span class="opt">opcional</span>{% endif %}
+            </label>
+            {{ campo }}
+            {% if campo.help_text %}<span class="hint">{{ campo.help_text }}</span>{% endif %}
+            {% for error in campo.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary btn-lg" type="submit">
+        {% if es_reenvio %}Reenviar solicitud{% else %}Enviar solicitud{% endif %}
+      </button>
+    </div>
+  </form>
+{% elif solicitud %}
+  {% comment %} Solo lectura: se enseña la fotografía, no la ficha viva. Es lo
+     que se envió y lo que se está dictaminando (RN-22). {% endcomment %}
+  {% include "stands/parciales/resumen_solicitud.html" with datos=solicitud.datos_editorial sellos=solicitud.sellos %}
+{% endif %}
+
+{% endblock %}

@@ -249,6 +249,7 @@ a.home:hover { opacity: 0.88; }
 /* ===================== Forms ===================== */
 .field { margin-bottom: 16px; }
 .field > label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--gris-700); }
+.field .hint { font-weight: 400; color: var(--gris-500); font-size: 12.5px; }
 .req { color: var(--color-rojo); font-weight: 700; }
 .opt { color: var(--gris-500); font-weight: 400; font-size: 12.5px; }
 
@@ -395,6 +396,10 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .badge-open   { background: var(--ok-050);   color: var(--ok-600); }
 .badge-closed { background: var(--gris-100); color: var(--gris-500); }
 .badge-soon   { background: var(--warn-050); color: var(--warn-600); }
+.badge-pending  { background: var(--azul-100); color: var(--azul-600); }
+.badge-accepted { background: var(--ok-050);   color: var(--ok-600); }
+.badge-rejected { background: var(--err-050);  color: var(--err-600); }
+.badge-changes  { background: var(--warn-050); color: var(--warn-600); }
 
 /* ===================== Notas / avisos ===================== */
 .note {
@@ -403,6 +408,7 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 }
 .note .ico { flex: 0 0 22px; font-size: 18px; line-height: 1.2; }
 .note-info { background: var(--azul-050); color: var(--color-azul-institucional); border: 1px solid var(--azul-100); }
+.note-warn { background: var(--warn-050); color: #7a5a00; border: 1px solid var(--oro-200); }
 .note-gold { background: var(--oro-050); color: var(--color-dorado-700); border: 1px solid var(--oro-200); }
 
 .closed-overlay {
@@ -498,3 +504,25 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 /* .btn-danger · prototipo/VIS/styles.css */
 .btn-danger { background: var(--err-050); color: var(--err-600); border: 1.5px solid #eecac5; }
 .btn-danger:hover { background: #f7dcd8; text-decoration: none; }
+
+/* ── Portadas de STD (U1, A1, A2) ──────────────────────────────
+   Copiado de prototipo/common/styles-base.css con los mismos nombres,
+   como manda el skill `filey-render` §6: al portar una pantalla se trae
+   solo lo que esa pantalla usa. */
+
+/* .grid-2 · líneas 263 · formularios de dos columnas */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+
+/* .radio-row · línea 266 · opciones en línea (giro, materiales) */
+.radio-row { display: flex; gap: 22px; padding-top: 4px; flex-wrap: wrap; }
+.radio-row label { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14.5px; color: var(--gris-700); }
+
+/* .multi-input · línea 281 · lista de nombres (los sellos editoriales) */
+.multi-input { display: flex; flex-direction: column; gap: 8px; }
+
+/* .info-grid · línea 382 · contenido principal + columna lateral */
+.info-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+
+@media (max-width: 920px) {
+  .grid-2, .info-grid { grid-template-columns: 1fr; }
+}

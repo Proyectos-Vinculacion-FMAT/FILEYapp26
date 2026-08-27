@@ -238,8 +238,34 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | tipo | `comprobante_pago`, `carta_representacion`, `lista_titulos`, `constancia_fiscal`, `doc_abono`, `otro`. |
 | archivo_url | Ubicación/almacenamiento del archivo. |
 | fecha_carga | Fecha de carga. |
-| entidad_tipo | Entidad relacionada (`editorial`, `aplicacion`, `movimiento`). |
-| entidad_id | Id de la entidad relacionada. |
+| ~~entidad_tipo~~ | **Desviación al construir (2026-08-27):** ver la nota. |
+| ~~entidad_id~~ | **Desviación al construir (2026-08-27):** ver la nota. |
+
+> [!important] Se construyó con claves foráneas reales, no con una referencia polimórfica
+> `entidad_tipo` / `entidad_id` describe una referencia que **la base de datos no puede
+> validar**: una fila puede apuntar a una tabla que no toca, o a un id que no existe, y nada lo
+> impide. Es exactamente lo que
+> [ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>) descartó al elegir entre
+> `RegistroConvocatoria` y el `RouterSolicitudes` de `EVT`.
+>
+> Con una feria por schema hay además un agravante concreto: un `ContentType` de Django dice
+> `"app.modelo"`, y ese par significaría **una fila distinta en cada edición**.
+>
+> Lo construido son **columnas anulables con una restricción que exige exactamente una**:
+> `editorial` y `solicitud` hoy, `movimiento` cuando exista la fase de pago. Cuesta una columna
+> por destino y a cambio la integridad la sostiene PostgreSQL.
+
+<!-- -->
+
+> [!note] Dónde caen los archivos (2026-08-27)
+> `archivo` es un `FileField` con `upload_to=CarpetaDeLaFeria("documentos")`, así que la ruta
+> queda `feria_2027/documentos/<uuid>.pdf`: el aislamiento por feria llega también al disco, y
+> el nombre original —que suele traer datos personales— no sobrevive en la ruta. Se conserva
+> aparte, en `nombre_original`, para poder decirle a la persona cuál subió. Ver
+> [ADR-0007](<../../adr/0007-los-archivos-empiezan-en-disco.md>).
+>
+> **Ningún documento se sirve por una URL.** La vista que los entrega comprobando quién pregunta
+> está pendiente; hasta que exista, A2 los lista y no los deja descargar.
 
 ### 3.5 Stand
 | Atributo | Descripción |

@@ -1,0 +1,88 @@
+{% comment %} ===========================================================
+   La Ficha de Registro para Expositores, en cuatro bloques.
+
+   Contexto que espera:
+
+     form_editorial   un EditorialForm (ligado o no)
+
+   Se parte en secciones y no en una lista larga porque son 27 campos:
+   sin agrupar, quien la llena pierde el hilo de qué le falta. Los
+   nombres de los bloques son los de la ficha en papel, a propósito —
+   quien la llena suele tenerla delante.
+   =========================================================== {% endcomment %}
+
+{% comment %} Los errores que no son de ningún campo concreto. {% endcomment %}
+{% if form_editorial.non_field_errors %}
+  <div class="note note-warn">
+    <div class="ico">⚠️</div>
+    <div>{{ form_editorial.non_field_errors|join:" " }}</div>
+  </div>
+{% endif %}
+
+<div class="section-card card">
+  <div class="section-head"><h3>Datos de la editorial</h3></div>
+  <div class="section-body">
+    {% include "stands/parciales/campo.html" with campo=form_editorial.nombre %}
+    <div class="grid-2">
+      {% include "stands/parciales/campo.html" with campo=form_editorial.giro %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.responsable_stand %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.correo_electronico %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.telefono_celular %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.telefono_oficina %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.nombre_antepecho %}
+    </div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head"><h3>Domicilio</h3></div>
+  <div class="section-body">
+    <div class="grid-2">
+      {% include "stands/parciales/campo.html" with campo=form_editorial.domicilio_calle %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.domicilio_numero %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.domicilio_colonia %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.cp %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.municipio %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.estado %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.pais %}
+    </div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head"><h3>Contactos</h3>
+    <p>Solo el director general es obligatorio.</p></div>
+  <div class="section-body">
+    <div class="grid-2">
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_general_nombre %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_general_email %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_comercial_nombre %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_comercial_email %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_editorial_nombre %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_editorial_email %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_promocion_nombre %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.director_promocion_email %}
+    </div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head"><h3>Qué exhibes</h3></div>
+  <div class="section-body">
+    <div class="grid-2">
+      {% include "stands/parciales/campo.html" with campo=form_editorial.num_personas_atienden %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.cantidad_libros_aprox %}
+      {% include "stands/parciales/campo.html" with campo=form_editorial.cantidad_titulos_aprox %}
+    </div>
+    <div class="field">
+      <label>{{ form_editorial.materiales.label }} <span class="opt">opcional</span></label>
+      <div class="radio-row">{{ form_editorial.materiales }}</div>
+      {% for error in form_editorial.materiales.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="field">
+      <label>{{ form_editorial.tematicas.label }} <span class="opt">opcional</span></label>
+      <div class="radio-row">{{ form_editorial.tematicas }}</div>
+      {% for error in form_editorial.tematicas.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
+    </div>
+  </div>
+</div>

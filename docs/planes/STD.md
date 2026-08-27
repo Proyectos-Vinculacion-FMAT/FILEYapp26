@@ -34,7 +34,10 @@ siguiente.
 - Alta de convocatorias desde el admin de la edición (`/f/<slug>/django-admin/`).
 - **La fase 0 completa** (2026-08-27): `RegistroConvocatoria`, el registro de módulos, la
   tarjeta del catálogo enlazando de verdad y el callback de configuración del alta.
-- 210 pruebas en verde.
+- **La fase 1, en su mitad de almacenamiento** ([ADR-0007](<../adr/0007-los-archivos-empiezan-en-disco.md>)).
+- **La fase 2 completa** (2026-08-27): `apps/stands` con la vertical de solicitud entera,
+  `CU-STD-001` a `008`, y las vistas U1, A1 y A2.
+- 282 pruebas en verde.
 - Los estados del mapa en Godot: renombrados al vocabulario del dominio, probados y reexportados.
 
 ### Decidido, sin construir
@@ -105,7 +108,7 @@ procesos (ver la fase 6). Lo único que falta decidir es quién lo invoca:
 
 No bloquea la fase 2.
 
-### Fase 2 · Solicitud
+### Fase 2 · Solicitud — ✅ construida el 2026-08-27
 
 > `CU-STD-001` a `008` · vistas U1, A1, A2 · **necesita** las fases 0 y 1.
 
@@ -217,8 +220,10 @@ barrida solo lo recoge en casos de borde.
 | Riesgo | Nivel | Por qué importa |
 | --- | --- | --- |
 | El build de Godot pesa 39.5 MB | **Alto** | Nada se carga de un CDN (regla 6), así que vive en el repositorio. `CompressedManifestStaticFilesStorage` reescribe URLs dentro del JS al hacer `collectstatic`, e `index.js` referencia el `.wasm` por nombre: hay que excluir ese directorio del manifiesto o el mapa deja de cargar **solo en producción**. |
+| Los archivos no se pueden abrir desde la aplicación | **Alto** | `Documento` guarda y `ADR-0007` deja los archivos fuera de toda URL a propósito —son actas constitutivas y RFC—, pero la vista que los entrega comprobando quién pregunta **no existe todavía**. Hasta que exista, A2 lista los adjuntos y no los deja descargar. Es lo primero que hay que cerrar de la administración. |
 | El prototipo de `STD` no está en `prototipo/` | **Alto** | La referencia visual es una app Angular con Angular Material, un sistema de componentes que `filey.css` no tiene. Portar U1–U6 y A1–A10 no es mecánico: hay que decidir con `filey-identidad` qué se traduce y qué se rehace. |
 | La invariante del tipo es de código | Medio | Nada en el esquema impide colgar una `Solicitud` de stands de un registro cuya convocatoria es de eventos. Se comprueba en el servicio y hay prueba, pero la base no lo sostiene (ADR-0006). |
+| Una vista de participante dentro de una feria enlaza fuera | Bajo | `requiere_participante` redirigía con `reverse("registros:acceso")`, que no resuelve dentro de `/f/<slug>/`. No se había notado porque ninguna vista de participante vivía dentro de una feria; U1 fue la primera. Corregido con `url_publica` y con prueba, pero es el patrón que va a volver en `EVT` y en `VIS`. |
 | `stand-map-host` sigue en inglés | Medio | No está bajo git y tiene dos parches LAN aplicados a mano. Hoy funciona porque su build y sus datos son igual de viejos; al refrescarlo hay que reaplicar los parches y traducir los JSON en el mismo paso. |
 | El modelo de `EVT` contradice a ADR-0006 | Medio | Sigue describiendo el `RouterSolicitudes` derogado. Es contradicción de papel, no de base de datos: corregirla es requisito para empezar `EVT`, no para terminar `STD`. |
 
@@ -240,13 +245,18 @@ barrida solo lo recoge en casos de borde.
 
 ## 5. Por dónde empezar
 
-**La fase 2, que ya no está bloqueada.** Con la fase 0 y el almacenamiento resueltos, nada
-impide empezar `apps/stands`. La decisión que queda de la fase 1 —quién invoca la barrida— no
-la bloquea: hace falta en la fase 6.
+**La fase 3, el mapa.** Es lo siguiente que la fase 2 desbloquea: ya hay expositores
+aceptados y `RN-16` los habilita para reservar, pero no hay dónde elegir espacios.
 
-**Es la fase que estrena el enganche.** `apps/stands` será la primera app en
-inscribirse en el registro de módulos, y hasta que lo haga el mecanismo está probado pero sin
-usar: las tres tarjetas del catálogo dicen «próximamente».
+**Lo que la fase 2 dejó comprobado**, y que valía la pena saber antes de seguir:
+
+- El enganche de [ADR-0006](<../adr/0006-la-liga-entre-convocatoria-y-modulo.md>) **funciona
+  end-to-end**. El alta de una convocatoria de stands crea su `ConfiguracionSistema` sin que
+  `apps/convocatorias` importe nada de `apps/stands`, y hay prueba que recorre los dos dominios.
+- La tarjeta del catálogo **navega de verdad** por primera vez: `STD` dejó de decir
+  «próximamente».
+- `requiere_participante` estaba roto dentro de una feria y nadie lo había notado — ver la tabla
+  de riesgos.
 
 ---
 
