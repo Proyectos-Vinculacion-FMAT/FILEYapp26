@@ -1,0 +1,55 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} Confirmar el retiro de un acceso (CU-FER-004, paso 4).
+
+   Es una pantalla propia y no un `confirm()` de JavaScript por dos
+   motivos: toda pantalla del sistema funciona sin JS, y un diálogo del
+   navegador no cabe explicar en qué **no** consiste esto.
+
+   Ese es el trabajo del texto de abajo. Retirar un acceso se parece
+   peligrosamente a borrar una cuenta, y no lo es: decir en la propia
+   confirmación lo que la persona conserva evita que el dueño dude de si
+   está causando un daño mayor del que quiere. {% endcomment %}
+
+{% block titulo %}{{ feria.nombre }} — Retirar acceso{% endblock %}
+
+{% block clases_pagina %}page-narrow{% endblock %}
+
+{% block encabezado_titulo %}¿Retirar el acceso de {{ acceso.persona.primer_nombre|default:acceso.persona.correo }}?{% endblock %}
+
+{% block encabezado_texto %}
+  Dejará de poder entrar a {{ feria.nombre }} en su siguiente petición,
+  aunque tenga la sesión abierta ahora mismo.
+{% endblock %}
+
+{% block contenido %}
+
+<section class="card card-pad">
+  <div class="field">
+    <label>Persona</label>
+    {{ acceso.persona.nombre_completo|default:"—" }} · {{ acceso.persona.correo }}
+  </div>
+
+  <div class="note note-gold">
+    <div class="ico">⚠️</div>
+    <div>
+      Lo que <strong>sí</strong> pasa: pierde el acceso al panel de
+      {{ feria.nombre }} de inmediato.
+      <br>
+      Lo que <strong>no</strong> pasa: su cuenta de FILEY sigue existiendo con
+      su historial intacto, conserva el acceso a cualquier otra edición que
+      administre, y puede seguir participando como proponente. Si te
+      equivocas, puedes volver a darle acceso desde esta misma pantalla.
+    </div>
+  </div>
+
+  <form method="post" action="{% url 'accesos:retirar' acceso.id %}">
+    {% csrf_token %}
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{% url 'accesos:panel' %}">Cancelar</a>
+      <button class="btn btn-danger" type="submit">Sí, retirar su acceso</button>
+    </div>
+  </form>
+</section>
+
+{% endblock %}

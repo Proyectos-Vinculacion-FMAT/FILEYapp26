@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: "0.4"
+version: "0.5"
 tags:
   - tipo/indice
   - dom/fer
@@ -48,6 +48,12 @@ feria.
 - **CU-FER-010** Elegir la feria en la que quiero participar — *Participante*
 - **CU-FER-003** Dar de alta un administrador en mi feria — *Dueño de la feria*
 - **CU-FER-004** Retirar el acceso de un administrador de mi feria — *Dueño de la feria*
+
+> [!note] CU-FER-003 y CU-FER-004 son una sola pantalla
+> `/f/<slug>/accesos/`, construida el 2026-08-26. Dar y quitar acceso arrancan los dos en la
+> misma lista —*"quién administra hoy esta feria"*—, y separarlas obligaría a ir y volver para
+> comprobar lo que se estaba mirando. Solo la ve el dueño, y el enlace a ella aparece en el
+> catálogo de la edición únicamente para él.
 
 ### Catálogo de convocatorias
 

@@ -1,0 +1,92 @@
+{% comment %}
+Aviso de alta de un administrador en una feria (CU-FER-003, paso 6).
+
+Maquetado con tablas y estilos en línea a propósito: los clientes
+de correo (Outlook, Gmail) ignoran hojas de estilo y buena parte
+de CSS moderno. Colores tomados de los tokens del frontend.
+
+Hermano de `alta_feria.html`, y con una diferencia deliberada: el
+recuadro dorado dice lo que este acceso **no** da. Quien recibe el aviso
+no tiene por qué saber que administrar y ser dueño no es lo mismo.
+{% endcomment %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background:#f4f6f8;margin:0;padding:24px 0;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+             style="max-width:560px;background:#ffffff;border-radius:12px;
+                    overflow:hidden;font-family:Segoe UI,Helvetica,Arial,sans-serif;">
+
+        <tr>
+          <td style="background:#01457C;padding:28px 32px;">
+            <div style="color:#ffffff;font-size:19px;font-weight:600;">{{ feria }}</div>
+            <div style="color:#C8D7E3;font-size:13px;margin-top:4px;">
+              Feria Internacional de la Lectura Yucatán
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:32px;color:#151A30;font-size:15px;line-height:1.6;">
+            <p style="margin:0 0 18px;">
+              {% if nombre %}Hola {{ nombre }},{% else %}Hola,{% endif %}
+            </p>
+
+            <p style="margin:0 0 18px;">
+              Ya puedes <strong>administrar {{ feria }}</strong> en el sistema
+              FILEY.
+            </p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="margin:0 0 26px;border-left:3px solid #C99213;background:#faf6ec;">
+              <tr>
+                <td style="padding:14px 18px;font-size:14px;color:#6E4D03;">
+                  Como administrador operas <strong>todo el contenido</strong> de
+                  esta feria: propuestas, talleres, stands y visitas. Dar de alta
+                  administradores y abrir o cerrar convocatorias sigue siendo cosa
+                  del <strong>dueño</strong> de la edición.
+                </td>
+              </tr>
+            </table>
+
+            <table role="presentation" cellpadding="0" cellspacing="0"
+                   style="margin:0 0 26px;">
+              <tr>
+                <td style="background:#01457C;border-radius:8px;">
+                  <a href="{{ url_feria }}"
+                     style="display:inline-block;padding:13px 26px;color:#ffffff;
+                            font-size:15px;font-weight:600;text-decoration:none;">
+                    Entrar a {{ feria }}
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 18px;font-size:14px;color:#4A5568;">
+              No necesitas contraseña. Escribe este mismo correo
+              (<strong>{{ correo }}</strong>) y te enviaremos un código de un
+              solo uso para entrar. Si ya usabas FILEY, entra con el mismo
+              correo de siempre: esta feria te aparecerá entre las que
+              administras.
+            </p>
+
+            <p style="margin:0;font-size:13px;color:#718096;">
+              Si no esperabas este mensaje, ignóralo o avísanos a
+              <a href="mailto:{{ correo_soporte }}"
+                 style="color:#01457C;">{{ correo_soporte }}</a>.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#f4f6f8;padding:18px 32px;font-size:12px;color:#718096;
+                     font-family:Segoe UI,Helvetica,Arial,sans-serif;">
+            FILEY — Feria Internacional de la Lectura Yucatán<br>
+            Coordinación General de Contenidos · UADY
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

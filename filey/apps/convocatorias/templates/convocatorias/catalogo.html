@@ -18,6 +18,21 @@
 {% endblock %}
 
 {% block contenido %}
+{% comment %} Lo único que un administrador **no dueño** no ve de esta pantalla.
+   Administrar los accesos de la feria es exclusivo del dueño (ADR-0004),
+   y esta es la puerta de entrada: sin ella la responsabilidad existe
+   sobre el papel y no se puede ejercer.
+
+   Que el enlace no salga es cortesía, no seguridad — la vista de
+   accesos lo rechaza igual (CU-FER-003 E1). {% endcomment %}
+{% if es_dueno %}
+  <div class="toolbar-row">
+    <a class="btn btn-ghost" href="{% url 'accesos:panel' %}">
+      👥 Administradores de esta feria
+    </a>
+  </div>
+{% endif %}
+
 {% if convocatorias %}
   <div class="conv-grid">
     {% for convocatoria in convocatorias %}
