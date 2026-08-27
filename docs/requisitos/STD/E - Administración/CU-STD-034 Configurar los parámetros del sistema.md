@@ -15,7 +15,14 @@ dependencias: []
 
 ## Descripción
 
-El administrador establece las reglas y valores (costos, porcentajes, plazos y cuentas bancarias) que el sistema utilizará como plantilla base para todas las nuevas reservas de **esta feria**. Cada edición tiene sus propios parámetros: el costo por m² y la fecha límite de pronto pago cambian cada año.
+El administrador establece las reglas y valores (costos, porcentajes, plazos y cuentas bancarias) que el sistema aplicará a las reservas de **una convocatoria de stands**.
+
+> [!important] La configuración es **de una convocatoria**, no de la feria
+> Hasta el 2026-08-27 este caso de uso decía "de esta feria", y era cierto cuando había una sola
+> convocatoria de stands por edición. Ya no: una feria puede abrir una convocatoria general y
+> otra para un pabellón concreto, **con `costo_m2` y plazos distintos** (RN-19). El formulario
+> edita la configuración de la convocatoria en la que se está operando, y editarla no toca a las
+> demás.
 
 ## Actores
 
@@ -24,23 +31,30 @@ El administrador establece las reglas y valores (costos, porcentajes, plazos y c
 ## Precondiciones
 
 - El administrador tiene acceso a la feria en la que opera (`AdminFeria`).
+- Está operando sobre una convocatoria de stands concreta.
 
 ## Disparador
 
-El administrador ingresa a la vista de "Configuración del Evento" (vista A10).
+El administrador ingresa a la vista de "Configuración de la convocatoria" (vista A10).
 
 ## Flujo principal
 
 1. El administrador ingresa a la sección de configuración.
-2. El sistema despliega el formulario con los datos cargados desde la entidad `ConfiguracionSistema`.
+2. El sistema despliega el formulario con los datos de la `ConfiguracionSistema` **de esta convocatoria**.
 3. El administrador puede editar:
-   - **Costo base por m²** (aplica a todos los stands que no tengan un precio manual).
+   - **Costo por m²**, del que se deriva el precio de **todos** los stands de esta convocatoria
+     (RN-01). No hay precio manual por stand: la zona no fija tarifa, y pabellones a precios
+     distintos son convocatorias distintas (RN-19).
    - **Porcentaje de anticipo** (por defecto 50%).
    - **Plazo de reserva** en días (por defecto 30).
    - **Descuento por pronto pago** (10%) y su **Fecha límite**.
    - **Instrucciones de pago** y datos bancarios que aparecerán a los usuarios.
 4. El administrador aplica los cambios y guarda.
-5. El sistema actualiza el registro en `ConfiguracionSistema` y registra la acción en la `Bitacora`.
+5. El sistema actualiza la `ConfiguracionSistema` de esta convocatoria y registra la acción en la `Bitacora`.
+
+> [!warning] Cambiar el `costo_m2` no recalcula lo ya cobrado (RN-01)
+> Las reservas existentes conservan su `monto_total`. Lo que sí cambia es el **desglose por
+> stand**, que se recalcula con el valor nuevo y puede dejar de cuadrar con ese total.
 6. El sistema notifica que la configuración fue actualizada con éxito.
 7. El caso de uso termina.
 

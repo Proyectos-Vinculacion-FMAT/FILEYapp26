@@ -34,7 +34,7 @@ El aplicante agrega un stand al carrito desde su detalle (CU-STD-010), o abre su
 ## Precondiciones
 
 - El aplicante tiene sesión iniciada y está habilitado para reservar (RN-16).
-- La editorial no tiene una reserva activa (se permite una sola reserva por editorial; agregar más stands a una reserva existente se considera ampliación, fuera de alcance).
+- La editorial no tiene una reserva activa **en esta convocatoria** (una reserva por editorial y convocatoria; agregar más stands a una reserva existente se considera ampliación, fuera de alcance).
 
 ## Postcondiciones
 

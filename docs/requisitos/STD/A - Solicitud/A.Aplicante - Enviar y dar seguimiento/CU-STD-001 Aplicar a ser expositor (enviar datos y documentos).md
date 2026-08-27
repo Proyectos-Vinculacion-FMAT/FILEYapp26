@@ -34,14 +34,14 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 ## Precondiciones
 
 - El aplicante tiene sesión iniciada.
-- El evento está en periodo de convocatoria abierto.
-- La editorial/cuenta no tiene una solicitud previa activa (se permite una sola solicitud en proceso por editorial/cuenta; si la previa tiene cambios solicitados, se reedita la misma; si fue rechazada definitivamente, se permite crear una nueva).
+- La convocatoria de stands a la que aplica está `abierta`.
+- La persona no tiene una solicitud **viva** en **esta** convocatoria (RN-22): se admite como mucho una en `pendiente` o `cambios_solicitados`. Si la previa tiene cambios solicitados, se reedita la misma (CU-STD-002); si fue rechazada, se crea una nueva con la misma editorial.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Se crea una solicitud en estado `pendiente`, asociada a la editorial y al evento, con su fecha de envío.
+- Se crea una solicitud en estado `pendiente`, asociada a la editorial y al registro de la persona en esta convocatoria, con su fecha de envío y con la **fotografía** de los datos enviados (RN-22).
 - Los datos de la editorial, sus sellos y los documentos adjuntos quedan almacenados.
 - La solicitud queda en la cola de revisión del administrador.
 
@@ -56,7 +56,7 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 3. El aplicante adjunta los documentos requeridos: constancia de situación fiscal y lista de títulos.
 4. El aplicante envía la solicitud.
 5. El sistema valida que los campos obligatorios y los documentos requeridos estén completos.
-6. El sistema registra la solicitud en estado `pendiente`, con su fecha de envío, asociándola a la editorial y al evento.
+6. El sistema crea el registro de la persona en esta convocatoria si aún no existe, y registra la solicitud en estado `pendiente` con su fecha de envío, asociándola a la editorial y a ese registro.
 7. El sistema confirma al aplicante que su solicitud fue enviada y se encuentra en revisión.
 
 ## Flujos alternos
@@ -80,9 +80,13 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 
 ### E2. Ya existe una solicitud para la editorial/cuenta
 
-1. En el paso 6 el sistema detecta que la editorial/cuenta ya tiene una solicitud registrada.
+1. En el paso 6 el sistema detecta que la persona ya tiene una solicitud **viva** en esta convocatoria.
 2. El sistema impide crear una nueva y avisa al aplicante.
-3. Si la solicitud previa tiene cambios solicitados, el sistema lo dirige a editarla y reenviarla (CU-STD-002). Si la solicitud previa fue rechazada, el sistema permite continuar con la creación de la nueva solicitud.
+3. Si la solicitud previa tiene cambios solicitados, el sistema lo dirige a editarla y reenviarla (CU-STD-002). Si fue rechazada, **no bloquea**: permite crear la nueva (RN-22).
+
+> [!note] Una solicitud viva **por convocatoria**, no por editorial
+> Hasta el 2026-08-27 esto decía "una solicitud por editorial/cuenta". Con varias convocatorias
+> de stands en la misma feria, la misma editorial puede tener una solicitud viva en cada una.
 
 ## Datos relevantes
 

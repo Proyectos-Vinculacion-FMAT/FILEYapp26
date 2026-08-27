@@ -16,7 +16,7 @@ dependencias:
 
 ## Descripción
 
-El administrador consulta un catálogo de todas las entidades expositoras (editoriales) que han superado el filtro de solicitud y están habilitadas para operar dentro del evento.
+El administrador consulta un catálogo de todas las entidades expositoras (editoriales) que han superado el filtro de solicitud y están habilitadas para operar dentro de esta convocatoria.
 
 ## Actores
 
@@ -33,7 +33,7 @@ El administrador selecciona la opción de "Expositores" en el menú principal (v
 ## Flujo principal
 
 1. El administrador ingresa a la vista de Expositores.
-2. El sistema recupera los perfiles de todas las entidades `Editorial` cuya `Solicitud` al evento en curso se encuentre en estado `aceptada`.
+2. El sistema recupera los perfiles de todas las entidades `Editorial` cuya `Solicitud` en la convocatoria en curso se encuentre en estado `aceptada`.
 3. El sistema muestra una tabla o listado con columnas clave: Razón Social / Nombre Comercial, RFC, Nombre del Contacto, Teléfono y Correo.
 4. El administrador utiliza los controles de búsqueda (por nombre, RFC o correo) para localizar a un expositor en particular.
 5. El administrador selecciona un expositor para consultar su ficha técnica y operativa (CU-STD-031).

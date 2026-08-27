@@ -309,7 +309,7 @@ La distinción que organiza todo el modelo:
 > | Convocatoria `tipo` | Módulo | Qué cuelga del registro |
 > | --- | --- | --- |
 > | `EVT` | Eventos | `Solicitudes_EVT` — una propuesta de actividad (puede haber varias por persona). |
-> | `STD` | Stands | `Solicitud` — la aplicación a expositor, con su `Editorial` y su reserva detrás. Ver [`STD/Modelo de datos - Stands`](<../STD/Modelo de datos - Stands.md>) §3.3. |
+> | `STD` | Stands | `Solicitud` — la aplicación a expositor, con su `Editorial` y su reserva detrás. **1—N**: tras un rechazo se puede volver a aplicar (RN-22 de `STD`). Ver [`STD/Modelo de datos - Stands`](<../STD/Modelo de datos - Stands.md>) §3.3. |
 > | `VIS` | Visitas | La solicitud de visita escolar (modelo pendiente). |
 >
 > Esta es la razón de ser del patrón: agregar un tipo de convocatoria no obliga a tocar ninguna
@@ -317,7 +317,39 @@ La distinción que organiza todo el modelo:
 
 <!-- -->
 
-> [!warning] Colisión con el `RouterSolicitudes` de `EVT`
+> [!important] Cuántos expedientes cuelgan de un registro — **N, no uno** (2026-08-27)
+> Este documento no lo decía, y `STD` lo obligó a decidirse: de un registro cuelgan **todos** los
+> expedientes de esa persona en esa convocatoria a lo largo del tiempo, con **como mucho uno
+> vivo**. En `STD` es porque tras un rechazo se puede volver a aplicar (RN-22); en `EVT` es de
+> nacimiento, porque una persona propone varias actividades.
+>
+> Lo único que sigue siendo 1—1 es **persona ↔ registro** dentro de una convocatoria, que es lo
+> que la restricción única de arriba garantiza.
+
+<!-- -->
+
+> [!important] Cómo llega alguien del catálogo al módulo — resuelto por ADR-0006
+> El botón "Registrarme" de la tarjeta no puede resolver `reverse("stands:aplicar")`: `FER` no
+> conoce a los módulos, y no puede conocerlos sin invertir la dependencia. Lo resuelve un
+> **registro de módulos por tipo** en `apps/convocatorias/modulos.py`, donde cada app vertical se
+> inscribe a sí misma al arrancar. Ver
+> [ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>).
+>
+> De ahí sale también **cuándo nace un registro**: al guardarse el expediente del módulo, no al
+> pulsar el botón. Si naciera con el clic, cada visita curiosa dejaría una inscripción vacía y
+> las listas contarían gente que nunca aplicó.
+>
+> Y una advertencia que hay que tener presente al implementar: **la base de datos no puede
+> garantizar que el expediente corresponda al `tipo` de la convocatoria** — el `tipo` vive un
+> salto más allá, en `Convocatoria`. Es una invariante de código, con prueba. El ADR explica por
+> qué se acepta.
+
+<!-- -->
+
+> [!warning] ~~Colisión con el `RouterSolicitudes` de `EVT`~~ — **resuelta el 2026-08-27**
+> Gana `RegistroConvocatoria`, por [ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>).
+> `RouterSolicitudes` queda derogado y `EVT` tiene que reapuntar `Solicitudes_EVT` aquí. El
+> texto original se conserva abajo porque explica el porqué.
 > `EVT` ya define un `RouterSolicitudes(usuario_django, convocatoria, solicitud_id)` descrito
 > como *"único para todo el sistema"*, donde `convocatoria` es un discriminador de **dominio**
 > (`EVT`/`TAL`/`STD`/`VIS`), no una convocatoria con identidad propia. Es la misma figura que
@@ -364,7 +396,21 @@ La distinción que organiza todo el modelo:
 
 <!-- -->
 
-> [!warning] Esta bitácora no es la de `STD`, y no deberían ser dos
+> [!important] Son tres bitácoras, y se quedan así — decidido el 2026-08-27
+> `BitacoraFER`, la `Bitacora` de `STD` y `BitacoraEVT` tienen la misma forma, y este documento
+> venía diciendo que unificarlas era lo razonable. **Se decide lo contrario: una por módulo.**
+>
+> Lo que registran son las acciones sensibles **de un dominio**, y esas no se parecen: mover la
+> fecha de cierre de una convocatoria y validar un abono no comparten vocabulario ni quién los
+> lee. Una tabla común obligaría a un `accion` que fuera la unión de todos los conjuntos
+> cerrados — es decir, ninguno —, y el conjunto cerrado es precisamente lo que hace legible una
+> bitácora.
+>
+> El texto de abajo se conserva porque explica la duda que había.
+
+<!-- -->
+
+> [!warning] ~~Esta bitácora no es la de `STD`, y no deberían ser dos~~ *(superado)*
 > `STD` tiene su propia `Bitacora` (§3.12 de su modelo) con la misma forma —persona, acción,
 > entidad polimórfica, detalle, fecha— para sus acciones sensibles: validar un abono, aplicar un
 > descuento especial, prorrogar una reserva. Ahora hay **dos tablas idénticas en distinto
@@ -466,10 +512,9 @@ flowchart TD
   el contenido de la feria a cualquier administrador. Consultar el catálogo sí sigue abierto a
   cualquier administrador. Si la lista de lo reservado al dueño vuelve a crecer, deja de ser una
   enmienda y hay que escribir el ADR que sustituya al 0004.
-- **Tres bitácoras idénticas.** `BitacoraFER` (§3.5), `Bitacora` de `STD` y `BitacoraEVT` tienen
-  la misma forma y resuelven el mismo problema. Unificarlas en una bitácora por feria es lo
-  razonable; hacerlo ahora obliga a tocar tres modelos y sus casos de uso. Lo urgente no es
-  unificarlas: es que el cuarto dominio no añada la cuarta.
+- ~~**Tres bitácoras idénticas.**~~ **Resuelto el 2026-08-27: se quedan separadas, una por
+  módulo.** Lo que registra cada una son las acciones sensibles de su dominio, y su valor está
+  en que `accion` sea un conjunto cerrado y legible; una tabla común lo disolvería. Ver §3.5.
 - **Varias convocatorias del mismo tipo: qué se rompió río abajo.** La decisión del 2026-08-25
   (§3.3) invalida el supuesto de "una convocatoria de stands por feria". `STD` ya está corregido
   —`ConfiguracionSistema` cuelga de `convocatoria_id`— pero **cualquier pantalla o servicio que
@@ -478,10 +523,12 @@ flowchart TD
 - **Dónde encaja `TAL`.** `Convocatoria.tipo` tiene tres valores y `TAL` no está entre ellos
   (§3.3). Decidir si es un cuarto tipo o una convocatoria `EVT` con otro público, antes de
   construir el módulo.
-- **Reconciliar `RegistroConvocatoria` con el `RouterSolicitudes` de `EVT`.** Son la misma figura
-  con dos soluciones incompatibles (§3.4). Hay que elegir una y corregir el modelo de `EVT`; el
-  discriminador `convocatoria` de ese router nombra un dominio, no una convocatoria, lo que hace
-  el conflicto más confuso de lo que es.
+- ~~**Reconciliar `RegistroConvocatoria` con el `RouterSolicitudes` de `EVT`.**~~ **Resuelto el
+  2026-08-27 por [ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>):** gana
+  `RegistroConvocatoria`, con claves foráneas reales, y `RouterSolicitudes` queda derogado.
+  **`EVT` no se toca ahora** (decisión de alcance del 2026-08-27: se construye `STD`). Su modelo
+  sigue describiendo el router derogado; corregirlo es requisito para empezar `EVT`, no para
+  terminar `STD`.
 - **El índice global de convocatorias abiertas.** Con `Convocatoria` dentro del schema de cada
   feria, la pregunta "¿dónde puedo participar hoy?" no se responde con un `SELECT`: hay que
   recorrer schemas o mantener un espejo en `public`. Es el mismo problema que el punto siguiente
