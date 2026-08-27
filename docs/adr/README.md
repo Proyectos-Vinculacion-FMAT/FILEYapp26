@@ -100,6 +100,7 @@ convención de equipo normal, no aquí.
 | [0002](<0002-migracion-de-registro-al-monolito.md>) | Migrar el Core Registros al monolito y sustituir el JWT por sesión de Django | Aceptado | 2026-08-11 |
 | [0003](<0003-una-feria-por-schema.md>) | Aislar cada feria en su propio schema de PostgreSQL | Aceptado | 2026-08-21 |
 | [0004](<0004-acceso-administrativo-por-feria.md>) | El acceso administrativo se otorga por feria, con un dueño por feria | Aceptado | 2026-08-21 |
+| [0005](<0005-el-operador-alcanza-cualquier-feria.md>) | El operador de la plataforma alcanza cualquier feria, sin fila en `AdminFeria` | Aceptado | 2026-08-27 |
 
 
 ## Estructura de la carpeta
@@ -112,6 +113,7 @@ adr/
 ├── 0002-migracion-de-registro-al-monolito.md
 ├── 0003-una-feria-por-schema.md
 ├── 0004-acceso-administrativo-por-feria.md
+├── 0005-el-operador-alcanza-cualquier-feria.md
 └── 000N-....md
 ```
 

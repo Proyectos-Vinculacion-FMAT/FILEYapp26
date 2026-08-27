@@ -13,7 +13,7 @@ de una edición. Tenerla en `ferias` obligaba a que la app global de
 
 from django.shortcuts import render
 
-from apps.ferias.permisos import acceso_a
+from apps.ferias.permisos import administra, tiene_alcance_de_dueno
 
 from .servicios import catalogo
 
@@ -28,12 +28,13 @@ def catalogo_de_la_feria(peticion):
 
     Es la misma pantalla para dos públicos: el participante ve un
     escaparate y el administrador un panel de control. Lo que decide
-    cuál es ``acceso_a`` —la misma función que usan los decoradores de
-    `apps/ferias/permisos.py`—, para que no haya dos respuestas
-    distintas a "¿administra ésta?".
+    cuál son ``administra`` y ``tiene_alcance_de_dueno`` —las mismas
+    funciones que usan los decoradores de `apps/ferias/permisos.py`—,
+    para que no haya dos respuestas distintas a "¿administra ésta?".
+    Cuentan también al operador de la plataforma, que no tiene fila en
+    ``AdminFeria`` y aun así opera cualquier feria (`ADR-0005`).
     """
-    acceso = acceso_a(peticion)
-    es_administrador = acceso is not None
+    es_administrador = administra(peticion)
 
     return render(
         peticion,
@@ -43,7 +44,7 @@ def catalogo_de_la_feria(peticion):
             "convocatorias": catalogo.convocatorias_visibles(
                 es_administrador=es_administrador
             ),
-            "es_dueno": acceso is not None and acceso.es_dueno,
+            "es_dueno": tiene_alcance_de_dueno(peticion),
             # El chasis lo deduce solo dentro de una feria, pero la
             # pantalla también decide con esto qué texto enseña.
             "zona_admin": es_administrador,
