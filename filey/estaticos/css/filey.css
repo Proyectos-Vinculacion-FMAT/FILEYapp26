@@ -448,3 +448,53 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
   .auth-wrap { grid-template-columns: 1fr; }
   .auth-hero { display: none; }
 }
+
+/* =========================================================
+   Panel de administración de una feria (FER)
+   Todo lo de abajo es copia literal del prototipo —mismos nombres de
+   clase y de token—, traída al usarse por primera vez en Django. Ver
+   `filey-render` §6: mientras las dos hojas existan, lo que se porta se
+   copia tal cual; inventar un nombre distinto para el mismo valor es lo
+   que las vuelve irreconciliables.
+   ========================================================= */
+
+/* .page-narrow · prototipo/common/styles-base.css */
+.page-narrow { max-width: 760px; }
+
+/* .card / .section-card · prototipo/common/styles-base.css */
+.card {
+  background: var(--color-blanco); border: 1px solid var(--gris-200);
+  border-radius: var(--radio); box-shadow: var(--sombra-sm);
+}
+.card-pad { padding: 24px 26px; }
+
+.section-card { margin-bottom: 22px; }
+.section-card > .section-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 24px; border-bottom: 1px solid var(--gris-200);
+  background: var(--gris-050); border-radius: var(--radio) var(--radio) 0 0;
+}
+.section-card > .section-head h3 { margin: 0; font-size: 16.5px; color: var(--color-azul-institucional-enfoque); }
+.section-card > .section-head p { margin: 2px 0 0; font-size: 13px; color: var(--gris-500); }
+.section-card > .section-body { padding: 22px 24px; }
+
+/* .table · prototipo/common/styles-base.css */
+.table { width: 100%; border-collapse: collapse; background: var(--color-blanco); }
+.table th, .table td { text-align: left; padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--gris-200); }
+.table th { background: var(--gris-050); color: var(--gris-700); font-size: 12.5px; text-transform: uppercase; letter-spacing: .5px; }
+.table tr:hover td { background: var(--azul-050); }
+
+/* .form-actions · prototipo/common/styles-base.css */
+.form-actions {
+  display: flex; gap: 12px; justify-content: flex-end; align-items: center;
+  margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--gris-200);
+}
+.form-actions .spacer { margin-right: auto; }
+
+/* .toolbar-row y .btn-row · prototipo/EVT/styles.css */
+.toolbar-row { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; }
+.btn-row { padding: 7px 14px; font-size: 13px; }
+
+/* .btn-danger · prototipo/VIS/styles.css */
+.btn-danger { background: var(--err-050); color: var(--err-600); border: 1.5px solid #eecac5; }
+.btn-danger:hover { background: #f7dcd8; text-decoration: none; }

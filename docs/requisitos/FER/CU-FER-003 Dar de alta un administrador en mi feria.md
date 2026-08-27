@@ -1,13 +1,13 @@
 ---
-estado: propuesta
-version: "0.1"
+estado: implementado
+version: "1.0"
 tags:
   - tipo/caso-de-uso
   - dom/fer
   - dom/reg
   - tema/permisos
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-26
 id: CU-FER-003
 dominio: FER
 responsable: Hugo Janssen
@@ -46,12 +46,14 @@ la que se opera. No otorga acceso a ninguna otra feria, ni convierte a la person
 
 - **Sistema de correo** — envía el aviso de alta.
 
-> [!warning] Estado de implementación — hoy sin interfaz
-> Igual que el alta administrativa anterior, mientras no exista la pantalla de accesos el alta se
-> realiza con un **comando de administración en el servidor**. La diferencia respecto a
-> CU-FER-001 es que aquí **sí está previsto construir la pantalla**: es una acción del cliente
-> —del dueño de la feria—, no del equipo técnico, y mientras no exista, ningún dueño puede
-> ejercer la responsabilidad que este modelo le asigna sin pedírselo al equipo.
+> [!note] La pantalla existe desde el 2026-08-26
+> Hasta esa fecha el alta solo se podía hacer con un comando en el servidor, y eso dejaba al
+> dueño sin poder ejercer la responsabilidad que este modelo le asigna sin pedírselo al equipo
+> técnico. Ahora vive en `/f/<slug>/accesos/`; ver *Estado de implementación* al final.
+>
+> El comando sigue existiendo como **vía de emergencia** —sirve cuando el dueño no puede
+> entrar—, y desde entonces los dos llaman al mismo servicio: dar acceso por consola y darlo
+> desde el panel dejan exactamente el mismo estado.
 
 ## Disparador
 
@@ -163,3 +165,35 @@ El dueño necesita que otra persona (coordinador, asistente) pueda operar el pan
 > Este caso de uso solo crea administradores. La propiedad de la feria se asigna al crearla
 > (CU-FER-001) y transferirla es un tema abierto — ver
 > [`Modelo de datos - Ferias`](<Modelo de datos - Ferias.md>) §6.
+
+---
+
+## Estado de implementación
+
+Construido el 2026-08-26. La pantalla es `/f/<slug>/accesos/`, y comparte dirección con
+CU-FER-004: lista y alta son el paso 2 y el paso 3 del mismo caso de uso, y partirlas obligaría
+a ir y volver para comprobar lo que se estaba mirando.
+
+| Pieza | Dónde |
+| --- | --- |
+| La regla (pasos 4-6, A1, E2, E3, E4) | `filey/apps/ferias/servicios/accesos.py::dar_acceso` |
+| La lista (paso 2) | `…/servicios/accesos.py::administradores_de` |
+| La pantalla | `filey/apps/ferias/views_accesos.py::panel_accesos` |
+| Quién puede (E1) | `filey/apps/ferias/permisos.py::requiere_dueno_feria` |
+| El aviso (paso 6) | `filey/apps/ferias/servicios/avisos.py::avisar_admin_de_feria` |
+| La vía de emergencia | `manage.py alta_admin_feria`, que llama al mismo servicio |
+| Las pruebas | `filey/apps/ferias/pruebas/test_accesos.py` |
+
+> [!important] La puerta de entrada solo la ve el dueño, y eso **no** es la protección
+> El enlace *"Administradores de esta feria"* aparece en el catálogo de la edición —la pantalla
+> principal de `/f/<slug>/`— únicamente si quien mira es el dueño. Es cortesía: no ofrecer lo
+> que se va a negar. Lo que protege es `requiere_dueno_feria`, que responde 403 a cualquier
+> administrador que llegue a la dirección por su cuenta (E1). Hay una prueba de cada cosa.
+
+### Lo que quedó fuera
+
+- **E3 no ofrece reenviar el aviso.** El alta se conserva y el dueño ve el fallo, pero el
+  mensaje le dice que comparta la dirección de la feria en vez de darle un botón de reenvío.
+  Un reenvío es una acción sobre un acceso ya creado, y esa pantalla todavía no tiene ninguna.
+- **No hay bitácora.** Quién concedió el acceso sí queda (`AdminFeria.creado_por`); quién lo
+  intentó y fue rechazado, no. `BitacoraFER` sigue pendiente.

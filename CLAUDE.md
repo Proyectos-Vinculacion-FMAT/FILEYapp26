@@ -61,9 +61,10 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   el envío de correo (Resend). `REG` acaba en cuanto hay sesión: lo que se ve después es de
   `FER`.
 - **Construido:** `FER` (Core Ferias) — `apps/ferias/` (capa `public`: `Feria`, `AdminFeria`,
-  el alta desde `/django-admin/` y las dos pantallas de elegir feria) y `apps/convocatorias/`
-  (capa por feria: `Convocatoria` y su catálogo, que es la portada de `/f/<slug>/`). Falta el
-  CRUD de convocatorias, `RegistroConvocatoria` y `BitacoraFER`.
+  el alta desde `/django-admin/`, las dos pantallas de elegir feria y los accesos de una feria
+  en `/f/<slug>/accesos/`) y `apps/convocatorias/` (capa por feria: `Convocatoria` y su
+  catálogo, que es la portada de `/f/<slug>/`). Falta el CRUD de convocatorias,
+  `RegistroConvocatoria`, la transferencia de propiedad y `BitacoraFER`.
 - **Solo documentado:** `EVT`, `TAL`, `STD`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
   Ningún panel de módulo está conectado todavía.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`.
@@ -110,7 +111,13 @@ cd filey && python manage.py alta_feria --help      # crear una feria por consol
 > `reverse("registros:acceso")` falla ahí: ese nombre vive en el urlconf público. Para enlazar
 > de una feria hacia fuera está `comun.urls.url_publica()` en Python y `{% url_publica %}` en
 > plantillas. El acceso es global —la cuenta no pertenece a ninguna feria— y su URL no debe
-> llevar prefijo de edición.
+> llevar prefijo de edición. Vale también para `plantillas/403.html`, que se pinta **dentro** de
+> una feria cuando `requiere_dueno_feria` rechaza a alguien.
+>
+> `apps/ferias` tiene un urlconf a cada lado de esa frontera y **dos namespaces distintos**, a
+> propósito: `ferias:` (`urls.py`) solo resuelve fuera de toda feria y `accesos:`
+> (`urls_accesos.py`) solo dentro. Con un namespace compartido, el mismo prefijo significaría
+> cosas distintas según el urlconf activo.
 
 > [!warning] La caché por defecto no vale para producción
 > El límite por IP de `comun/limites.py` cuenta en la caché. Con `LocMemCache` cada worker lleva

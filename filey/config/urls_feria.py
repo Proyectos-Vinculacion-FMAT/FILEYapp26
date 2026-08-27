@@ -12,11 +12,17 @@ que sirve `apps.convocatorias`. Aquí se montarán los dominios de
 contenido (`eventos/`, `talleres/`, `stands/`, `visitas/`) conforme se
 construyan: todos son contenido de una edición, y ninguno vive fuera de
 una.
+
+`accesos/` es la excepción aparente: lo que administra —quién puede
+entrar a esta feria— vive en el schema `public`, no en el de la edición.
+Cuelga de aquí de todas formas porque la pregunta que responde sí es de
+una feria concreta: *quién administra **ésta***.
 """
 
 from django.urls import include, path
 
 urlpatterns = [
+    path("accesos/", include("apps.ferias.urls_accesos")),
     path("", include("apps.convocatorias.urls")),
 ]
 

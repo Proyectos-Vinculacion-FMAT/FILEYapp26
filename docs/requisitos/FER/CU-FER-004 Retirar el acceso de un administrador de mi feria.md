@@ -1,12 +1,12 @@
 ---
-estado: propuesta
-version: "0.1"
+estado: implementado
+version: "1.0"
 tags:
   - tipo/caso-de-uso
   - dom/fer
   - tema/permisos
 fecha: 2026-08-21
-fecha_actualizacion: 2026-08-21
+fecha_actualizacion: 2026-08-26
 id: CU-FER-004
 dominio: FER
 responsable: Hugo Janssen
@@ -121,3 +121,37 @@ Alguien deja el equipo de la feria, cambia de responsabilidad, o se dio acceso p
 > [ADR-0003](<../../adr/0003-una-feria-por-schema.md>) evita con los schemas. Si más adelante
 > hace falta saber quién tuvo acceso y cuándo, eso es una bitácora aparte, no un estado de esta
 > tabla.
+
+---
+
+## Estado de implementación
+
+Construido el 2026-08-26, junto con CU-FER-003 y sobre la misma pantalla.
+
+| Pieza | Dónde |
+| --- | --- |
+| La regla, incluido E2 | `filey/apps/ferias/servicios/accesos.py::retirar_acceso` |
+| La confirmación y el retiro | `filey/apps/ferias/views_accesos.py::retirar_acceso` |
+| Quién puede (E1) | `filey/apps/ferias/permisos.py::requiere_dueno_feria` |
+| Las pruebas | `filey/apps/ferias/pruebas/test_accesos.py` |
+
+> [!important] La confirmación es una pantalla, no un `confirm()` del navegador
+> Por dos motivos. Toda pantalla del sistema funciona sin JavaScript, y un diálogo del navegador
+> no da sitio para explicar en qué **no** consiste esto — que es justo el trabajo del paso 4.
+>
+> El retiro ocurre en un **POST**. Si ocurriera en el GET de la confirmación, bastaría con que
+> alguien precargara el enlace para quitarle el acceso a un administrador; hay una prueba que
+> lo fija.
+
+> [!note] El dueño no tiene botón de retiro, y la fila tampoco se puede retirar por POST
+> En la lista, la columna de acciones del dueño dice *"La propiedad se transfiere, no se
+> retira"*. El servicio rechaza igual el intento si el POST llega fabricado a mano: E2 no puede
+> depender de que una plantilla se acuerde de esconder algo.
+
+### Lo que quedó fuera
+
+- **La transferencia de propiedad**, que es la salida que E2 señala, sigue sin existir (ver
+  [`Modelo de datos - Ferias`](<Modelo de datos - Ferias.md>) §6). Hasta que exista, un dueño
+  que deja el proyecto obliga a que el operador reasigne la propiedad por consola.
+- **No hay bitácora** de accesos retirados: la fila se elimina, y eso es deliberado (ver la nota
+  al final de *Datos relevantes*).

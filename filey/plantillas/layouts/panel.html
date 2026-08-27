@@ -23,12 +23,16 @@
    `zona_admin`, que sigue siendo un dato del contexto para las
    pantallas de **fuera** de una feria —"mis ferias"—, donde no hay
    feria contra la que comprobar nada.
+
+   `{% block clases_pagina %}` es para el ancho del contenido: una
+   pantalla de confirmación o un formulario suelto piden `page-narrow`,
+   un listado no. Es lo único que una pantalla decide sobre el chasis.
    =========================================================== {% endcomment %}
 
 {% block cuerpo %}
 {% topbar %}
 
-<main class="page">
+<main class="page {% block clases_pagina %}{% endblock %}">
   {% block encabezado %}
     <div class="page-head">
       <h1>{% block encabezado_titulo %}Hola, {{ user.primer_nombre }} 👋{% endblock %}</h1>
