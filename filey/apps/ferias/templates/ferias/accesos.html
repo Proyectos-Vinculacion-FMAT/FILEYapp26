@@ -1,0 +1,139 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} Accesos de una feria (CU-FER-003 lista y alta, CU-FER-004 el
+   enlace de retiro).
+
+   Solo la ve el dueño: la vista lleva `requiere_dueno_feria`. Ocultar
+   el enlace en el catálogo **no** es la protección —eso es cortesía—;
+   la protección es que el servidor rechace la petición (CU-FER-003 E1).
+
+   La lista y el alta comparten pantalla a propósito: son el paso 2 y el
+   paso 3 del mismo caso de uso, y partirlas obligaría a ir y volver
+   para comprobar lo que se estaba mirando. {% endcomment %}
+
+{% block titulo %}{{ feria.nombre }} — Accesos{% endblock %}
+
+{% block encabezado_titulo %}Quién administra {{ feria.nombre }}{% endblock %}
+
+{% block encabezado_texto %}
+  Como dueño de esta edición decides quién puede operarla. El acceso vale
+  solo para {{ feria.nombre }}: no alcanza a ninguna otra edición de FILEY.
+{% endblock %}
+
+{% block contenido %}
+
+<div class="toolbar-row">
+  <a class="btn btn-ghost" href="{% url 'convocatorias:catalogo' %}">← Volver al catálogo</a>
+</div>
+
+<section class="card section-card">
+  <div class="section-head">
+    <h3>Accesos de esta edición</h3>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Persona</th>
+        <th scope="col">Correo</th>
+        <th scope="col">Papel</th>
+        <th scope="col">Desde</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for acceso in accesos %}
+        <tr>
+          <td>{{ acceso.persona.nombre_completo|default:"—" }}</td>
+          <td>{{ acceso.persona.correo }}</td>
+          <td>
+            {% if acceso.es_dueno %}
+              <span class="badge badge-open">Dueño</span>
+            {% else %}
+              <span class="badge badge-soon">Administrador</span>
+            {% endif %}
+          </td>
+          <td>{{ acceso.creado_en|date:"j M Y" }}</td>
+          <td>
+            {% comment %} El dueño no tiene botón de retiro: una feria sin dueño
+               no podría volver a dar acceso a nadie (CU-FER-004 E2). El
+               servicio lo rechaza igual si el POST llega a mano. {% endcomment %}
+            {% if acceso.es_dueno %}
+              <span class="opt">La propiedad se transfiere, no se retira</span>
+            {% else %}
+              <a class="btn btn-ghost btn-row"
+                 href="{% url 'accesos:retirar' acceso.id %}">Retirar acceso</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card section-card">
+  <div class="section-head">
+    <h3>Dar acceso a alguien más</h3>
+    <p>Entra con su correo de siempre; no se crea contraseña.</p>
+  </div>
+
+  <div class="section-body">
+    <form method="post" action="{% url 'accesos:panel' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="id_correo">Correo electrónico <span class="req">*</span></label>
+        <input type="email"
+               id="id_correo"
+               name="correo"
+               value="{{ form.correo.value|default:'' }}"
+               placeholder="coordinacion@ejemplo.com"
+               autocomplete="off"
+               class="{% if form.correo.errors %}is-invalid{% endif %}">
+        {% for error in form.correo.errors %}
+          <p class="msg-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      {% comment %} Sin asterisco, y rotulados "solo si la cuenta es nueva": lo
+         normal es dar acceso a alguien que ya usa FILEY, y entonces sus datos
+         ya están y no se tocan (CU-FER-003 A1). Exigirlos haría que el dueño
+         inventara un nombre para una cuenta que ya tiene el suyo. {% endcomment %}
+      <div class="field">
+        <label for="id_nombre">Nombre(s) <span class="opt">(solo si la cuenta es nueva)</span></label>
+        <input type="text"
+               id="id_nombre"
+               name="nombre"
+               value="{{ form.nombre.value|default:'' }}"
+               placeholder="María del Carmen"
+               autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="id_primer_apellido">Primer apellido <span class="opt">(solo si la cuenta es nueva)</span></label>
+        <input type="text"
+               id="id_primer_apellido"
+               name="primer_apellido"
+               value="{{ form.primer_apellido.value|default:'' }}"
+               placeholder="Pech"
+               autocomplete="off">
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Dar acceso a esta feria</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div class="note note-info">
+  <div class="ico">ℹ️</div>
+  <div>
+    Aquí <strong>no se envía ningún código</strong>: el de un solo uso se
+    genera cuando esa persona escribe su correo en el acceso. Un
+    administrador opera todo el contenido de la feria, pero <strong>no</strong>
+    sus accesos ni sus convocatorias — eso se queda contigo.
+  </div>
+</div>
+
+{% endblock %}

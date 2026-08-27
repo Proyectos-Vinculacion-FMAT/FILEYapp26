@@ -1,0 +1,53 @@
+name: Deploy to Develop
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./filey
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL_DEV }}
+          DJANGO_SECRET_KEY: "dummy-key-for-migrations"
+          DJANGO_DEBUG: "false"
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Ensure Django Superuser Exists
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL_DEV }}
+          DJANGO_SECRET_KEY: "dummy-key-for-migrations"
+          DJANGO_DEBUG: "false"
+          SUPERUSER_EMAIL: ${{ secrets.SUPERUSER_EMAIL }}
+          SUPERUSER_PASSWORD: ${{ secrets.SUPERUSER_PASSWORD }}
+        run: |
+          python manage.py ensure_superuser
+
+      - name: Trigger Render Deploy (Develop)
+        if: ${{ env.RENDER_DEPLOY_HOOK_URL_DEV != '' }}
+        env:
+          RENDER_DEPLOY_HOOK_URL_DEV: ${{ secrets.RENDER_DEPLOY_HOOK_URL_DEV }}
+        run: |
+          curl -X POST $RENDER_DEPLOY_HOOK_URL_DEV

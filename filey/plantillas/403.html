@@ -1,8 +1,16 @@
 {% extends "base.html" %}
+{% load enlaces %}
 
 {% comment %} Se muestra cuando alguien con sesión iniciada llega a una pantalla
-   para la que no tiene permiso (ver apps/registros/permisos.py). No es
-   un error del sistema, así que se explica y se ofrece una salida. {% endcomment %}
+   para la que no tiene permiso (ver apps/registros/permisos.py y
+   apps/ferias/permisos.py). No es un error del sistema, así que se
+   explica y se ofrece una salida.
+
+   La salida va por `{% url_publica %}` y no por `{% url %}`: esta
+   página se pinta también **dentro** de `/f/<slug>/` —es lo que
+   responde `requiere_dueno_feria` a un administrador que no es dueño— y
+   ahí el urlconf activo no conoce `registros:raiz`. Con `{% url %}`, el
+   403 revienta con un `NoReverseMatch` que tapa el motivo real. {% endcomment %}
 
 {% block titulo %}FILEY 2027 — Sin permiso{% endblock %}
 
@@ -21,7 +29,7 @@
     <strong>contenidos&#64;filey.org</strong>.
   </p>
   <p style="margin-top:22px">
-    <a class="btn btn-primary" href="{% url 'registros:raiz' %}">Volver al inicio</a>
+    <a class="btn btn-primary" href="{% url_publica 'registros:raiz' %}">Volver al inicio</a>
   </p>
 </main>
 {% endblock %}

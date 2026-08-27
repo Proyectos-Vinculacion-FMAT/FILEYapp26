@@ -55,3 +55,42 @@ def avisar_dueno_de_feria(feria, persona) -> None:
         raise AvisoFallido(str(exc)) from exc
 
     logger.info("Aviso de alta de la feria %s enviado a %s", feria.slug, persona.correo)
+
+
+def avisar_admin_de_feria(feria, persona) -> None:
+    """Avisa a quien acaba de recibir acceso a una feria (CU-FER-003, paso 6).
+
+    Como el aviso al dueño: el enlace no lleva token y no caduca. Lo que
+    autentica es el OTP que se envía a este mismo correo al entrar
+    (CU-REG-003), así que la dirección del panel no es un secreto — y
+    por eso mismo **aquí no se envía ningún código**: se genera cuando
+    la persona escribe su correo en el acceso.
+    """
+    contexto = {
+        "nombre": persona.primer_nombre,
+        "correo": persona.correo,
+        "feria": feria.nombre,
+        "url_feria": settings.URL_BASE + feria.url,
+        "correo_soporte": "contenidos@filey.org",
+    }
+
+    cuerpo_texto = render_to_string("ferias/correos/alta_admin.txt", contexto)
+    cuerpo_html = render_to_string("ferias/correos/alta_admin.html", contexto)
+
+    mensaje = EmailMultiAlternatives(
+        subject=f"Ya administras {feria.nombre} en FILEY",
+        body=cuerpo_texto,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[persona.correo],
+    )
+    mensaje.attach_alternative(cuerpo_html, "text/html")
+
+    try:
+        mensaje.send(fail_silently=False)
+    except Exception as exc:  # noqa: BLE001 — cualquier fallo del proveedor
+        logger.exception("Aviso de acceso a feria no enviado a %s", persona.correo)
+        raise AvisoFallido(str(exc)) from exc
+
+    logger.info(
+        "Aviso de acceso a la feria %s enviado a %s", feria.slug, persona.correo
+    )

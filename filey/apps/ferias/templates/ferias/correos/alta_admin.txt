@@ -1,0 +1,20 @@
+{% if nombre %}Hola {{ nombre }},{% else %}Hola,{% endif %}
+
+Ya puedes administrar {{ feria }} en el sistema FILEY.
+
+Como administrador de esta feria operas todo su contenido: propuestas,
+talleres, stands y visitas. Dar de alta administradores y abrir o cerrar
+convocatorias sigue siendo cosa del dueño de la edición.
+
+Entra aquí:
+{{ url_feria }}
+
+No necesitas contraseña. Escribe este mismo correo ({{ correo }}) y te
+enviaremos un código de un solo uso para entrar. Si ya usabas FILEY,
+entra con el mismo correo de siempre: esta feria te aparecerá entre las
+que administras.
+
+Si no esperabas este mensaje, ignóralo o avísanos a {{ correo_soporte }}.
+
+FILEY — Feria Internacional de la Lectura Yucatán
+Coordinación General de Contenidos · UADY
