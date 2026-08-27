@@ -14,7 +14,7 @@ cuenta a propósito (CU-FER-006, A1) — pedir sesión para mirar qué hay
 convocado rompe el embudo—, así que resolver la feria y exigir permiso
 tienen que ser dos decisiones distintas.
 
-Dos niveles, y solo dos:
+Dos decoradores, y solo dos:
 
 - ``requiere_admin_feria`` — administra **esta** feria. Da acceso a
   todo su contenido.
@@ -23,6 +23,12 @@ Dos niveles, y solo dos:
   administrar las convocatorias (CU-FER-005, 007, 008, 009).
 
 No hay nivel de solo lectura: ADR-0004 lo elimina a sabiendas.
+
+Por encima de los dos pasa el **operador de la plataforma** —el
+superusuario de Django—, que alcanza cualquier feria sin tener fila en
+``AdminFeria`` (`ADR-0005`). No es un tercer decorador: es una respuesta
+distinta a las mismas dos preguntas, y por eso vive en ``administra`` y
+``tiene_alcance_de_dueno`` y no repartida por las vistas.
 """
 
 import functools
@@ -63,6 +69,53 @@ def acceso_a(peticion):
     return AdminFeria.objects.filter(feria=feria, persona=usuario).first()
 
 
+def es_operador(peticion) -> bool:
+    """¿Es el equipo técnico? (`ADR-0005`)
+
+    El operador de la plataforma es el superusuario de Django. Alcanza
+    **todas** las ferias sin tener fila en ``AdminFeria``, que es la
+    excepción que ADR-0005 abre sobre ADR-0004 para que una edición
+    cuyo dueño se fue no quede inoperable.
+
+    Se pide ``is_superuser`` y no ``is_staff`` a propósito: son dos
+    techos distintos y el reparto es el de Django. ``is_staff`` abre los
+    dos admin de Django —incluido el de la edición, donde se dan de alta
+    las convocatorias—; ``is_superuser`` es lo único que además sustituye
+    a ser dueño de la feria.
+    """
+    usuario = getattr(peticion, "user", None)
+    return bool(
+        usuario is not None
+        and usuario.is_authenticated
+        and usuario.is_active
+        and usuario.is_superuser
+    )
+
+
+def administra(peticion) -> bool:
+    """¿Puede operar el contenido de esta feria?
+
+    Tiene fila en ``AdminFeria`` —dueña o no— o es el operador. Es la
+    pregunta que hace ``requiere_admin_feria``, y también la que hacen
+    las pantallas que no exigen permiso pero enseñan cosas distintas
+    según quién mire (el catálogo, la barra superior). Que salga de una
+    sola función es lo que impide que la pantalla y el decorador
+    discrepen.
+    """
+    return acceso_a(peticion) is not None or es_operador(peticion)
+
+
+def tiene_alcance_de_dueno(peticion) -> bool:
+    """¿Alcanza además lo reservado al dueño?
+
+    Accesos y convocatorias (CU-FER-003 a CU-FER-009). Lo tiene quien es
+    dueño de esta feria y, desde `ADR-0005`, el operador de la
+    plataforma.
+    """
+    acceso = acceso_a(peticion)
+    return (acceso is not None and acceso.es_dueno) or es_operador(peticion)
+
+
 def requiere_admin_feria(vista):
     """Panel de una feria: hay que administrar **ésta**."""
 
@@ -70,7 +123,7 @@ def requiere_admin_feria(vista):
     def envoltura(peticion, *args, **kwargs):
         if not peticion.user.is_authenticated:
             return redirect(url_publica("registros:admin_acceso"))
-        if acceso_a(peticion) is None:
+        if not administra(peticion):
             # Administrar otra feria no da acceso a ésta. Se dice sin
             # rodeos: quien llega aquí ya demostró su identidad, así que
             # el mensaje no revela nada que no sepa.
@@ -81,19 +134,24 @@ def requiere_admin_feria(vista):
 
 
 def requiere_dueno_feria(vista):
-    """Solo el dueño de la feria (enmienda del 2026-08-25 a ADR-0004)."""
+    """El dueño de la feria, o el operador de la plataforma.
+
+    Enmienda del 2026-08-25 a ADR-0004 (qué queda reservado al dueño) y
+    `ADR-0005` (que el operador también lo alcanza).
+    """
 
     @functools.wraps(vista)
     def envoltura(peticion, *args, **kwargs):
         if not peticion.user.is_authenticated:
             return redirect(url_publica("registros:admin_acceso"))
-        acceso = acceso_a(peticion)
-        if acceso is None:
+        if tiene_alcance_de_dueno(peticion):
+            return vista(peticion, *args, **kwargs)
+        # Los dos mensajes se conservan separados: no es lo mismo no
+        # tener nada que ver con esta feria que administrarla y toparse
+        # con el techo del dueño. Quien lee el segundo sabe a quién
+        # pedírselo.
+        if acceso_a(peticion) is None:
             raise PermissionDenied("Tu cuenta no administra esta feria.")
-        if not acceso.es_dueno:
-            raise PermissionDenied(
-                "Solo quien es dueño de esta feria puede hacer esto."
-            )
-        return vista(peticion, *args, **kwargs)
+        raise PermissionDenied("Solo quien es dueño de esta feria puede hacer esto.")
 
     return envoltura

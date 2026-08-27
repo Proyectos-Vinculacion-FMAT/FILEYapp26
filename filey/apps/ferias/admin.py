@@ -16,6 +16,7 @@ que es para los administradores de una feria; esto vive en
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
+from django.utils.html import format_html
 
 from .models import AdminFeria, Domain, Feria, validar_slug
 from .servicios import altas
@@ -103,10 +104,32 @@ class AdminFeriaInline(admin.TabularInline):
 class FeriaAdmin(admin.ModelAdmin):
     form = FeriaForm
     inlines = [AdminFeriaInline]
-    list_display = ("nombre", "slug", "edicion", "estado", "schema_name", "creada_en")
+    list_display = ("nombre", "slug", "edicion", "estado", "operar", "creada_en")
     list_filter = ("estado",)
     search_fields = ("nombre", "slug", "sede")
     ordering = ("-creada_en",)
+
+    @admin.display(description="Operar la edición")
+    def operar(self, obj):
+        """Las puertas hacia dentro de esta feria.
+
+        Sin esto, entrar a una edición desde aquí es escribir su URL a
+        mano: el listado conoce todas las ferias y no enlazaba a ninguna.
+        Es la única forma que tiene el operador de la plataforma de
+        llegar a las ediciones que no administra —y desde `ADR-0005` las
+        alcanza todas, sin tener fila en `AdminFeria`—.
+
+        Los tres enlaces son los tres sitios distintos de una feria:
+        su contenido (el admin de la edición, donde se dan de alta las
+        convocatorias), sus accesos (CU-FER-003 / CU-FER-004) y lo que
+        ve el público.
+        """
+        return format_html(
+            '<a href="{url}django-admin/">Contenido</a> · '
+            '<a href="{url}accesos/">Accesos</a> · '
+            '<a href="{url}">Catálogo</a>',
+            url=obj.url,
+        )
 
     def get_queryset(self, request):
         """Oculta la fila de sistema.
@@ -132,13 +155,25 @@ class FeriaAdmin(admin.ModelAdmin):
         # El slug determina el prefijo de la URL y el nombre del schema.
         # Cambiarlo rompería todos los enlaces ya compartidos y dejaría
         # el schema huérfano (CU-FER-001, E1).
-        return ("slug", "schema_name", "creada_en")
+        return ("slug", "schema_name", "creada_en", "operar")
 
     def get_fieldsets(self, request, obj=None):
         de_la_feria = ["nombre", "slug", "edicion", "sede", "fecha_inicio", "fecha_fin"]
         if obj is not None:
             return [
                 ("La edición", {"fields": de_la_feria + ["estado"]}),
+                (
+                    "Entrar a esta edición",
+                    {
+                        "fields": ["operar"],
+                        "description": (
+                            "El contenido de una feria no se administra desde aquí: "
+                            "vive en su propio schema y se opera desde dentro de ella. "
+                            "Un superusuario alcanza cualquier edición, administre o "
+                            "no (ADR-0005)."
+                        ),
+                    },
+                ),
                 ("Infraestructura", {"fields": ["schema_name", "creada_en"]}),
             ]
         return [

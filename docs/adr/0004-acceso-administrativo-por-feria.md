@@ -42,6 +42,14 @@ implica en esos tres casos de uso.
 > el ADR que sustituya a este: sería señal de que "el administrador puede todo el contenido" ya
 > no describe el sistema.
 
+> [!note] Enmendado en un punto por ADR-0005 (2026-08-27)
+> La tabla de niveles de más abajo dice que el operador de la plataforma *"no es un rol dentro
+> de ninguna feria"*. [ADR-0005](<0005-el-operador-alcanza-cualquier-feria.md>) abre esa puerta:
+> el superusuario de Django alcanza cualquier feria, incluidas las pantallas reservadas a su
+> dueño, sin tener fila en `AdminFeria`. Cierra el hueco que este mismo ADR dejó anotado en
+> Consecuencias —qué pasa si el dueño se va—. **El resto de esta decisión sigue vigente**: el
+> acceso se otorga por feria, con un dueño por feria, y `AdminFeria` no cambia.
+
 ## Contexto
 
 [ADR-0003](<0003-una-feria-por-schema.md>) separa el contenido de cada feria en su propio

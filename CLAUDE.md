@@ -33,7 +33,11 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    ni su propio control de acceso: importa los decoradores. Quién decide qué:
    `apps/registros/permisos.py` para lo de fuera de una feria (`requiere_participante`,
    `requiere_admin`) y `apps/ferias/permisos.py` para lo de dentro (`requiere_admin_feria`,
-   `requiere_dueno_feria`). El middleware de feria **no comprueba permisos** —corre antes de
+   `requiere_dueno_feria`). Por encima de los dos pasa el **operador de la plataforma**
+   —superusuario de Django—, que alcanza cualquier feria sin tener fila en `AdminFeria`
+   (ADR-0005). No lo comprueba ninguna vista por su cuenta: vive en `es_operador()` y lo
+   consultan `administra()` y `tiene_alcance_de_dueno()`, que son las dos funciones que
+   responden "¿administra ésta?" para los decoradores **y** para las pantallas. El middleware de feria **no comprueba permisos** —corre antes de
    `AuthenticationMiddleware`, así que no hay `request.user`—: solo fija el schema.
 3. **Capas por app:** `models.py` (datos e invariantes, modelos gordos) → `services/` (reglas de
    negocio) → `views.py` (traduce HTTP ↔ servicio, vistas delgadas) → plantillas.
@@ -63,8 +67,10 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 - **Construido:** `FER` (Core Ferias) — `apps/ferias/` (capa `public`: `Feria`, `AdminFeria`,
   el alta desde `/django-admin/`, las dos pantallas de elegir feria y los accesos de una feria
   en `/f/<slug>/accesos/`) y `apps/convocatorias/` (capa por feria: `Convocatoria` y su
-  catálogo, que es la portada de `/f/<slug>/`). Falta el CRUD de convocatorias,
-  `RegistroConvocatoria`, la transferencia de propiedad y `BitacoraFER`.
+  catálogo, que es la portada de `/f/<slug>/`, y el alta de convocatorias desde
+  `/f/<slug>/django-admin/`). Falta la pantalla de convocatorias del panel del dueño
+  (CU-FER-005 a CU-FER-009 con su propia UI), `RegistroConvocatoria`, la transferencia de
+  propiedad y `BitacoraFER`.
 - **Solo documentado:** `EVT`, `TAL`, `STD`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
   Ningún panel de módulo está conectado todavía.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`.
@@ -118,6 +124,21 @@ cd filey && python manage.py alta_feria --help      # crear una feria por consol
 > propósito: `ferias:` (`urls.py`) solo resuelve fuera de toda feria y `accesos:`
 > (`urls_accesos.py`) solo dentro. Con un namespace compartido, el mismo prefijo significaría
 > cosas distintas según el urlconf activo.
+
+> [!warning] Hay **dos** sitios de admin de Django, y el modelo va en uno solo
+> `/django-admin/` corre sobre `public` y sirve lo de `SHARED_APPS` (`Feria`, `AdminFeria`,
+> `Persona`). `/f/<slug>/django-admin/` corre sobre el schema de la edición y sirve lo de
+> `TENANT_APPS`; lo dibuja `comun/admin_feria.py::admin_feria`, que es otro `AdminSite`, no el
+> de siempre.
+>
+> La regla es mecánica: **una app de `TENANT_APPS` registra en `admin_feria`; una de
+> `SHARED_APPS`, en `admin.site`.** Equivocarse **no falla al arrancar** —el `check` pasa y la
+> entrada se ve bien en el índice—: revienta con `relation "..." does not exist` la primera vez
+> que alguien abre la pantalla, porque esa tabla no existe en `public`.
+>
+> El alta de convocatorias vive hoy ahí (CU-FER-005, provisional). Con eso el actor es el equipo
+> técnico (`is_staff`) y no el dueño de la feria: la desviación está anotada en el caso de uso y
+> se cierra cuando exista la pantalla del panel.
 
 > [!warning] La caché por defecto no vale para producción
 > El límite por IP de `comun/limites.py` cuenta en la caché. Con `LocMemCache` cada worker lleva

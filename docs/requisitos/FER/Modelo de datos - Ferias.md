@@ -440,12 +440,13 @@ flowchart TD
 
 ## 6. Temas abiertos del modelo
 
-- **Qué pasa si el dueño se va.** Con exactamente un dueño por feria, y solo él pudiendo
-  administrar accesos, una feria cuyo dueño abandona el proyecto queda sin quien dé de alta a
-  nadie. La salida provisional es que el operador de la plataforma reasigne la propiedad por
-  comando. Falta decidir si eso basta o si hace falta un caso de uso de **transferencia de
-  propiedad** ejecutable por el propio dueño antes de irse — que es lo que evitaría depender
-  del equipo técnico. Ver el índice de `FER`.
+- **Qué pasa si el dueño se va.** **Desatascado el 2026-08-27** por
+  [ADR-0005](<../../adr/0005-el-operador-alcanza-cualquier-feria.md>): el operador de la
+  plataforma alcanza las pantallas de accesos de cualquier feria, así que una edición cuyo dueño
+  abandona el proyecto ya se arregla desde la pantalla y no por consola. **Sigue faltando** el
+  caso de uso de **transferencia de propiedad** ejecutable por el propio dueño antes de irse —
+  que es lo que evitaría depender del equipo técnico para la salida ordenada. Ver el índice de
+  `FER`.
 - **Corrección pendiente en `TAL` y `STD`.** Sus modelos separan la edición de otra forma:
   `TAL` lleva `edicion_id` como FK a `EdicionFeria` en cuatro tablas (una dentro de su clave
   primaria compuesta) y `STD` tiene una entidad `Evento` = "edición de la feria". ADR-0003 las

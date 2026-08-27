@@ -53,11 +53,18 @@ def topbar(context):
         # llamada «(sistema)».
         feria = None
 
-    acceso = permisos.acceso_a(peticion) if autenticada else None
+    # `administra` y no `acceso_a`: el operador de la plataforma no tiene
+    # fila en `AdminFeria` y aun así ve la feria como quien la administra
+    # (`ADR-0005`). Si la barra preguntara distinto que el decorador, un
+    # superusuario vería el chasis de participante sobre pantallas de
+    # administración.
+    #
     # `zona_admin` del contexto es lo que usan las pantallas de fuera de
     # una feria —"mis ferias"—, donde no hay `tenant` contra el que
     # comprobar nada.
-    zona_admin = acceso is not None or bool(context.get("zona_admin"))
+    zona_admin = (
+        autenticada and permisos.administra(peticion)
+    ) or bool(context.get("zona_admin"))
 
     return {
         "usuario": usuario,
