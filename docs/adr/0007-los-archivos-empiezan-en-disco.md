@@ -27,11 +27,13 @@ la fase 2 de [`STD`](<../planes/STD.md>).
 
 Lo que hay alrededor sí condiciona la decisión:
 
-- **Render está en `plan: free`** (`filey/render.yaml`). Ahí el sistema de archivos del
-  contenedor es efímero: cada despliegue lo reemplaza. Los discos persistentes son de los
-  planes de pago.
-- **La base de datos es Supabase** —lo dice el comentario de `DATABASE_URL` en el mismo
-  archivo—, y Supabase incluye un almacén de objetos compatible con S3 en la misma cuenta. No
+- **Render está en `plan: free`**. Ahí el sistema de archivos del contenedor es efímero: cada
+  despliegue lo reemplaza. Los discos persistentes son de los planes de pago.
+- **Render despliega solo al recibir un commit en la rama vigilada.** Eso convierte "se pierden
+  en cada despliegue" en "se pierden en cada commit": en un entorno de pruebas activo, un
+  archivo subido no sobrevive a la siguiente tarde de trabajo.
+- **La base de datos es Supabase** —lo dice el comentario de `DATABASE_URL` en
+  `filey/render.yaml`—, y Supabase incluye un almacén de objetos compatible con S3 en la misma cuenta. No
   está confirmado que esté habilitado.
 - **Estos archivos no son públicos.** Son actas constitutivas, RFC y comprobantes de pago de
   personas identificadas. Es una diferencia de fondo con los estáticos, que son parte del
@@ -56,8 +58,8 @@ entorno, de forma que pasar a S3 sea configuración y no código.
   - `django-storages` habla con Supabase Storage, R2 y AWS por la misma interfaz; lo único que
     los distingue es el endpoint, así que la decisión de *qué proveedor* se pospone sin costo.
 - **En contra:**
-  - Mientras el plan de Render siga en `free`, los archivos **se pierden en cada despliegue**.
-    Es deuda real, no teórica.
+  - Mientras el plan de Render siga en `free`, los archivos **se pierden en cada commit a la
+    rama desplegada**. Es deuda real, no teórica.
   - Un `FileField` guarda una ruta; el archivo que hay detrás puede desaparecer sin que la fila
     cambie. El síntoma llega tarde y disfrazado.
 
@@ -162,9 +164,16 @@ como el 1.
 
 **Negativas / riesgos aceptados**
 
-- **Con Render en `free`, los archivos se pierden en cada despliegue.** Es la deuda que esta
-  decisión acepta a sabiendas. `render.yaml` ya trae el bloque `disk:` escrito, pero no tiene
-  efecto hasta que el plan suba a `starter`.
+- **Con Render en `free`, los archivos se pierden en cada commit a la rama desplegada** —no en
+  cada release: el despliegue es automático—. Es la deuda que esta decisión acepta a sabiendas,
+  y en un entorno de pruebas activo significa que un documento subido no dura casi nada. Lo que
+  **no** se pierde es la fila de la base, así que el expediente se sigue viendo completo hasta
+  que alguien intenta abrir el archivo.
+- **`render.yaml` puede no ser la fuente de verdad de los servicios reales.** Declara un solo
+  servicio en `branch: QA`, mientras que los workflows disparan dos deploy hooks distintos: los
+  servicios vivos parecen creados desde el dashboard. Si es así, `ALMACENAMIENTO` y `MEDIA_ROOT`
+  hay que declararlas **en el dashboard de cada servicio**, y el bloque `disk:` del archivo no
+  monta nada. Está pendiente de confirmar.
 - **`FileSystemStorage` no sirve para más de un proceso en máquinas distintas.** Hoy es un solo
   servicio; si algún día hay dos, el disco local deja de valer aunque persista.
 - **Sin la vista de entrega, un `FileField` guardado no se puede abrir desde la aplicación.**

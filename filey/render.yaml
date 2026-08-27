@@ -1,3 +1,15 @@
+# ── Aviso: esto puede no ser lo que está corriendo ────────────
+# Los workflows disparan DOS deploy hooks distintos
+# (RENDER_DEPLOY_HOOK_URL_DEV y RENDER_DEPLOY_HOOK_URL), así que hay al
+# menos dos servicios de Render; aquí se declara uno solo. Todo apunta a
+# que los servicios vivos se crearon desde el dashboard y no desde este
+# Blueprint — en cuyo caso lo de abajo es documentación, no
+# configuración, y las variables hay que declararlas en el dashboard de
+# cada servicio.
+#
+# Pendiente de confirmar. Mientras no se confirme, no des por hecho que
+# tocar este archivo cambia algo en producción.
+
 services:
   # Servicio Web Django
   - type: web
