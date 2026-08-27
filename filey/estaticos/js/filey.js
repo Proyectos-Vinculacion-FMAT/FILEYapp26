@@ -12,46 +12,40 @@
    posibilidad de entrar.
    ========================================================= */
 
+/**
+ * Quitar una fila de una lista editable (los sellos de STD).
+ *
+ * Es una función suelta y **no un `Alpine.data`**, a propósito. La
+ * pantalla declara su estado con un objeto literal —`x-data="{ visibles:
+ * 1 }"`— que no depende de este archivo: si esto no cargara, lo único
+ * que se rompe es el botón de quitar, y las filas siguen visibles. Con
+ * un componente con nombre, un `filey.js` que no llegue deja `visibles`
+ * en `undefined`, todos los `x-show` en falso y **la sección entera
+ * invisible** — que es peor que no tener JavaScript.
+ *
+ * Corre los valores hacia arriba en vez de esconder la fila en su sitio:
+ * un hueco en medio se lee como un error, y al servidor le da igual
+ * porque descarta los nombres vacíos.
+ *
+ * Los archivos no se pueden reasignar —el navegador no deja escribir en
+ * un `<input type=file>`—, así que se limpian los de las filas movidas.
+ * Es lo que avisa la plantilla.
+ *
+ * @returns {number} cuántas filas quedan visibles.
+ */
+window.fileyQuitarFila = function (raiz, indice, visibles) {
+  const nombres = raiz.querySelectorAll('input[type="text"]');
+  const archivos = raiz.querySelectorAll('input[type="file"]');
+  for (let i = indice; i < visibles - 1; i++) {
+    nombres[i].value = nombres[i + 1].value;
+    archivos[i].value = '';
+  }
+  nombres[visibles - 1].value = '';
+  archivos[visibles - 1].value = '';
+  return Math.max(1, visibles - 1);
+};
+
 document.addEventListener('alpine:init', () => {
-
-  /**
-   * Las filas de sellos editoriales de la solicitud de expositor (STD).
-   *
-   * El servidor manda SIEMPRE las diez filas y esto decide cuántas se
-   * ven. Es lo que hace que la pantalla funcione sin JavaScript (regla 6
-   * de CLAUDE.md): sin Alpine, `x-show` no hace nada, se ven las diez, y
-   * el formulario se envía igual — los nombres vacíos se descartan al
-   * guardar.
-   *
-   * `quitar` corre los valores hacia arriba en vez de esconder la fila en
-   * su sitio: dejar un hueco en medio se vería como un error, y al
-   * servidor le da igual porque descarta los vacíos.
-   *
-   * El archivo de una fila no se puede reasignar por seguridad del
-   * navegador —un `<input type=file>` no admite que le escriban un
-   * valor—, así que al correr los nombres se limpian los archivos de las
-   * filas afectadas. Es la razón del aviso que pinta la plantilla.
-   */
-  Alpine.data('filasDeSellos', ({ visibles, maximo }) => ({
-    visibles: visibles,
-    maximo: maximo,
-
-    agregar() {
-      if (this.visibles < this.maximo) this.visibles += 1;
-    },
-
-    quitar(indice) {
-      const nombres = this.$el.querySelectorAll('input[type="text"]');
-      const archivos = this.$el.querySelectorAll('input[type="file"]');
-      for (let i = indice; i < this.visibles - 1; i++) {
-        nombres[i].value = nombres[i + 1].value;
-        archivos[i].value = '';
-      }
-      nombres[this.visibles - 1].value = '';
-      archivos[this.visibles - 1].value = '';
-      if (this.visibles > 1) this.visibles -= 1;
-    },
-  }));
 
   /* ---- Avisos flotantes lanzados desde el navegador ----
      Los del servidor llegan por django.contrib.messages; estos son

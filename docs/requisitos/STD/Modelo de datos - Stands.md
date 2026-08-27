@@ -119,6 +119,22 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 ### 3.1 Editorial
 > Datos provenientes de la Ficha de Registro para Expositores.
 
+> [!important] La ficha es **la fuente** de los campos de U1 (decisión 2026-08-27)
+> Qué se le pide a un expositor al aplicar lo dice
+> [`Registro-para-Expositores-FILEY-2026.pdf`](<../../soporte/documentos proporcionados por FILEY/Material para Registro de Actividades FILEY 2027/Registro-para-Expositores-FILEY-2026.pdf>),
+> y solo ella. Ni las bases, ni el prototipo de Angular, ni este documento cuando abrevie.
+>
+> No es celo: son **dos PDF distintos y hacen cosas distintas**.
+> `Convocatoria Expositores 2026.pdf` son las *bases* —quién puede participar, precios, plazos,
+> forma de pago— y **no trae un solo campo de formulario**; dice que la ficha va "anexa". Los
+> campos están únicamente en la ficha.
+>
+> La regla nace de haberla incumplido: la fila `tematicas` de aquí abajo decía *"lista de
+> temáticas (Administración, Arte, Infantil, …)"*, con puntos suspensivos, y al construir U1 esos
+> puntos se rellenaron con lo que había en el mock del prototipo Angular. Salieron nueve
+> temáticas inventadas donde la ficha tiene 61. **Un catálogo abreviado en este documento no
+> autoriza a completarlo de memoria: se abre el PDF.**
+
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |

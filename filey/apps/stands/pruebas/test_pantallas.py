@@ -515,7 +515,29 @@ def test_la_pantalla_pinta_las_diez_filas(client, feria_2027):
 
     assert cuerpo.count('name="sello_') == 10
     assert cuerpo.count('name="carta_') == 10
-    assert "filasDeSellos" in cuerpo
+    # Y los dos controles que Alpine acciona.
+    assert "Añadir otro sello" in cuerpo
+    assert "fileyQuitarFila" in cuerpo
+
+
+def test_las_filas_no_dependen_de_que_filey_js_llegue(client, feria_2027):
+    """El estado va en un objeto literal, no en un `Alpine.data`.
+
+    Con un componente con nombre, un `filey.js` que no cargue —cacheado,
+    o caído— deja `visibles` en `undefined`, todos los `x-show` en falso
+    y **la sección entera invisible**. Peor que no tener JavaScript, que
+    es el caso que la regla 6 sí contempla.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert 'x-data="{ visibles: 1, maximo: 10 }"' in cuerpo
 
 
 # ── A1 y A2 · el administrador ────────────────────────────────

@@ -118,10 +118,11 @@
             </ul>
           </div>
         {% endif %}
-        <div class="grid-2">
-          {% include "stands/parciales/campo.html" with campo=form_documentos.constancia_fiscal %}
-          {% include "stands/parciales/campo.html" with campo=form_documentos.lista_titulos %}
-        </div>
+        {% comment %} Apilados y no en dos columnas: la caja de archivo ya
+           ocupa todo el ancho y su ayuda son dos renglones. En `grid-2` los
+           dos quedan estrechos y la ayuda se parte en tres. {% endcomment %}
+        {% include "stands/parciales/campo.html" with campo=form_documentos.constancia_fiscal %}
+        {% include "stands/parciales/campo.html" with campo=form_documentos.lista_titulos %}
       </div>
     </div>
 
@@ -130,8 +131,12 @@
        que menos gente tiene. Cada fila lleva su carta al lado porque la carta
        autoriza a representar **a ese** sello (RN-17); en dos listas paralelas
        nadie podría decir qué carta es de cuál. {% endcomment %}
+    {% comment %} El estado va en un objeto literal y no en un componente con
+       nombre: así solo depende de que Alpine cargue. Con un componente, un
+       `filey.js` que no llegue deja `visibles` en `undefined` y **esconde la
+       sección entera** — peor que no tener JavaScript. {% endcomment %}
     <div class="section-card card"
-         x-data="filasDeSellos({ visibles: {{ form_sellos.visibles_al_cargar }}, maximo: {{ maximo_sellos }} })">
+         x-data="{ visibles: {{ form_sellos.visibles_al_cargar }}, maximo: {{ maximo_sellos }} }">
       <div class="section-head">
         <div class="num">6</div>
         <div>
@@ -148,7 +153,8 @@
           <div class="multi-fila" x-show="visibles > {{ forloop.counter0 }}">
             {% include "stands/parciales/campo.html" with campo=campo_nombre %}
             {% include "stands/parciales/campo.html" with campo=campo_carta %}
-            <button type="button" class="btn btn-ghost btn-row" @click="quitar({{ forloop.counter0 }})"
+            <button type="button" class="btn btn-ghost btn-row"
+                    @click="visibles = fileyQuitarFila($root, {{ forloop.counter0 }}, visibles)"
                     x-show="visibles > 1">
               Quitar
             </button>
@@ -168,7 +174,8 @@
 
         {% comment %} `type="button"`: sin Alpine no hace nada, que es mejor
            que enviar el formulario sin querer. {% endcomment %}
-        <button type="button" class="btn btn-ghost" @click="agregar()"
+        <button type="button" class="btn btn-ghost"
+                @click="visibles = Math.min(visibles + 1, maximo)"
                 x-show="visibles < maximo">
           + Añadir otro sello
         </button>
