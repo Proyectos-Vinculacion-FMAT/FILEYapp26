@@ -27,7 +27,7 @@ from django.db import models
 from django.db.models import Q
 
 from apps.convocatorias.models import Convocatoria, RegistroConvocatoria
-from comun.almacenamiento import CarpetaDeLaFeria
+from comun.almacenamiento import CarpetaDeLaFeria, DocumentoAdmisible
 
 
 class Giro(models.TextChoices):
@@ -351,7 +351,15 @@ class Documento(models.Model):
         OTRO = "otro", "Otro"
 
     tipo = models.CharField(max_length=24, choices=Tipo.choices)
-    archivo = models.FileField(upload_to=CarpetaDeLaFeria("documentos"))
+    archivo = models.FileField(
+        upload_to=CarpetaDeLaFeria("documentos"),
+        # Lista blanca de extensiones y tope de tamaño. La lista blanca no
+        # es celo: estos archivos se entregan **desde nuestro propio
+        # origen** (`servicios/archivos.py`), así que un `.html` subido y
+        # servido en línea sería XSS almacenado con nuestras cookies
+        # detrás.
+        validators=[DocumentoAdmisible()],
+    )
     # Lo que la persona llamó al archivo. El nombre real es un UUID
     # (`ADR-0007`), así que sin esto no habría cómo decirle cuál subió.
     nombre_original = models.CharField(max_length=255, blank=True)

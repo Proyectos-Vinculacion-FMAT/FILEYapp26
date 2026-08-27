@@ -33,6 +33,7 @@ Lo que queda es::
 from pathlib import PurePosixPath
 from uuid import uuid4
 
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.utils.deconstruct import deconstructible
 
@@ -86,3 +87,57 @@ class CarpetaDeLaFeria:
 
     def __repr__(self):
         return f"CarpetaDeLaFeria({self.subcarpeta!r})"
+
+
+#: Qué se admite subir. Es una lista blanca y no una negra a propósito:
+#: una negra deja pasar todo lo que nadie pensó en prohibir.
+#:
+#: `.html` y `.svg` **no están, y es la razón de ser de esta lista**. Los
+#: documentos se entregan desde nuestro propio origen, así que un HTML
+#: subido y servido en línea es XSS almacenado con nuestras cookies
+#: detrás. Un SVG es un documento XML que puede traer `<script>`.
+EXTENSIONES_ADMITIDAS = frozenset(
+    {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".doc", ".docx", ".odt"}
+)
+
+#: 10 MB. Una constancia fiscal son dos páginas; una lista de títulos,
+#: unas pocas más. Lo que esto corta no son documentos grandes: son
+#: subidas que llenarían el disco del contenedor (`ADR-0007`).
+TAMANO_MAXIMO_BYTES = 10 * 1024 * 1024
+
+
+@deconstructible
+class DocumentoAdmisible:
+    """Valida un archivo subido: extensión de la lista blanca y tamaño.
+
+    Va en el `FileField` y no en el formulario para que valga también
+    desde el shell, desde el admin y desde cualquier comando — es la
+    regla 3 de `CLAUDE.md` aplicada a un validador.
+    """
+
+    def __init__(self, extensiones=None, maximo_bytes=TAMANO_MAXIMO_BYTES):
+        self.extensiones = frozenset(extensiones or EXTENSIONES_ADMITIDAS)
+        self.maximo_bytes = maximo_bytes
+
+    def __call__(self, archivo):
+        extension = PurePosixPath(archivo.name or "").suffix.lower()
+        if extension not in self.extensiones:
+            admitidas = ", ".join(sorted(self.extensiones))
+            raise ValidationError(
+                f"«{extension or "sin extensión"}» no se admite. "
+                f"Sube uno de estos: {admitidas}."
+            )
+        tamano = getattr(archivo, "size", None)
+        if tamano is not None and tamano > self.maximo_bytes:
+            megas = self.maximo_bytes / (1024 * 1024)
+            raise ValidationError(f"El archivo pasa de {megas:.0f} MB.")
+
+    def __eq__(self, otro):
+        return (
+            isinstance(otro, DocumentoAdmisible)
+            and otro.extensiones == self.extensiones
+            and otro.maximo_bytes == self.maximo_bytes
+        )
+
+    def __hash__(self):
+        return hash((type(self), self.extensiones, self.maximo_bytes))

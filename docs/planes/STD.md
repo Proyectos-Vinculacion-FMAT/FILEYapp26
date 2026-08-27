@@ -37,7 +37,7 @@ siguiente.
 - **La fase 1, en su mitad de almacenamiento** ([ADR-0007](<../adr/0007-los-archivos-empiezan-en-disco.md>)).
 - **La fase 2 completa** (2026-08-27): `apps/stands` con la vertical de solicitud entera,
   `CU-STD-001` a `008`, y las vistas U1, A1 y A2.
-- 282 pruebas en verde.
+- 301 pruebas en verde.
 - Los estados del mapa en Godot: renombrados al vocabulario del dominio, probados y reexportados.
 
 ### Decidido, sin construir
@@ -118,6 +118,8 @@ No bloquea la fase 2.
   1—N por registro, `RN-22`), `Documento`.
 - `ConfiguracionSistema` y su `crear_por_defecto`, que es lo que la fase 0 invoca por callback.
 - `Notificacion` en el schema de la feria, con el envío por `apps/notificaciones`.
+- La entrega de adjuntos: una vista que comprueba quién pregunta y, con almacén de objetos,
+  redirige a una URL firmada sin que el archivo pase por Django (`ADR-0007`).
 
 > [!important] `stands` es una app, y no comparte modelos con ningún otro módulo
 > Ni con `EVT`, ni con una app «de convocatorias» que sirva a varios. Cada vertical tiene su
@@ -220,7 +222,6 @@ barrida solo lo recoge en casos de borde.
 | Riesgo | Nivel | Por qué importa |
 | --- | --- | --- |
 | El build de Godot pesa 39.5 MB | **Alto** | Nada se carga de un CDN (regla 6), así que vive en el repositorio. `CompressedManifestStaticFilesStorage` reescribe URLs dentro del JS al hacer `collectstatic`, e `index.js` referencia el `.wasm` por nombre: hay que excluir ese directorio del manifiesto o el mapa deja de cargar **solo en producción**. |
-| Los archivos no se pueden abrir desde la aplicación | **Alto** | `Documento` guarda y `ADR-0007` deja los archivos fuera de toda URL a propósito —son actas constitutivas y RFC—, pero la vista que los entrega comprobando quién pregunta **no existe todavía**. Hasta que exista, A2 lista los adjuntos y no los deja descargar. Es lo primero que hay que cerrar de la administración. |
 | El prototipo de `STD` no está en `prototipo/` | **Alto** | La referencia visual es una app Angular con Angular Material, un sistema de componentes que `filey.css` no tiene. Portar U1–U6 y A1–A10 no es mecánico: hay que decidir con `filey-identidad` qué se traduce y qué se rehace. |
 | La invariante del tipo es de código | Medio | Nada en el esquema impide colgar una `Solicitud` de stands de un registro cuya convocatoria es de eventos. Se comprueba en el servicio y hay prueba, pero la base no lo sostiene (ADR-0006). |
 | Una vista de participante dentro de una feria enlaza fuera | Bajo | `requiere_participante` redirigía con `reverse("registros:acceso")`, que no resuelve dentro de `/f/<slug>/`. No se había notado porque ninguna vista de participante vivía dentro de una feria; U1 fue la primera. Corregido con `url_publica` y con prueba, pero es el patrón que va a volver en `EVT` y en `VIS`. |

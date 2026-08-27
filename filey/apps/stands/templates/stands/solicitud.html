@@ -101,7 +101,12 @@
             <label>Ya adjuntaste</label>
             <ul class="multi-input">
               {% for doc in documentos %}
-                <li>{{ doc.get_tipo_display }} — {{ doc.nombre_original|default:"archivo" }}</li>
+                <li>
+                  {{ doc.get_tipo_display }} —
+                  <a href="{% url 'stands:documento' documento_id=doc.pk %}" target="_blank" rel="noopener">
+                    {{ doc.nombre_original|default:"archivo" }}
+                  </a>
+                </li>
               {% endfor %}
             </ul>
           </div>

@@ -44,4 +44,11 @@ urlpatterns = [
         views.detalle_solicitud,
         name="detalle_solicitud",
     ),
+    # La entrega de adjuntos. Es la única forma de alcanzar un archivo:
+    # `MEDIA_URL` no está montada en ningún urlconf (`ADR-0007`).
+    path(
+        "stands/documento/<int:documento_id>/",
+        views.documento,
+        name="documento",
+    ),
 ]

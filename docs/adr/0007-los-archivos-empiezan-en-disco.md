@@ -84,7 +84,7 @@ entorno, de forma que pasar a S3 sea configuración y no código.
 ## Decisión
 
 **Opción A.** Los archivos se guardan en el sistema de archivos, y el cambio a un almacén de
-objetos es una variable de entorno. Con cinco condiciones que hacen que la deuda no se olvide
+objetos es una variable de entorno. Con seis condiciones que hacen que la deuda no se olvide
 y que la migración sea posible.
 
 ### 1. El almacén se elige por entorno, no por código
@@ -125,14 +125,38 @@ extensión.
 privados; servirlos desde una URL estática los deja al alcance de cualquiera que la tenga o la
 adivine, sin pasar por ninguna comprobación de permisos.
 
-Cada módulo entrega los suyos por una vista que comprueba quién pregunta —es trabajo de la fase
-2, junto con el primer `FileField`—. `MEDIA_URL` existe porque `FileField.url` la usa para
-componer, no porque algo la resuelva.
+Cada módulo entrega los suyos por una vista que comprueba quién pregunta. `MEDIA_URL` existe
+porque `FileField.url` la usa para componer, no porque algo la resuelva.
 
-Con `s3`, además, el bucket es privado y las URL van firmadas con caducidad; aun así **la puerta
-sigue siendo la vista del módulo**, no el bucket.
+**Construido el 2026-08-27** en `apps/stands/servicios/archivos.py`. Django está en el camino de
+la **decisión**; no necesariamente en el del archivo, y esa distinción es la que deja abierta la
+mejora:
 
-### 4. Las variables se declaran en el dashboard de Render
+| Cómo | Cuándo |
+| --- | --- |
+| `X-Accel-Redirect` | Lo correcto con un nginx delante. **No lo tenemos:** el servicio corre `gunicorn` directo y el proxy de Render no interpreta la cabecera. |
+| URL firmada | Con `ALMACENAMIENTO=s3`: se comprueba el permiso y se redirige a una URL con caducidad que genera el bucket. **El archivo no pasa por Django.** |
+| `FileResponse` | Con `local`: Django lee y transmite. Ocupa un worker mientras dura. |
+
+Una sola función decide y dos entregan, elegidas por la misma variable de esta decisión. Quien
+llama no cambia, así que el día que haya bucket la mejora entra sola. Las dos ramas están
+probadas, incluida la de `s3`: dejarla sin prueba hasta que hubiera bucket significaría
+estrenarla el día que nadie vuelva a leer esa vista.
+
+### 4. Solo se admite subir lo que no se puede ejecutar
+
+Los archivos se entregan **desde nuestro propio origen**, así que un `.html` subido y servido en
+línea sería XSS almacenado con nuestras cookies detrás; un `.svg` es XML y puede traer
+`<script>`. `comun/almacenamiento.py::DocumentoAdmisible` los rechaza con una **lista blanca**
+—una negra deja pasar el siguiente formato peligroso que nadie previó— y con un tope de 10 MB,
+que es lo que impide llenar el disco.
+
+El validador va en el `FileField` **y** en el formulario, y hacen falta los dos:
+`Model.objects.create()` no llama a `full_clean()`, así que el del modelo por sí solo protege al
+shell y al admin y no a lo que llega de verdad. La respuesta añade además `nosniff` y una CSP en
+sandbox, por si algo se colara con una extensión inocente.
+
+### 5. Las variables se declaran en el dashboard de Render
 
 **No en `render.yaml`.** Ese archivo no gobierna nada: el despliegue está partido en dos
 sistemas que no se hablan —GitHub Actions corre las migraciones contra Supabase, y Render solo
@@ -143,7 +167,7 @@ Así que `ALMACENAMIENTO` y `MEDIA_ROOT` van en el dashboard, **servicio por ser
 `DATABASE_URL`. Y montar un disco es una acción del dashboard, no una línea de YAML — lo cual
 importa poco mientras el plan siga en `free`, porque ahí no hay discos.
 
-### 5. La deuda avisa sola
+### 6. La deuda avisa sola
 
 `manage.py check --deploy` emite `comun.W001` cuando `DEBUG=False`, el almacén es el sistema de
 archivos y `MEDIA_ROOT` no está declarada. Es un **aviso y no un error**: la decisión está
@@ -189,8 +213,10 @@ como el 1.
   `check --deploy`. Es la contrapartida de que `render.yaml` no gobierne el despliegue.
 - **`FileSystemStorage` no sirve para más de un proceso en máquinas distintas.** Hoy es un solo
   servicio; si algún día hay dos, el disco local deja de valer aunque persista.
-- **Sin la vista de entrega, un `FileField` guardado no se puede abrir desde la aplicación.**
-  Es intencional, y es trabajo de la fase 2.
+- **Con `local`, cada descarga ocupa un worker de gunicorn.** Con tres workers y PDFs de unos
+  cientos de KB que revisan un par de administradores, es asumible; deja de serlo si algún día
+  se sirven archivos grandes o a mucha gente a la vez. La salida ya está escrita: es el
+  `ALMACENAMIENTO=s3`.
 
 **Qué queda descartado por esta decisión**
 

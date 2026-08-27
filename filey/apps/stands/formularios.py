@@ -10,6 +10,8 @@ formularios y también un comando de `manage.py`.
 
 from django import forms
 
+from comun.almacenamiento import DocumentoAdmisible
+
 from .models import MATERIALES, TEMATICAS, Documento, Editorial
 
 
@@ -126,13 +128,24 @@ class DocumentoForm(forms.Form):
     recargar todo por corregir un teléfono (`CU-STD-002` A1).
     """
 
+    # El mismo validador que el `FileField` del modelo, y hace falta en
+    # los dos sitios: `Documento.objects.create()` **no** llama a
+    # `full_clean()`, así que el del modelo solo protege al shell y al
+    # admin. El del formulario es el que ve lo que llega de verdad, y
+    # además convierte el rechazo en un error bajo el campo en vez de en
+    # un 500.
     constancia_fiscal = forms.FileField(
-        required=True, label="Constancia de situación fiscal"
+        required=True,
+        label="Constancia de situación fiscal",
+        validators=[DocumentoAdmisible()],
     )
-    lista_titulos = forms.FileField(required=True, label="Lista de títulos")
+    lista_titulos = forms.FileField(
+        required=True, label="Lista de títulos", validators=[DocumentoAdmisible()]
+    )
     cartas_representacion = ArchivosMultiples(
         required=False,
         label="Cartas de representación",
+        validators=[DocumentoAdmisible()],
         help_text=(
             "Una por cada editorial representada, con membrete del "
             "representado y firma de un ejecutivo facultado (RN-17)."

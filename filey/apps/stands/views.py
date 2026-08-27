@@ -24,7 +24,7 @@ from apps.registros.permisos import requiere_participante
 
 from .formularios import DictamenForm, DocumentoForm, EditorialForm, SellosForm
 from .models import Documento, Editorial, Solicitud
-from .servicios import configuracion, dictamen, solicitudes
+from .servicios import archivos, configuracion, dictamen, solicitudes
 
 
 def _convocatoria_de_stands(convocatoria_id: int) -> Convocatoria:
@@ -322,3 +322,27 @@ def panel(peticion, convocatoria_id):
     """
     configuracion.de_la_convocatoria(_convocatoria_de_stands(convocatoria_id))
     return redirect("stands:solicitudes", convocatoria_id=convocatoria_id)
+
+
+# ── La entrega de archivos ────────────────────────────────────
+
+
+@requiere_participante
+def documento(peticion, documento_id):
+    """Entrega un adjunto a quien tiene derecho a verlo (`ADR-0007`).
+
+    Lleva `requiere_participante` y no `requiere_admin_feria` porque los
+    dos públicos pasan por aquí: la editorial revisando lo que subió y
+    quien administra la feria revisándolo para dictaminar. Quién puede
+    ver qué lo decide `archivos.puede_ver`.
+
+    **Un 404 y no un 403 cuando no se puede.** Un 403 confirmaría que ese
+    documento existe, que es justo lo que no queremos decirle a alguien
+    que está probando identificadores.
+    """
+    adjunto = get_object_or_404(
+        Documento.objects.select_related("editorial"), pk=documento_id
+    )
+    if not archivos.puede_ver(peticion, adjunto):
+        raise Http404("No hay ningún documento con ese identificador.")
+    return archivos.entregar(adjunto)

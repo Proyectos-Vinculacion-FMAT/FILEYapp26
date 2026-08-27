@@ -18,6 +18,7 @@ no llegue a la respuesta en vez de ocultarse en la plantilla.
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django_tenants.utils import schema_context
@@ -56,9 +57,18 @@ def _admin_de(feria, correo="rita@filey.org"):
 
 
 def _url(feria, nombre, **kwargs):
-    """La URL de una vista de stands, con el prefijo de su feria."""
-    with schema_context(feria.schema_name):
-        return f"{feria.url.rstrip('/')}{reverse(f'stands:{nombre}', kwargs=kwargs)}"
+    """La URL de una vista de stands, con el prefijo de su feria.
+
+    Se resuelve contra ``ROOT_URLCONF`` **a secas** —el módulo, sin el
+    envoltorio que `django-tenants` le pone— y se le antepone
+    ``feria.url``. Hacerlo con un `reverse` normal dentro de
+    ``schema_context`` es una trampa: ahí la conexión lleva un
+    ``FakeTenant`` sin ``domain_subfolder``, y el resultado depende de si
+    otra prueba ya calentó la caché del resolver.
+    """
+    return f"{feria.url.rstrip('/')}" + reverse(
+        f"stands:{nombre}", kwargs=kwargs, urlconf=settings.ROOT_URLCONF
+    )
 
 
 # ── U1 · el aplicante ─────────────────────────────────────────

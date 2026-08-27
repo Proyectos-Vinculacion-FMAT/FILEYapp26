@@ -45,18 +45,17 @@
             {% for doc in documentos %}
               <li>
                 <strong>{{ doc.get_tipo_display }}</strong> —
-                {{ doc.nombre_original|default:"archivo" }}
+                <a href="{% url 'stands:documento' documento_id=doc.pk %}" target="_blank" rel="noopener">
+                  {{ doc.nombre_original|default:"archivo" }}
+                </a>
                 <span class="hint">{{ doc.fecha_carga|date:"j M Y" }}</span>
               </li>
             {% endfor %}
           </ul>
-          {% comment %} E1 de CU-STD-005: los archivos no se enlazan todavía.
-             Se entregan por una vista que comprueba quién pregunta —son
-             actas constitutivas y RFC— y esa vista llega con el resto de
-             la administración (ADR-0007). {% endcomment %}
-          <p class="hint">
-            La descarga se habilita con la vista de entrega de archivos.
-          </p>
+          {% comment %} El enlace no va a MEDIA_URL —no está montada en ningún
+             urlconf (ADR-0007)— sino a una vista que comprueba quién pregunta.
+             `target="_blank"` porque quien revisa abre cuatro seguidos y
+             perder la pantalla del dictamen en cada uno es peor. {% endcomment %}
         {% else %}
           <p>No adjuntó documentos.</p>
         {% endif %}
