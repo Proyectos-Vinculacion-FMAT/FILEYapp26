@@ -139,9 +139,47 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | total_sellos | Total de sellos editoriales participantes. |
 | cantidad_libros_aprox | Cantidad aproximada de libros. |
 | cantidad_titulos_aprox | Cantidad aproximada de títulos. |
-| materiales | Multivalor: Libro, Audiolibro, Revista, Material didáctico, Libros electrónicos, Otro. |
-| tematicas | Multivalor: lista de temáticas (Administración, Arte, Infantil, …). |
+| materiales | Multivalor: Libro, Audiolibro, Revista, Material didáctico, Libros electrónicos, Otro. Con `materiales_otro` para el texto de «Otro (especificar)». |
+| tematicas | Multivalor: las **61 entradas** de la Ficha de Registro p. 2 (60 temáticas más «Otros»). Con `tematicas_otra` para el texto. |
 | constancia_fiscal_id | FK → Documento — Constancia de Situación Fiscal. Permite emitir facturas por fuera del sistema. |
+
+> [!note] Validado contra la ficha oficial (2026-08-27)
+> Se comparó campo por campo con `Registro-para-Expositores-FILEY-2026.pdf`. Todo lo de arriba
+> coincide, y aparecieron cuatro huecos que ya se cerraron: el catálogo de temáticas tenía nueve
+> entradas y la ficha tiene 61; faltaba el texto de «Otro (especificar)» en materiales y en
+> temáticas; faltaba la aceptación de las bases (§3.3); y el aviso de que cambiar el antepecho
+> después se cobra.
+>
+> **Lo que no se construyó, y por qué:** la ficha ofrece «Tipo de stand: Básico / Personalizado».
+> Se descartó por decisión del equipo — el básico 3×2 son $15,000, que es exactamente el
+> `costo_m2` de $2,500 por sus 6 m², así que la distinción no cambia ni el precio ni el modelo.
+>
+> **Pendiente de resolver con el cliente:** las bases admiten *"instituciones de educación
+> superior, librerías, asociaciones civiles y dependencias gubernamentales"*, pero la ficha solo
+> ofrece `Editor / Librero / Distribuidor` en el campo `giro`. Los dos documentos se contradicen;
+> el modelo sigue a la ficha.
+>
+> Y las bases confirman que la deuda de `es_recurrente` (§2.a) es una **regla operativa real**:
+> *"se respetará a los participantes de la última edición"* al asignar espacios.
+
+<!-- -->
+
+> [!warning] El catálogo de temáticas está **sin verificar por una persona**
+> La ficha oficial es un **escaneo sin capa de texto**: `pdftotext` no devuelve nada, así que las
+> 61 entradas de `apps/stands/models.py::TEMATICAS` se transcribieron **leyendo la imagen** de la
+> página 2, columna por columna. La aritmética cuadra —21 + 22 + 19 impresas, menos «Pintura»,
+> que aparece repetida— pero una lista de 61 leída de un escaneo es justo donde se esconde una
+> errata.
+>
+> **Hay que contrastarla contra el PDF antes de abrir la convocatoria.** Es un rato de trabajo y
+> lo cubre `test_las_tematicas_son_las_de_la_ficha`, que fija la cuenta y las dos correcciones
+> conocidas (`Braile` → Braille, `Sofware` → Software).
+>
+> Contexto de por qué importa: hasta el 2026-08-27 la lista tenía **nueve** entradas inventadas a
+> partir del mock del prototipo Angular. El modelo decía *"lista de temáticas (Administración,
+> Arte, Infantil, …)"*, con puntos suspensivos, y nadie había abierto el papel.
+
+<!-- -->
 
 > [!important] Una editorial por persona, y una persona por editorial (RN-21)
 > Dentro de una feria la relación es **1—1 en los dos sentidos**: una `Persona` tiene una
@@ -179,6 +217,7 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | sellos | Fotografía de los sellos declarados en el envío. |
 | editorial_id | FK → Editorial. |
 | estado | `pendiente` / `aceptada` / `rechazada` / `cambios_solicitados`. |
+| bases_aceptadas | Que se aceptaron las bases al enviar. En papel es la firma bajo *"RECONOZCO Y ACEPTO LAS BASES DE PARTICIPACIÓN"* (ficha p. 2). Va aquí y no en `Editorial` porque se aceptan las bases **de esta convocatoria**, en el momento de enviar: es parte de la fotografía. |
 | fecha_envio | Fecha de envío. |
 | fecha_revision | Fecha de revisión. |
 | revisado_por | FK → `Persona` (`REG`) — el administrador que dictaminó. |

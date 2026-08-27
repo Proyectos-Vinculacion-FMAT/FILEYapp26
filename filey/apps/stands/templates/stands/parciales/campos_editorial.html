@@ -1,26 +1,35 @@
 {% comment %} ===========================================================
-   La Ficha de Registro para Expositores, en cuatro bloques.
+   La Ficha de Registro para Expositores, en cuatro bloques numerados.
 
    Contexto que espera:
 
      form_editorial   un EditorialForm (ligado o no)
 
-   Se parte en secciones y no en una lista larga porque son 27 campos:
-   sin agrupar, quien la llena pierde el hilo de qué le falta. Los
-   nombres de los bloques son los de la ficha en papel, a propósito —
-   quien la llena suele tenerla delante.
+   El orden y los nombres son los de la ficha en papel (FILEY 2026), y eso
+   es deliberado: mucha gente la va a tener al lado mientras llena esto, y
+   saltar de un bloque a otro buscando el campo equivalente es lo que hace
+   que se abandonen los formularios largos.
+
+   Los números siguen en `solicitud.html` con Documentos (5) y Sellos (6).
+   Si se añade una sección en medio, hay que renumerar las dos.
    =========================================================== {% endcomment %}
 
-{% comment %} Los errores que no son de ningún campo concreto. {% endcomment %}
+{% comment %} Los errores que no pertenecen a ningún campo concreto. {% endcomment %}
 {% if form_editorial.non_field_errors %}
-  <div class="note note-warn">
+  <div class="note note-err">
     <div class="ico">⚠️</div>
     <div>{{ form_editorial.non_field_errors|join:" " }}</div>
   </div>
 {% endif %}
 
 <div class="section-card card">
-  <div class="section-head"><h3>Datos de la editorial</h3></div>
+  <div class="section-head">
+    <div class="num">1</div>
+    <div>
+      <h3>Tu editorial</h3>
+      <p>Cómo se llama y cómo te localizamos.</p>
+    </div>
+  </div>
   <div class="section-body">
     {% include "stands/parciales/campo.html" with campo=form_editorial.nombre %}
     <div class="grid-2">
@@ -35,13 +44,21 @@
 </div>
 
 <div class="section-card card">
-  <div class="section-head"><h3>Domicilio</h3></div>
+  <div class="section-head">
+    <div class="num">2</div>
+    <div>
+      <h3>Domicilio</h3>
+      <p>El fiscal, el mismo de tu constancia.</p>
+    </div>
+  </div>
   <div class="section-body">
     <div class="grid-2">
       {% include "stands/parciales/campo.html" with campo=form_editorial.domicilio_calle %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.domicilio_numero %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.domicilio_colonia %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.cp %}
+    </div>
+    <div class="grid-3">
       {% include "stands/parciales/campo.html" with campo=form_editorial.municipio %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.estado %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.pais %}
@@ -50,8 +67,13 @@
 </div>
 
 <div class="section-card card">
-  <div class="section-head"><h3>Contactos</h3>
-    <p>Solo el director general es obligatorio.</p></div>
+  <div class="section-head">
+    <div class="num">3</div>
+    <div>
+      <h3>Contactos</h3>
+      <p>Solo el director general es obligatorio. Llena los demás si existen.</p>
+    </div>
+  </div>
   <div class="section-body">
     <div class="grid-2">
       {% include "stands/parciales/campo.html" with campo=form_editorial.director_general_nombre %}
@@ -67,22 +89,35 @@
 </div>
 
 <div class="section-card card">
-  <div class="section-head"><h3>Qué exhibes</h3></div>
+  <div class="section-head">
+    <div class="num">4</div>
+    <div>
+      <h3>Qué vas a exponer</h3>
+      <p>Nos sirve para orientar al público que pregunte por un título.</p>
+    </div>
+  </div>
   <div class="section-body">
-    <div class="grid-2">
+    <div class="grid-3">
       {% include "stands/parciales/campo.html" with campo=form_editorial.num_personas_atienden %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.cantidad_libros_aprox %}
       {% include "stands/parciales/campo.html" with campo=form_editorial.cantidad_titulos_aprox %}
     </div>
+
     <div class="field">
       <label>{{ form_editorial.materiales.label }} <span class="opt">opcional</span></label>
-      <div class="radio-row">{{ form_editorial.materiales }}</div>
+      {% comment %} `.opciones` reparte las casillas en columnas que fluyen.
+         Seis caben en una fila; las 59 temáticas de abajo, no. {% endcomment %}
+      <div class="opciones">{{ form_editorial.materiales }}</div>
       {% for error in form_editorial.materiales.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
     </div>
+    {% include "stands/parciales/campo.html" with campo=form_editorial.materiales_otro %}
+
     <div class="field">
       <label>{{ form_editorial.tematicas.label }} <span class="opt">opcional</span></label>
-      <div class="radio-row">{{ form_editorial.tematicas }}</div>
+      <span class="hint">{{ form_editorial.tematicas.help_text }}</span>
+      <div class="opciones">{{ form_editorial.tematicas }}</div>
       {% for error in form_editorial.tematicas.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
     </div>
+    {% include "stands/parciales/campo.html" with campo=form_editorial.tematicas_otra %}
   </div>
 </div>

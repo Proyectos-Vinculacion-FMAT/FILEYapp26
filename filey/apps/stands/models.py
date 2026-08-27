@@ -38,7 +38,7 @@ class Giro(models.TextChoices):
     DISTRIBUIDOR = "distribuidor", "Distribuidor"
 
 
-#: Qué exhibe la editorial. Lista cerrada de la Ficha de Registro.
+#: Qué exhibe la editorial. Los seis de la Ficha de Registro, p. 2.
 MATERIALES = [
     "Libro",
     "Audiolibro",
@@ -48,17 +48,75 @@ MATERIALES = [
     "Otro",
 ]
 
-#: Sobre qué. Lista cerrada de la Ficha de Registro.
+#: Sobre qué. Las 59 de la Ficha de Registro, p. 2, en su orden.
+#:
+#: .. note:: Dos correcciones sobre el papel
+#:
+#:    La ficha impresa trae «Braile» y «Sofware», y repite «Pintura» dos
+#:    veces en la tercera columna. Aquí van escritas bien y sin repetir:
+#:    son erratas del formato, no temáticas distintas.
 TEMATICAS = [
     "Administración",
+    "Agronomía",
+    "Antropología",
+    "Arquitectura",
     "Arte",
-    "Ciencias",
-    "Académica",
+    "Astronomía",
+    "Autoayuda",
+    "Biografías",
+    "Braille",
+    "Ciencias sociales",
+    "Ciencia y tecnologías",
+    "Cine",
+    "Cocina",
+    "Comics",
+    "Comercio",
+    "Computación",
+    "Comunicación",
+    "Contabilidad",
+    "Deporte",
+    "Derecho",
+    "Diccionario/Enciclopedia",
+    "Discapacidad intelectual",
+    "Discapacidad motriz",
+    "Discapacidad psíquica",
+    "Discapacidad sensorial y de comunicación",
+    "Diseño",
+    "Ecología",
+    "Economía",
+    "Educación",
+    "Enfermería",
+    "Espiritualidad",
+    "Filosofía",
+    "Física",
+    "Geografía",
     "Historia",
+    "Idiomas",
     "Infantil",
-    "Juvenil",
+    "Ingeniería",
+    "Lingüísticas",
     "Literatura",
-    "Otro",
+    "Matemáticas",
+    "Medicina",
+    "Multimedia",
+    "Música",
+    "Ordenadores",
+    "Pedagogía",
+    "Pintura",
+    "Poesía",
+    "Política",
+    "Psicología",
+    "Química",
+    "Religión",
+    "Sexualidad",
+    "Sociología",
+    "Software",
+    "Teatro",
+    "Textos editoriales",
+    "Turismo",
+    "Veterinaria",
+    "Video",
+    "Otros",
 ]
 
 
@@ -101,53 +159,82 @@ class Editorial(models.Model):
         related_name="editorial",
         help_text="Quién presenta y administra esta editorial en esta feria.",
     )
-    nombre = models.CharField(max_length=200)
+    nombre = models.CharField("nombre de la editorial", max_length=200)
 
     # ── Domicilio ─────────────────────────────────────────────
-    domicilio_calle = models.CharField(max_length=160)
-    domicilio_numero = models.CharField(max_length=40)
-    domicilio_colonia = models.CharField(max_length=120)
+    domicilio_calle = models.CharField("calle", max_length=160)
+    domicilio_numero = models.CharField("número", max_length=40)
+    domicilio_colonia = models.CharField("colonia", max_length=120)
     cp = models.CharField("código postal", max_length=10)
-    municipio = models.CharField(max_length=120)
-    estado = models.CharField(max_length=120)
+    municipio = models.CharField("municipio", max_length=120)
+    estado = models.CharField("estado", max_length=120)
     pais = models.CharField("país", max_length=80, default="México")
 
     # ── Contactos ─────────────────────────────────────────────
     # Los cuatro cargos que pide la Ficha de Registro. Solo el general es
     # obligatorio: una editorial pequeña no tiene los cuatro puestos, y
     # exigirlos dejaría fuera a quien sí puede exponer.
-    director_general_nombre = models.CharField(max_length=160)
-    director_general_email = models.EmailField()
-    director_comercial_nombre = models.CharField(max_length=160, blank=True)
-    director_comercial_email = models.EmailField(blank=True)
-    director_editorial_nombre = models.CharField(max_length=160, blank=True)
-    director_editorial_email = models.EmailField(blank=True)
-    director_promocion_nombre = models.CharField(max_length=160, blank=True)
-    director_promocion_email = models.EmailField(blank=True)
+    director_general_nombre = models.CharField("director general", max_length=160)
+    director_general_email = models.EmailField("correo del director general")
+    director_comercial_nombre = models.CharField(
+        "director comercial", max_length=160, blank=True
+    )
+    director_comercial_email = models.EmailField(
+        "correo del director comercial", blank=True
+    )
+    director_editorial_nombre = models.CharField(
+        "director editorial", max_length=160, blank=True
+    )
+    director_editorial_email = models.EmailField(
+        "correo del director editorial", blank=True
+    )
+    director_promocion_nombre = models.CharField(
+        "director de promoción", max_length=160, blank=True
+    )
+    director_promocion_email = models.EmailField(
+        "correo del director de promoción", blank=True
+    )
 
-    responsable_stand = models.CharField(max_length=160)
-    giro = models.CharField(max_length=12, choices=Giro.choices)
-    telefono_oficina = models.CharField(max_length=20, blank=True)
-    telefono_celular = models.CharField(max_length=20)
+    responsable_stand = models.CharField("responsable del stand", max_length=160)
+    giro = models.CharField("giro", max_length=12, choices=Giro.choices)
+    telefono_oficina = models.CharField(
+        "teléfono de oficina", max_length=20, blank=True
+    )
+    telefono_celular = models.CharField("teléfono celular", max_length=20)
     # **No es el correo de acceso.** Ese vive en `Persona` y puede ser
     # otro: la cuenta personal de quien tramita frente al buzón comercial
     # de la editorial.
-    correo_electronico = models.EmailField()
+    correo_electronico = models.EmailField("correo de contacto")
 
     # ── El stand ──────────────────────────────────────────────
     nombre_antepecho = models.CharField(
-        max_length=120, help_text="Lo que se rotula en el antepecho del stand."
+        "nombre en el antepecho",
+        max_length=120,
+        help_text=(
+            "Se rotula tal como lo escribas. Cambiarlo después de que se "
+            "imprima tiene un costo que corre por tu cuenta."
+        ),
     )
-    num_personas_atienden = models.PositiveSmallIntegerField(default=1)
-    total_sellos = models.PositiveSmallIntegerField(default=0)
-    cantidad_libros_aprox = models.PositiveIntegerField(default=0)
-    cantidad_titulos_aprox = models.PositiveIntegerField(default=0)
+    num_personas_atienden = models.PositiveSmallIntegerField(
+        "personas que atienden el stand", default=1
+    )
+    total_sellos = models.PositiveSmallIntegerField("total de sellos", default=0)
+    cantidad_libros_aprox = models.PositiveIntegerField(
+        "cantidad aproximada de libros", default=0
+    )
+    cantidad_titulos_aprox = models.PositiveIntegerField(
+        "cantidad aproximada de títulos", default=0
+    )
 
     # Multivalor. JSON y no una tabla aparte porque son catálogos
     # cerrados y cortos que solo se leen enteros: una tabla añadiría dos
     # `JOIN` para no responder ninguna pregunta que hoy se haga.
-    materiales = models.JSONField(default=list, blank=True)
-    tematicas = models.JSONField(default=list, blank=True)
+    materiales = models.JSONField("materiales que exhibe", default=list, blank=True)
+    # Lo que la ficha llama «Otro (especificar)». Sin esto, marcar «Otro»
+    # no dice nada: el administrador ve que hay algo más y no qué.
+    materiales_otro = models.CharField("¿qué otro material?", max_length=160, blank=True)
+    tematicas = models.JSONField("temáticas", default=list, blank=True)
+    tematicas_otra = models.CharField("¿qué otra temática?", max_length=160, blank=True)
 
     creada_en = models.DateTimeField(auto_now_add=True)
     actualizada_en = models.DateTimeField(auto_now=True)
@@ -199,6 +286,17 @@ class SelloEditorial(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def carta(self):
+        """Su carta de representación, si la subió (`RN-17`).
+
+        Es una y no varias: la carta autoriza a representar **a este
+        sello**. Se guarda como `Documento` y no como un `FileField`
+        propio para que herede lo que ya tienen los demás adjuntos — la
+        lista blanca de extensiones y la vista de entrega con permisos.
+        """
+        return self.cartas.first()
 
 
 class Solicitud(models.Model):
@@ -259,6 +357,11 @@ class Solicitud(models.Model):
     estado = models.CharField(
         max_length=20, choices=Estado.choices, default=Estado.PENDIENTE
     )
+    # La ficha se firma bajo «RECONOZCO Y ACEPTO LAS BASES DE
+    # PARTICIPACIÓN». Va en la solicitud y no en la editorial porque se
+    # aceptan las bases **de esta convocatoria**, en el momento de
+    # enviar: es parte de la fotografía, no de la ficha.
+    bases_aceptadas = models.BooleanField("aceptó las bases", default=False)
     fecha_envio = models.DateTimeField(auto_now_add=True)
     fecha_revision = models.DateTimeField(null=True, blank=True)
     revisado_por = models.ForeignKey(
@@ -271,7 +374,7 @@ class Solicitud(models.Model):
     # Motivo del rechazo o detalle de los cambios pedidos. Obligatorio al
     # solicitar cambios (`CU-STD-007` E1) y opcional al rechazar, que es
     # una acción directa (`CU-STD-006` A2).
-    motivo_peticion = models.TextField(blank=True)
+    motivo_peticion = models.TextField("motivo o cambios pedidos", blank=True)
 
     class Meta:
         verbose_name = "solicitud"
@@ -362,7 +465,9 @@ class Documento(models.Model):
     )
     # Lo que la persona llamó al archivo. El nombre real es un UUID
     # (`ADR-0007`), así que sin esto no habría cómo decirle cuál subió.
-    nombre_original = models.CharField(max_length=255, blank=True)
+    nombre_original = models.CharField(
+        "nombre original del archivo", max_length=255, blank=True
+    )
     fecha_carga = models.DateTimeField(auto_now_add=True)
 
     editorial = models.ForeignKey(
@@ -379,6 +484,18 @@ class Documento(models.Model):
         blank=True,
         related_name="documentos",
     )
+    # De qué sello es la carta de representación. Es un dato **de más**,
+    # no una tercera rama de la restricción: la carta de un sello sigue
+    # siendo un documento de su editorial, y `editorial` sigue puesto.
+    # Sin esto, tres cartas de tres sellos serían tres archivos que nadie
+    # puede decir a cuál corresponde (`RN-17`).
+    sello = models.ForeignKey(
+        "SelloEditorial",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="cartas",
+    )
 
     class Meta:
         verbose_name = "documento"
@@ -391,6 +508,15 @@ class Documento(models.Model):
                     | Q(editorial__isnull=True, solicitud__isnull=False)
                 ),
                 name="un_documento_cuelga_de_exactamente_una_entidad",
+            ),
+            # Solo una carta de representación apunta a un sello. Sin
+            # esto, una constancia fiscal podría quedar colgada de un
+            # sello y desaparecer al quitarlo.
+            models.CheckConstraint(
+                condition=(
+                    Q(sello__isnull=True) | Q(tipo="carta_representacion")
+                ),
+                name="solo_una_carta_cuelga_de_un_sello",
             ),
         ]
 
@@ -454,7 +580,9 @@ class ConfiguracionSistema(models.Model):
     )
     # Una fecha de la convocatoria, igual para todos, no un contador por
     # reserva (`RN-04`): quien reserva tarde tiene menos días.
-    fecha_limite_pronto_pago = models.DateField(null=True, blank=True)
+    fecha_limite_pronto_pago = models.DateField(
+        "fecha límite del pronto pago", null=True, blank=True
+    )
     instrucciones_pago = models.TextField(
         blank=True, help_text="Banco, cuenta, CLABE, sucursal y referencia."
     )
@@ -529,7 +657,7 @@ class Notificacion(models.Model):
     )
     # Qué salió mal, cuando `estado` es `fallida`. Es lo que el
     # administrador necesita para reintentar a mano (`CU-STD-008` E1).
-    detalle_error = models.TextField(blank=True)
+    detalle_error = models.TextField("detalle del error", blank=True)
 
     class Meta:
         verbose_name = "notificación"

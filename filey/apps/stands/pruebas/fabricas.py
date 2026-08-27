@@ -6,6 +6,8 @@ Vive aparte porque montarla cuesta cinco piezas de tres dominios
 prueba escondería lo que cada una está mirando.
 """
 
+from django.core.files.uploadedfile import SimpleUploadedFile
+
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.registros.models import Persona
 from apps.stands.models import Editorial
@@ -58,3 +60,28 @@ def editorial(de_persona, **cambios):
     datos = {**FICHA, **cambios}
     ficha = Editorial.objects.create(persona=de_persona, **datos)
     return ficha
+
+
+def envio(*, con_documentos=True, **extra):
+    """Un POST completo y válido del formulario de U1.
+
+    Existe para que una prueba diga **solo lo que está mirando**. El
+    formulario tiene treinta campos y crece con cada cosa que la ficha
+    oficial pide; sin esto, añadir un campo obligatorio rompe una docena
+    de pruebas que no tenían nada que ver.
+
+    :param con_documentos: a ``False`` omite los adjuntos obligatorios,
+        que es lo que hace falta para probar E1.
+    """
+    datos = {
+        **FICHA,
+        "materiales": ["Libro"],
+        "tematicas": ["Literatura"],
+        # La casilla de «acepto las bases»: sin ella no se envía, igual
+        # que la ficha en papel no vale sin firma.
+        "acepto": "on",
+    }
+    if con_documentos:
+        datos["constancia_fiscal"] = SimpleUploadedFile("csf.pdf", b"%PDF")
+        datos["lista_titulos"] = SimpleUploadedFile("titulos.pdf", b"%PDF")
+    return {**datos, **extra}

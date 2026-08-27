@@ -14,6 +14,45 @@
 
 document.addEventListener('alpine:init', () => {
 
+  /**
+   * Las filas de sellos editoriales de la solicitud de expositor (STD).
+   *
+   * El servidor manda SIEMPRE las diez filas y esto decide cuántas se
+   * ven. Es lo que hace que la pantalla funcione sin JavaScript (regla 6
+   * de CLAUDE.md): sin Alpine, `x-show` no hace nada, se ven las diez, y
+   * el formulario se envía igual — los nombres vacíos se descartan al
+   * guardar.
+   *
+   * `quitar` corre los valores hacia arriba en vez de esconder la fila en
+   * su sitio: dejar un hueco en medio se vería como un error, y al
+   * servidor le da igual porque descarta los vacíos.
+   *
+   * El archivo de una fila no se puede reasignar por seguridad del
+   * navegador —un `<input type=file>` no admite que le escriban un
+   * valor—, así que al correr los nombres se limpian los archivos de las
+   * filas afectadas. Es la razón del aviso que pinta la plantilla.
+   */
+  Alpine.data('filasDeSellos', ({ visibles, maximo }) => ({
+    visibles: visibles,
+    maximo: maximo,
+
+    agregar() {
+      if (this.visibles < this.maximo) this.visibles += 1;
+    },
+
+    quitar(indice) {
+      const nombres = this.$el.querySelectorAll('input[type="text"]');
+      const archivos = this.$el.querySelectorAll('input[type="file"]');
+      for (let i = indice; i < this.visibles - 1; i++) {
+        nombres[i].value = nombres[i + 1].value;
+        archivos[i].value = '';
+      }
+      nombres[this.visibles - 1].value = '';
+      archivos[this.visibles - 1].value = '';
+      if (this.visibles > 1) this.visibles -= 1;
+    },
+  }));
+
   /* ---- Avisos flotantes lanzados desde el navegador ----
      Los del servidor llegan por django.contrib.messages; estos son
      para lo que solo sabe la pantalla, como "ese módulo todavía no

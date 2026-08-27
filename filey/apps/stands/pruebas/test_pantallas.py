@@ -27,7 +27,7 @@ from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.ferias.models import AdminFeria
 from apps.registros.models import Persona
 
-from ..models import Documento, Editorial, Solicitud
+from ..models import Documento, Editorial, SelloEditorial, Solicitud
 from ..servicios import dictamen, solicitudes
 from . import fabricas
 
@@ -158,8 +158,10 @@ def test_una_convocatoria_cerrada_se_consulta_pero_no_recibe(client, escenario):
 
     cuerpo = client.get(_url(feria, "solicitud", convocatoria_id=conv.pk)).content.decode()
 
-    assert "no está abierta" in cuerpo
+    assert "convocatoria está cerrada" in cuerpo
+    # Lo que de verdad importa: no hay forma de enviar nada.
     assert "Enviar solicitud" not in cuerpo
+    assert "Reenviar solicitud" not in cuerpo
 
 
 def test_enviar_la_solicitud_desde_el_formulario(client, feria_2027):
@@ -175,17 +177,10 @@ def test_enviar_la_solicitud_desde_el_formulario(client, feria_2027):
         conv = fabricas.convocatoria()
     client.force_login(ana)
 
-    datos = {
-        **fabricas.FICHA,
-        "materiales": ["Libro"],
-        "tematicas": ["Literatura"],
-        "sello_0": "Fondo Azul",
-        "sello_1": "",
-        "constancia_fiscal": SimpleUploadedFile("csf.pdf", b"%PDF-1.4 csf"),
-        "lista_titulos": SimpleUploadedFile("titulos.pdf", b"%PDF-1.4 lista"),
-    }
     respuesta = client.post(
-        _url(feria_2027, "solicitud", convocatoria_id=conv.pk), datos, follow=True
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(sello_0="Fondo Azul", sello_1=""),
+        follow=True,
     )
 
     assert respuesta.status_code == 200
@@ -210,13 +205,9 @@ def test_los_archivos_caen_bajo_el_schema_de_su_feria(client, feria_2027):
 
     client.post(
         _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
-        {
-            **fabricas.FICHA,
-            "materiales": ["Libro"],
-            "tematicas": ["Literatura"],
-            "constancia_fiscal": SimpleUploadedFile("RFC_ANA_PECH.pdf", b"%PDF"),
-            "lista_titulos": SimpleUploadedFile("titulos.pdf", b"%PDF"),
-        },
+        fabricas.envio(
+            constancia_fiscal=SimpleUploadedFile("RFC_ANA_PECH.pdf", b"%PDF")
+        ),
     )
 
     with schema_context(feria_2027.schema_name):
@@ -238,7 +229,7 @@ def test_faltar_un_documento_no_crea_nada(client, feria_2027):
 
     respuesta = client.post(
         _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
-        {**fabricas.FICHA, "materiales": ["Libro"], "tematicas": ["Literatura"]},
+        fabricas.envio(con_documentos=False),
     )
 
     assert respuesta.status_code == 200
@@ -266,13 +257,7 @@ def test_un_envio_rechazado_no_deja_ficha_a_medias(client, feria_2027):
     ):
         respuesta = client.post(
             _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
-            {
-                **fabricas.FICHA,
-                "materiales": ["Libro"],
-                "tematicas": ["Literatura"],
-                "constancia_fiscal": SimpleUploadedFile("csf.pdf", b"%PDF"),
-                "lista_titulos": SimpleUploadedFile("titulos.pdf", b"%PDF"),
-            },
+            fabricas.envio(),
         )
 
     assert respuesta.status_code == 200
@@ -280,6 +265,257 @@ def test_un_envio_rechazado_no_deja_ficha_a_medias(client, feria_2027):
         assert not Solicitud.objects.exists()
         assert not Editorial.objects.exists()
         assert not Documento.objects.exists()
+
+
+# ── Lo que la ficha oficial exige ─────────────────────────────
+
+
+def test_sin_aceptar_las_bases_no_se_envia(client, feria_2027):
+    """La ficha en papel no vale sin firma; ésta tampoco sin la casilla.
+
+    Es la traducción de «RECONOZCO Y ACEPTO LAS BASES DE PARTICIPACIÓN»
+    (Ficha de Registro, p. 2), y se comprueba en el servidor: quitar el
+    `required` del navegador no debe bastar.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    datos = fabricas.envio()
+    del datos["acepto"]
+    client.post(_url(feria_2027, "solicitud", convocatoria_id=conv.pk), datos)
+
+    with schema_context(feria_2027.schema_name):
+        assert not Solicitud.objects.exists()
+
+
+def test_al_enviar_queda_registrado_que_acepto(client, feria_2027):
+    """Va en la solicitud, no en la ficha: se aceptan las bases **de esta**
+    convocatoria, en el momento de enviar."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(_url(feria_2027, "solicitud", convocatoria_id=conv.pk), fabricas.envio())
+
+    with schema_context(feria_2027.schema_name):
+        assert Solicitud.objects.get().bases_aceptadas is True
+
+
+def test_marcar_otro_sin_decir_cual_no_se_admite(client, feria_2027):
+    """La ficha pide «Otro (especificar)»; sin el texto no dice nada."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(materiales=["Libro", "Otro"]),
+    )
+
+    with schema_context(feria_2027.schema_name):
+        assert not Solicitud.objects.exists()
+
+
+def test_las_tematicas_son_las_de_la_ficha():
+    """La lista completa del papel, no las nueve que había antes.
+
+    La cuenta sale de la Ficha de Registro p. 2: 21 de la primera
+    columna, 22 de la segunda y 17 de la tercera —19 impresas, menos
+    «Pintura» que aparece repetida y menos «Otros», que va aparte— dan 60
+    temáticas, más «Otros» como escape: 61 entradas.
+    """
+    from ..models import TEMATICAS
+
+    assert len(TEMATICAS) == 61
+    assert TEMATICAS[-1] == "Otros"
+    # Sin repetir: la ficha impresa trae «Pintura» dos veces.
+    assert len(set(TEMATICAS)) == len(TEMATICAS)
+    # Y con las dos erratas del formato corregidas.
+    assert "Braille" in TEMATICAS and "Braile" not in TEMATICAS
+    assert "Software" in TEMATICAS and "Sofware" not in TEMATICAS
+
+
+def test_los_materiales_son_los_de_la_ficha():
+    from ..models import MATERIALES
+
+    assert MATERIALES == [
+        "Libro",
+        "Audiolibro",
+        "Revista",
+        "Material didáctico",
+        "Libros electrónicos",
+        "Otro",
+    ]
+
+
+# ── Los sellos y sus cartas (RN-17) ───────────────────────────
+
+
+def test_cada_sello_guarda_su_propia_carta(client, feria_2027):
+    """`RN-17`: la carta autoriza a representar **a ese** sello.
+
+    En dos listas paralelas —sellos por un lado, cartas por otro— nadie
+    podría decir qué carta corresponde a cuál.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(
+            sello_0="Fondo Azul",
+            carta_0=SimpleUploadedFile("azul.pdf", b"%PDF azul"),
+            sello_1="Fondo Verde",
+            carta_1=SimpleUploadedFile("verde.pdf", b"%PDF verde"),
+        ),
+    )
+
+    with schema_context(feria_2027.schema_name):
+        azul = SelloEditorial.objects.get(nombre="Fondo Azul")
+        verde = SelloEditorial.objects.get(nombre="Fondo Verde")
+
+    assert azul.carta.nombre_original == "azul.pdf"
+    assert verde.carta.nombre_original == "verde.pdf"
+
+
+def test_un_sello_sin_carta_se_admite(client, feria_2027):
+    """La carta solo hace falta si se representa a otra casa editora."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(sello_0="Fondo Propio"),
+    )
+
+    with schema_context(feria_2027.schema_name):
+        sello = SelloEditorial.objects.get()
+
+    assert sello.carta is None
+
+
+def test_una_carta_sin_sello_se_descarta(client, feria_2027):
+    """Un archivo sin sello al que pertenecer no autoriza nada."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(sello_0="", carta_0=SimpleUploadedFile("huerfana.pdf", b"%PDF")),
+    )
+
+    with schema_context(feria_2027.schema_name):
+        assert not SelloEditorial.objects.exists()
+        assert not Documento.objects.filter(tipo="carta_representacion").exists()
+
+
+def test_reenviar_conserva_la_carta_que_ya_estaba(client, escenario):
+    """`CU-STD-002` A1, y la razón de reconciliar por nombre.
+
+    Borrar los sellos y recrearlos —que es lo que hacía— se llevaría por
+    delante la carta en cada reenvío, aunque el sello no hubiera cambiado.
+    """
+    feria, conv, ana, solicitud = escenario
+    with schema_context(feria.schema_name):
+        ficha = ana.editorial
+        sello = ficha.sellos.create(nombre="Fondo Azul")
+        Documento.objects.create(
+            tipo=Documento.Tipo.CARTA_REPRESENTACION,
+            archivo=SimpleUploadedFile("azul.pdf", b"%PDF"),
+            nombre_original="azul.pdf",
+            editorial=ficha,
+            sello=sello,
+        )
+        dictamen.solicitar_cambios(
+            solicitud, revisor=_admin_de(feria), motivo="Corrige el teléfono."
+        )
+    client.force_login(ana)
+
+    client.post(
+        _url(feria, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(
+            con_documentos=False, sello_0="Fondo Azul", telefono_celular="9990000000"
+        ),
+    )
+
+    with schema_context(feria.schema_name):
+        sello.refresh_from_db()
+        assert sello.carta is not None
+        assert sello.carta.nombre_original == "azul.pdf"
+
+
+def test_quitar_un_sello_se_lleva_su_carta(client, escenario):
+    """Una carta que autoriza a un sello que ya no está no autoriza nada."""
+    feria, conv, ana, solicitud = escenario
+    with schema_context(feria.schema_name):
+        ficha = ana.editorial
+        sello = ficha.sellos.create(nombre="Fondo Azul")
+        Documento.objects.create(
+            tipo=Documento.Tipo.CARTA_REPRESENTACION,
+            archivo=SimpleUploadedFile("azul.pdf", b"%PDF"),
+            nombre_original="azul.pdf",
+            editorial=ficha,
+            sello=sello,
+        )
+        dictamen.solicitar_cambios(
+            solicitud, revisor=_admin_de(feria), motivo="Quita el sello."
+        )
+    client.force_login(ana)
+
+    client.post(
+        _url(feria, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(con_documentos=False),
+    )
+
+    with schema_context(feria.schema_name):
+        assert not SelloEditorial.objects.exists()
+        assert not Documento.objects.filter(tipo="carta_representacion").exists()
+
+
+def test_no_caben_mas_de_diez_sellos(client, feria_2027):
+    """El tope es del formulario: la fila once no existe, así que se ignora."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    extras = {f"sello_{i}": f"Fondo {i}" for i in range(12)}
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk), fabricas.envio(**extras)
+    )
+
+    with schema_context(feria_2027.schema_name):
+        assert SelloEditorial.objects.count() == 10
+
+
+def test_la_pantalla_pinta_las_diez_filas(client, feria_2027):
+    """Regla 6: sin JavaScript no hay forma de añadir una.
+
+    El servidor manda las diez y Alpine enseña las que hacen falta. Sin
+    Alpine se ven las diez y el formulario funciona igual.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert cuerpo.count('name="sello_') == 10
+    assert cuerpo.count('name="carta_') == 10
+    assert "filasDeSellos" in cuerpo
 
 
 # ── A1 y A2 · el administrador ────────────────────────────────

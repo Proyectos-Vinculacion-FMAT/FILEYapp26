@@ -408,6 +408,8 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 }
 .note .ico { flex: 0 0 22px; font-size: 18px; line-height: 1.2; }
 .note-info { background: var(--azul-050); color: var(--color-azul-institucional); border: 1px solid var(--azul-100); }
+.note-ok   { background: var(--ok-050); color: var(--ok-600); border: 1px solid #cfe6d5; }
+.note-err  { background: var(--err-050); color: var(--err-600); border: 1px solid #eecac5; }
 .note-warn { background: var(--warn-050); color: #7a5a00; border: 1px solid var(--oro-200); }
 .note-gold { background: var(--oro-050); color: var(--color-dorado-700); border: 1px solid var(--oro-200); }
 
@@ -480,6 +482,11 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
   padding: 16px 24px; border-bottom: 1px solid var(--gris-200);
   background: var(--gris-050); border-radius: var(--radio) var(--radio) 0 0;
 }
+.section-card > .section-head .num {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+  background: var(--color-azul-institucional); color: var(--color-blanco);
+  display: grid; place-items: center; font-weight: 700; font-size: 14px;
+}
 .section-card > .section-head h3 { margin: 0; font-size: 16.5px; color: var(--color-azul-institucional-enfoque); }
 .section-card > .section-head p { margin: 2px 0 0; font-size: 13px; color: var(--gris-500); }
 .section-card > .section-body { padding: 22px 24px; }
@@ -520,9 +527,50 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 /* .multi-input · línea 281 · lista de nombres (los sellos editoriales) */
 .multi-input { display: flex; flex-direction: column; gap: 8px; }
 
+/* .multi-fila · NUEVO, sin contraparte en el prototipo.
+   Una fila de una lista editable: los campos crecen y la acción se queda
+   del tamaño que necesita. La usan los sellos de STD (nombre + carta).
+   STD no tiene pantallas en `prototipo/`, así que esto nace aquí; si el
+   prototipo llega a tenerlas, hay que reconciliarlo. */
+.multi-fila { display: flex; gap: 14px; align-items: flex-end; margin-bottom: 6px; }
+.multi-fila > .field { flex: 1 1 0; margin-bottom: 10px; }
+.multi-fila > .btn { margin-bottom: 10px; flex: 0 0 auto; }
+
+@media (max-width: 920px) {
+  .multi-fila { flex-direction: column; align-items: stretch; }
+}
+
 /* .info-grid · línea 382 · contenido principal + columna lateral */
 .info-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
 
 @media (max-width: 920px) {
   .grid-2, .info-grid { grid-template-columns: 1fr; }
 }
+
+/* .grid-3 · prototipo/common/styles-base.css línea 264 */
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; }
+
+/* .opciones · NUEVO, sin contraparte en el prototipo.
+   Una lista larga de casillas —las 59 temáticas de la Ficha de Registro—
+   en columnas que fluyen. Con `columns` y no con grid porque el orden que
+   importa es el alfabético de arriba abajo: es como está impresa la ficha
+   y como la va a recorrer quien la tenga delante. Además reflota sola al
+   estrecharse, sin un breakpoint por cada anchura. */
+.opciones { columns: 3 190px; column-gap: 22px; }
+.opciones label {
+  display: flex; align-items: baseline; gap: 8px;
+  break-inside: avoid; margin-bottom: 7px;
+  font-weight: 500; font-size: 14px; color: var(--gris-700);
+}
+.opciones input { flex: 0 0 auto; }
+
+/* .opcion-larga · una opción cuya descripción no cabe en su etiqueta
+   (el tipo de stand y lo que incluye cada uno). */
+.opcion-larga { display: flex; flex-direction: column; gap: 10px; }
+.opcion-larga label {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
+  padding: 12px 14px; cursor: pointer; font-size: 14px; color: var(--gris-700);
+}
+.opcion-larga label:hover { border-color: var(--azul-600); background: var(--azul-050); }
+.opcion-larga input { margin-top: 3px; flex: 0 0 auto; }

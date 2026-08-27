@@ -18,7 +18,7 @@ from django.utils import timezone
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.convocatorias.servicios import registros
 
-from ..models import Editorial, Solicitud
+from ..models import Documento, Editorial, Solicitud
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,9 @@ def _fotografia(editorial: Editorial) -> tuple[dict, list]:
         "cantidad_libros_aprox",
         "cantidad_titulos_aprox",
         "materiales",
+        "materiales_otro",
         "tematicas",
+        "tematicas_otra",
     ]
     datos = {campo: getattr(editorial, campo) for campo in campos}
     sellos = list(editorial.sellos.values_list("nombre", flat=True))
@@ -169,6 +171,9 @@ def enviar_solicitud(
         datos_editorial=datos,
         sellos=sellos,
         estado=Solicitud.Estado.PENDIENTE,
+        # Enviar **es** aceptar las bases: el formulario no deja mandar
+        # sin marcarlo, igual que la ficha en papel no vale sin firma.
+        bases_aceptadas=True,
     )
     solicitud.save()
 
@@ -222,24 +227,60 @@ def reenviar_solicitud(solicitud: Solicitud) -> Solicitud:
     return solicitud
 
 
-def guardar_editorial(editorial: Editorial, *, sellos: list[str]) -> Editorial:
-    """Guarda la ficha y sus sellos, sustituyendo los que hubiera.
+def guardar_editorial(editorial: Editorial, *, sellos) -> Editorial:
+    """Guarda la ficha y sus sellos, con la carta de cada uno.
 
-    Se sustituyen en vez de reconciliarse porque un sello no tiene nada
-    colgando: es un nombre. Reconciliar por nombre daría el mismo
-    resultado con más código.
+    :param sellos: pares ``(nombre, carta)``. La carta es el archivo
+        recién subido o ``None`` si no se tocó.
+
+    **Se reconcilia por nombre, no se sustituye la lista entera**, y eso
+    cambió el 2026-08-27 al colgar la carta de su sello: borrar y recrear
+    se llevaría por delante las cartas ya subidas en cada reenvío, que es
+    justo lo que `CU-STD-002` A1 dice que no debe pasar. El nombre sirve
+    de identidad porque ya es único por editorial.
 
     ``total_sellos`` se deriva de la lista en vez de creerle al
     formulario: son dos formas de decir lo mismo, y la que se puede
     contar gana.
     """
-    editorial.total_sellos = len(sellos)
+    declarados = [(n.strip(), carta) for n, carta in sellos if n and n.strip()]
+    editorial.total_sellos = len(declarados)
     editorial.full_clean(exclude=["persona"])
+
     with transaction.atomic():
         editorial.save()
-        editorial.sellos.all().delete()
-        for nombre in dict.fromkeys(n.strip() for n in sellos if n.strip()):
-            editorial.sellos.create(nombre=nombre)
+
+        nombres = [n for n, _ in declarados]
+        # Los que ya no se declaran se van, y con ellos su carta: una
+        # carta que autoriza a representar a un sello que ya no está no
+        # autoriza nada.
+        #
+        # Las cartas se borran **antes**, a mano, y no se deja al
+        # `CASCADE`: `Documento.sello` es anulable, y ante una clave
+        # foránea anulable el colector de Django no registra la
+        # dependencia entre los dos modelos. Recoge las dos filas, pero
+        # emite los `DELETE` en un orden que no garantiza, y aquí sale el
+        # del sello primero — con la carta todavía apuntándolo.
+        por_quitar = list(
+            editorial.sellos.exclude(nombre__in=nombres).values_list("pk", flat=True)
+        )
+        if por_quitar:
+            Documento.objects.filter(sello_id__in=por_quitar).delete()
+            editorial.sellos.filter(pk__in=por_quitar).delete()
+
+        for nombre, carta in declarados:
+            sello, _ = editorial.sellos.get_or_create(nombre=nombre)
+            if carta is None:
+                # No subió nada: la carta que hubiera sigue donde estaba.
+                continue
+            sello.cartas.all().delete()
+            Documento.objects.create(
+                tipo=Documento.Tipo.CARTA_REPRESENTACION,
+                archivo=carta,
+                nombre_original=carta.name[:255],
+                editorial=editorial,
+                sello=sello,
+            )
     return editorial
 
 

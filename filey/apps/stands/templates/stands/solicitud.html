@@ -14,56 +14,73 @@
      aceptada              solo lectura, habilitada para reservar
      rechazada             formulario otra vez (RN-22: se reaplica)
 
-   Funciona sin JavaScript: un POST normal, con las cajas de sello
-   pintadas de antemano porque no se pueden añadir filas sin JS.
+   Las secciones van numeradas porque llenar esto **sí es una secuencia**:
+   son treinta campos, y el número dice cuánto queda. El orden es el de la
+   Ficha de Registro en papel, que es lo que mucha gente va a tener al lado
+   mientras la llena.
+
+   Funciona sin JavaScript: un POST normal. Lo único que Alpine mejora son
+   las filas de sellos, y sin él se ven las diez.
    =========================================================== {% endcomment %}
 
 {% block titulo %}Mi solicitud — {{ convocatoria.nombre }}{% endblock %}
 
-{% block encabezado_titulo %}{{ convocatoria.nombre }}{% endblock %}
-{% block encabezado_texto %}
-  Solicitud para participar como expositor.
-{% endblock %}
+{% block encabezado_titulo %}Solicitud para exponer{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
 
 {% block contenido %}
 
-{% comment %} El estado, arriba del todo: es lo primero que alguien viene a
-   mirar cuando vuelve a esta pantalla (CU-STD-003). {% endcomment %}
+{% comment %} El desenlace, arriba del todo: es lo primero que alguien viene a
+   mirar cuando vuelve (CU-STD-003). Cada estado con su color — en revisión
+   informa, aceptada es buena noticia, y las dos que piden algo avisan. Pintar
+   los cuatro igual obliga a leer para saber si hay que hacer algo. {% endcomment %}
 {% if solicitud %}
-  <div class="note {% if solicitud.estado == 'aceptada' %}note-info{% elif solicitud.estado == 'rechazada' %}note-warn{% elif solicitud.estado == 'cambios_solicitados' %}note-warn{% else %}note-info{% endif %}">
-    <div class="ico">
-      {% if solicitud.estado == 'aceptada' %}✅{% elif solicitud.estado == 'rechazada' %}❌{% elif solicitud.estado == 'cambios_solicitados' %}✏️{% else %}⏳{% endif %}
-    </div>
-    <div>
-      {% if solicitud.estado == 'pendiente' %}
+  {% if solicitud.estado == 'pendiente' %}
+    <div class="note note-info">
+      <div class="ico">⏳</div>
+      <div>
         <strong>Tu solicitud está en revisión.</strong>
-        La enviaste el {{ solicitud.fecha_envio|date:"j \d\e F \d\e Y" }}.
-        Te avisaremos por correo en cuanto haya respuesta.
-      {% elif solicitud.estado == 'aceptada' %}
-        <strong>Tu solicitud fue aceptada.</strong>
+        La enviaste el {{ solicitud.fecha_envio|date:"j \d\e F" }}.
+        Te avisamos por correo en cuanto haya respuesta.
+      </div>
+    </div>
+  {% elif solicitud.estado == 'aceptada' %}
+    <div class="note note-ok">
+      <div class="ico">✅</div>
+      <div>
+        <strong>Te aceptamos como expositor.</strong>
         Ya puedes elegir tus espacios en el mapa del showfloor.
-        {% comment %} El enlace al mapa llega con U2; hasta entonces esto
-           informa y no navega. {% endcomment %}
-      {% elif solicitud.estado == 'rechazada' %}
+      </div>
+    </div>
+  {% elif solicitud.estado == 'cambios_solicitados' %}
+    <div class="note note-warn">
+      <div class="ico">✏️</div>
+      <div>
+        <strong>Hacen falta algunos cambios.</strong>
+        {{ solicitud.motivo_peticion }}
+        Corrígelo abajo y vuelve a enviarla; lo demás se conserva.
+      </div>
+    </div>
+  {% else %}
+    <div class="note note-err">
+      <div class="ico">✕</div>
+      <div>
         <strong>Tu solicitud no fue aceptada.</strong>
-        {% if solicitud.motivo_peticion %}{{ solicitud.motivo_peticion }}{% endif %}
+        {{ solicitud.motivo_peticion }}
         {% if convocatoria_abierta %}
           Puedes corregir lo que haga falta y volver a enviarla.
         {% endif %}
-      {% else %}
-        <strong>Hacen falta algunos cambios.</strong>
-        {{ solicitud.motivo_peticion }}
-      {% endif %}
+      </div>
     </div>
-  </div>
+  {% endif %}
 {% endif %}
 
 {% if not convocatoria_abierta %}
   <div class="note note-warn">
     <div class="ico">🔒</div>
     <div>
-      Esta convocatoria <strong>no está abierta</strong>: puedes consultar lo que
-      enviaste, pero no enviar ni corregir nada.
+      <strong>Esta convocatoria está cerrada.</strong>
+      Puedes consultar lo que enviaste, pero ya no se admiten cambios.
     </div>
   </div>
 {% endif %}
@@ -74,27 +91,17 @@
 
     {% include "stands/parciales/campos_editorial.html" %}
 
+    {% comment %} ── 5 · Documentos ── {% endcomment %}
     <div class="section-card card">
-      <div class="section-head"><h3>Sellos editoriales</h3>
-        <p>Si representas a otras casas editoras, decláralas aquí. Cada una
-           necesita su carta de representación.</p></div>
-      <div class="section-body">
-        <div class="multi-input">
-          {% for campo in form_sellos %}
-            <div class="field">
-              <label for="{{ campo.id_for_label }}">{{ campo.label }} <span class="opt">opcional</span></label>
-              {{ campo }}
-            </div>
-          {% endfor %}
+      <div class="section-head">
+        <div class="num">5</div>
+        <div>
+          <h3>Documentos</h3>
+          <p>{% if documentos %}Los que ya subiste siguen adjuntos. Sube uno nuevo
+             solo si quieres reemplazarlo.{% else %}PDF o imagen, hasta 10 MB cada
+             uno.{% endif %}</p>
         </div>
       </div>
-    </div>
-
-    <div class="section-card card">
-      <div class="section-head"><h3>Documentos</h3>
-        <p>{% if documentos %}Los que ya subiste siguen adjuntos; sube uno nuevo
-           solo si quieres reemplazarlo.{% else %}La constancia fiscal y la lista
-           de títulos son obligatorias.{% endif %}</p></div>
       <div class="section-body">
         {% if documentos %}
           <div class="field">
@@ -111,16 +118,75 @@
             </ul>
           </div>
         {% endif %}
-        {% for campo in form_documentos %}
-          <div class="field">
-            <label for="{{ campo.id_for_label }}">
-              {{ campo.label }}
-              {% if campo.field.required %}<span class="req">*</span>{% else %}<span class="opt">opcional</span>{% endif %}
-            </label>
-            {{ campo }}
-            {% if campo.help_text %}<span class="hint">{{ campo.help_text }}</span>{% endif %}
-            {% for error in campo.errors %}<span class="hint req">{{ error }}</span>{% endfor %}
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form_documentos.constancia_fiscal %}
+          {% include "stands/parciales/campo.html" with campo=form_documentos.lista_titulos %}
+        </div>
+      </div>
+    </div>
+
+    {% comment %} ── 6 · Sellos ──
+       Al final, después de los documentos: son lo último que se llena y lo
+       que menos gente tiene. Cada fila lleva su carta al lado porque la carta
+       autoriza a representar **a ese** sello (RN-17); en dos listas paralelas
+       nadie podría decir qué carta es de cuál. {% endcomment %}
+    <div class="section-card card"
+         x-data="filasDeSellos({ visibles: {{ form_sellos.visibles_al_cargar }}, maximo: {{ maximo_sellos }} })">
+      <div class="section-head">
+        <div class="num">6</div>
+        <div>
+          <h3>Sellos que representas</h3>
+          <p>Solo si vas a exhibir el fondo de otras casas editoras.
+             Hasta {{ maximo_sellos }}.</p>
+        </div>
+      </div>
+      <div class="section-body">
+        {% for campo_nombre, campo_carta in form_sellos.filas %}
+          {% comment %} Sin Alpine, `x-show` no hace nada y se ven las diez
+             filas. El formulario funciona igual: los nombres vacíos se
+             descartan al guardar. {% endcomment %}
+          <div class="multi-fila" x-show="visibles > {{ forloop.counter0 }}">
+            {% include "stands/parciales/campo.html" with campo=campo_nombre %}
+            {% include "stands/parciales/campo.html" with campo=campo_carta %}
+            <button type="button" class="btn btn-ghost btn-row" @click="quitar({{ forloop.counter0 }})"
+                    x-show="visibles > 1">
+              Quitar
+            </button>
           </div>
+        {% endfor %}
+
+        {% for sello in sellos_actuales %}
+          {% if sello.carta %}
+            <p class="hint">
+              «{{ sello.nombre }}» ya tiene carta:
+              <a href="{% url 'stands:documento' documento_id=sello.carta.pk %}" target="_blank" rel="noopener">
+                {{ sello.carta.nombre_original|default:"archivo" }}</a>.
+              Sube una nueva solo si quieres reemplazarla.
+            </p>
+          {% endif %}
+        {% endfor %}
+
+        {% comment %} `type="button"`: sin Alpine no hace nada, que es mejor
+           que enviar el formulario sin querer. {% endcomment %}
+        <button type="button" class="btn btn-ghost" @click="agregar()"
+                x-show="visibles < maximo">
+          + Añadir otro sello
+        </button>
+      </div>
+    </div>
+
+    {% comment %} La firma de la ficha. En papel es una línea bajo «RECONOZCO
+       Y ACEPTO LAS BASES DE PARTICIPACIÓN»; aquí, una casilla obligatoria
+       pegada al botón, que es donde de verdad se decide enviar. {% endcomment %}
+    <div class="note {% if form_bases.acepto.errors %}note-err{% else %}note-gold{% endif %}">
+      <div class="ico">📋</div>
+      <div>
+        <label class="radio-row">
+          {{ form_bases.acepto }}
+          Acepto las bases de participación de {{ convocatoria.nombre }}.
+        </label>
+        {% for error in form_bases.acepto.errors %}
+          <span class="hint req">{{ error }}</span>
         {% endfor %}
       </div>
     </div>

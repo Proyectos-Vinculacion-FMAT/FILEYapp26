@@ -22,7 +22,14 @@ from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.ferias.permisos import requiere_admin_feria
 from apps.registros.permisos import requiere_participante
 
-from .formularios import DictamenForm, DocumentoForm, EditorialForm, SellosForm
+from .formularios import (
+    MAXIMO_SELLOS,
+    BasesForm,
+    DictamenForm,
+    DocumentoForm,
+    EditorialForm,
+    SellosForm,
+)
 from .models import Documento, Editorial, Solicitud
 from .servicios import archivos, configuracion, dictamen, solicitudes
 
@@ -60,6 +67,9 @@ def solicitud(peticion, convocatoria_id):
     viva = solicitudes.solicitud_viva(convocatoria, persona)
     ultima = viva or solicitudes.ultima_solicitud(convocatoria, persona)
     editorial = Editorial.objects.filter(persona=persona).first()
+    sellos_actuales = (
+        list(editorial.sellos.prefetch_related("cartas")) if editorial else []
+    )
 
     # Se puede capturar cuando no hay ninguna solicitud, cuando la última
     # fue rechazada (`RN-22`: se vuelve a aplicar) o cuando piden
@@ -83,16 +93,13 @@ def solicitud(peticion, convocatoria_id):
         formularios = {
             "form_editorial": EditorialForm(instance=editorial),
             "form_sellos": SellosForm(
-                sellos_actuales=(
-                    list(editorial.sellos.values_list("nombre", flat=True))
-                    if editorial
-                    else []
-                )
+                sellos_actuales=[s.nombre for s in sellos_actuales]
             ),
             "form_documentos": DocumentoForm(
                 ya_hay_documentos=editorial is not None
                 and editorial.documentos.exists()
             ),
+            "form_bases": BasesForm(),
         }
 
     return render(
@@ -102,7 +109,12 @@ def solicitud(peticion, convocatoria_id):
             "convocatoria": convocatoria,
             "solicitud": ultima,
             "editorial": editorial,
-            "documentos": editorial.documentos.all() if editorial else [],
+            # Solo los generales: las cartas se enseñan junto a su sello.
+            "documentos": (
+                editorial.documentos.filter(sello__isnull=True) if editorial else []
+            ),
+            "sellos_actuales": sellos_actuales,
+            "maximo_sellos": MAXIMO_SELLOS,
             "editable": editable and puede_operar,
             "convocatoria_abierta": puede_operar,
             "es_reenvio": ultima is not None
@@ -123,22 +135,35 @@ def _guardar_solicitud(peticion, convocatoria, editorial, ultima):
     que comparten la captura entera y solo difieren en la última línea.
     """
     form_editorial = EditorialForm(peticion.POST, instance=editorial)
-    form_sellos = SellosForm(peticion.POST)
+    form_sellos = SellosForm(peticion.POST, peticion.FILES)
     form_documentos = DocumentoForm(
         peticion.POST,
         peticion.FILES,
         ya_hay_documentos=editorial is not None and editorial.documentos.exists(),
     )
+    form_bases = BasesForm(peticion.POST)
     formularios = {
         "form_editorial": form_editorial,
         "form_sellos": form_sellos,
         "form_documentos": form_documentos,
+        "form_bases": form_bases,
     }
 
-    if not (form_editorial.is_valid() and form_sellos.is_valid() and form_documentos.is_valid()):
+    # Los cuatro se validan siempre —y no con cortocircuito— para que los
+    # errores salgan todos de una vez. Enterarse de tres cosas en tres
+    # envíos es lo que hace abandonar un formulario largo.
+    validos = [f.is_valid() for f in formularios.values()]
+    if not all(validos):
         # E1 de `CU-STD-001` y de `CU-STD-002`: se señala lo que falta y
-        # no se envía nada.
-        messages.error(peticion, "Revisa los campos marcados: falta información.")
+        # no se envía nada. Se dice **cuántos** son: "revisa los campos"
+        # obliga a recorrer un formulario de treinta a ciegas.
+        cuantos = sum(len(f.errors) for f in formularios.values())
+        messages.error(
+            peticion,
+            f"No se envió: falta {cuantos} campo por corregir."
+            if cuantos == 1
+            else f"No se envió: faltan {cuantos} campos por corregir.",
+        )
         return None, formularios
 
     es_reenvio = (
@@ -156,7 +181,7 @@ def _guardar_solicitud(peticion, convocatoria, editorial, ultima):
         with transaction.atomic():
             ficha = form_editorial.save(commit=False)
             ficha.persona = peticion.user
-            solicitudes.guardar_editorial(ficha, sellos=form_sellos.nombres())
+            solicitudes.guardar_editorial(ficha, sellos=form_sellos.declarados())
             _guardar_documentos(ficha, form_documentos)
             if es_reenvio:
                 solicitudes.reenviar_solicitud(ultima)
@@ -177,36 +202,32 @@ def _guardar_solicitud(peticion, convocatoria, editorial, ultima):
 
     messages.success(
         peticion,
-        "Tu solicitud se reenvió y está de nuevo en revisión."
+        "Solicitud reenviada. Te avisamos por correo en cuanto la revisemos."
         if es_reenvio
-        else "Tu solicitud fue enviada y está en revisión.",
+        else "Solicitud enviada. Te avisamos por correo en cuanto la revisemos.",
     )
     return redirect("stands:solicitud", convocatoria_id=convocatoria.pk), formularios
 
 
 def _guardar_documentos(editorial, form):
-    """Los adjuntos cuelgan de la editorial, no de la solicitud.
+    """Los adjuntos generales cuelgan de la editorial, no de la solicitud.
 
     Es lo que permite reenviar corrigiendo solo un teléfono sin volver a
-    subir la constancia fiscal (`CU-STD-002` A1). Un documento nuevo del
-    mismo tipo **sustituye** al anterior: la ficha tiene una constancia
-    fiscal, no un historial de constancias.
+    subir la constancia fiscal (`CU-STD-002` A1). Uno nuevo del mismo
+    tipo **sustituye** al anterior: la ficha tiene una constancia fiscal,
+    no un historial de constancias.
+
+    Las cartas de representación no pasan por aquí: cada una cuelga de su
+    sello y las guarda `servicios/solicitudes.py::guardar_editorial`.
     """
     for campo, tipo in form.TIPOS.items():
-        archivos = form.files.getlist(campo)
-        if not archivos:
+        archivo = form.cleaned_data.get(campo)
+        if not archivo:
             continue
-        if tipo != Documento.Tipo.CARTA_REPRESENTACION:
-            editorial.documentos.filter(tipo=tipo).delete()
-            archivos = archivos[:1]
-        else:
-            # Las cartas sí son varias —una por representado (`RN-17`)—,
-            # así que subir cartas reemplaza el juego entero.
-            editorial.documentos.filter(tipo=tipo).delete()
-        for archivo in archivos:
-            editorial.documentos.create(
-                tipo=tipo, archivo=archivo, nombre_original=archivo.name[:255]
-            )
+        editorial.documentos.filter(tipo=tipo, sello__isnull=True).delete()
+        editorial.documentos.create(
+            tipo=tipo, archivo=archivo, nombre_original=archivo.name[:255]
+        )
 
 
 # ── A1 y A2 · Panel del administrador ─────────────────────────
@@ -278,20 +299,32 @@ def detalle_solicitud(peticion, solicitud_id):
             try:
                 if accion == "aceptar":
                     dictamen.aceptar(solicitud_obj, revisor=peticion.user)
-                    messages.success(peticion, "Solicitud aceptada. Se avisó al aplicante.")
+                    messages.success(
+                        peticion,
+                        f"Aceptaste a {solicitud_obj.datos_editorial.get('nombre', 'la editorial')}. "
+                        "Ya puede reservar stands y se le avisó por correo.",
+                    )
                 elif accion == "rechazar":
                     dictamen.rechazar(solicitud_obj, revisor=peticion.user, motivo=motivo)
-                    messages.success(peticion, "Solicitud rechazada. Se avisó al aplicante.")
+                    messages.success(
+                        peticion,
+                        "Solicitud rechazada. Se le avisó por correo y puede "
+                        "volver a aplicar mientras la convocatoria siga abierta.",
+                    )
                 else:
                     dictamen.solicitar_cambios(
                         solicitud_obj, revisor=peticion.user, motivo=motivo
                     )
-                    messages.success(peticion, "Se pidieron cambios. Se avisó al aplicante.")
+                    messages.success(
+                        peticion,
+                        "Cambios pedidos. Se le mandó tu nota por correo; la "
+                        "solicitud vuelve a la cola cuando la corrija.",
+                    )
                 return redirect("stands:detalle_solicitud", solicitud_id=solicitud_obj.pk)
             except dictamen.DictamenRechazado as exc:
                 messages.error(peticion, str(exc))
         else:
-            messages.error(peticion, "No se entendió la acción.")
+            messages.error(peticion, "Elige una de las tres acciones.")
     else:
         form = DictamenForm()
 
