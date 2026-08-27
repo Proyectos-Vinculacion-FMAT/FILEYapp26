@@ -59,7 +59,8 @@ erDiagram
 
     RouterDocumentos {
         bigint id PK
-        bigint solicitud_id FK
+        bigint tipo_actividad_id FK "DISCRIMINADOR"
+        bigint detalle_id FK "REFERENCIA POLIMORFICA"
         string tipo_documento
         string storage_key
     }
@@ -164,9 +165,9 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
     Solicitudes_EVT ||--o{ RouterActividades : "contiene"
-    Solicitudes_EVT ||--o{ RouterDocumentos : "adjunta"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
+    CatalogoActividades ||--o{ RouterDocumentos : "clasifica"
 
     RouterActividades }o..|| Actividad_Conversatorio : "enruta"
     RouterActividades }o..|| Actividad_Conferencia : "enruta"
@@ -176,3 +177,6 @@ erDiagram
     RouterActividades }o..|| Actividad_PresentacionRevista : "enruta"
     RouterActividades }o..|| Actividad_LecturaObra : "enruta"
     RouterActividades }o..|| Actividad_Encuentro : "enruta"
+
+    RouterDocumentos }o..|| Actividad_PresentacionLibro : "adjunta"
+    RouterDocumentos }o..|| Actividad_PresentacionRevista : "adjunta"
