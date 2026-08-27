@@ -1,0 +1,513 @@
+/* =========================================================
+   FILEY — Paleta secundaria: estilos y usos
+   -----------------------------------------------------------
+   Origen: Figma > Copiar/Pegar como > Copiar como código > CSS
+   (todas las capas). El export original no es CSS válido (son
+   declaraciones de propiedades sueltas, sin selectores ni
+   llaves, con "font-family: 'Inter'" genérico de Figma).
+   Este archivo corrige eso: selectores reales, sin errores de
+   sintaxis, tokens reutilizables en :root y tipografía
+   institucional FILEY en vez de la fuente por defecto de Figma.
+   La sección "Ejemplo de uso" extiende lo que el frame de Figma
+   dejó sin definir (el export termina en el título sin componentes).
+   Ver también: ../identidad-institucional.md
+   ========================================================= */
+
+:root {
+  /* Paleta secundaria */
+
+  /* Familia morado–magenta */
+  --color-morado: #955FF2;
+  --color-magenta-oscuro: #70124C;
+
+  /* Familia verde */
+  --color-verde-lima: #99BA15;
+  --color-verde-700: #839F10;
+  --color-verde-800: #6C840B;
+  --color-verde-degradado-oscuro: #3F4E00;
+
+  /* Familia rojo */
+  --color-rojo: #CC311D;
+  --color-rojo-700: #912111;
+  --color-rojo-800: #73190B;
+  --color-rojo-degradado-oscuro: #551104;
+
+  /* Neutrales (compartidos con primary colors usage.css en un sistema real;
+     se repiten aquí para que el archivo sea autocontenido). */
+  --color-blanco: #FFFFFF;
+  --color-negro: #000000;
+
+  /* Tipografía institucional: FILEY usa "Open Sans" (filey.org).
+     No se carga como webfont (el prototipo es intencionalmente
+     sin dependencias de red): se declara el nombre real y se
+     deja caer a fuentes de sistema si no está instalada. */
+  --font-filey: "Open Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  --radio-card: 13px;
+  --radio-btn: 16px;
+  --radio-pill: 30px;
+  --sombra-card: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+/* ===================== Frame contenedor (1080×1920) =====================
+   Mismo ancho y alto mínimo que primary colors usage.css para mantener
+   consistencia entre las dos referencias de paleta. */
+.fs-frame {
+  position: relative;
+  width: 1080px;
+  min-height: 1920px;
+  margin: 0 auto;
+  background: var(--color-blanco);
+  font-family: var(--font-filey);
+  color: var(--color-negro);
+  box-shadow: var(--sombra-card);
+}
+
+.fs-title,
+.fs-title-secondary {
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 48px;
+  color: var(--color-negro);
+}
+
+.fs-title {
+  padding: 30px 0 10px;
+}
+
+.fs-title-secondary {
+  margin: 0 0 24px;
+}
+
+.fs-subtitle {
+  width: 100%;
+  padding: 0 0 30px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--color-verde-800);
+}
+
+.fs-section {
+  padding: 40px 60px;
+}
+
+.fs-section + .fs-section {
+  border-top: 1px solid #e4e7ec;
+}
+
+.fs-section-title {
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 39px;
+  color: var(--color-morado);
+  margin: 0 0 24px;
+}
+
+/* ===================== Paleta secundaria (swatches) =====================
+   inline-flex: mismo motivo que en primary colors usage.css — el borde
+   debe ajustarse al ancho real de los swatches, no al 100% de .fs-section. */
+.fs-swatch-grid {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 1px solid var(--color-negro);
+}
+
+.fs-swatch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 87px;
+  height: 87px;
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.fs-swatch--morado                 { background: var(--color-morado);                 color: var(--color-blanco); }
+.fs-swatch--magenta-oscuro         { background: var(--color-magenta-oscuro);          color: #F5F5F5; }
+.fs-swatch--verde-lima             { background: var(--color-verde-lima);              color: #262626; }
+.fs-swatch--verde-700              { background: var(--color-verde-700);               color: var(--color-blanco); }
+.fs-swatch--verde-800              { background: var(--color-verde-800);               color: var(--color-blanco); }
+.fs-swatch--verde-degradado-oscuro { background: var(--color-verde-degradado-oscuro);  color: var(--color-blanco); }
+.fs-swatch--rojo                   { background: var(--color-rojo);                    color: var(--color-blanco); }
+.fs-swatch--rojo-700               { background: var(--color-rojo-700);               color: var(--color-blanco); }
+.fs-swatch--rojo-800               { background: var(--color-rojo-800);               color: var(--color-blanco); }
+.fs-swatch--rojo-degradado-oscuro  { background: var(--color-rojo-degradado-oscuro);   color: var(--color-blanco); }
+
+/* ===================== Colores de texto sobre fondo ===================== */
+.fs-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.fs-usage-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Borde del "chip card": usa el color más oscuro de su propia familia.
+   El export de Figma usaba #6E4D03 (dorado de la paleta primaria) como
+   borde de todos los chips — se corrige aquí con el token semántico correcto. */
+.fs-usage-card__chips {
+  display: flex;
+  height: 110px;
+  border: 1px solid;
+  border-radius: var(--radio-card);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+}
+
+.fs-usage-card__chips--verde   { border-color: var(--color-verde-degradado-oscuro); }
+.fs-usage-card__chips--rojo    { border-color: var(--color-rojo-degradado-oscuro); }
+.fs-usage-card__chips--magenta { border-color: var(--color-magenta-oscuro); }
+
+.fs-usage-card__chip {
+  flex: 1 1 0;
+}
+
+.fs-usage-card__chip--blanco    { background: var(--color-blanco); }
+.fs-usage-card__chip--verde-800 { background: var(--color-verde-800); }
+.fs-usage-card__chip--rojo-800  { background: var(--color-rojo-800); }
+.fs-usage-card__chip--morado    { background: var(--color-morado); }
+
+.fs-usage-card__label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 49px;
+  padding: 5px;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 27px;
+  text-align: center;
+}
+
+.fs-usage-card__label--fondo-verde   { background: var(--color-verde-800);  color: var(--color-blanco); }
+.fs-usage-card__label--fondo-rojo    { background: var(--color-rojo-800);   color: var(--color-blanco); }
+.fs-usage-card__label--fondo-magenta { background: var(--color-morado);     color: var(--color-blanco); }
+.fs-usage-card__label--texto-verde   { background: var(--color-blanco);     color: var(--color-verde-800); }
+.fs-usage-card__label--texto-rojo    { background: var(--color-blanco);     color: var(--color-rojo-800); }
+.fs-usage-card__label--texto-magenta { background: var(--color-blanco);     color: var(--color-morado); }
+
+/* ===================== Degradados ===================== */
+.fs-gradient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.fs-gradient-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.fs-gradient-card__gradients {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid;
+  border-radius: var(--radio-card);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+}
+
+.fs-gradient-card--verde   .fs-gradient-card__gradients { border-color: var(--color-verde-degradado-oscuro); }
+.fs-gradient-card--rojo    .fs-gradient-card__gradients { border-color: var(--color-rojo-degradado-oscuro); }
+.fs-gradient-card--magenta .fs-gradient-card__gradients { border-color: var(--color-magenta-oscuro); }
+
+.fs-gradient-card__radial { height: 150px; }
+.fs-gradient-card__linear { height: 110px; }
+
+.fs-gradient-card--verde   .fs-gradient-card__radial {
+  background: radial-gradient(50% 132.3% at 50% 50%, var(--color-verde-lima) 0%, var(--color-verde-degradado-oscuro) 100%);
+}
+.fs-gradient-card--verde   .fs-gradient-card__linear {
+  background: linear-gradient(90deg, var(--color-verde-lima) 0%, var(--color-verde-degradado-oscuro) 100%);
+}
+.fs-gradient-card--rojo    .fs-gradient-card__radial {
+  background: radial-gradient(50% 132.3% at 50% 50%, var(--color-rojo) 0%, var(--color-rojo-degradado-oscuro) 100%);
+}
+.fs-gradient-card--rojo    .fs-gradient-card__linear {
+  background: linear-gradient(90deg, var(--color-rojo) 0%, var(--color-rojo-degradado-oscuro) 100%);
+}
+.fs-gradient-card--magenta .fs-gradient-card__radial {
+  background: radial-gradient(50% 132.3% at 50% 50%, var(--color-morado) 0%, var(--color-magenta-oscuro) 100%);
+}
+.fs-gradient-card--magenta .fs-gradient-card__linear {
+  background: linear-gradient(78.51deg, var(--color-morado) 0.21%, var(--color-magenta-oscuro) 100.21%);
+}
+
+.fs-gradient-card__label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 49px;
+  padding: 5px;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 27px;
+  color: var(--color-blanco);
+  text-align: center;
+}
+
+.fs-gradient-card--verde   .fs-gradient-card__label { background: var(--color-verde-800); }
+.fs-gradient-card--rojo    .fs-gradient-card__label { background: var(--color-rojo-800); }
+.fs-gradient-card--magenta .fs-gradient-card__label { background: var(--color-morado); }
+
+/* ===================== Agrupación (group box) ===================== */
+.fs-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 35px;
+  padding: 30px 25px;
+  border: 1px solid var(--color-negro);
+}
+
+.fs-group__title {
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.2;
+  color: var(--color-morado);
+  margin: 0;
+}
+
+.fs-group__text {
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--color-verde-800);
+  text-align: center;
+  max-width: 813px;
+  margin: 0;
+}
+
+.fs-group__hint {
+  font-size: 18px;
+  line-height: 1.4;
+  color: #6b7686;
+  text-align: center;
+  margin: 0;
+}
+
+/* ===================== Etiquetas de categoría =====================
+   Pills de clasificación para los tres dominios de la paleta secundaria. */
+.fs-tag-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.fs-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 24px;
+  border-radius: var(--radio-pill);
+  font-family: var(--font-filey);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--color-blanco);
+  cursor: default;
+}
+
+.fs-tag--verde   { background: var(--color-verde-800); }
+.fs-tag--rojo    { background: var(--color-rojo-800); }
+.fs-tag--magenta { background: var(--color-morado); }
+
+.fs-tag:hover {
+  opacity: 0.88;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* ===================== Tarjetas de actividad ===================== */
+.fs-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  width: 100%;
+}
+
+.fs-activity-card {
+  border: 1px solid #d0d5dd;
+  border-radius: var(--radio-card);
+  overflow: hidden;
+  box-shadow: var(--sombra-card);
+  background: var(--color-blanco);
+}
+
+.fs-activity-card__header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--color-blanco);
+}
+
+.fs-activity-card__header--verde   { background: var(--color-verde-800); }
+.fs-activity-card__header--rojo    { background: var(--color-rojo-800); }
+.fs-activity-card__header--magenta { background: var(--color-morado); }
+
+.fs-activity-card__body {
+  padding: 18px;
+}
+
+.fs-activity-card__title {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.3;
+  color: var(--color-negro);
+  margin: 0 0 8px;
+}
+
+.fs-activity-card__meta {
+  font-size: 18px;
+  line-height: 1.4;
+  color: #6b7686;
+  margin: 0 0 14px;
+}
+
+.fs-activity-card__cupo {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.fs-activity-card__cupo--disponible { color: var(--color-verde-800); }
+.fs-activity-card__cupo--lleno      { color: var(--color-rojo-800); }
+.fs-activity-card__cupo--espera     { color: var(--color-morado); }
+
+/* ===================== Alertas y avisos =====================
+   Borde izquierdo grueso codificado por color; fondo neutro para
+   no competir con la paleta primaria cuando ambas conviven en pantalla. */
+.fs-alert-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.fs-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 22px;
+  border-left: 6px solid;
+  border-radius: 0 var(--radio-card) var(--radio-card) 0;
+  background: #fafafa;
+  box-shadow: var(--sombra-card);
+}
+
+.fs-alert--verde   { border-color: var(--color-verde-800); }
+.fs-alert--rojo    { border-color: var(--color-rojo-800); }
+.fs-alert--magenta { border-color: var(--color-morado); }
+
+.fs-alert__dot {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-top: 4px;
+}
+
+.fs-alert--verde   .fs-alert__dot { background: var(--color-verde-800); }
+.fs-alert--rojo    .fs-alert__dot { background: var(--color-rojo-800); }
+.fs-alert--magenta .fs-alert__dot { background: var(--color-morado); }
+
+.fs-alert__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fs-alert__title {
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--color-negro);
+  margin: 0;
+}
+
+.fs-alert__desc {
+  font-size: 18px;
+  line-height: 1.4;
+  color: #6b7686;
+  margin: 0;
+}
+
+/* ===================== Indicadores de cupo ===================== */
+.fs-cupo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  width: 100%;
+}
+
+.fs-cupo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px 18px;
+  border: 1px solid #d0d5dd;
+  border-radius: var(--radio-card);
+  box-shadow: var(--sombra-card);
+}
+
+.fs-cupo-card__label {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--color-negro);
+  margin: 0;
+}
+
+.fs-cupo-bar {
+  width: 100%;
+  height: 18px;
+  border-radius: var(--radio-pill);
+  background: #eaecf0;
+  overflow: hidden;
+}
+
+.fs-cupo-bar__fill {
+  height: 100%;
+  border-radius: var(--radio-pill);
+}
+
+.fs-cupo-bar__fill--verde   { background: var(--color-verde-800); }
+.fs-cupo-bar__fill--rojo    { background: var(--color-rojo-800); }
+.fs-cupo-bar__fill--magenta { background: var(--color-morado); }
+
+.fs-cupo-card__stats {
+  font-size: 18px;
+  line-height: 1.4;
+  color: #6b7686;
+  margin: 0;
+}
+
+/* ===================== Pie del frame ===================== */
+.fs-frame-footer {
+  padding: 30px 60px 60px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #6b7686;
+}
