@@ -50,7 +50,7 @@ siguiente.
 
 ### Sin decidir
 
-Ver §4. Queda una que bloquea una fase: los trabajos programados.
+Ver §4. Queda una que bloquea una fase: quién invoca la barrida diaria de la fase 6.
 
 > [!note] Qué cambió respecto del plan anterior
 > **El mapa dejó de ser la fase cara.** Era el riesgo mayor —editor dentro del sistema,
@@ -86,19 +86,24 @@ Ver §4. Queda una que bloquea una fase: los trabajos programados.
 | Decisión | Qué bloquea | Estado |
 | --- | --- | --- |
 | **Almacenamiento de archivos** | Fase 2 (`CU-STD-001`) | ✅ [ADR-0007](<../adr/0007-los-archivos-empiezan-en-disco.md>) — 2026-08-27 |
-| **Trabajos programados** | Fase 6 | Pendiente |
+| **Quién invoca la barrida diaria** | Fase 6 | Pendiente |
 
 **Almacenamiento — decidido y construido.** Empieza en disco y el paso a un almacén de objetos
 es una variable de entorno, no código. Con eso la fase 2 deja de estar bloqueada. Lo que queda
 es una deuda con nombre: mientras Render siga en `plan: free` no hay disco persistente y los
-archivos se pierden en cada despliegue — `manage.py check --deploy` lo dice en voz alta
-(`comun.W001`) para que no se olvide.
+archivos se pierden en cada commit a la rama desplegada — `manage.py check --deploy` lo dice en
+voz alta (`comun.W001`) para que no se olvide.
 
-**Trabajos programados — sigue abierto.** Seis casos de uso son temporales y no hay
-planificador. Lo coherente con ADR-0001 es un comando idempotente de `manage.py` invocado desde
-fuera; **quién lo invoca** es lo que falta decidir, y depende del plan de Render: los Cron Jobs
-son un servicio de pago, mientras que los workflows programados de GitHub Actions ya están
-montados en el repositorio y no cuestan nada. No bloquea la fase 2.
+**La barrida — sigue abierto, y es más pequeño de lo que parecía.** Lo que hace falta es **un**
+comando de `manage.py`, idempotente, que corra una vez al día; no un planificador para seis
+procesos (ver la fase 6). Lo único que falta decidir es quién lo invoca:
+
+| Opción | Nota |
+| --- | --- |
+| **Workflow programado de GitHub Actions** | Ya hay tres workflows en el repositorio y uno más no cuesta nada. Correría contra Supabase, que es el mismo patrón que ya usan las migraciones. |
+| **Cron Job de Render** | Servicio de pago aparte. Correría dentro del contenedor, con el mismo entorno que la aplicación. |
+
+No bloquea la fase 2.
 
 ### Fase 2 · Solicitud
 
@@ -167,12 +172,35 @@ montados en el repositorio y no cuestan nada. No bloquea la fase 2.
 
 > `CU-STD-022` a `027` · sin vistas · **necesita** las fases 1 y 5.
 
-- Los seis procesos temporizados, cada uno idempotente y ejecutable a mano desde `manage.py`.
-- Vencimiento del plazo, pronto pago, umbrales del 50% y el 100%, avisos de posible cancelación.
+> [!important] No son seis procesos temporizados — es uno
+> El plan decía "los seis procesos temporizados" y los casos de uso no lo sostienen. Corregido
+> el 2026-08-27, porque cambia el tamaño de la decisión de la fase 1.
+
+**Lo que necesita reloj es una sola barrida diaria**, la de `CU-STD-022` paso 3: recorre las
+reservas `Por confirmar`, y de las que ya pasaron su `fecha_vencimiento_anticipo` sin llegar al
+50% dispara el aviso al administrador (`CU-STD-024`) y la advertencia al aplicante
+(`CU-STD-025`). Esos dos no son procesos aparte: son lo que la barrida hace al encontrar algo.
+
+**Lo que no necesita reloj** son los umbrales. `CU-STD-026` (50%) y `CU-STD-027` (100%) se
+disparan *durante la reevaluación del saldo*, o sea dentro de validar un abono, en la misma
+petición y de forma síncrona. No hay nada que esperar.
+
+`CU-STD-023` —el 10% por pronto pago— está a caballo: se aplica al validar el abono, y la
+barrida solo lo recoge en casos de borde.
+
+> [!warning] La barrida tiene que recorrer los schemas, no las filas
+> `Reserva` vive en el schema de cada feria y ninguna consulta lleva filtro de edición
+> (`ADR-0003`). Un `Reserva.objects.filter(...)` desde `public` no ve **nada**: no falla, no
+> devuelve nada, y el comando parecería no tener trabajo. Hay que iterar las ferias y correr la
+> barrida dentro de cada una — el mismo patrón que `migrate_schemas`.
+>
+> Y solo sobre las ediciones vivas: una feria archivada no manda avisos de vencimiento a nadie.
 
 > [!important] Vencer el plazo no libera nada
-> El sistema notifica y espera la decisión de una persona (`RN-12`). Es la regla que más se presta
-> a implementarse de más.
+> El sistema notifica y espera la decisión de una persona (`RN-12`, y el paso 7 de
+> `CU-STD-022`): la reserva se queda donde está hasta que alguien la cancele o la prorrogue. Es
+> la regla que más se presta a implementarse de más — un comando que "limpia" reservas vencidas
+> liberaría stands que nadie decidió liberar.
 
 ### Fase 7 · Administración restante
 
@@ -200,7 +228,7 @@ montados en el repositorio y no cuestan nada. No bloquea la fase 2.
 
 | Pregunta | Bloquea | Quién decide |
 | --- | --- | --- |
-| Cómo corren los trabajos programados | Fase 6 | Equipo — es un ADR, y depende del plan de Render |
+| Quién invoca la barrida diaria: Actions o un cron de Render | Fase 6 | Equipo — es un ADR, y depende del plan de Render |
 | Subir Render a `starter` para tener disco persistente, o contratar almacén de objetos | Nada, pero hay archivos en juego | Equipo — ver ADR-0007 |
 | Retirar un descuento: ¿borra la fila o la marca? | Fase 5 | Equipo |
 | ¿Hace falta el desglose de una reserva vieja tal como se aceptó? | Fase 7 | Cliente |
@@ -213,7 +241,7 @@ montados en el repositorio y no cuestan nada. No bloquea la fase 2.
 ## 5. Por dónde empezar
 
 **La fase 2, que ya no está bloqueada.** Con la fase 0 y el almacenamiento resueltos, nada
-impide empezar `apps/stands`. La decisión que queda de la fase 1 —los trabajos programados— no
+impide empezar `apps/stands`. La decisión que queda de la fase 1 —quién invoca la barrida— no
 la bloquea: hace falta en la fase 6.
 
 **Es la fase que estrena el enganche.** `apps/stands` será la primera app en
