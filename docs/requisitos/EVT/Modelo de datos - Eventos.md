@@ -38,15 +38,16 @@ dato queda en ambos lados.
 ### Elementos de asociación y enrutamiento
 
 Tres tablas intermedias resuelven las relaciones. Ninguna guarda datos de negocio: solo
-conectan entidades y, cuando hace falta, indican **a qué tabla** apunta la conexión. Dos de
-ellas son polimórficas y las alimenta un catálogo, en vez de guardar el discriminador como un
-string suelto; la tercera no lo necesita, porque siempre apunta al mismo destino.
+conectan entidades y, cuando hace falta, indican **a qué tabla** apunta la conexión. Todas son
+polimórficas y las alimentan dos catálogos —uno por router, salvo el de documentos, que
+**reutiliza el mismo catálogo que el de actividades** en vez de tener uno propio, porque enruta
+contra el mismo conjunto de ocho tablas.
 
 | Tabla | Propósito |
 | --- | --- |
 | Router de solicitudes | Relaciona a la persona con las solicitudes que ha creado. Su discriminador, `convocatoria_id`, es una FK a `CatalogoConvocatorias` (§2.2); la fila referida trae el `prefijo` (`EVT`, `TAL`, `STD` o `VIS`) con el que se resuelve a qué tabla pertenece la solicitud. Es único para todo el sistema: sirve a los cuatro dominios. |
 | Router de actividades | Relaciona una solicitud con su actividad específica. Su discriminador, `tipo_actividad_id`, es una FK a `CatalogoActividades` (§2.5); la fila referida trae el `nombre` con el que se resuelve cuál de las ocho tablas la contiene. |
-| Router de documentos | Relaciona los archivos adjuntos con la solicitud que los requiere. FK directa a `Solicitudes_EVT` —no polimórfica: el objeto que tiene folio propio es la solicitud, no la actividad específica, y `RouterActividades` ya garantiza que cada solicitud resuelve a un único tipo—. `tipo_documento` queda limitado a `portada_libro`, `portada_revista` y `retrato_autor`, los únicos adjuntos que existen hoy y que solo aplican cuando el tipo de actividad de la solicitud es presentación de libro o revista. |
+| Router de documentos | Relaciona los archivos adjuntos con la actividad específica que los requiere. Comparte discriminador con el router de actividades —`tipo_actividad_id`, FK al mismo `CatalogoActividades`— y resuelve contra la misma tabla `Actividad_*`. Hoy solo hay filas para presentación de libro y revista, pero el esquema no limita a esas dos: cualquier tipo de actividad que llegue a necesitar un archivo usa el mismo mecanismo sin cambiar la tabla. |
 
 Visualmente:
 
@@ -65,12 +66,11 @@ flowchart TD
 
     CA[(CatalogoActividades<br/>8 tipos)]
     RA{{Router de actividades<br/>discriminador: tipo_actividad_id}}
+    RD{{Router de documentos<br/>discriminador: tipo_actividad_id}}
 
     A_1[Actividad tipo 1]
     A_2[Actividad tipo 2]
     A_n[Actividad tipo N]
-
-    RD{{Router de documentos<br/>tipo_documento + storage_key}}
 
     U --> RS
     CC --> RS
@@ -82,34 +82,41 @@ flowchart TD
 
     S_EVT --> RA
     CA --> RA
-    S_EVT --> RD
+    CA --> RD
 
     RA -.->|solo una| A_1
     RA -.-> A_2
     RA -.-> A_n
+
+    RD -.->|si requiere archivos| A_1
 
     style S_EVT fill:#2C4C8C , stroke:#01457C
 ```
 
 ### Referencias polimórficas
 
-`RouterSolicitudes` y `RouterActividades` comparten un mecanismo: guardan un **discriminador**
-que nombra la tabla destino y un **identificador** de la fila dentro de esa tabla. El
-discriminador vive **en la fila del router**, no en el catálogo: ya no es un string suelto,
-sino una FK (`convocatoria_id`, `tipo_actividad_id`) hacia una tabla de catálogo. El catálogo
-referido no es el discriminador —es el que la aplicación consulta, ya siguió la FK, para
-resolver a qué tabla apunta—, a través de un campo propio de esa fila: `prefijo` en
-`CatalogoConvocatorias`, `nombre` en `CatalogoActividades`. Agregar una convocatoria o un tipo
-de actividad es entonces dar de alta una fila de catálogo, no tocar un `enum` en código.
+Los tres routers comparten un mecanismo: guardan un **discriminador** que nombra la tabla
+destino y un **identificador** de la fila dentro de esa tabla. El discriminador vive **en la
+fila del router**, no en el catálogo: ya no es un string suelto, sino una FK (`convocatoria_id`,
+`tipo_actividad_id`) hacia una tabla de catálogo. El catálogo referido no es el discriminador
+—es el que la aplicación consulta, ya siguió la FK, para resolver a qué tabla apunta—, a través
+de un campo propio de esa fila: `prefijo` en `CatalogoConvocatorias`, `nombre` en
+`CatalogoActividades`. Agregar una convocatoria o un tipo de actividad es entonces dar de alta
+una fila de catálogo, no tocar un `enum` en código.
+
+`RouterActividades` y `RouterDocumentos` (§2.6, §2.8) van un paso más allá: **comparten el
+mismo catálogo**. No hay un `CatalogoDocumentos` aparte —sería un catálogo con el mismo
+contenido que `CatalogoActividades`, solo que vacío en seis de sus ocho filas—; ambos routers
+discriminan contra `CatalogoActividades` y resuelven a la misma familia de tablas `Actividad_*`.
+Lo único que distingue su alcance es de negocio, no de esquema: hoy únicamente presentación de
+libro y revista requieren archivos, pero cualquier tipo nuevo que los necesite usa el mecanismo
+que ya existe.
 
 | Router | Discriminador (en el router) | Se resuelve con | Identificador | Destinos posibles |
 | --- | --- | --- | --- | --- |
 | `RouterSolicitudes` | `convocatoria_id` (FK) | `CatalogoConvocatorias.prefijo` | `solicitud_id` | `Solicitudes_EVT`, `Solicitudes_TAL`, `Solicitudes_STD`, `Solicitudes_VIS` |
 | `RouterActividades` | `tipo_actividad_id` (FK) | `CatalogoActividades.nombre` | `detalle_id` | Las ocho tablas `Actividad_*` |
-
-`RouterDocumentos` (§2.8) queda fuera de esta tabla a propósito: no es polimórfico. Apunta
-siempre a `Solicitudes_EVT` mediante una FK normal, así que no necesita discriminador ni
-identificador polimórfico.
+| `RouterDocumentos` | `tipo_actividad_id` (FK) | `CatalogoActividades.nombre` | `detalle_id` | Las ocho tablas `Actividad_*` (en la práctica, solo hay filas para `Actividad_PresentacionLibro` y `Actividad_PresentacionRevista`) |
 
 Como el identificador puede apuntar a tablas distintas según el discriminador, **no es una
 clave foránea con restricción**: la base de datos no puede validarlo. La integridad depende de
@@ -194,7 +201,8 @@ erDiagram
 
     RouterDocumentos {
         bigint id PK
-        bigint solicitud_id FK
+        bigint tipo_actividad_id FK "DISCRIMINADOR"
+        bigint detalle_id FK "REFERENCIA POLIMORFICA"
         string tipo_documento
         string storage_key
     }
@@ -299,9 +307,9 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_EVT : "enruta"
 
     Solicitudes_EVT ||--o{ RouterActividades : "contiene"
-    Solicitudes_EVT ||--o{ RouterDocumentos : "adjunta"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
+    CatalogoActividades ||--o{ RouterDocumentos : "clasifica"
 
     RouterActividades }o..|| Actividad_Conversatorio : "enruta"
     RouterActividades }o..|| Actividad_Conferencia : "enruta"
@@ -311,6 +319,9 @@ erDiagram
     RouterActividades }o..|| Actividad_PresentacionRevista : "enruta"
     RouterActividades }o..|| Actividad_LecturaObra : "enruta"
     RouterActividades }o..|| Actividad_Encuentro : "enruta"
+
+    RouterDocumentos }o..|| Actividad_PresentacionLibro : "adjunta"
+    RouterDocumentos }o..|| Actividad_PresentacionRevista : "adjunta"
 ```
 
 ### 2.1 Persona
@@ -396,6 +407,8 @@ participante, y por eso se definen junto a cada `nombre_participante_*` en las t
 Catálogo de los ocho tipos de actividad. Antes `RouterActividades.tipo_actividad` guardaba el
 valor de texto directamente; ahora ese campo es una FK hacia aquí, y esta tabla es la que la
 aplicación consulta, una vez seguida la FK, para saber a qué tabla `Actividad_*` corresponde.
+`RouterDocumentos` (§2.8) reutiliza este mismo catálogo como su propio discriminador —no tiene
+uno aparte—, porque enruta contra la misma familia de tablas.
 
 | Atributo | Descripción |
 | --- | --- |
@@ -468,7 +481,7 @@ administrador escribe**, se movió a `DetallesAdminSolicitud` (§3.1), con nota 
 únicamente a solicitudes de este tipo o de `Actividad_PresentacionRevista`.
 
 Las fotografías del autor y de la portada dejaron de tener un booleano `tiene_foto_*` en esta
-tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), anclado a la solicitud.
+tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), anclado a esta misma tabla.
 
 #### Actividad_PresentacionRevista
 
@@ -493,25 +506,31 @@ booleano de caché, se consulta en `RouterDocumentos` (§2.8).
 
 ### 2.8 RouterDocumentos
 
-Registro de los archivos que acompañan a una solicitud. FK directa a `Solicitudes_EVT`, **no
-polimórfica**: el objeto que tiene folio propio y existencia única es la solicitud, no la
-actividad específica, y esa relación ya la resuelve `RouterActividades` (§2.6) —una solicitud
-apunta exactamente a una de las ocho tablas `Actividad_*`—. Anclar los documentos ahí otra vez
-habría sido introducir un segundo enrutamiento polimórfico para un caso que no lo necesita:
-`tipo_documento` ya distingue de sobra a qué publicación pertenece cada archivo, sin tener que
-apuntar a una tabla distinta.
+Registro de los archivos que acompañan a una **actividad específica**, no a la solicitud en
+general. Es polimórfico, y reutiliza exactamente el mismo mecanismo que `RouterActividades`
+(§2.6) en vez de definir uno propio: mismo discriminador (`tipo_actividad_id`, FK a
+`CatalogoActividades`, §2.5), mismo identificador (`detalle_id`, apuntando a la fila de
+`Actividad_*` que corresponda). No hay un catálogo de "tipos de documento por actividad"
+separado porque sería el mismo catálogo con la mayoría de sus filas sin usar.
 
-En la práctica solo existen filas aquí para solicitudes cuyo tipo de actividad (§2.6) es
-presentación de libro o revista; para el resto, la tabla queda vacía. Esa restricción no la
-impone la base de datos —la FK es válida contra cualquier `Solicitudes_EVT`—, la impone la capa
-de aplicación, igual que ya ocurre con la relación entre discriminador e identificador de los
-routers polimórficos (§1).
+Anclarlo a `Solicitudes_EVT` con una FK simple —como se intentó en una revisión anterior de
+este documento— resolvía el caso de hoy (solo libro y revista llevan archivos) pero cerraba la
+puerta a que otro tipo de actividad los necesite mañana sin agregar una columna nueva. Al
+compartir el discriminador con `RouterActividades`, agregar un adjunto a un tipo de actividad
+que hoy no lleva ninguno no requiere ninguna migración: solo empezar a escribir filas aquí con
+ese `tipo_actividad_id`.
+
+En la práctica, hoy solo existen filas para `Actividad_PresentacionLibro` y
+`Actividad_PresentacionRevista`; para el resto de tipos, la tabla queda vacía. Esa restricción
+no la impone la base de datos —el patrón polimórfico nunca lo hace (§1)—, la impone que
+ningún otro formulario pida adjuntos todavía.
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| solicitud_id | FK → Solicitudes_EVT. |
-| tipo_documento | Qué documento es, sobre el conjunto cerrado `portada_libro`, `portada_revista` o `retrato_autor` (este último solo aplica a libro). |
+| tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.5); comparte el mismo campo y el mismo significado que `RouterActividades.tipo_actividad_id`. |
+| detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda (§1) — hoy, siempre una de las dos tablas de presentación. |
+| tipo_documento | Qué documento es. Hoy usa `portada_libro`, `portada_revista` o `retrato_autor` (este último solo aplica a libro); un tipo de actividad nuevo que requiera archivos agrega sus propios valores aquí, sin tocar la tabla. |
 | storage_key | Ubicación del archivo almacenado. El formato —clave de almacenamiento, ruta o URL— está por definir. |
 
 ---
@@ -740,7 +759,7 @@ ventana normal, ediciones manuales del programa y similares.
 - **Persona** (`REG`) 1—N **RouterSolicitudes** 1—1 **Solicitudes_EVT**. Único camino entre una persona y sus solicitudes.
 - **CatalogoActividades** 1—N **RouterActividades**. Cada fila de enrutamiento clasifica contra un tipo del catálogo.
 - **Solicitudes_EVT** 1—1 **RouterActividades** →(polimórfica) **Actividad_\***. Una de las ocho, según `tipo_actividad_id`.
-- **Solicitudes_EVT** 1—N **RouterDocumentos** (no polimórfica). En la práctica solo hay filas cuando el tipo de actividad es presentación de libro o revista.
+- **CatalogoActividades** 1—N **RouterDocumentos** →(polimórfica) **Actividad_\***. Comparte catálogo y mecanismo con `RouterActividades`; en la práctica solo hay filas para presentación de libro y revista.
 
 ### Etapa 2 — administración y programación
 
