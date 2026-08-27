@@ -29,11 +29,14 @@ Lo que hay alrededor sí condiciona la decisión:
 
 - **Render está en `plan: free`**. Ahí el sistema de archivos del contenedor es efímero: cada
   despliegue lo reemplaza. Los discos persistentes son de los planes de pago.
+- **El despliegue está partido en dos sistemas que no se coordinan.** GitHub Actions corre las
+  migraciones contra Supabase; Render construye y sirve el contenedor Docker por su cuenta. No
+  hay un sitio en el repositorio donde se configure el servicio: `render.yaml` es un vestigio y
+  no gobierna nada.
 - **Render despliega solo al recibir un commit en la rama vigilada.** Eso convierte "se pierden
   en cada despliegue" en "se pierden en cada commit": en un entorno de pruebas activo, un
   archivo subido no sobrevive a la siguiente tarde de trabajo.
-- **La base de datos es Supabase** —lo dice el comentario de `DATABASE_URL` en
-  `filey/render.yaml`—, y Supabase incluye un almacén de objetos compatible con S3 en la misma cuenta. No
+- **La base de datos es Supabase**, y Supabase incluye un almacén de objetos compatible con S3 en la misma cuenta. No
   está confirmado que esté habilitado.
 - **Estos archivos no son públicos.** Son actas constitutivas, RFC y comprobantes de pago de
   personas identificadas. Es una diferencia de fondo con los estáticos, que son parte del
@@ -81,7 +84,7 @@ entorno, de forma que pasar a S3 sea configuración y no código.
 ## Decisión
 
 **Opción A.** Los archivos se guardan en el sistema de archivos, y el cambio a un almacén de
-objetos es una variable de entorno. Con cuatro condiciones que hacen que la deuda no se olvide
+objetos es una variable de entorno. Con cinco condiciones que hacen que la deuda no se olvide
 y que la migración sea posible.
 
 ### 1. El almacén se elige por entorno, no por código
@@ -129,7 +132,18 @@ componer, no porque algo la resuelva.
 Con `s3`, además, el bucket es privado y las URL van firmadas con caducidad; aun así **la puerta
 sigue siendo la vista del módulo**, no el bucket.
 
-### 4. La deuda avisa sola
+### 4. Las variables se declaran en el dashboard de Render
+
+**No en `render.yaml`.** Ese archivo no gobierna nada: el despliegue está partido en dos
+sistemas que no se hablan —GitHub Actions corre las migraciones contra Supabase, y Render solo
+construye y sirve el contenedor Docker—, y los servicios vivos se crearon a mano. `render.yaml`
+quedó como un vestigio del arranque del proyecto.
+
+Así que `ALMACENAMIENTO` y `MEDIA_ROOT` van en el dashboard, **servicio por servicio**, junto a
+`DATABASE_URL`. Y montar un disco es una acción del dashboard, no una línea de YAML — lo cual
+importa poco mientras el plan siga en `free`, porque ahí no hay discos.
+
+### 5. La deuda avisa sola
 
 `manage.py check --deploy` emite `comun.W001` cuando `DEBUG=False`, el almacén es el sistema de
 archivos y `MEDIA_ROOT` no está declarada. Es un **aviso y no un error**: la decisión está
@@ -146,7 +160,7 @@ Se calla de las dos formas correctas: apuntando `MEDIA_ROOT` a un disco montado,
 2. Poner `ALMACENAMIENTO=s3` y las cuatro credenciales en el entorno.
 3. Copiar el contenido de `MEDIA_ROOT` al bucket **conservando las rutas relativas**. Son las
    mismas claves: `feria_2027/solicitudes/9f2c….pdf` es la ruta en disco y la clave en S3.
-4. Retirar el bloque `disk:` de `render.yaml`.
+4. Desmontar el disco de cada servicio en el dashboard de Render, si llegó a haberlo.
 
 No hay migración de base de datos: lo que guarda un `FileField` es la ruta relativa, y no
 cambia. Ese es el motivo de que el paso 2 de esta decisión —el prefijo por feria— importe tanto
@@ -169,11 +183,10 @@ como el 1.
   y en un entorno de pruebas activo significa que un documento subido no dura casi nada. Lo que
   **no** se pierde es la fila de la base, así que el expediente se sigue viendo completo hasta
   que alguien intenta abrir el archivo.
-- **`render.yaml` puede no ser la fuente de verdad de los servicios reales.** Declara un solo
-  servicio en `branch: QA`, mientras que los workflows disparan dos deploy hooks distintos: los
-  servicios vivos parecen creados desde el dashboard. Si es así, `ALMACENAMIENTO` y `MEDIA_ROOT`
-  hay que declararlas **en el dashboard de cada servicio**, y el bloque `disk:` del archivo no
-  monta nada. Está pendiente de confirmar.
+- **Nada de esto está declarado en el repositorio.** `ALMACENAMIENTO` y `MEDIA_ROOT` viven en
+  el dashboard de Render, que no está bajo control de versiones: un servicio nuevo, o uno
+  recreado, nace sin ellas y sin que nada lo señale salvo `comun.W001` en su primer
+  `check --deploy`. Es la contrapartida de que `render.yaml` no gobierne el despliegue.
 - **`FileSystemStorage` no sirve para más de un proceso en máquinas distintas.** Hoy es un solo
   servicio; si algún día hay dos, el disco local deja de valer aunque persista.
 - **Sin la vista de entrega, un `FileField` guardado no se puede abrir desde la aplicación.**

@@ -1,15 +1,3 @@
-# ── Aviso: esto puede no ser lo que está corriendo ────────────
-# Los workflows disparan DOS deploy hooks distintos
-# (RENDER_DEPLOY_HOOK_URL_DEV y RENDER_DEPLOY_HOOK_URL), así que hay al
-# menos dos servicios de Render; aquí se declara uno solo. Todo apunta a
-# que los servicios vivos se crearon desde el dashboard y no desde este
-# Blueprint — en cuyo caso lo de abajo es documentación, no
-# configuración, y las variables hay que declararlas en el dashboard de
-# cada servicio.
-#
-# Pendiente de confirmar. Mientras no se confirme, no des por hecho que
-# tocar este archivo cambia algo en producción.
-
 services:
   # Servicio Web Django
   - type: web
@@ -30,27 +18,3 @@ services:
         value: "*" # Actualizar a tu dominio final luego
       - key: DJANGO_SSL_REDIRECT
         value: "true"
-
-      # ── Archivos que sube la gente (ADR-0007) ──────────────
-      # Mientras no haya almacén de objetos, van a disco. `MEDIA_ROOT`
-      # tiene que apuntar al `disk.mountPath` de abajo: sin eso caen en
-      # el sistema de archivos del contenedor y se pierden en cada
-      # despliegue, sin dar ningún síntoma hasta que alguien intenta
-      # abrir un acta constitutiva. `check --deploy` lo avisa
-      # (comun.W001).
-      - key: ALMACENAMIENTO
-        value: "local"
-      - key: MEDIA_ROOT
-        value: "/var/data/medios"
-
-    # El disco NO existe en el plan `free`: hay que subir a `starter`
-    # para montarlo. Mientras el plan siga en `free`, esto no tiene
-    # efecto y los archivos son efímeros — es la deuda que cierra el
-    # paso a un almacén de objetos.
-    #
-    # Con `ALMACENAMIENTO=s3` y sus cuatro variables, este bloque sobra
-    # y se puede volver a un servicio sin disco.
-    disk:
-      name: medios
-      mountPath: /var/data/medios
-      sizeGB: 1
