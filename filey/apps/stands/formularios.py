@@ -22,6 +22,23 @@ from .models import MATERIALES, TEMATICAS, Documento, Editorial
 #: editorial puede representar a más, y el día que haga falta se sube.
 MAXIMO_SELLOS = 10
 
+#: Qué campo de la ficha se propone con qué dato de la cuenta.
+#:
+#: La ficha vuelve a pedir tres datos que la persona ya escribió al darse
+#: de alta. Proponerlos ahorra tecleo, pero sobre todo evita el error de
+#: escribir mal el propio correo justo en el campo por el que le vamos a
+#: avisar del dictamen.
+#:
+#: Son **propuestas, no copias**: los tres pueden ser legítimamente
+#: distintos —la cuenta personal de quien tramita frente al buzón
+#: comercial de la editorial— y por eso se rellena `initial` y no el
+#: valor guardado. Quien llena la ficha manda.
+DE_LA_CUENTA = {
+    "responsable_stand": "nombre_completo",
+    "correo_electronico": "correo",
+    "telefono_celular": "telefono",
+}
+
 
 class EditorialForm(forms.ModelForm):
     """La Ficha de Registro para Expositores (`CU-STD-001` paso 2).
@@ -70,9 +87,10 @@ class EditorialForm(forms.ModelForm):
 
     def __init__(self, *args, persona=None, **kwargs):
         """
-        :param persona: quién llena el formulario. Solo se usa para
-            ordenar el desplegable de países y proponer el suyo por
-            omisión; el formulario funciona igual sin ella.
+        :param persona: quién llena el formulario. Se usa para ordenar
+            el desplegable de países, proponer el suyo por omisión y
+            prellenar lo que la cuenta ya sabe (`DE_LA_CUENTA`). El
+            formulario funciona igual sin ella: solo llega en blanco.
         """
         super().__init__(*args, **kwargs)
         # `total_sellos` no se pide: se deriva de cuántos sellos se
@@ -89,6 +107,54 @@ class EditorialForm(forms.ModelForm):
         self.fields["pais"].choices = opciones_de_pais(suyo)
         if not self.initial.get("pais") and not self.instance.pk:
             self.initial["pais"] = suyo or "MX"
+
+        # Las etiquetas de los campos que llegaron de la cuenta, para que
+        # la pantalla pueda decirlo. Vacía si no se propuso nada.
+        self.prellenado = self._proponer_de_la_cuenta(persona)
+
+    def _proponer_de_la_cuenta(self, persona) -> list[str]:
+        """Rellena `initial` con lo que la cuenta ya sabe.
+
+        Solo en la ficha en blanco. Con una ficha guardada la fuente es
+        la ficha: si se repropusiera lo de la cuenta, quien cambiara su
+        teléfono personal se encontraría cambiado el de la editorial sin
+        haberlo tocado.
+
+        Con el formulario ligado tampoco corre: ahí lo que se pinta es lo
+        que se envió, y anunciar un prellenado que no se ve confunde.
+
+        :returns: las etiquetas de los campos que se propusieron.
+        """
+        if persona is None or self.is_bound or self.instance.pk:
+            return []
+
+        propuestos = []
+        for campo, atributo in DE_LA_CUENTA.items():
+            valor = (getattr(persona, atributo, "") or "").strip()
+            # Una cuenta técnica puede no tener teléfono (`blank=True`),
+            # y un `initial` explícito de quien llame manda sobre esto.
+            if valor and not self.initial.get(campo):
+                self.initial[campo] = valor
+                # En minúscula: Django capitaliza la etiqueta para
+                # ponerla encima de la caja, y estas van dentro de una
+                # frase, donde «Correo de contacto» a media línea se lee
+                # como un error de mecanografía.
+                etiqueta = self.fields[campo].label
+                propuestos.append(etiqueta[:1].lower() + etiqueta[1:])
+        return propuestos
+
+    @property
+    def prellenado_texto(self) -> str:
+        """Los campos propuestos, enumerados como se dicen en voz alta.
+
+        La coma y la «y» se arman aquí y no en la plantilla porque no hay
+        filtro que las ponga; la frase que los envuelve sí es de la
+        plantilla, que es de quien son las palabras.
+        """
+        if not self.prellenado:
+            return ""
+        *primeros, ultimo = self.prellenado
+        return f"{', '.join(primeros)} y {ultimo}" if primeros else ultimo
 
     def clean(self):
         """Marcar «Otro» sin decir cuál no dice nada.

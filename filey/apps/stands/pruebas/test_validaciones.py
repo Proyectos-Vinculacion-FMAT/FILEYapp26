@@ -33,9 +33,12 @@ from django_tenants.utils import schema_context
 
 from comun.validadores import telefono, validar_cp
 
+from apps.registros.models import Persona
+
 from ..formularios import EditorialForm, SellosForm
 from ..models import ConfiguracionSistema
 from . import fabricas
+from .fabricas import FICHA
 
 pytestmark = pytest.mark.django_db
 
@@ -221,3 +224,78 @@ def test_la_ficha_de_las_pruebas_es_valida():
     form = _ficha()
 
     assert form.is_valid(), form.errors
+
+
+# ── Lo que la cuenta ya sabe ──────────────────────────────────
+
+
+def _persona(**cambios):
+    datos = {
+        "correo": "ana@ejemplo.com",
+        "nombre": "Ana María",
+        "primer_apellido": "Pech",
+        "telefono": "9990001234",
+        "pais": "MX",
+        **cambios,
+    }
+    return Persona.objects.create_user(**datos)
+
+
+def test_la_ficha_en_blanco_llega_con_lo_de_la_cuenta():
+    """Tres de los campos de la ficha ya se escribieron en el alta."""
+    form = EditorialForm(persona=_persona())
+
+    assert form.initial["responsable_stand"] == "Ana María Pech"
+    assert form.initial["correo_electronico"] == "ana@ejemplo.com"
+    assert form.initial["telefono_celular"] == "9990001234"
+
+
+def test_lo_prellenado_se_puede_cambiar():
+    """Son propuestas: el buzón comercial casi nunca es el personal."""
+    form = _ficha(correo_electronico="ventas@mayab.mx")
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["correo_electronico"] == "ventas@mayab.mx"
+
+
+def test_una_ficha_ya_guardada_no_se_repropone(feria_2027):
+    """Si no, cambiar el teléfono personal cambiaría el de la editorial."""
+    ana = _persona()
+    with schema_context(feria_2027.schema_name):
+        ficha = fabricas.editorial(ana)
+
+        form = EditorialForm(instance=ficha, persona=ana)
+
+        assert form.initial["telefono_celular"] == FICHA["telefono_celular"]
+        assert form.prellenado == []
+
+
+def test_no_se_anuncia_un_prellenado_en_un_formulario_ya_enviado():
+    """Ligado se pinta lo enviado; el aviso hablaría de algo que no se ve."""
+    form = EditorialForm({**FICHA}, persona=_persona())
+
+    assert form.prellenado == []
+
+
+def test_una_cuenta_sin_telefono_solo_propone_lo_que_tiene():
+    """`Persona.telefono` es `blank=True` para las cuentas técnicas."""
+    form = EditorialForm(persona=_persona(telefono=""))
+
+    assert "telefono_celular" not in form.initial
+    assert form.initial["correo_electronico"] == "ana@ejemplo.com"
+
+
+def test_sin_persona_el_formulario_llega_en_blanco():
+    """La vista siempre la pasa, pero el formulario no la exige."""
+    form = EditorialForm()
+
+    assert form.prellenado == []
+    assert "correo_electronico" not in form.initial
+
+
+def test_los_campos_propuestos_se_enumeran_para_decirlos():
+    form = EditorialForm(persona=_persona())
+
+    assert form.prellenado_texto == (
+        "responsable del stand, correo de contacto y teléfono celular"
+    )

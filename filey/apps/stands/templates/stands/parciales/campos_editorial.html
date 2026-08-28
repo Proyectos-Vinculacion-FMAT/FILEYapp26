@@ -31,6 +31,16 @@
     </div>
   </div>
   <div class="section-body">
+    {% comment %} Los tres campos que la cuenta ya sabe caen en esta sección,
+       así que un solo renglón los cubre. Se dice **cuáles** y no un genérico
+       "algunos datos": lo que hay que revisar es justo esa lista, y quien
+       tramita para una editorial suele querer cambiar los tres. {% endcomment %}
+    {% if form_editorial.prellenado %}
+      <p class="hint">
+        Llenamos {{ form_editorial.prellenado_texto }} con los datos de tu cuenta.
+        Cámbialos si en la feria contesta alguien más.
+      </p>
+    {% endif %}
     {% include "stands/parciales/campo.html" with campo=form_editorial.nombre %}
     <div class="grid-2">
       {% include "stands/parciales/campo.html" with campo=form_editorial.giro %}

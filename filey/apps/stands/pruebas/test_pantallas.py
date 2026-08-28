@@ -438,6 +438,32 @@ def test_el_desplegable_propone_el_pais_de_la_cuenta(client, feria_2027):
     assert 'value="CO" selected' in seccion
 
 
+def test_la_ficha_llega_con_el_correo_y_el_telefono_de_la_cuenta(client, feria_2027):
+    """Que lo prellenado llegue al HTML, y no solo al `initial`.
+
+    Es lo que la persona ve: si la plantilla dejara de pintar el valor
+    —por pasar a un widget propio, por ejemplo— las pruebas del
+    formulario seguirían en verde y la pantalla llegaría en blanco.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        ana.telefono = "9990001234"
+        ana.save()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert 'name="correo_electronico" value="ana@ejemplo.com"' in cuerpo
+    assert 'name="telefono_celular" value="9990001234"' in cuerpo
+    assert 'name="responsable_stand" value="Ana Pech"' in cuerpo
+    # Y que se diga de dónde salió: son datos que mucha gente va a
+    # querer cambiar por los de la editorial.
+    assert "con los datos de tu cuenta" in cuerpo
+
+
 def test_sin_pais_en_la_cuenta_propone_mexico(client, feria_2027):
     with schema_context(feria_2027.schema_name):
         ana = fabricas.persona()
