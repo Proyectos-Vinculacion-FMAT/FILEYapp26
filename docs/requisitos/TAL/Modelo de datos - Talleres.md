@@ -58,7 +58,7 @@ Django distintas (`apps.talleres` vs. `apps.eventos`), así que reusar los mismo
 tabla entre dominios no colisiona.
 
 `TAL` **no tiene** `RouterDocumentos`: confirmado en `CU-TAL-002` que no hay adjuntos de
-archivo en ningún tipo de actividad (ver §2.9). El mecanismo existe y está listo en el patrón
+archivo en ningún tipo de actividad (ver §2.8). El mecanismo existe y está listo en el patrón
 de `EVT` si algún día se necesita, pero no se modela aquí sin un requisito real que lo pida.
 
 | Tabla | Rol en `TAL` |
@@ -120,13 +120,6 @@ erDiagram
         timestamp fecha_de_solicitud
     }
 
-    ParticipanteConstancia {
-        bigint id PK
-        bigint solicitud_id FK
-        string nombre_completo
-        int orden
-    }
-
     CatalogoActividades {
         bigint id PK
         string nombre
@@ -179,7 +172,6 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_TAL : "enruta"
 
     Solicitudes_TAL ||--o{ RouterActividades : "contiene"
-    Solicitudes_TAL ||--o{ ParticipanteConstancia : "otorga"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
@@ -222,7 +214,7 @@ Global, compartida — ver `EVT` §2.3. `TAL` es uno de los cuatro dominios que 
 ### 2.5 Solicitudes_TAL
 
 Los datos que el tallerista captura y que son **comunes a los seis tipos de actividad**. Lo
-que distingue a cada tipo vive en las tablas `Actividad_*` (§2.9); lo que decide el
+que distingue a cada tipo vive en las tablas `Actividad_*` (§2.8); lo que decide el
 administrador vive en la etapa 2 (§3). Equivalente directo de `Solicitudes_EVT`.
 
 | Atributo | Descripción |
@@ -231,8 +223,8 @@ administrador vive en la etapa 2 (§3). Equivalente directo de `Solicitudes_EVT`
 | numero_contacto | Teléfono de contacto del responsable. Puede diferir del registrado en `Persona`. |
 | titulo_actividad | Nombre oficial del evento/taller ("saldrá en el programa como se registre"). Obligatorio. |
 | nombre_organizador_organizacion | Institución, dependencia o grupo responsable que organiza. Obligatorio. |
-| requiere_constancia | Indica si la actividad requiere constancia de participación. Booleano, precargado en `true` (en `EVT`, §2.4, el mismo campo no se precarga). |
-| procedencia | `local` / `nacional` / `internacional`. Obligatorio. Determina, además, la elegibilidad de modalidad: la convocatoria reserva la modalidad virtual para quienes son de fuera de Mérida (`nacional`/`internacional`); los locales participan presencial. La modalidad en sí **no es un campo capturado** — no hay `modalidad` ni `enlace_videoconferencia` en el modelo, porque el formulario real no los pide (`## Datos del evento` no tiene ningún selector de modalidad); se infiere de `procedencia`, no se pregunta aparte. |
+| requiere_constancia | Indica si la actividad requiere constancia de participación. Booleano, precargado en `true` (en `EVT`, §2.4, el mismo campo no se precarga). Los destinatarios de la constancia no se capturan aparte — se derivan de los nombres ya registrados en `Actividad_*`, ver el final de §2.8. |
+| procedencia | `local` / `nacional` / `internacional`. Obligatorio. Acota la modalidad sin determinarla: quien es de fuera de Mérida (`nacional`/`internacional`) **puede** optar por modalidad virtual, pero también puede presentarse presencial si así lo decide — la convocatoria no lo obliga a ninguna de las dos. Quien es `local` sí queda sin esa opción: solo presencial. Por eso no hay un campo `modalidad`/`enlace_videoconferencia` en el modelo —el formulario real no lo pide (`## Datos del evento` no tiene ningún selector de modalidad)— pero tampoco se puede derivar limpiamente de `procedencia`: qué modalidad usará cada quien no queda capturado en ningún dato (ver §6). |
 | tema | Texto. Obligatorio. Sin equivalente en `EVT`. |
 | sinopsis | Reseña breve de la actividad, para mostrar al público. Obligatorio. |
 | publico_objetivo | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` / `adultos_mayores` (mínimo uno). El conjunto de valores es propio de `TAL`, no se homologa con el de `EVT` (escalas distintas: nivel escolar vs. tipo de público). |
@@ -249,33 +241,7 @@ ni carga de archivos adjuntos"). No se modela.
 se incorpora directo aquí, igual que `EVT` mantiene `institucion`/`cargo` en `Solicitudes_EVT`
 en vez de una entidad `Aplicante` aparte.
 
-### 2.6 ParticipanteConstancia
-
-Una fila por cada persona que recibirá constancia de participación: una lista sin tope fijo
-—"al menos 1"—, con una regla de negocio explícita para cuando hay más de seis: *"En el
-programa oficial solo se incluirá el primer nombre y primer apellido de cada participante. En
-caso de que haya más de seis personas, únicamente se mostrará lo que se haya colocado en la
-casilla 'Organizado por'"*. Un campo de texto no puede sostener esa regla con limpieza (no hay
-forma de contar ni truncar una lista dentro de un string); una tabla hija sí.
-
-No es un patrón que exista todavía en `EVT` —sus listas de participantes tienen tope fijo
-(`nombre_participante_1…3` como máximo) y viven como columnas en `Actividad_*`—, pero no
-rompe la arquitectura: es una tabla 1—N normal colgando de `Solicitudes_TAL`, del mismo tipo
-de relación que ya usan `RouterActividades` o `RouterDocumentos` en `EVT`.
-
-| Atributo | Descripción |
-| --- | --- |
-| id | Identificador único. |
-| solicitud_id | FK → Solicitudes_TAL. |
-| nombre_completo | Nombre completo de la persona. En el programa impreso solo se muestra el primer nombre y primer apellido; ese recorte es una regla de **presentación**, no algo que se guarde por separado. |
-| orden | Posición en la lista, para poder aplicar la regla de "más de seis" de forma determinista (las primeras seis se imprimen, el resto no). |
-
-> [!warning] Regla de "más de seis" no tiene dueño claro todavía
-> ¿Se trunca a las primeras seis por `orden` de captura, o el tallerista elige cuáles seis
-> destacar? El formulario real no lo aclara. Mientras no se confirme, `orden` asume que es por
-> captura.
-
-### 2.7 CatalogoActividades
+### 2.6 CatalogoActividades
 
 Catálogo de los seis tipos de actividad de `TAL`. Mismo patrón que `EVT` §2.5, con su propia
 tabla y sus propias filas — no comparte tabla con el catálogo de `EVT`, son taxonomías
@@ -289,7 +255,7 @@ distintas.
 Agregar un séptimo tipo a `TAL` es tan fácil como agregar un noveno a `EVT`: una fila nueva en
 el catálogo, no un cambio de esquema.
 
-### 2.8 RouterActividades
+### 2.7 RouterActividades
 
 Conecta la propuesta con su actividad específica. Mismo mecanismo que `EVT` §2.6.
 
@@ -297,10 +263,10 @@ Conecta la propuesta con su actividad específica. Mismo mecanismo que `EVT` §2
 | --- | --- |
 | id | Identificador único. |
 | solicitud_id | FK → Solicitudes_TAL. |
-| tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.7) de `TAL`. |
+| tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.6) de `TAL`. |
 | detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda. |
 
-### 2.9 Tablas `Actividad_*`
+### 2.8 Tablas `Actividad_*`
 
 Seis tablas, una por tipo, igual que `EVT`. El formulario real confirma la división para
 "Presentación de libros" (tiene su propia sección, ver más abajo); para los otros cinco tipos
@@ -342,6 +308,17 @@ Sin semblanza en ninguna de las seis: no se modela `semblanza_participante_1`/
 `semblanza_autor_1`. Es una decisión de negocio confirmada (ningún
 `CU-TAL` ni el formulario real la piden), no un hueco de documentación — a diferencia de `EVT`,
 donde la semblanza sí es un requisito capturado (`CU-EVT-002`).
+
+**Cómo se generan las constancias.** No hay una tabla propia de "participantes que reciben
+constancia": si `requiere_constancia = true` (§2.5), el sistema consulta —a partir del `id` de
+la solicitud, vía `RouterActividades` → la tabla `Actividad_*` que corresponda— los nombres ya
+capturados ahí (`nombre_participante_1`, y en `Actividad_PresentacionLibroInfantil` también
+`nombre_autor_1`) y genera una constancia por cada uno, automáticamente. Si el conteo resultante
+superara seis, el programa oficial cae al valor de `nombre_organizador_organizacion` (§2.5) en
+vez de listar nombres — la misma regla que describía el formulario real para su lista de
+constancias. Con la cardinalidad actual de estas tablas (uno o dos nombres por propuesta), ese
+caso no se alcanza; si el negocio pide varios `nombre_participante`/`nombre_autor` por tipo más
+adelante (ver la nota de `nombre_autor_1` arriba), la regla vuelve a ser relevante.
 
 ---
 
@@ -527,7 +504,6 @@ agregaría si surge un caso de uso que la requiera.
 - **Persona** (`REG`) 1—N **RouterSolicitudes** 1—1 **Solicitudes_TAL**. Único camino entre una persona y sus propuestas.
 - **CatalogoActividades** 1—N **RouterActividades**. Cada fila de enrutamiento clasifica contra un tipo del catálogo de `TAL`.
 - **Solicitudes_TAL** 1—1 **RouterActividades** →(polimórfica) **Actividad_\***. Una de las seis, según `tipo_actividad_id`.
-- **Solicitudes_TAL** 1—N **ParticipanteConstancia**. Al menos uno por propuesta.
 
 ### Etapa 2 — administración y programación
 
@@ -547,7 +523,6 @@ agregaría si surge un caso de uso que la requiera.
 | --- | --- |
 | RouterSolicitudes | CU-REG-001, CU-TAL-002 |
 | Solicitudes_TAL · CatalogoActividades · RouterActividades · Actividad_* | CU-TAL-002 a CU-TAL-004, CU-TAL-006 |
-| ParticipanteConstancia | CU-TAL-002, CU-TAL-006 |
 | DetallesAdminSolicitud | CU-TAL-003, CU-TAL-007 a CU-TAL-009 |
 | SolicitudesAprobadas | CU-TAL-005, CU-TAL-009 |
 | ProgramacionActividad | CU-TAL-006; CU-PRG-002 a CU-PRG-004 en `PRG` |
@@ -568,9 +543,11 @@ agregaría si surge un caso de uso que la requiera.
 - Confirmar si el tipo `presentacion_libro_infantil` necesita una constancia de ejemplar físico
   entregado, como su equivalente en `EVT` (`ejemplar_fisico_entregado`) — no se modeló por
   falta de evidencia en los `CU-TAL` ni en el formulario real.
-- La regla de truncar a seis nombres en el programa impreso (`ParticipanteConstancia`, §2.6) no
-  aclara si el corte es por orden de captura o por selección del tallerista. Se asumió por
-  orden de captura; confirmar con Elvira.
+- Qué modalidad (presencial/virtual) usará finalmente una propuesta de fuera de Mérida no
+  queda registrada en ningún dato de este modelo (§2.5) — `procedencia` solo descarta la
+  virtual para locales, no resuelve el resto. Operativamente hace falta saberlo con
+  anticipación: la convocatoria promete que "un integrante del equipo FILEY estará presente
+  durante la transmisión" de las actividades virtuales.
 - El texto de elegibilidad ética/legal (RENOA, sanciones por violencia de género, etc.)
   menciona que "las personas postulantes deberán firmar una declaración bajo protesta de decir
   verdad". No está claro si eso es un campo capturado (p. ej. una casilla de aceptación) o solo

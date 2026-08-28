@@ -46,13 +46,6 @@ erDiagram
         timestamp fecha_de_solicitud
     }
 
-    ParticipanteConstancia {
-        bigint id PK
-        bigint solicitud_id FK
-        string nombre_completo
-        int orden
-    }
-
     CatalogoActividades {
         bigint id PK
         string nombre
@@ -105,7 +98,6 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_TAL : "enruta"
 
     Solicitudes_TAL ||--o{ RouterActividades : "contiene"
-    Solicitudes_TAL ||--o{ ParticipanteConstancia : "otorga"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
