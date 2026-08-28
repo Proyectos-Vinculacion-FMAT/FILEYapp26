@@ -35,18 +35,24 @@ erDiagram
         string numero_contacto
         string titulo_actividad
         string nombre_organizador_organizacion
-        string participantes_constancia
+        boolean requiere_constancia
         string procedencia
         string tema
         string sinopsis
         string modalidad
         string enlace_videoconferencia
-        string autores
-        string editorial
         string publico_objetivo
-        string sugerencia_dia_turno
+        string dias_disponibilidad
+        string turno
         string comentarios
         timestamp fecha_de_solicitud
+    }
+
+    ParticipanteConstancia {
+        bigint id PK
+        bigint solicitud_id FK
+        string nombre_completo
+        int orden
     }
 
     CatalogoActividades {
@@ -79,6 +85,8 @@ erDiagram
     Actividad_PresentacionLibroInfantil {
         bigint id PK
         string nombre_participante_1
+        string nombre_autor_1
+        string editorial
     }
 
     Actividad_ObraTeatral {
@@ -99,6 +107,7 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_TAL : "enruta"
 
     Solicitudes_TAL ||--o{ RouterActividades : "contiene"
+    Solicitudes_TAL ||--o{ ParticipanteConstancia : "otorga"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
 

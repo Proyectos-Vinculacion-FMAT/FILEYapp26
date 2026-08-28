@@ -31,15 +31,20 @@ dato queda en ambos lados.
 
 <!-- -->
 
-> [!note] Homologado con la arquitectura de `EVT` (2026-08-28)
+> [!note] Homologado con la arquitectura de `EVT` (2026-08-28, revisado contra el formulario
+> real el mismo día)
 > Hasta esta revisión, `TAL` se describía como "espejo de `EVT`" solo en el ciclo de negocio
 > (dictamen aceptar/cambios/rechazar). El modelo de datos en sí era una tabla plana propia,
 > sin el patrón de routers y catálogos que usa `EVT`. Esta versión adopta **la misma
 > arquitectura**, no solo el mismo flujo — ver §1. Las diferencias que siguen siendo reales
 > (no de esquema, de negocio) se conservan: sin categorización cruzada (literaria/académica ×
-> UADY/externa), sin adjuntos de archivo, sin semblanza de participantes, y con constancia
-> **obligatoria** para todo tallerista (no opcional como en `EVT`). Cuatro decisiones de
-> homologación se tomaron explícitamente con Isaac; se señalan en cada sección que aplica.
+> UADY/externa), sin adjuntos de archivo y sin semblanza de participantes. La diferencia de
+> constancia resultó **menor** de lo que se pensó en la primera versión: `TAL` sí tiene el
+> mismo booleano `requiere_constancia` que `EVT` (§2.4 de `EVT`), solo que precargado en
+> `true` en vez de en blanco — no es una ausencia de campo, es un valor por defecto distinto.
+> Cuatro decisiones de homologación se tomaron explícitamente con Isaac; se señalan en cada
+> sección que aplica. El detalle campo por campo contra el formulario real vive en
+> [`datos de convocatoria.md`](<datos%20de%20convocatoria.md>).
 
 ---
 
@@ -59,7 +64,7 @@ Django distintas (`apps.talleres` vs. `apps.eventos`), así que reusar los mismo
 tabla entre dominios no colisiona.
 
 `TAL` **no tiene** `RouterDocumentos`: confirmado en `CU-TAL-002` que no hay adjuntos de
-archivo en ningún tipo de actividad (ver §2.8). El mecanismo existe y está listo en el patrón
+archivo en ningún tipo de actividad (ver §2.9). El mecanismo existe y está listo en el patrón
 de `EVT` si algún día se necesita, pero no se modela aquí sin un requisito real que lo pida.
 
 | Tabla | Rol en `TAL` |
@@ -110,18 +115,24 @@ erDiagram
         string numero_contacto
         string titulo_actividad
         string nombre_organizador_organizacion
-        string participantes_constancia
+        boolean requiere_constancia
         string procedencia
         string tema
         string sinopsis
         string modalidad
         string enlace_videoconferencia
-        string autores
-        string editorial
         string publico_objetivo
-        string sugerencia_dia_turno
+        string dias_disponibilidad
+        string turno
         string comentarios
         timestamp fecha_de_solicitud
+    }
+
+    ParticipanteConstancia {
+        bigint id PK
+        bigint solicitud_id FK
+        string nombre_completo
+        int orden
     }
 
     CatalogoActividades {
@@ -154,6 +165,8 @@ erDiagram
     Actividad_PresentacionLibroInfantil {
         bigint id PK
         string nombre_participante_1
+        string nombre_autor_1
+        string editorial
     }
 
     Actividad_ObraTeatral {
@@ -174,6 +187,7 @@ erDiagram
     RouterSolicitudes }o--|| Solicitudes_TAL : "enruta"
 
     Solicitudes_TAL ||--o{ RouterActividades : "contiene"
+    Solicitudes_TAL ||--o{ ParticipanteConstancia : "otorga"
 
     CatalogoActividades ||--o{ RouterActividades : "clasifica"
 
@@ -218,27 +232,37 @@ Global, compartida — ver `EVT` §2.3. `TAL` es uno de los cuatro dominios que 
 ### 2.5 Solicitudes_TAL
 
 Los datos que el tallerista captura y que son **comunes a los seis tipos de actividad**. Lo
-que distingue a cada tipo vive en las tablas `Actividad_*` (§2.8); lo que decide el
+que distingue a cada tipo vive en las tablas `Actividad_*` (§2.9); lo que decide el
 administrador vive en la etapa 2 (§3). Equivalente directo de `Solicitudes_EVT`.
+
+> [!note] Revisado contra el formulario real (`docs/requisitos/TAL/datos de convocatoria.md`,
+> 2026-08-28)
+> Esta sección se corrigió sobre la primera versión de la homologación (que se apoyaba en
+> `CU-TAL-002`, más extrapolado) al tener el formulario curado a mano. Los cambios de fondo:
+> `requiere_constancia` sí existe como booleano (`EVT` y `TAL` son iguales en esto, no
+> diferentes como se pensó); los participantes que reciben constancia son una lista sin límite
+> fijo, no un solo campo de texto (§2.6); `autores`/`editorial` sí son exclusivos de
+> "Presentación de libros" y se movieron a `Actividad_PresentacionLibroInfantil` (§2.9); y
+> aparecieron dos campos que no estaban documentados en ningún lado (`dias_disponibilidad`,
+> `turno` obligatorio y multivalor en vez de opcional).
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único, `bigint`. Como en `EVT`, es la base del folio: **no se almacena**, se compone `{prefijo_folio}-{id}` con el prefijo de `DetallesConvocatoria` (§3.6). Antes `PropuestaTaller.folio` se guardaba directo; se homologa a folio derivado. |
 | numero_contacto | Teléfono de contacto del responsable. Puede diferir del registrado en `Persona`. |
-| titulo_actividad | Nombre oficial del evento/taller. Renombrado de `nombre_evento` para usar el mismo campo que `EVT`. Obligatorio. |
-| nombre_organizador_organizacion | Quién organiza. Renombrado de `organiza`. Obligatorio. |
-| participantes_constancia | Nombre completo de quienes recibirán constancia. **Obligatorio siempre** — a diferencia de `EVT`, donde `requiere_constancia` es un booleano opcional (§2.4 de `EVT`), en `TAL` la constancia no es opcional: no hace falta un booleano, la lista de nombres ya implica que se otorga. |
-| procedencia | `local` / `nacional` / `internacional`. Sin equivalente en `EVT`. |
-| tema | Texto. Sin equivalente en `EVT`. Obligatorio. |
-| sinopsis | Reseña breve de la actividad. Renombrado de `resena` para usar el mismo campo que `EVT`. Obligatorio (en `EVT` es igual de obligatorio). |
-| modalidad | `presencial` / `virtual`. Sin equivalente en `EVT`. |
+| titulo_actividad | Nombre oficial del evento/taller ("saldrá en el programa como se registre"). Renombrado de `nombre_evento` para usar el mismo campo que `EVT`. Obligatorio. |
+| nombre_organizador_organizacion | Institución, dependencia o grupo responsable que organiza. Renombrado de `organiza`. Obligatorio. |
+| requiere_constancia | Indica si la actividad requiere constancia de participación. **Booleano, por defecto `true`** — a diferencia de lo que se documentó en la primera versión de esta homologación, `TAL` sí tiene el mismo campo que `EVT` (§2.4 de `EVT`); la única diferencia real es el valor por defecto (`EVT` no lo precarga, `TAL` sí lo precarga en `true`). |
+| procedencia | `local` / `nacional` / `internacional`. Obligatorio. Sin equivalente en `EVT`. |
+| tema | Texto. Obligatorio. Sin equivalente en `EVT`. |
+| sinopsis | Reseña breve de la actividad, para mostrar al público. Renombrado de `resena` para usar el mismo campo que `EVT`. Obligatorio. |
+| modalidad | `presencial` / `virtual`. Obligatorio. Sin equivalente en `EVT`. |
 | enlace_videoconferencia | Obligatorio solo si `modalidad = virtual`. |
-| autores | Texto libre, opcional. `CU-TAL-002` lo muestra como campo único capturado para **cualquier** tipo de actividad, sin rama condicional por tipo — por eso vive aquí y no en una tabla `Actividad_*` (a diferencia de `EVT`, donde el equivalente —`nombre_autor_1…5`— sí es exclusivo de `Actividad_PresentacionLibro`/`Revista`, con su propio flujo alterno en `CU-EVT-002`). Revisar si en la práctica el formulario lo condiciona por tipo aunque el CU no lo diga. |
-| editorial | Texto, opcional. Misma nota que `autores`. |
-| publico_objetivo | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` (mínimo uno). Renombrado de `publico_meta` para usar el mismo nombre de campo que `EVT` — el conjunto de valores es propio de `TAL` y no se homologa (`EVT` usa público general/académico/estudiantil/infantil/familias; son escalas distintas, una por nivel escolar y otra por tipo de público). |
-| sugerencia_dia_turno | `matutino` / `vespertino`, opcional. Sin equivalente en `EVT`. |
-| comentarios | Observaciones libres, opcional. Renombrado de `observaciones` para usar el mismo campo que `EVT`. |
-| fecha_de_solicitud | Marca de tiempo del envío. Renombrado de `fecha_registro` para usar el mismo campo que `EVT`. |
+| publico_objetivo | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` / `adultos_mayores` (mínimo uno). Renombrado de `publico_meta`. El conjunto de valores es propio de `TAL`, no se homologa con el de `EVT` (escalas distintas: nivel escolar vs. tipo de público). `adultos_mayores` no estaba en la versión anterior de este documento —viene del formulario real, no del `CU`—; el texto introductorio de la convocatoria menciona "universidad" en cambio, así que hay una inconsistencia menor en la fuente misma que vale la pena confirmar con Elvira. |
+| dias_disponibilidad | Multivalor, sobre los días en que se realiza la feria (13 al 21 de marzo en la edición 2027). Obligatorio, mínimo uno. **Nuevo campo**: no estaba documentado en ningún `CU-TAL` ni en la versión anterior de este modelo; sale del formulario real. Sin equivalente en `EVT`, que no le pregunta al aplicante disponibilidad por día. |
+| turno | Multivalor: `matutino` (9:00–13:00) / `vespertino` (15:00–18:00), puede ser ambos. Obligatorio, mínimo uno. Renombrado de `sugerencia_dia_turno`, que se documentaba opcional y de un solo valor; el formulario real lo pide obligatorio y permite marcar los dos turnos. |
+| comentarios | Observaciones libres, opcional. Renombrado de `observaciones`. |
+| fecha_de_solicitud | Marca de tiempo del envío. Renombrado de `fecha_registro`. |
 
 No hay `es_uady` ni ningún campo de categorización: confirmado en `CU-TAL-002` que no existe
 paso de categorización en `TAL` ("A diferencia de CU-EVT-002, no existe paso de categorización
@@ -248,7 +272,36 @@ ni carga de archivos adjuntos"). No se modela.
 se incorpora directo aquí, igual que `EVT` mantiene `institucion`/`cargo` en `Solicitudes_EVT`
 en vez de una entidad `Aplicante` aparte.
 
-### 2.6 CatalogoActividades
+### 2.6 ParticipanteConstancia
+
+Una fila por cada persona que recibirá constancia de participación. **Corrección sobre la
+primera versión de esta homologación**: se había modelado `participantes_constancia` como un
+solo campo de texto en `Solicitudes_TAL` (equivalente conceptual, no estructural, de
+`participantes_constancia` en el documento anterior). El formulario real muestra que es una
+lista sin tope fijo —"al menos 1", y una regla de negocio explícita para cuando hay más de
+seis: *"En el programa oficial solo se incluirá el primer nombre y primer apellido de cada
+participante. En caso de que haya más de seis personas, únicamente se mostrará lo que se haya
+colocado en la casilla 'Organizado por'"*—. Un campo de texto no puede sostener esa regla con
+limpieza (no hay forma de contar ni truncar una lista dentro de un string); una tabla hija sí.
+
+No es un patrón que exista todavía en `EVT` —sus listas de participantes tienen tope fijo
+(`nombre_participante_1…3` como máximo) y viven como columnas en `Actividad_*`—, pero no
+rompe la arquitectura: es una tabla 1—N normal colgando de `Solicitudes_TAL`, del mismo tipo
+de relación que ya usan `RouterActividades` o `RouterDocumentos` en `EVT`.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| solicitud_id | FK → Solicitudes_TAL. |
+| nombre_completo | Nombre completo de la persona. En el programa impreso solo se muestra el primer nombre y primer apellido; ese recorte es una regla de **presentación**, no algo que se guarde por separado. |
+| orden | Posición en la lista, para poder aplicar la regla de "más de seis" de forma determinista (las primeras seis se imprimen, el resto no). |
+
+> [!warning] Regla de "más de seis" no tiene dueño claro todavía
+> ¿Se trunca a las primeras seis por `orden` de captura, o el tallerista elige cuáles seis
+> destacar? El formulario real no lo aclara. Mientras no se confirme, `orden` asume que es por
+> captura.
+
+### 2.7 CatalogoActividades
 
 Catálogo de los seis tipos de actividad de `TAL`. Mismo patrón que `EVT` §2.5, con su propia
 tabla y sus propias filas — no comparte tabla con el catálogo de `EVT`, son taxonomías
@@ -264,7 +317,7 @@ el de `EVT` es "extensible con tipos internos": con la homologación esa distinc
 —ambos son la misma clase de tabla (catálogo con FK), y agregar un séptimo tipo a `TAL` es
 exactamente tan fácil como agregar un noveno a `EVT`: una fila nueva, no un cambio de esquema.
 
-### 2.7 RouterActividades
+### 2.8 RouterActividades
 
 Conecta la propuesta con su actividad específica. Mismo mecanismo que `EVT` §2.6.
 
@@ -272,32 +325,44 @@ Conecta la propuesta con su actividad específica. Mismo mecanismo que `EVT` §2
 | --- | --- |
 | id | Identificador único. |
 | solicitud_id | FK → Solicitudes_TAL. |
-| tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.6) de `TAL`. |
+| tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.7) de `TAL`. |
 | detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda. |
 
-### 2.8 Tablas `Actividad_*`
+### 2.9 Tablas `Actividad_*`
 
-Seis tablas, una por tipo. **Decisión de homologación (2026-08-28):** dividir por tipo como
-`EVT`, aunque hoy no hay evidencia en `CU-TAL-002` de que los seis tipos necesiten campos
-distintos entre sí — el CU los captura con un único flujo, sin ramas condicionales por tipo
-(la única rama alterna que existe es por `modalidad`, no por `tipo_actividad`). El razonamiento
-para dividir de todas formas es el mismo que ya usa `EVT` §2.7: tener tabla propia por tipo
-permite que cada uno evolucione sin arrastrar a los demás, aunque hoy coincidan.
+Seis tablas, una por tipo. **Decisión de homologación (2026-08-28), confirmada tras revisar el
+formulario real:** cada tipo tiene su propia tabla y su propio `nombre_participante_1`, igual
+que `EVT` — quien presenta/imparte se documenta por tipo, no en `Solicitudes_TAL`, aunque hoy
+cinco de las seis tablas terminen con la misma estructura (mismo patrón que ya usa `EVT` con
+`Conferencia`/`Charla`/`LecturaObra`/`Encuentro`).
 
-Con `autores`/`editorial` viviendo en `Solicitudes_TAL` (§2.5, por la razón ahí explicada), las
-seis tablas quedan **estructuralmente idénticas hoy** — un solo campo cada una:
+#### Actividad_Taller · Actividad_Cuentacuentos · Actividad_PlaticaJuvenil · Actividad_ObraTeatral · Actividad_ProyeccionCine
 
-#### Actividad_Taller · Actividad_Cuentacuentos · Actividad_PlaticaJuvenil · Actividad_PresentacionLibroInfantil · Actividad_ObraTeatral · Actividad_ProyeccionCine
+Cinco tablas, hoy estructuralmente idénticas — un solo campo cada una:
 
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| nombre_participante_1 | Nombre de quien presenta/participa. Obligatorio. `CU-TAL-002` no menciona más de un presentador —a diferencia de `EVT`, donde varios tipos permiten hasta 2 o 3—, así que no se agregan `_2`/`_3` sin evidencia. |
+| nombre_participante_1 | Nombre de quien presenta/participa. Obligatorio. El formulario real no menciona más de un presentador para estos cinco tipos —a diferencia de `EVT`, donde varios tipos permiten hasta 2 o 3—, así que no se agregan `_2`/`_3` sin evidencia. |
 
-Sin semblanza: **decisión de homologación (2026-08-28)**, no modelar `semblanza_participante_1`
-aquí. Es una decisión de negocio confirmada (ningún `CU-TAL` la pide), no un hueco de
-documentación — a diferencia de `EVT`, donde la semblanza sí es un requisito capturado
-(`CU-EVT-002`).
+#### Actividad_PresentacionLibroInfantil
+
+El único de los seis tipos donde el formulario real muestra una sección propia ("Detalles
+Presentación de libros para niños o jóvenes"), con roles distintos — mismo patrón que
+`Actividad_PresentacionLibro` en `EVT` (autor, presentador y editorial son tres cosas
+distintas).
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| nombre_participante_1 | Presentador. Obligatorio — "parece ser solo 1 presentador permitido" según el formulario real. |
+| nombre_autor_1 | Autor(a). Obligatorio, al menos uno. El formulario real no especifica un tope de autores como sí lo hace `EVT` (hasta 5) ni muestra casillas numeradas — se modela como un solo campo por ahora; si en la práctica el formulario permite varios autores en cajas separadas, esto debe expandirse a `nombre_autor_1…N`. |
+| editorial | Obligatorio. |
+
+Sin semblanza en ninguna de las seis: **decisión de homologación (2026-08-28)**, no modelar
+`semblanza_participante_1`/`semblanza_autor_1`. Es una decisión de negocio confirmada (ningún
+`CU-TAL` ni el formulario real la piden), no un hueco de documentación — a diferencia de `EVT`,
+donde la semblanza sí es un requisito capturado (`CU-EVT-002`).
 
 ---
 
@@ -460,7 +525,8 @@ Reemplaza a `ParametrosConvocatoriaTAL`. Mismo patrón que `EVT` §3.6.
 | id | Identificador único. |
 | convocatoria_id | FK → CatalogoConvocatorias (§2.2), fila con `prefijo = TAL`. |
 | prefijo_folio | Prefijo del folio visible de una propuesta (§2.5). |
-| duracion_maxima_actividad | Duración máxima por actividad. Sin confirmar con el cliente si aplica igual que en `EVT` — se incluye por paralelismo estructural, revisar. |
+| duracion_minima_actividad | Duración mínima por actividad. **Confirmado en el formulario real** (2026-08-28): "entre 45 y 50 minutos" — a diferencia de `EVT`, que solo tiene un máximo, `TAL` tiene un rango con piso y techo. |
+| duracion_maxima_actividad | Duración máxima por actividad. Confirmado en el formulario real: 50 minutos. |
 | fecha_notificacion_seleccion | Fecha en que se enviará el lote con los resultados del dictamen. |
 | fecha_cierre_ajustes_aplicante | Fecha límite para que el tallerista solicite cambios de horario. Resuelve, a nivel de esquema, el tema abierto que el modelo anterior de `TAL` señalaba ("confirmar si existe una ventana de edición posterior a la aceptación") — el campo ya existe si se necesita; confirmar con Elvira si aplica sigue pendiente, esto no es una confirmación de negocio. |
 | fecha_asignacion_horario | Fecha a partir de la cual los talleristas ven su sala y hora asignadas. |
@@ -488,6 +554,7 @@ agregaría si surge un caso de uso que la requiera.
 - **Persona** (`REG`) 1—N **RouterSolicitudes** 1—1 **Solicitudes_TAL**. Único camino entre una persona y sus propuestas.
 - **CatalogoActividades** 1—N **RouterActividades**. Cada fila de enrutamiento clasifica contra un tipo del catálogo de `TAL`.
 - **Solicitudes_TAL** 1—1 **RouterActividades** →(polimórfica) **Actividad_\***. Una de las seis, según `tipo_actividad_id`.
+- **Solicitudes_TAL** 1—N **ParticipanteConstancia**. Al menos uno por propuesta.
 
 ### Etapa 2 — administración y programación
 
@@ -507,6 +574,7 @@ agregaría si surge un caso de uso que la requiera.
 | --- | --- |
 | RouterSolicitudes | CU-REG-001, CU-TAL-002 |
 | Solicitudes_TAL · CatalogoActividades · RouterActividades · Actividad_* | CU-TAL-002 a CU-TAL-004, CU-TAL-006 |
+| ParticipanteConstancia | CU-TAL-002, CU-TAL-006 |
 | DetallesAdminSolicitud | CU-TAL-003, CU-TAL-007 a CU-TAL-009 |
 | SolicitudesAprobadas | CU-TAL-005, CU-TAL-009 |
 | ProgramacionActividad | CU-TAL-006; CU-PRG-002 a CU-PRG-004 en `PRG` |
@@ -524,22 +592,40 @@ agregaría si surge un caso de uso que la requiera.
 - Confirmar con Elvira si de verdad existe una ventana de edición **posterior a la
   aceptación** — el campo `fecha_cierre_ajustes_aplicante` (§3.6) ya está listo por
   paralelismo con `EVT`, pero su necesidad real sigue sin confirmarse.
-- Confirmar si `autores`/`editorial` (§2.5) deberían capturarse solo para
-  `presentacion_libro_infantil` en la práctica, aunque `CU-TAL-002` los liste sin condicionar
-  por tipo — si se confirma que sí, esos dos campos se moverían de `Solicitudes_TAL` a
-  `Actividad_PresentacionLibroInfantil`.
-- Confirmar si `duracion_maxima_actividad` (§3.6) aplica a `TAL` igual que a `EVT` — se incluyó
-  por paralelismo estructural, sin evidencia directa en los `CU-TAL`.
 - Confirmar si el tipo `presentacion_libro_infantil` necesita una constancia de ejemplar físico
   entregado, como su equivalente en `EVT` (`ejemplar_fisico_entregado`) — no se modeló por
-  falta de evidencia en los `CU-TAL`.
+  falta de evidencia en los `CU-TAL` ni en el formulario real.
+- **Nuevo, del formulario real (2026-08-28):** la regla de truncar a seis nombres en el
+  programa impreso (`ParticipanteConstancia`, §2.6) no aclara si el corte es por orden de
+  captura o por selección del tallerista. Se asumió por orden de captura; confirmar con Elvira.
+- **Nuevo, del formulario real:** el texto de elegibilidad ética/legal (RENOA, sanciones por
+  violencia de género, etc.) menciona que "las personas postulantes deberán firmar una
+  declaración bajo protesta de decir verdad". No está claro si eso es un campo capturado
+  (p. ej. una casilla de aceptación) o solo texto legal mostrado sin dato asociado — si es lo
+  primero, faltaría un campo booleano tipo `declaracion_elegibilidad_aceptada` en
+  `Solicitudes_TAL`. No se agregó sin confirmar cuál de las dos es.
+- **Nuevo, del formulario real:** el texto introductorio dice "Escolaridad: Preescolar,
+  primaria, secundaria, preparatoria y universidad", pero el campo real de `publico_objetivo`
+  (§2.5) no tiene `universidad` — tiene `adultos_mayores` en su lugar. Es una inconsistencia de
+  la fuente, no del modelo; se modeló lo que el campo del formulario realmente ofrece.
+- `CatalogoConvocatorias.fecha_cierre` (tabla global, compartida con `EVT`/`STD`/`VIS`) está
+  tipado como `date` en el diagrama, pero el formulario real da la fecha límite con hora exacta
+  ("viernes 2 de octubre de 2026, a las 15:00 horas"). Si ese nivel de precisión importa para
+  el cierre automático, el tipo debería ser `timestamp` — pero esa tabla es compartida, así que
+  el cambio no es solo de `TAL`; se señala aquí y se deja pendiente de decidir en `EVT`.
 - El mecanismo de "horario final" que gatilla la publicación a `VIS` vive conceptualmente en
   `PRG` (ver "Temas abiertos" en `PRG/Modelo de datos - Programación.md`), no en este modelo.
+
+**Resuelto con el formulario real (2026-08-28):** `autores`/`editorial` sí son exclusivos de
+`presentacion_libro_infantil` (§2.9) — el formulario muestra una sección propia para ese tipo,
+a diferencia de lo que sugería `CU-TAL-002` al listarlos sin condicionar por tipo.
+`duracion_minima_actividad`/`duracion_maxima_actividad` (§3.6) también se confirmaron: 45–50
+minutos.
 
 ---
 
 ## Reglas de negocio relacionadas
 
-El ciclo de dictamen (pendiente/cambios_solicitados/aceptada/rechazada/cancelada), la
-constancia obligatoria y la cifra real de selección (~250 de ~300 propuestas) están
-documentados en `CU-TAL Índice.md` y en cada CU referenciado arriba.
+El ciclo de dictamen (pendiente/cambios_solicitados/aceptada/rechazada/cancelada),
+`requiere_constancia` con valor por defecto `true` (§2.5) y la cifra real de selección (~250 de
+~300 propuestas) están documentados en `CU-TAL Índice.md` y en cada CU referenciado arriba.
