@@ -9,7 +9,7 @@ de talleres en el catálogo → itinerario confirmado.
 > `app.js` lee/escribe vía `../common/db.js`, que carga la semilla desde
 > `../common/db/VIS/semillas/` (3 escuelas + catálogo de talleres del 14-mar-2027) hacia
 > `localStorage`. Como la semilla se carga con `fetch()`, **estas páginas deben servirse por
-> HTTP**, no abrirse por `file://` (CORS). Para desarrollo: `scripts/preview-vis.sh`. En
+> HTTP**, no abrirse por `file://` (CORS). Para desarrollo: `scripts/preview-vis.sh` (dentro de `prototipo/`). En
 > producción, GitHub Pages ya sirve por HTTP. Para reiniciar la demo a su estado de fábrica:
 > abre cualquier página con `?reset=1` o ejecuta `FileyDB.reset()` en la consola.
 > Solo **Benito Juárez García (VIS-2027-001)** es visible del lado escuela; las otras dos

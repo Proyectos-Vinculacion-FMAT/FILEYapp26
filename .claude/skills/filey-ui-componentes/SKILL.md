@@ -35,7 +35,7 @@ Reglas duras:
 - **Nunca leas un HTML completo** para copiar un patrón: `grep -n` la clase y lee ±20 líneas.
 - Edita con `Edit` puntual. Reescribir un archivo entero con `Write` para cambiar tres reglas
   gasta el archivo dos veces (leerlo + escribirlo) y pierde el resto del contenido de vista.
-- El inventario es **generado**: si lo notas desactualizado, corre `./scripts/gen-inventario.sh`;
+- El inventario es **generado**: si lo notas desactualizado, corre `./prototipo/scripts/gen-inventario.sh`;
   no lo edites a mano.
 
 ---
@@ -144,20 +144,20 @@ con `flex-wrap` o `minmax()`.
    `filey-identidad`).
 4. Si su tarjeta aparece en la pantalla de convocatorias de REG, añade `.banner-{dom}` en
    `common/`.
-5. Corre `./scripts/gen-inventario.sh` para que el dominio entre al índice.
+5. Corre `./prototipo/scripts/gen-inventario.sh` para que el dominio entre al índice.
 
 ---
 
 ## 9. Checklist — ejecutable, no de memoria
 
 ```bash
-./scripts/gen-inventario.sh   # reindexa tras tocar cualquier styles.css
-./scripts/check-ui.sh         # E1 var() rotos · E2 svg con width/height · E3 hex suelto
+./prototipo/scripts/gen-inventario.sh   # reindexa tras tocar cualquier styles.css
+./prototipo/scripts/check-ui.sh         # E1 var() rotos · E2 svg con width/height · E3 hex suelto
                               # W1 inline · W2 clase sin CSS · W4 <style> embebido (trinquete)
 ```
 
-Si bajaste deuda, fija el nuevo techo con `./scripts/check-ui.sh --baseline` y comitea
-`scripts/.ui-baseline`.
+Si bajaste deuda, fija el nuevo techo con `./prototipo/scripts/check-ui.sh --baseline` y comitea
+`prototipo/scripts/.ui-baseline`.
 
 A mano solo queda lo que un script no puede juzgar:
 

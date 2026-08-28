@@ -28,7 +28,7 @@ El azul y el dorado de FILEY están **verificados contra la marca real** (ver [r
 | Acento institucional | `--color-dorado-encabezado` `#C99213` | Realce, no acción. Un solo elemento dorado por pantalla |
 | Texto/fondo neutro | `--tinta`, `--gris-700/500/300/200/100/050`, `--color-blanco` | Todo lo demás |
 
-**Prohibido:** hex suelto en una regla. Si el color no existe como token, se añade el token primero. Lo verifica `./scripts/check-ui.sh` (E3).
+**Prohibido:** hex suelto en una regla. Si el color no existe como token, se añade el token primero. Lo verifica `./prototipo/scripts/check-ui.sh` (E3).
 
 ### Acento por dominio
 
@@ -124,4 +124,4 @@ Nunca terminología interna en pantalla ("dictaminar" sí, es del dominio; "CU-E
 - [ ] El contraste cumple AA
 - [ ] El acento corresponde al dominio de la pantalla
 - [ ] El número de opciones/campos visibles respeta Hick y Miller
-- [ ] `./scripts/check-ui.sh` en verde
+- [ ] `./prototipo/scripts/check-ui.sh` en verde

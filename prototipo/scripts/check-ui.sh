@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # check-ui.sh — Verifica las reglas de UI que un skill no puede garantizar por sí solo.
 #
-#   ./scripts/check-ui.sh            # verifica
-#   ./scripts/check-ui.sh --baseline # recalcula el trinquete de deuda tolerada
+#   ./prototipo/scripts/check-ui.sh            # verifica
+#   ./prototipo/scripts/check-ui.sh --baseline # recalcula el trinquete de deuda tolerada
 #
 # ERRORES (rompen, exit 1)
 #   E1  var(--token) sin definición y sin fallback
 #   E2  <svg> con width/height en un asset (el tamaño lo fija CSS)
 #   E3  color hex suelto en una regla CSS (fuera de :root)
 #
-# AVISOS con trinquete (rompen solo si CRECEN respecto a scripts/.ui-baseline)
+# AVISOS con trinquete (rompen solo si CRECEN respecto a prototipo/scripts/.ui-baseline)
 #   W1  style="..." inline en HTML
 #   W2  clase usada en HTML/JS sin definición en ningún CSS ni bloque <style>
 #   W4  líneas de CSS embebido en <style> dentro de HTML (debe vivir en una capa)
@@ -22,9 +22,9 @@
 
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROTO="$ROOT/prototipo"
-BASE="$ROOT/scripts/.ui-baseline"
+BASE="$PROTO/scripts/.ui-baseline"
 MODE="${1:-check}"
 
 # Arrays null-delimitados: hay assets con espacios en el nombre.
@@ -152,7 +152,7 @@ if [ -f "$BASE" ]; then
 else
   inline_styles=$w1; clases_indefinidas=$w2; css_embebido=$w4
   write_baseline
-  say ""; say "ℹ️  Creado scripts/.ui-baseline con los valores actuales."
+  say ""; say "ℹ️  Creado prototipo/scripts/.ui-baseline con los valores actuales."
 fi
 
 ratchet() { # nombre, actual, techo, pista
@@ -162,7 +162,7 @@ ratchet() { # nombre, actual, techo, pista
     say "→ Creció en $(($2 - $3)). $4"
     errors=$((errors + 1))
   elif [ "$2" -lt "$3" ]; then
-    say "→ Bajó. Corre ./scripts/check-ui.sh --baseline para fijar el nuevo techo."
+    say "→ Bajó. Corre ./prototipo/scripts/check-ui.sh --baseline para fijar el nuevo techo."
   fi
 }
 

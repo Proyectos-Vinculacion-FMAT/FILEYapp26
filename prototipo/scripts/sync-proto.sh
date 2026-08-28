@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # sync-proto.sh — sincroniza prototipo/ entre main-isaac y main sin tocar STD
 #
-# Uso (desde cualquier rama):
-#   ./scripts/sync-proto.sh push   # main-isaac → main  (y dispara deploy gh-pages)
-#   ./scripts/sync-proto.sh pull   # main → main-isaac
+# Uso (desde cualquier rama, desde cualquier directorio del repo):
+#   ./prototipo/scripts/sync-proto.sh push   # main-isaac → main  (y dispara deploy gh-pages)
+#   ./prototipo/scripts/sync-proto.sh pull   # main → main-isaac
 
 set -e
+
+# Los pathspecs de git más abajo ("prototipo/") son relativos al cwd, no a este
+# script — sin este cd, invocarlo desde fuera de la raíz del repo movería el
+# prototipo equivocado.
+cd "$(git rev-parse --show-toplevel)"
 
 MODE=$1
 FEATURE_BRANCH="main-isaac"

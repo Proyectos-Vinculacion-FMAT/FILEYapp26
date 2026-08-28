@@ -76,9 +76,9 @@ cd filey && python manage.py check && python manage.py runserver
 cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, no en tests.py
 cd filey && python manage.py migrate_schemas        # migra `public` Y cada feria
 cd filey && python manage.py alta_feria --help      # crear una feria por consola (CU-FER-001)
-./scripts/gen-inventario.sh         # reindexa el inventario CSS tras tocar un styles.css
-./scripts/check-ui.sh               # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)
-./scripts/preview-vis.sh            # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)
+./prototipo/scripts/gen-inventario.sh   # reindexa el inventario CSS tras tocar un styles.css
+./prototipo/scripts/check-ui.sh         # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)
+./prototipo/scripts/preview-vis.sh      # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)
 ```
 
 > [!warning] Una feria recién creada no la ve nadie de fuera

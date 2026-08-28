@@ -20,13 +20,13 @@
 # página aviso. Solo aplica a la ruta Python; el fallback de npx no la tiene.
 #
 # Uso:
-#   ./scripts/preview-vis.sh        # puerto 8080
-#   ./scripts/preview-vis.sh 5500   # puerto a elección
+#   ./prototipo/scripts/preview-vis.sh        # puerto 8080
+#   ./prototipo/scripts/preview-vis.sh 5500   # puerto a elección
 
 set -e
 
 PORT="${1:-8080}"
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../prototipo" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "→  Sirviendo $ROOT en http://localhost:$PORT"
 echo "→  Flujo REG → EVT:"

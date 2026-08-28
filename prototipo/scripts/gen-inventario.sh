@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # gen-inventario.sh — Índice de tokens y componentes CSS del prototipo FILEY.
 #
-#   ./scripts/gen-inventario.sh
+#   ./prototipo/scripts/gen-inventario.sh
 #
 # Salida: .claude/skills/filey-ui-componentes/references/inventario.md
 #
@@ -10,7 +10,7 @@
 
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROTO="$ROOT/prototipo"
 OUT="$ROOT/.claude/skills/filey-ui-componentes/references/inventario.md"
 
@@ -98,10 +98,10 @@ n_huerf=$(awk -F'\t' -v u="$usos" 'BEGIN{while((getline l<u)>0){split(l,a,"\t");
 # ---------- 4. componer ----------
 mkdir -p "$(dirname "$OUT")"
 {
-  echo "<!-- GENERADO por scripts/gen-inventario.sh — no editar a mano. -->"
+  echo "<!-- GENERADO por prototipo/scripts/gen-inventario.sh — no editar a mano. -->"
   echo "# Inventario CSS del prototipo"
   echo
-  echo "Regenerar con \`./scripts/gen-inventario.sh\` tras cualquier cambio en un \`styles.css\`."
+  echo "Regenerar con \`./prototipo/scripts/gen-inventario.sh\` tras cualquier cambio en un \`styles.css\`."
   echo "Fuente: \`prototipo/common/styles-base.css\` + \`prototipo/{DOM}/styles.css\`."
   echo
   echo "**$n_tok tokens · $n_cls definiciones de clase · $n_huerf sin uso detectado en HTML/JS.**"

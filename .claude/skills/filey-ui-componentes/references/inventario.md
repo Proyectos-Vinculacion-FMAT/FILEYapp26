@@ -1,10 +1,10 @@
-<!-- GENERADO por scripts/gen-inventario.sh — no editar a mano. -->
+<!-- GENERADO por prototipo/scripts/gen-inventario.sh — no editar a mano. -->
 # Inventario CSS del prototipo
 
-Regenerar con `./scripts/gen-inventario.sh` tras cualquier cambio en un `styles.css`.
+Regenerar con `./prototipo/scripts/gen-inventario.sh` tras cualquier cambio en un `styles.css`.
 Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 
-**      78 tokens ·      393 definiciones de clase · 39 sin uso detectado en HTML/JS.**
+**78 tokens · 393 definiciones de clase · 39 sin uso detectado en HTML/JS.**
 
 ## Cómo usar este archivo
 
@@ -182,7 +182,7 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.info-grid` | common | 382 | EVT, VIS |
 | `.dl-dates` | common | 384 | EVT |
 | `.row` | common | 385 | EVT |
-| `.dot` | common | 392 | EVT, REG, VIS |
+| `.dot` | common | 392 | EVT, REG, VIS, common |
 | `.cupos` | common | 394 | EVT |
 | `.cupo` | common | 395 | EVT |
 | `.top` | common | 398 | EVT |

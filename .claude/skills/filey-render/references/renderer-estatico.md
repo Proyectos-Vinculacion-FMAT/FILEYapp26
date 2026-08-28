@@ -28,8 +28,8 @@ localStorage que siembra datos desde JSON en `common/db/`.
 ## Previsualizar
 
 ```bash
-./scripts/preview-vis.sh        # puerto 8080
-./scripts/preview-vis.sh 5500
+./prototipo/scripts/preview-vis.sh        # puerto 8080
+./prototipo/scripts/preview-vis.sh 5500
 ```
 
 Sirve `prototipo/` por HTTP con `Cache-Control: no-store`, que es necesario: sin eso el
@@ -50,8 +50,8 @@ navegador puede seguir mostrando CSS viejo aunque el archivo ya cambió en disco
 
 `.github/workflows/deploy-pages.yml` publica `prototipo/` a la rama `gh-pages` en cada push a
 `main` que toque `prototipo/**`. La sincronización entre ramas se hace con
-`./scripts/sync-proto.sh push|pull`, que copia `prototipo/` entre `main-isaac` y `main`
-excluyendo `STD/`.
+`./prototipo/scripts/sync-proto.sh push|pull`, que copia `prototipo/` entre `main-isaac` y
+`main` excluyendo `STD/`.
 
 Consecuencia práctica: **lo que se rompa en `prototipo/` se publica.** Corre
-`./scripts/check-ui.sh` antes de un `sync-proto.sh push`.
+`./prototipo/scripts/check-ui.sh` antes de un `sync-proto.sh push`.

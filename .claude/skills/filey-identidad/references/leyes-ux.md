@@ -109,4 +109,4 @@ silencioso al inicio.
 pantalla con radios, sombras y colores fuera del sistema se percibe como más difícil,
 aunque funcione igual. También es la trampa: no compensa un flujo mal diseñado.
 
-**Verificación.** `./scripts/check-ui.sh` en verde.
+**Verificación.** `./prototipo/scripts/check-ui.sh` en verde.

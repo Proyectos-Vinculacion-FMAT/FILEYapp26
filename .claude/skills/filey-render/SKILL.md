@@ -165,7 +165,7 @@ al 2026-08-11 ya no coincide con el prototipo:
 prototipo, propágalo a `filey.css` en el mismo cambio; y al portar una pantalla, copia al
 `filey.css` solo lo que esa pantalla usa, con el nombre de token idéntico. Nunca inventes un
 nombre distinto para el mismo valor: eso es lo que vuelve irreconciliables las dos hojas.
-`./scripts/gen-inventario.sh` da la lista autoritativa de tokens del prototipo.
+`./prototipo/scripts/gen-inventario.sh` da la lista autoritativa de tokens del prototipo.
 
 ## 7. Portar una pantalla del prototipo
 
@@ -190,7 +190,7 @@ nombre distinto para el mismo valor: eso es lo que vuelve irreconciliables las d
 ```bash
 cd filey && python manage.py check && python manage.py runserver
 cd filey && pytest                 # las pruebas viven en apps/<dom>/pruebas/
-./scripts/check-ui.sh              # aplica al prototipo
+./prototipo/scripts/check-ui.sh    # aplica al prototipo
 ```
 
 - [ ] La plantilla extiende un layout, no repite `<head>` ni el chasis
