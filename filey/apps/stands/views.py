@@ -91,7 +91,7 @@ def solicitud(peticion, convocatoria_id):
         # formularios ligados, que es lo que conserva lo capturado.
     else:
         formularios = {
-            "form_editorial": EditorialForm(instance=editorial),
+            "form_editorial": EditorialForm(instance=editorial, persona=persona),
             "form_sellos": SellosForm(
                 sellos_actuales=[s.nombre for s in sellos_actuales]
             ),
@@ -134,7 +134,9 @@ def _guardar_solicitud(peticion, convocatoria, editorial, ultima):
     Separado de la vista porque son dos caminos —primer envío y reenvío—
     que comparten la captura entera y solo difieren en la última línea.
     """
-    form_editorial = EditorialForm(peticion.POST, instance=editorial)
+    form_editorial = EditorialForm(
+        peticion.POST, instance=editorial, persona=peticion.user
+    )
     form_sellos = SellosForm(peticion.POST, peticion.FILES)
     form_documentos = DocumentoForm(
         peticion.POST,

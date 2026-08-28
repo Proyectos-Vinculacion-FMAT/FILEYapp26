@@ -141,7 +141,8 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | persona_id | FK → `Persona` (`REG`). Quién presenta y administra esta editorial. |
 | nombre | Nombre de la editorial. |
 | domicilio_calle, domicilio_numero, domicilio_colonia | Domicilio. |
-| cp, municipio, estado, pais | Domicilio (cont.). |
+| cp, municipio, estado | Domicilio (cont.). |
+| pais | **Código ISO de dos letras**, no el nombre (`MX`), igual que `Persona.pais` y por el mismo motivo: el nombre cambia y se escribe de varias formas, el código no. Guardarlos igual es además lo que permite proponer por omisión el país de la cuenta. La **fotografía** de §3.3 guarda el nombre, que es lo que se lee. |
 | director_general_nombre, director_general_email | Contacto. |
 | director_comercial_nombre, director_comercial_email | Contacto. |
 | director_editorial_nombre, director_editorial_email | Contacto. |

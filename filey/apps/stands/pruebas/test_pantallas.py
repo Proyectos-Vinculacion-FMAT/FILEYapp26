@@ -15,6 +15,7 @@ la feria A no conceda nada en la B, y que lo que no corresponde a alguien
 no llegue a la respuesta en vez de ocultarse en la plantilla.
 """
 
+import re
 from unittest.mock import patch
 
 import pytest
@@ -350,6 +351,89 @@ def test_los_materiales_son_los_de_la_ficha():
         "Libros electrónicos",
         "Otro",
     ]
+
+
+# ── El país ───────────────────────────────────────────────────
+
+
+def test_el_pais_se_guarda_como_codigo_no_como_nombre(client, feria_2027):
+    """Igual que `Persona.pais`, y por el mismo motivo.
+
+    Con un campo de texto libre acababan «Mexico», «MEX» y «méxico» en la
+    misma columna, y agrupar por país exigía normalizar cadenas a mano.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(pais="CO"),
+    )
+
+    with schema_context(feria_2027.schema_name):
+        assert Editorial.objects.get().pais == "CO"
+
+
+def test_la_fotografia_guarda_el_nombre_del_pais(client, feria_2027):
+    """La fotografía se lee —en A2 y en el correo— y «CO» no se lee."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(pais="CO"),
+    )
+
+    with schema_context(feria_2027.schema_name):
+        assert Solicitud.objects.get().datos_editorial["pais"] == "Colombia"
+
+
+def test_el_desplegable_propone_el_pais_de_la_cuenta(client, feria_2027):
+    """Y lo pone arriba, para no recorrer 197 entradas."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        ana.pais = "CO"
+        ana.save()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    seccion = cuerpo[cuerpo.index('name="pais"') :]
+    seccion = seccion[: seccion.index("</select>")]
+    codigos = re.findall(r'value="([A-Z]{2})"', seccion)
+
+    assert codigos[:2] == ["CO", "MX"], "el suyo primero, México segundo"
+    assert 'value="CO" selected' in seccion
+
+
+def test_sin_pais_en_la_cuenta_propone_mexico(client, feria_2027):
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert 'value="MX" selected' in cuerpo
+
+
+def test_el_catalogo_de_paises_no_se_duplica_ni_se_encoge():
+    """`opciones()` reordena; no añade ni quita."""
+    from apps.registros.paises import PAISES, opciones
+
+    for preferido in (None, "MX", "CO", "ZZ"):
+        lista = opciones(preferido)
+        assert len(lista) == len(PAISES)
+        assert len({c for c, _ in lista}) == len(PAISES)
 
 
 # ── Los sellos y sus cartas (RN-17) ───────────────────────────

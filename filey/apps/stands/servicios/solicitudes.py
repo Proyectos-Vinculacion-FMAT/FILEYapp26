@@ -107,6 +107,11 @@ def _fotografia(editorial: Editorial) -> tuple[dict, list]:
         "tematicas_otra",
     ]
     datos = {campo: getattr(editorial, campo) for campo in campos}
+    # `pais` guarda el código de dos letras; en la fotografía va el
+    # nombre. La fotografía se lee —en A2 y en el correo— y «MX» no se
+    # lee. El código canónico sigue en `Editorial` para cualquier informe
+    # que quiera agrupar.
+    datos["pais"] = editorial.get_pais_display()
     sellos = list(editorial.sellos.values_list("nombre", flat=True))
     return datos, sellos
 

@@ -12,6 +12,23 @@ formularios. Si algún día hace falta filtrar (solo los países con
 participación histórica, por ejemplo), se filtra aquí, en un solo sitio.
 """
 
+#: Los que van arriba del desplegable, en este orden: los tres que hacen
+#: frontera con México y después los mercados de habla hispana que de
+#: hecho mandan expositores a una feria del libro latinoamericana.
+#:
+#: .. warning:: Es una decisión de usabilidad, no un dato de FILEY
+#:
+#:    No sale de ningún documento del cliente: es un atajo para que la
+#:    mayoría no recorra 197 entradas. Si algún día hay histórico de
+#:    participación, esta lista debería salir de ahí y no de una
+#:    suposición.
+CERCANOS = [
+    "US", "GT", "BZ",                                # frontera
+    "ES", "CO", "AR", "CL", "PE",                    # los que más mandan
+    "CU", "CR", "EC", "SV", "HN", "NI", "PA", "DO",  # el resto de la región
+    "BO", "PY", "UY", "VE", "BR",
+]
+
 # Orden alfabético en español, con México primero: es de donde viene la
 # inmensa mayoría de los participantes y ahorrarles el desplazamiento en
 # un desplegable de ~200 entradas es la diferencia entre un campo que se
@@ -228,3 +245,30 @@ def nombre_de(codigo: str) -> str:
     una persona que se registró cuando sí estaba.
     """
     return NOMBRES_POR_CODIGO.get(codigo or "", codigo or "")
+
+
+def opciones(preferido: str | None = None) -> list[tuple[str, str]]:
+    """El catálogo ordenado para un desplegable, sin repetir ninguno.
+
+    Arriba va el país de quien llena el formulario —si se sabe—, después
+    México, después los de `CERCANOS`, y al final el resto en orden
+    alfabético. La lógica es la misma que justifica tener México primero
+    en `PAISES`, llevada un paso más allá: quien escribe desde Bogotá
+    tampoco debería recorrer la lista entera.
+
+    Si `preferido` es México, o no se sabe, no pasa nada raro: no se
+    duplica y el orden queda como estaba.
+
+    :param preferido: código ISO de dos letras, o ``None``.
+    """
+    nombres = dict(PAISES)
+    orden = [preferido, "MX", *CERCANOS] if preferido else ["MX", *CERCANOS]
+
+    arriba, vistos = [], set()
+    for codigo in orden:
+        if codigo in nombres and codigo not in vistos:
+            arriba.append((codigo, nombres[codigo]))
+            vistos.add(codigo)
+
+    resto = [(c, n) for c, n in PAISES if c not in vistos]
+    return arriba + resto

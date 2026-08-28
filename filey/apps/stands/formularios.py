@@ -10,6 +10,7 @@ formularios y también un comando de `manage.py`.
 
 from django import forms
 
+from apps.registros.paises import opciones as opciones_de_pais
 from comun.almacenamiento import DocumentoAdmisible
 
 from .models import MATERIALES, TEMATICAS, Documento, Editorial
@@ -65,7 +66,12 @@ class EditorialForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, persona=None, **kwargs):
+        """
+        :param persona: quién llena el formulario. Solo se usa para
+            ordenar el desplegable de países y proponer el suyo por
+            omisión; el formulario funciona igual sin ella.
+        """
         super().__init__(*args, **kwargs)
         # `total_sellos` no se pide: se deriva de cuántos sellos se
         # declaren (ver `servicios/solicitudes.py::guardar_editorial`).
@@ -73,6 +79,14 @@ class EditorialForm(forms.ModelForm):
         for campo in ("director_comercial_email", "director_editorial_email",
                       "director_promocion_email", "telefono_oficina"):
             self.fields[campo].required = False
+
+        # El país de la cuenta va arriba y viene marcado. Escribirlo a
+        # mano en un campo de texto era la vía rápida a tener «Mexico»,
+        # «MEX» y «méxico» conviviendo en la misma columna.
+        suyo = (getattr(persona, "pais", "") or "").upper() or None
+        self.fields["pais"].choices = opciones_de_pais(suyo)
+        if not self.initial.get("pais") and not self.instance.pk:
+            self.initial["pais"] = suyo or "MX"
 
     def clean(self):
         """Marcar «Otro» sin decir cuál no dice nada.

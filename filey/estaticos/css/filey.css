@@ -536,12 +536,23 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
    del tamaño que necesita. La usan los sellos de STD (nombre + carta).
    STD no tiene pantallas en `prototipo/`, así que esto nace aquí; si el
    prototipo llega a tenerlas, hay que reconciliarlo. */
-.multi-fila { display: flex; gap: 14px; align-items: flex-end; margin-bottom: 6px; }
-.multi-fila > .field { flex: 1 1 0; margin-bottom: 10px; }
-.multi-fila > .btn { margin-bottom: 10px; flex: 0 0 auto; }
+.multi-fila { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 6px; }
+.multi-fila > .field { flex: 1 1 0; margin-bottom: 14px; }
+
+/* Alinear por arriba y no por abajo (`flex-end`) es lo que pone las dos
+   etiquetas en el mismo renglón y los dos controles a la misma altura.
+   Con `flex-end` mandaba el campo más alto —el de archivo, que además
+   lleva su ayuda debajo— y el otro quedaba a media altura, como si
+   fueran de dos filas distintas.
+   La contrapartida: el botón, que no tiene etiqueta, sube demasiado. Se
+   baja el alto exacto de un bloque de etiqueta para que quede a la
+   altura de los controles. */
+.multi-fila { --alto-etiqueta: 27px; }  /* 14px · line-height 1.5 + 6px */
+.multi-fila > .btn { flex: 0 0 auto; margin-top: var(--alto-etiqueta); }
 
 @media (max-width: 920px) {
   .multi-fila { flex-direction: column; align-items: stretch; }
+  .multi-fila > .btn { margin-top: 0; align-self: flex-start; }
 }
 
 /* .info-grid · línea 382 · contenido principal + columna lateral */

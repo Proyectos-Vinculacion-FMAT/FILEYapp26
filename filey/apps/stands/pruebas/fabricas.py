@@ -20,7 +20,7 @@ FICHA = {
     "cp": "97000",
     "municipio": "Mérida",
     "estado": "Yucatán",
-    "pais": "México",
+    "pais": "MX",
     "director_general_nombre": "Ana Pech",
     "director_general_email": "ana@mayab.mx",
     "responsable_stand": "Ana Pech",

@@ -27,6 +27,7 @@ from django.db import models
 from django.db.models import Q
 
 from apps.convocatorias.models import Convocatoria, RegistroConvocatoria
+from apps.registros.paises import PAISES
 from comun.almacenamiento import CarpetaDeLaFeria, DocumentoAdmisible
 
 
@@ -168,7 +169,12 @@ class Editorial(models.Model):
     cp = models.CharField("código postal", max_length=10)
     municipio = models.CharField("municipio", max_length=120)
     estado = models.CharField("estado", max_length=120)
-    pais = models.CharField("país", max_length=80, default="México")
+    # El **código** de dos letras, no el nombre — igual que `Persona.pais`
+    # y por el mismo motivo que explica `registros/paises.py`: el nombre
+    # de un país cambia y se escribe de varias formas, el código no.
+    # Guardarlos igual es además lo que permite proponer por omisión el
+    # país de la cuenta.
+    pais = models.CharField("país", max_length=2, choices=PAISES, default="MX")
 
     # ── Contactos ─────────────────────────────────────────────
     # Los cuatro cargos que pide la Ficha de Registro. Solo el general es
@@ -256,7 +262,14 @@ class Editorial(models.Model):
     def domicilio(self) -> str:
         """El domicilio en una línea, para pantallas y correos."""
         calle = f"{self.domicilio_calle} {self.domicilio_numero}".strip()
-        partes = [calle, self.domicilio_colonia, self.cp, self.municipio, self.estado]
+        partes = [
+            calle,
+            self.domicilio_colonia,
+            self.cp,
+            self.municipio,
+            self.estado,
+            self.get_pais_display(),
+        ]
         return ", ".join(p for p in partes if p)
 
 
