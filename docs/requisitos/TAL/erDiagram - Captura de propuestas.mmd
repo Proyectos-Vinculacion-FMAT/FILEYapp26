@@ -1,0 +1,110 @@
+erDiagram
+    Persona {
+        bigint id PK
+        string nombre
+        string primer_apellido
+        string segundo_apellido
+        string correo
+        string celular
+        string pais
+    }
+
+    CatalogoConvocatorias {
+        bigint id PK
+        string nombre_convocatoria
+        string prefijo
+        date fecha_apertura
+        date fecha_cierre
+        boolean esta_activa
+    }
+
+    DetallesConvocatoria {
+        bigint id PK
+        bigint convocatoria_id FK
+    }
+
+    RouterSolicitudes {
+        bigint id PK
+        bigint usuario_django FK
+        bigint convocatoria_id FK "DISCRIMINADOR"
+        bigint solicitud_id FK "REFERENCIA POLIMORFICA"
+    }
+
+    Solicitudes_TAL {
+        bigint id PK
+        string numero_contacto
+        string titulo_actividad
+        string nombre_organizador_organizacion
+        string participantes_constancia
+        string procedencia
+        string tema
+        string sinopsis
+        string modalidad
+        string enlace_videoconferencia
+        string autores
+        string editorial
+        string publico_objetivo
+        string sugerencia_dia_turno
+        string comentarios
+        timestamp fecha_de_solicitud
+    }
+
+    CatalogoActividades {
+        bigint id PK
+        string nombre
+    }
+
+    RouterActividades {
+        bigint id PK
+        bigint solicitud_id FK
+        bigint tipo_actividad_id FK "DISCRIMINADOR"
+        bigint detalle_id FK "REFERENCIA POLIMORFICA"
+    }
+
+    Actividad_Taller {
+        bigint id PK
+        string nombre_participante_1
+    }
+
+    Actividad_Cuentacuentos {
+        bigint id PK
+        string nombre_participante_1
+    }
+
+    Actividad_PlaticaJuvenil {
+        bigint id PK
+        string nombre_participante_1
+    }
+
+    Actividad_PresentacionLibroInfantil {
+        bigint id PK
+        string nombre_participante_1
+    }
+
+    Actividad_ObraTeatral {
+        bigint id PK
+        string nombre_participante_1
+    }
+
+    Actividad_ProyeccionCine {
+        bigint id PK
+        string nombre_participante_1
+    }
+
+
+    Persona ||--o{ RouterSolicitudes : "tiene"
+    CatalogoConvocatorias ||--o{ RouterSolicitudes : "clasifica"
+    CatalogoConvocatorias ||--|| DetallesConvocatoria : "detalla"
+
+    RouterSolicitudes }o--|| Solicitudes_TAL : "enruta"
+
+    Solicitudes_TAL ||--o{ RouterActividades : "contiene"
+
+    CatalogoActividades ||--o{ RouterActividades : "clasifica"
+
+    RouterActividades }o..|| Actividad_Taller : "enruta"
+    RouterActividades }o..|| Actividad_Cuentacuentos : "enruta"
+    RouterActividades }o..|| Actividad_PlaticaJuvenil : "enruta"
+    RouterActividades }o..|| Actividad_PresentacionLibroInfantil : "enruta"
+    RouterActividades }o..|| Actividad_ObraTeatral : "enruta"
+    RouterActividades }o..|| Actividad_ProyeccionCine : "enruta"

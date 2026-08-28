@@ -626,8 +626,10 @@ Los estados de avance que esa entidad habría guardado son **derivados** y no se
 - Programada: hay al menos una.
 - Confirmada: sus programaciones tienen confirmación del aplicante (§3.4).
 
-`PRG` y `TAL` sí modelan una entidad `Actividad` propia; queda pendiente homologar cómo
-referencian desde ahí lo que en `EVT` es una solicitud aprobada.
+`PRG` sí modela una entidad `Actividad` propia; queda pendiente homologar cómo referencia
+desde ahí lo que en `EVT` es una solicitud aprobada. `TAL` ya no —se homologó con este mismo
+patrón el 2026-08-28: ver
+[`TAL/Modelo de datos - Talleres.md`](<../TAL/Modelo%20de%20datos%20-%20Talleres.md>) §3.
 
 ### 3.2 SolicitudesAprobadas
 
