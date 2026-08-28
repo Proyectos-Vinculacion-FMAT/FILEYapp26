@@ -119,8 +119,6 @@ erDiagram
         string procedencia
         string tema
         string sinopsis
-        string modalidad
-        string enlace_videoconferencia
         string publico_objetivo
         string dias_disponibilidad
         string turno
@@ -256,8 +254,6 @@ administrador vive en la etapa 2 (§3). Equivalente directo de `Solicitudes_EVT`
 | procedencia | `local` / `nacional` / `internacional`. Obligatorio. Sin equivalente en `EVT`. |
 | tema | Texto. Obligatorio. Sin equivalente en `EVT`. |
 | sinopsis | Reseña breve de la actividad, para mostrar al público. Renombrado de `resena` para usar el mismo campo que `EVT`. Obligatorio. |
-| modalidad | `presencial` / `virtual`. Obligatorio. Sin equivalente en `EVT`. |
-| enlace_videoconferencia | Obligatorio solo si `modalidad = virtual`. |
 | publico_objetivo | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` / `adultos_mayores` (mínimo uno). Renombrado de `publico_meta`. El conjunto de valores es propio de `TAL`, no se homologa con el de `EVT` (escalas distintas: nivel escolar vs. tipo de público). `adultos_mayores` no estaba en la versión anterior de este documento —viene del formulario real, no del `CU`—; el texto introductorio de la convocatoria menciona "universidad" en cambio, así que hay una inconsistencia menor en la fuente misma que vale la pena confirmar con Elvira. |
 | dias_disponibilidad | Multivalor, sobre los días en que se realiza la feria (13 al 21 de marzo en la edición 2027). Obligatorio, mínimo uno. **Nuevo campo**: no estaba documentado en ningún `CU-TAL` ni en la versión anterior de este modelo; sale del formulario real. Sin equivalente en `EVT`, que no le pregunta al aplicante disponibilidad por día. |
 | turno | Multivalor: `matutino` (9:00–13:00) / `vespertino` (15:00–18:00), puede ser ambos. Obligatorio, mínimo uno. Renombrado de `sugerencia_dia_turno`, que se documentaba opcional y de un solo valor; el formulario real lo pide obligatorio y permite marcar los dos turnos. |
@@ -271,6 +267,17 @@ ni carga de archivos adjuntos"). No se modela.
 `Tallerista` deja de existir como entidad propia: su único campo adicional (`numero_contacto`)
 se incorpora directo aquí, igual que `EVT` mantiene `institucion`/`cargo` en `Solicitudes_EVT`
 en vez de una entidad `Aplicante` aparte.
+
+> [!warning] `modalidad` y `enlace_videoconferencia` se retiran (2026-08-28) — error de lectura
+> Una revisión anterior de este documento los incluyó a partir de los puntos 3 y 4 de
+> "Requisitos para la participación" en
+> [`datos de convocatoria.md`](<datos%20de%20convocatoria.md>) ("Modalidad presencial",
+> "Modalidad virtual"). Esos puntos son **texto informativo sobre cómo participar**, no una
+> pregunta del formulario: la sección `## Datos del evento`, que es la que de verdad enumera
+> los campos capturados, no tiene ningún selector de modalidad ni campo de enlace. Se borran
+> ambos del modelo. Cómo distingue el sistema una actividad presencial de una virtual —si es
+> que hace falta distinguirlas en algún dato— queda sin resolver; no se inventa un campo para
+> sustituirlos sin evidencia de que exista.
 
 ### 2.6 ParticipanteConstancia
 
@@ -330,11 +337,21 @@ Conecta la propuesta con su actividad específica. Mismo mecanismo que `EVT` §2
 
 ### 2.9 Tablas `Actividad_*`
 
-Seis tablas, una por tipo. **Decisión de homologación (2026-08-28), confirmada tras revisar el
-formulario real:** cada tipo tiene su propia tabla y su propio `nombre_participante_1`, igual
-que `EVT` — quien presenta/imparte se documenta por tipo, no en `Solicitudes_TAL`, aunque hoy
-cinco de las seis tablas terminen con la misma estructura (mismo patrón que ya usa `EVT` con
-`Conferencia`/`Charla`/`LecturaObra`/`Encuentro`).
+Seis tablas, una por tipo. **Decisión de homologación (2026-08-28):** dividir por tipo, igual
+que `EVT` — confirmada además por el formulario real, que muestra una sección propia para
+"Presentación de libros" (§2.9, más abajo). Que cada tipo tenga su propia tabla y su propio
+`nombre_participante_1` sí está confirmado, pero solo para ese tipo.
+
+> [!warning] `nombre_participante_1` en los otros cinco tipos: arquitectura, no evidencia
+> Para `Taller`/`Cuentacuentos`/`Plática juvenil`/`Obra teatral`/`Proyección de cine`, el
+> formulario real (§ `Responsable del evento`, § `Datos del evento`) **no** tiene ningún campo
+> de "quién presenta" además del responsable del evento (que ya es `Persona` +
+> `numero_contacto`, §2.5). El campo `nombre_participante_1` en estas cinco tablas se mantiene
+> por instrucción explícita de Isaac en el turno anterior —"igual que en EVT los nombres de los
+> participantes van en el detalle de la actividad"—, como decisión de arquitectura (espejo de
+> `EVT`), no como algo que el formulario real pida. A diferencia de `modalidad`/
+> `enlace_videoconferencia` (que se borraron, ver §2.5), esto no se retira porque ya se
+> confirmó explícitamente que es intencional; se deja señalado aquí para que quede trazable.
 
 #### Actividad_Taller · Actividad_Cuentacuentos · Actividad_PlaticaJuvenil · Actividad_ObraTeatral · Actividad_ProyeccionCine
 
@@ -343,7 +360,7 @@ Cinco tablas, hoy estructuralmente idénticas — un solo campo cada una:
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
-| nombre_participante_1 | Nombre de quien presenta/participa. Obligatorio. El formulario real no menciona más de un presentador para estos cinco tipos —a diferencia de `EVT`, donde varios tipos permiten hasta 2 o 3—, así que no se agregan `_2`/`_3` sin evidencia. |
+| nombre_participante_1 | Nombre de quien presenta/participa. Obligatorio. Ver la nota de arriba: no está en el formulario real para estos cinco tipos, se mantiene por decisión de arquitectura. El formulario tampoco menciona más de un presentador —a diferencia de `EVT`, donde varios tipos permiten hasta 2 o 3—, así que no se agregan `_2`/`_3` sin evidencia. |
 
 #### Actividad_PresentacionLibroInfantil
 
@@ -531,7 +548,6 @@ Reemplaza a `ParametrosConvocatoriaTAL`. Mismo patrón que `EVT` §3.6.
 | fecha_cierre_ajustes_aplicante | Fecha límite para que el tallerista solicite cambios de horario. Resuelve, a nivel de esquema, el tema abierto que el modelo anterior de `TAL` señalaba ("confirmar si existe una ventana de edición posterior a la aceptación") — el campo ya existe si se necesita; confirmar con Elvira si aplica sigue pendiente, esto no es una confirmación de negocio. |
 | fecha_asignacion_horario | Fecha a partir de la cual los talleristas ven su sala y hora asignadas. |
 | fecha_constancias | Fecha a partir de la cual pueden descargarse las constancias. |
-| modalidades_admitidas | Multivalor: `presencial` / `virtual` (mínimo una). Propio de `TAL`, sin equivalente en `EVT`. |
 | programa_archivado | Indica si el programa se cerró definitivamente. |
 | fecha_archivado | Fecha y hora del cierre definitivo. |
 | archivado_por | FK → Persona (administrador que ejecutó el cierre). |
@@ -539,6 +555,11 @@ Reemplaza a `ParametrosConvocatoriaTAL`. Mismo patrón que `EVT` §3.6.
 
 Sin `cupo_*`: confirmado que `TAL` no tiene categorización cruzada, así que no hay nada que
 contar por categoría.
+
+Sin `modalidades_admitidas`: existía en `ParametrosConvocatoriaTAL` (el documento que este
+reemplaza) configurando qué modalidades acepta la convocatoria. Con `modalidad` retirado de
+`Solicitudes_TAL` (§2.5) por no ser un campo real del formulario, este parámetro queda sin
+nada que configurar — se retira en cascada, no por error propio.
 
 Sin `BitacoraTAL`: `EVT` tiene `BitacoraEVT` para auditar acciones excepcionales del
 administrador, pero ningún `CU-TAL` describe esa necesidad. No se modela sin evidencia; se
