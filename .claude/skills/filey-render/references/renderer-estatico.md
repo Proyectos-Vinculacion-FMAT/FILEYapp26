@@ -49,9 +49,9 @@ navegador puede seguir mostrando CSS viejo aunque el archivo ya cambió en disco
 ## Despliegue
 
 `.github/workflows/deploy-pages.yml` publica `prototipo/` a la rama `gh-pages` en cada push a
-`main` que toque `prototipo/**`. La sincronización entre ramas se hace con
-`./prototipo/scripts/sync-proto.sh push|pull`, que copia `prototipo/` entre `main-isaac` y
-`main` excluyendo `STD/`.
+`main` que toque `prototipo/**`. Llega ahí por el flujo normal de PR (rama personal → `develop`
+→ `QA` → `main`), no por un script de sincronización aparte — `sync-proto.sh`, que copiaba
+`prototipo/` entre `main-isaac` y `main` a mano, quedó deprecado con ese flujo y se eliminó.
 
 Consecuencia práctica: **lo que se rompa en `prototipo/` se publica.** Corre
-`./prototipo/scripts/check-ui.sh` antes de un `sync-proto.sh push`.
+`./prototipo/scripts/check-ui.sh` en verde antes de abrir el PR que toque `main`.
