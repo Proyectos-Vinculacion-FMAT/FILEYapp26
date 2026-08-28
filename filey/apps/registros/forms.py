@@ -8,9 +8,9 @@ dígitos); las reglas de negocio —si el correo ya existe, si toca
 cool-down— son de `services/`, no del formulario.
 """
 
-import re
-
 from django import forms
+
+from comun import validadores
 
 from .paises import PAIS_POR_DEFECTO, PAISES
 
@@ -92,14 +92,22 @@ class RegistroForm(forms.Form):
         return self.cleaned_data["segundo_apellido"].strip()
 
     def clean_telefono(self):
-        """E1: teléfono de al menos 10 dígitos (criterio del prototipo).
+        """E1: teléfono de al menos 10 dígitos (`CU-REG-001`).
 
         Se guarda solo con dígitos para que "999 000 0000" y
         "9990000000" sean el mismo teléfono al comprobar duplicados.
+
+        La regla no se escribe aquí: vive en `comun/validadores.py`, que
+        es lo mismo que valida el campo del modelo y lo que usa `STD` en
+        su ficha de expositor. Cuando estaba escrita en este método,
+        `Persona.telefono` la ignoraba por completo.
+
+        Se valida **además de** normalizar, y no basta con el validador
+        del campo: esto es un `forms.Form` y no un `ModelForm`, así que
+        nada del modelo corre solo.
         """
-        digitos = re.sub(r"\D", "", self.cleaned_data["telefono"])
-        if len(digitos) < 10:
-            raise forms.ValidationError("El teléfono debe tener al menos 10 dígitos.")
+        digitos = validadores.solo_digitos(self.cleaned_data["telefono"])
+        validadores.telefono(digitos)
         return digitos
 
 

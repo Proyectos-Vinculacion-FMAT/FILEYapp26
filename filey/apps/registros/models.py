@@ -16,8 +16,11 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import PermissionsMixin
+from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils import timezone
+
+from comun.validadores import telefono as validar_telefono
 
 from .paises import PAISES
 
@@ -89,13 +92,26 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     # `REG/Modelo de datos - Registros` §2.1): sin separarlo no se puede
     # ordenar por apellido, saludar por el nombre de pila en un correo,
     # ni imprimir una constancia con el formato que pida cada documento.
-    nombre = models.CharField(max_length=80)
-    primer_apellido = models.CharField(max_length=80)
+    # El mínimo de dos caracteres estaba **solo en el formulario**, así
+    # que una cuenta creada desde el admin o desde un comando podía
+    # llamarse "X". La regla vive ahora en el campo, que es por donde
+    # pasan los tres caminos.
+    nombre = models.CharField(max_length=80, validators=[MinLengthValidator(2)])
+    primer_apellido = models.CharField(
+        max_length=80, validators=[MinLengthValidator(2)]
+    )
     # Opcional a propósito, y no por descuido: hay personas que no tienen
     # segundo apellido y la mayoría de los participantes extranjeros usan
     # uno solo. Ninguna validación puede exigirlo (CU-REG-001, E1).
     segundo_apellido = models.CharField(max_length=80, blank=True)
-    telefono = models.CharField(max_length=20, blank=True)
+    # `CU-REG-001` pide al menos 10 dígitos, y esa regla vivía **solo en
+    # `RegistroForm.clean_telefono`**: `create_user`, el admin y
+    # cualquier comando escribían lo que fuera. Con `blank=True` los
+    # validadores no corren sobre el vacío, así que las cuentas técnicas
+    # sin teléfono siguen pudiendo crearse.
+    telefono = models.CharField(
+        max_length=20, blank=True, validators=[validar_telefono]
+    )
     # Se guarda el código ISO de dos letras, no el nombre — ver
     # `paises.py`. `blank` porque las cuentas administrativas se dan de
     # alta por comando sin pedirlo; el formulario de CU-REG-001 sí lo

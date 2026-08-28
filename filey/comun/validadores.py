@@ -18,19 +18,47 @@ divergen en cuanto alguien arregla una.
 import re
 
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 
-#: Dígitos, espacios, guiones, puntos, paréntesis y un `+` inicial. Con
-#: al menos ocho dígitos: en México son diez —clave lada más número, como
-#: pide la ficha—, y ocho deja pasar los formatos cortos de otros países
-#: sin dejar pasar "1234".
-telefono = RegexValidator(
-    regex=r"^\+?[\d\s().-]{8,}$",
-    message=(
-        "Escribe el teléfono con clave lada, solo números "
-        "(por ejemplo, 999 123 4567)."
-    ),
-)
+#: Cuántos dígitos hace falta reconocer para dar algo por teléfono. Sale
+#: de `CU-REG-001`: *"al menos 10 dígitos"*, que es clave lada más número
+#: en México.
+#:
+#: .. warning:: Deja fuera formatos extranjeros legítimos
+#:
+#:    Un móvil español son nueve dígitos. La misma pantalla que exige
+#:    diez pide también el país, así que la regla y el catálogo de países
+#:    se contradicen para quien escribe desde fuera de Norteamérica. Es
+#:    una regla escrita —`CU-REG-001`, "Datos relevantes"— y por eso se
+#:    respeta tal cual; corregirla es decisión del equipo, no de aquí.
+MINIMO_DIGITOS_TELEFONO = 10
+
+
+def solo_digitos(valor: str) -> str:
+    """El teléfono con solo sus dígitos.
+
+    Es lo que se guarda, para que "999 000 0000" y "9990000000" sean el
+    mismo teléfono al comparar. Sin esto, buscar un duplicado obliga a
+    normalizar en cada consulta — y a acordarse de hacerlo.
+    """
+    return re.sub(r"\D", "", valor or "")
+
+
+def telefono(valor: str) -> None:
+    """Que lo escrito se parezca a un número al que se pueda llamar.
+
+    Cuenta **dígitos** en vez de casar un formato completo porque la
+    gente escribe el suyo de cinco maneras —con lada entre paréntesis,
+    con guiones, con `+52`— y todas son correctas. Lo que se rechaza es
+    lo que no tiene números suficientes para ser un teléfono.
+
+    :raises ValidationError: con el mínimo dicho en voz alta.
+    """
+    if len(solo_digitos(valor)) < MINIMO_DIGITOS_TELEFONO:
+        raise ValidationError(
+            f"El teléfono debe tener al menos {MINIMO_DIGITOS_TELEFONO} dígitos, "
+            "con clave lada (por ejemplo, 999 123 4567)."
+        )
+
 
 #: Cinco dígitos exactos. Es el formato mexicano, y solo se aplica cuando
 #: el domicilio es de México.
