@@ -9,9 +9,11 @@ formularios y también un comando de `manage.py`.
 """
 
 from django import forms
+from django.core.exceptions import ValidationError
 
 from apps.registros.paises import opciones as opciones_de_pais
 from comun.almacenamiento import DocumentoAdmisible
+from comun.validadores import validar_cp
 
 from .models import MATERIALES, TEMATICAS, Documento, Editorial
 
@@ -96,6 +98,15 @@ class EditorialForm(forms.ModelForm):
         los dos campos es la casilla, que es cosa del formulario.
         """
         datos = super().clean()
+
+        # El código postal se valida **contra el país**, así que no puede
+        # ser un validador del campo: necesita los dos valores ya
+        # limpios. Cinco dígitos en México; fuera, algo razonable.
+        try:
+            validar_cp(datos.get("cp"), datos.get("pais"))
+        except ValidationError as exc:
+            self.add_error("cp", exc)
+
         for lista, texto, marca in (
             ("materiales", "materiales_otro", "Otro"),
             ("tematicas", "tematicas_otra", "Otros"),
@@ -136,6 +147,7 @@ class SellosForm(forms.Form):
             self.fields[f"sello_{i}"] = forms.CharField(
                 required=False,
                 max_length=200,
+                min_length=2,
                 label=f"Sello {i + 1}",
                 initial=self.actuales[i] if i < len(self.actuales) else "",
             )

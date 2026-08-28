@@ -184,18 +184,23 @@
 
     {% comment %} La firma de la ficha. En papel es una línea bajo «RECONOZCO
        Y ACEPTO LAS BASES DE PARTICIPACIÓN»; aquí, una casilla obligatoria
-       pegada al botón, que es donde de verdad se decide enviar. {% endcomment %}
-    <div class="note {% if form_bases.acepto.errors %}note-err{% else %}note-gold{% endif %}">
-      <div class="ico">📋</div>
-      <div>
-        <label class="radio-row">
+       pegada al botón, que es donde de verdad se decide enviar.
+
+       El aviso entero **es** la etiqueta de la casilla, así que se marca al
+       pulsar en cualquier parte y no solo en el cuadrito de 13 píxeles. El
+       icono va `aria-hidden` para que no acabe leído como parte del nombre
+       del control; el error se queda fuera de la etiqueta por lo mismo. {% endcomment %}
+    <div class="note nota-elegible {% if form_bases.acepto.errors %}note-err{% else %}note-gold{% endif %}">
+      <label>
+        <span class="ico" aria-hidden="true">📋</span>
+        <span>
           {{ form_bases.acepto }}
           Acepto las bases de participación de {{ convocatoria.nombre }}.
-        </label>
-        {% for error in form_bases.acepto.errors %}
-          <span class="hint req">{{ error }}</span>
-        {% endfor %}
-      </div>
+        </span>
+      </label>
+      {% for error in form_bases.acepto.errors %}
+        <span class="hint req">{{ error }}</span>
+      {% endfor %}
     </div>
 
     <div class="form-actions">

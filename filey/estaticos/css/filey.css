@@ -617,3 +617,28 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .field input[type="file"]::file-selector-button:hover {
   border-color: var(--azul-600); background: var(--azul-050);
 }
+
+/* ── Un aviso que se puede marcar ──────────────────────────────
+   La aceptación de las bases. El aviso entero es la etiqueta de la
+   casilla: se marca pulsando en cualquier parte, no solo en el cuadrito
+   de 13 píxeles, que en un móvil es un objetivo ridículo.
+
+   Y tiene que **parecerlo**: un `.note` normal es informativo, así que
+   sin cursor, sin hover y sin foco visible nadie sabría que se puede
+   pulsar. */
+.nota-elegible { display: block; padding: 0; }
+.nota-elegible > label {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; cursor: pointer;
+}
+.nota-elegible > label input { margin-top: 2px; }
+.nota-elegible > .hint { display: block; padding: 0 16px 14px 50px; }
+
+/* El aviso completo reacciona, no solo la casilla. */
+.nota-elegible:hover { filter: brightness(0.98); }
+/* El foco del teclado se ve en el aviso entero: el recuadro nativo de la
+   casilla se pierde dentro de un bloque de color. */
+.nota-elegible:focus-within { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+/* Y al marcarla se nota que quedó marcada, que es lo que confirma que el
+   paso obligatorio está resuelto. */
+.nota-elegible:has(input:checked) { border-color: var(--ok-600); }

@@ -22,13 +22,14 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 
 from apps.convocatorias.models import Convocatoria, RegistroConvocatoria
 from apps.registros.paises import PAISES
 from comun.almacenamiento import CarpetaDeLaFeria, DocumentoAdmisible
+from comun.validadores import telefono as validar_telefono
 
 
 class Giro(models.TextChoices):
@@ -160,7 +161,14 @@ class Editorial(models.Model):
         related_name="editorial",
         help_text="Quién presenta y administra esta editorial en esta feria.",
     )
-    nombre = models.CharField("nombre de la editorial", max_length=200)
+    nombre = models.CharField(
+        "nombre de la editorial",
+        max_length=200,
+        # Mismo mínimo que `Convocatoria.nombre`, y por lo mismo: es lo
+        # que identifica a la editorial en todas las pantallas, y un
+        # nombre de una letra es una tecla suelta, no una editorial.
+        validators=[MinLengthValidator(3)],
+    )
 
     # ── Domicilio ─────────────────────────────────────────────
     domicilio_calle = models.CharField("calle", max_length=160)
@@ -203,10 +211,18 @@ class Editorial(models.Model):
 
     responsable_stand = models.CharField("responsable del stand", max_length=160)
     giro = models.CharField("giro", max_length=12, choices=Giro.choices)
+    # La ficha pide «clave lada + número» en los dos. Sin validar, el
+    # campo aceptaba cualquier texto y nadie se enteraba hasta que
+    # alguien intentaba llamar.
     telefono_oficina = models.CharField(
-        "teléfono de oficina", max_length=20, blank=True
+        "teléfono de oficina",
+        max_length=20,
+        blank=True,
+        validators=[validar_telefono],
     )
-    telefono_celular = models.CharField("teléfono celular", max_length=20)
+    telefono_celular = models.CharField(
+        "teléfono celular", max_length=20, validators=[validar_telefono]
+    )
     # **No es el correo de acceso.** Ese vive en `Persona` y puede ser
     # otro: la cuenta personal de quien tramita frente al buzón comercial
     # de la editorial.
@@ -222,7 +238,11 @@ class Editorial(models.Model):
         ),
     )
     num_personas_atienden = models.PositiveSmallIntegerField(
-        "personas que atienden el stand", default=1
+        "personas que atienden el stand",
+        default=1,
+        # `PositiveSmallIntegerField` admite el cero, y un stand que no
+        # atiende nadie no es un stand.
+        validators=[MinValueValidator(1)],
     )
     total_sellos = models.PositiveSmallIntegerField("total de sellos", default=0)
     cantidad_libros_aprox = models.PositiveIntegerField(
@@ -585,6 +605,8 @@ class ConfiguracionSistema(models.Model):
         "plazo de la reserva (días)",
         default=30,
         help_text="Vigencia de una reserva en espera del anticipo (RN-03).",
+        # Cero días vencería la reserva en el mismo instante de crearla.
+        validators=[MinValueValidator(1)],
     )
     descuento_pronto_pago = models.PositiveSmallIntegerField(
         "descuento por pronto pago (%)",

@@ -291,6 +291,31 @@ def test_sin_aceptar_las_bases_no_se_envia(client, feria_2027):
         assert not Solicitud.objects.exists()
 
 
+def test_el_aviso_entero_es_la_etiqueta_de_la_casilla(client, feria_2027):
+    """Se marca pulsando en cualquier parte, no solo en el cuadrito.
+
+    Un `<input type=checkbox>` mide trece píxeles; en un móvil es un
+    objetivo ridículo para el único paso obligatorio del formulario.
+    Envolverlo en la etiqueta lo convierte en un bloque entero.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    aviso = cuerpo[cuerpo.index("nota-elegible") :]
+    aviso = aviso[: aviso.index("</div>")]
+
+    # La casilla vive dentro de la etiqueta, no al lado.
+    assert aviso.index("<label>") < aviso.index('name="acepto"')
+    # Y el icono no entra en el nombre accesible del control.
+    assert 'aria-hidden="true"' in aviso
+
+
 def test_al_enviar_queda_registrado_que_acepto(client, feria_2027):
     """Va en la solicitud, no en la ficha: se aceptan las bases **de esta**
     convocatoria, en el momento de enviar."""
