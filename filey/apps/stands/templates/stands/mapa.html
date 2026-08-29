@@ -1,0 +1,126 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   El mapa del showfloor — CU-STD-009 (aplicante) y CU-STD-032 (admin).
+
+   Es **una sola plantilla con un parámetro** y no dos pantallas. Lo
+   único que las separa es si los estados llegan colapsados (RN-09) o
+   completos (RN-18), y eso ya lo decidió `servicios/dibujo.py`. Dos
+   plantillas se separan al primer cambio y acaban dibujando mapas
+   distintos.
+
+   Contexto que espera:
+
+     vista        una `dibujo.Vista`, o None si la convocatoria no tiene mapa
+     habilitada   si quien mira puede ver el mapa (RN-16)
+     costo_m2     para decir de dónde sale el precio
+     zona_admin   presente solo en CU-STD-032
+
+   **Funciona sin JavaScript**, y no es un detalle: el mapa es un SVG con
+   un `<a>` por espacio libre. Se navega con el tabulador, se imprime y
+   sigue ahí si el script no carga. Lo que falta sin él es el zoom, que
+   es comodidad.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mapa del showfloor — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Mapa del showfloor{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% if not habilitada %}
+  {% comment %} E1 de CU-STD-009. No se dice *por qué* no está habilitada
+     —nunca aplicó, sigue en revisión, se la rechazaron—: eso lo cuenta su
+     solicitud, que es la pantalla donde además puede hacer algo. {% endcomment %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div>
+      <strong>Todavía no puedes elegir espacios.</strong>
+      El mapa se abre en cuanto aceptemos tu solicitud de expositor.
+      <a href="{% url 'stands:solicitud' convocatoria_id=convocatoria.pk %}">Ver cómo va la mía</a>.
+    </div>
+  </div>
+
+{% elif not vista %}
+  {% comment %} E2. Una convocatoria recién creada no tiene mapa: es su
+     estado normal, no una avería, y se dice como tal. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">🗺️</div>
+    <div>
+      <strong>El mapa todavía no está listo.</strong>
+      {% if zona_admin %}
+        Se carga desde el admin de esta edición, o con
+        <code>manage.py importar_mapa</code>.
+      {% else %}
+        Te avisamos en cuanto se publique el plano de esta edición.
+      {% endif %}
+    </div>
+  </div>
+
+{% else %}
+  <div class="mapa-cabecera">
+    <div>
+      <h3>{{ vista.salon }}</h3>
+      <p class="hint">
+        {% if zona_admin %}
+          {{ vista.libres }} de {{ vista.total }} espacios siguen disponibles.
+        {% else %}
+          {{ vista.libres }} espacios disponibles de {{ vista.total }}.
+          Elige uno para ver sus medidas y su precio.
+        {% endif %}
+      </p>
+    </div>
+    <ul class="mapa-leyenda">
+      <li><span class="mapa-muestra es-disponible"></span> Disponible</li>
+      {% if zona_admin %}
+        <li><span class="mapa-muestra es-reservado"></span> Reservado</li>
+        <li><span class="mapa-muestra es-ocupado"></span> Ocupado</li>
+      {% else %}
+        <li><span class="mapa-muestra es-ocupado"></span> Ocupado</li>
+      {% endif %}
+      <li><span class="mapa-muestra es-recinto"></span> Áreas de la feria</li>
+    </ul>
+  </div>
+
+  <div class="mapa-lienzo">
+    <svg class="mapa" viewBox="-1 -1 {{ vista.columnas|add:2 }} {{ vista.filas|add:2 }}"
+         role="group" aria-label="Plano de {{ vista.salon }} con {{ vista.total }} espacios">
+      <g class="mapa-recinto" aria-hidden="true">
+        {% for deco in vista.decoraciones %}
+          {% if deco.contorno %}<path d="{{ deco.contorno }}"/>{% endif %}
+          <text x="{{ deco.x }}" y="{{ deco.y }}" style="font-size:{{ deco.tamano_texto }}px">{{ deco.etiqueta }}</text>
+        {% endfor %}
+      </g>
+      <g class="mapa-espacios">
+        {% for pieza in vista.piezas %}
+          {% comment %} Solo lo reservable es un enlace. Un `<a>` a un
+             espacio que no se puede tomar promete algo que no hay, y
+             además mete en el recorrido del tabulador cien paradas que no
+             llevan a ninguna parte. {% endcomment %}
+          {% if pieza.libre and not zona_admin %}
+            <a href="{% url 'stands:detalle_stand' convocatoria_id=convocatoria.pk clave=pieza.clave %}"
+               class="mapa-espacio es-{{ pieza.aspecto }}">
+              <title>{{ pieza.etiqueta }} — {{ pieza.metros_cuadrados|floatformat:0 }} m², ${{ pieza.precio|floatformat:0 }}</title>
+              <path d="{{ pieza.contorno }}"/>
+              <text x="{{ pieza.x }}" y="{{ pieza.y }}" style="font-size:{{ pieza.tamano_texto }}px">{{ pieza.etiqueta }}</text>
+            </a>
+          {% else %}
+            <g class="mapa-espacio es-{{ pieza.aspecto }}">
+              <title>{{ pieza.etiqueta }} — {{ pieza.aspecto_texto }}</title>
+              <path d="{{ pieza.contorno }}"/>
+              <text x="{{ pieza.x }}" y="{{ pieza.y }}" style="font-size:{{ pieza.tamano_texto }}px">{{ pieza.etiqueta }}</text>
+            </g>
+          {% endif %}
+        {% endfor %}
+      </g>
+    </svg>
+  </div>
+
+  <p class="hint">
+    Los precios salen de la superficie de cada espacio a
+    ${{ costo_m2|floatformat:0 }} el m² (RN-01).
+  </p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+
+{% comment %} ===========================================================
+   CU-STD-039 · Cargar el showfloor de una convocatoria.
+
+   Vive en el admin de la **edición** (`/f/<slug>/django-admin/`) porque
+   `MapaShowfloor` es de `TENANT_APPS`: sus tablas no existen en `public`.
+
+   Extiende el admin y no `layouts/panel.html` a propósito: quien entra
+   aquí es el equipo técnico, ya está en el admin, y llevarlo a otro
+   chasis a media tarea le quita la navegación con la que llegó.
+   =========================================================== {% endcomment %}
+
+{% block content %}
+<div id="content-main">
+
+  <p style="max-width: 62ch">
+    El archivo se valida entero antes de escribir nada: si algo falla, no se
+    importa ni una fila. Un mapa a medias se ve igual que uno bueno y le faltan
+    espacios que nadie echa de menos hasta que alguien pregunta por el suyo.
+  </p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <ul class="errorlist">
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+
+    <fieldset class="module aligned">
+      {% for campo in form %}
+        <div class="form-row{% if campo.errors %} errors{% endif %}">
+          {{ campo.errors }}
+          <div>
+            {{ campo.label_tag }}
+            {{ campo }}
+            {% if campo.help_text %}<div class="help">{{ campo.help_text }}</div>{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" value="Importar" class="default">
+      {% comment %} La URL llega por contexto: hay dos sitios de admin y el
+         prefijo `admin:` es el del otro, el que corre sobre `public`. {% endcomment %}
+      <a href="{{ url_listado }}" class="closelink">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

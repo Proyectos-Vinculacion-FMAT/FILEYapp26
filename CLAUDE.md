@@ -86,14 +86,21 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   el catálogo con cada vertical (ADR-0006). Falta la pantalla de convocatorias del panel del
   dueño (CU-FER-005 a CU-FER-009 con su propia UI), la transferencia de propiedad y
   `BitacoraFER`.
-- **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene **la solicitud de expositor
-  entera** (CU-STD-001 a 008): la ficha oficial en U1, la cola de revisión y el detalle en A1 y
-  A2, el dictamen con su aviso por correo, los adjuntos con permiso, y `ConfiguracionSistema`
-  (CU-STD-034) editable desde `/f/<slug>/django-admin/` mientras no exista A10. **Falta todo lo
-  que cuelga del mapa**: `MapaShowfloor`, `Stand`, `DecoracionMapa`, `Reserva`, `Movimiento`, y
-  con ellos CU-STD-009 a 033 y 035 a 039. El **mapa sí existe ya como dato**:
-  `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel por
-  `scripts/derivar-mapa/`; es la entrada que CU-STD-039 tiene que saber leer.
+- **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene dos verticales completas:
+  - **La solicitud de expositor** (CU-STD-001 a 008): la ficha oficial en U1, la cola de
+    revisión y el detalle en A1 y A2, el dictamen con su aviso por correo, los adjuntos con
+    permiso, y `ConfiguracionSistema` (CU-STD-034) editable desde `/f/<slug>/django-admin/`
+    mientras no exista A10.
+  - **El mapa del showfloor** (CU-STD-009, 010, 032, 039): `MapaShowfloor`, `Stand` y
+    `DecoracionMapa`; la importación desde JSON —`servicios/mapas.py`, la pantalla del admin de
+    la edición y `manage.py importar_mapa`—; y el mapa dibujado en **SVG servido**, que es la
+    misma plantilla para el aplicante y para quien administra (lo que cambia es si `reservado`
+    y `ocupado` llegan colapsados, RN-09). El mapa de 2026 vive en
+    `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel
+    por `scripts/derivar-mapa/`.
+
+  **Falta la reserva y el pago**: `Reserva`, `ReservaStand`, `Movimiento`,
+  `DescuentoAplicado`, y con ellos CU-STD-011 a 029, 033 y 035 a 038.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel

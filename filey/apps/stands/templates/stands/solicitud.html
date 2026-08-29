@@ -49,7 +49,9 @@
       <div class="ico">✅</div>
       <div>
         <strong>Te aceptamos como expositor.</strong>
-        Ya puedes elegir tus espacios en el mapa del showfloor.
+        Ya puedes elegir tus espacios en el
+        <a href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">mapa del
+        showfloor</a>.
       </div>
     </div>
   {% elif solicitud.estado == 'cambios_solicitados' %}

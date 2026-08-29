@@ -31,7 +31,14 @@ from .formularios import (
     SellosForm,
 )
 from .models import Documento, Editorial, Solicitud
-from .servicios import archivos, configuracion, dictamen, solicitudes
+from .servicios import (
+    archivos,
+    configuracion,
+    dibujo,
+    dictamen,
+    mapas,
+    solicitudes,
+)
 
 
 def _convocatoria_de_stands(convocatoria_id: int) -> Convocatoria:
@@ -391,3 +398,112 @@ def documento(peticion, documento_id):
     if not archivos.puede_ver(peticion, adjunto):
         raise Http404("No hay ningún documento con ese identificador.")
     return archivos.entregar(adjunto)
+
+
+# ── El mapa del showfloor ─────────────────────────────────────
+
+
+def _contexto_del_mapa(convocatoria, *, con_detalle):
+    """Lo común a las dos vistas del mapa (`CU-STD-009` y `032`).
+
+    Devuelve ``None`` en `vista` cuando la convocatoria todavía no tiene
+    mapa. No es un error —`CU-STD-009` E2— sino el estado normal de una
+    convocatoria recién creada, y las dos plantillas lo dicen con sus
+    palabras en vez de romperse.
+    """
+    mapa = mapas.mapa_de(convocatoria)
+    if mapa is None:
+        return {"vista": None, "costo_m2": None}
+    costo_m2 = configuracion.de_la_convocatoria(convocatoria).costo_m2
+    return {
+        "vista": dibujo.vista_para(mapa, costo_m2=costo_m2, con_detalle=con_detalle),
+        "costo_m2": costo_m2,
+    }
+
+
+@requiere_participante
+def mapa(peticion, convocatoria_id):
+    """El showfloor, como lo ve quien aplica (`CU-STD-009`).
+
+    `RN-09`: los estados `reservado` y `ocupado` llegan colapsados en uno
+    solo. Quien aplica no necesita distinguirlos —no puede reservar
+    ninguno de los dos— y separarlos diría quién va ganando el reparto
+    del recinto.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    # `RN-16`: solo una solicitud aceptada habilita a reservar. `E1`.
+    editorial = solicitudes.habilitada_para_reservar(convocatoria, peticion.user)
+
+    contexto = (
+        _contexto_del_mapa(convocatoria, con_detalle=False)
+        if editorial
+        else {"vista": None, "costo_m2": None}
+    )
+    return render(
+        peticion,
+        "stands/mapa.html",
+        {
+            "convocatoria": convocatoria,
+            "editorial": editorial,
+            "habilitada": editorial is not None,
+            **contexto,
+        },
+    )
+
+
+@requiere_participante
+def detalle_stand(peticion, convocatoria_id, clave):
+    """Dimensiones, superficie, precio y qué incluye (`CU-STD-010`).
+
+    Pantalla propia y no un panel dentro del mapa: sin JavaScript el mapa
+    es un SVG con enlaces, y el enlace tiene que llevar a algún sitio
+    (regla 6). Con JavaScript, lo mismo se puede traer con htmx sin
+    cambiar nada de aquí.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    if solicitudes.habilitada_para_reservar(convocatoria, peticion.user) is None:
+        raise Http404("Todavía no puedes consultar los espacios.")
+
+    mapa_showfloor = mapas.mapa_de(convocatoria)
+    if mapa_showfloor is None:
+        raise Http404("Esta convocatoria no tiene mapa.")
+    stand = get_object_or_404(
+        mapa_showfloor.stands.select_related("mapa"), clave=clave
+    )
+
+    costo_m2 = configuracion.de_la_convocatoria(convocatoria).costo_m2
+    return render(
+        peticion,
+        "stands/detalle_stand.html",
+        {
+            "convocatoria": convocatoria,
+            "stand": stand,
+            "metros_cuadrados": stand.metros_cuadrados,
+            "precio": stand.precio(costo_m2),
+            "costo_m2": costo_m2,
+            "libre": stand.esta_libre,
+            "metros_por_celda": mapa_showfloor.metros_por_celda,
+        },
+    )
+
+
+@requiere_admin_feria
+def mapa_completo(peticion, convocatoria_id):
+    """El showfloor sin censura, para quien administra (`CU-STD-032`).
+
+    `RN-18`: aquí sí se distinguen los tres estados de `RN-10`. Es la
+    diferencia entera con `CU-STD-009`, y son la misma plantilla con un
+    parámetro, no dos pantallas: dos plantillas se separan al primer
+    cambio y acaban dibujando mapas distintos.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    return render(
+        peticion,
+        "stands/mapa.html",
+        {
+            "convocatoria": convocatoria,
+            "habilitada": True,
+            "zona_admin": True,
+            **_contexto_del_mapa(convocatoria, con_detalle=True),
+        },
+    )

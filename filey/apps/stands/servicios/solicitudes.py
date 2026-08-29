@@ -310,10 +310,35 @@ def guardar_editorial(editorial: Editorial, *, sellos) -> Editorial:
     return editorial
 
 
+def habilitada_para_reservar(convocatoria: Convocatoria, persona) -> Editorial | None:
+    """La editorial de esta persona, si puede reservar (`RN-16`).
+
+    ``None`` cuando no puede, y **no se dice por qué**: el llamador solo
+    tiene que decidir si enseña el mapa. Los tres motivos —nunca aplicó,
+    su solicitud sigue en revisión, se la rechazaron— los cuenta la
+    pantalla de su solicitud, que es donde puede hacer algo al respecto.
+
+    Vive aquí y no en `permisos.py` porque no es una regla de acceso: es
+    una regla de negocio sobre el expediente, y tiene que poder
+    responderse desde un comando de `manage.py`.
+    """
+    aceptada = (
+        Solicitud.objects.filter(
+            registro__convocatoria=convocatoria,
+            registro__persona=persona,
+            estado=Solicitud.Estado.ACEPTADA,
+        )
+        .select_related("editorial")
+        .first()
+    )
+    return aceptada.editorial if aceptada else None
+
+
 __all__ = [
     "EnvioRechazado",
     "ValidationError",
     "enviar_solicitud",
+    "habilitada_para_reservar",
     "guardar_editorial",
     "reenviar_solicitud",
     "solicitud_viva",

@@ -44,6 +44,25 @@ urlpatterns = [
         views.detalle_solicitud,
         name="detalle_solicitud",
     ),
+    # El showfloor. La clave del stand va en la URL y no su id: es lo
+    # que la gente dice en voz alta ("el 24B"), y sobrevive a reimportar
+    # el mapa, que borra las filas y las vuelve a crear con ids nuevos.
+    path(
+        "stands/<int:convocatoria_id>/mapa/",
+        views.mapa,
+        name="mapa",
+    ),
+    path(
+        "stands/<int:convocatoria_id>/mapa/<str:clave>/",
+        views.detalle_stand,
+        name="detalle_stand",
+    ),
+    # `CU-STD-032`: el mismo mapa sin colapsar los estados (`RN-18`).
+    path(
+        "stands/<int:convocatoria_id>/showfloor/",
+        views.mapa_completo,
+        name="mapa_completo",
+    ),
     # La entrega de adjuntos. Es la única forma de alcanzar un archivo:
     # `MEDIA_URL` no está montada en ningún urlconf (`ADR-0007`).
     path(

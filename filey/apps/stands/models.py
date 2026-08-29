@@ -720,3 +720,269 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} → {self.destinatario}"
+
+
+# ══ El mapa del showfloor ═════════════════════════════════════
+#
+# Lo que sigue es la retícula sobre la que se dibuja el recinto y lo que
+# hay encima: los espacios que se venden y lo que no se vende pero se
+# dibuja igual. Es lo que `CU-STD-009`, `010`, `032` y `037`/`038`
+# necesitan, y de donde `Reserva` sacará el precio (`RN-01`).
+
+
+class MapaShowfloor(models.Model):
+    """La retícula del showfloor de **una** convocatoria (`RN-19`).
+
+    Una fila por convocatoria de stands: rediseñar el mapa de 2028 no
+    toca nada de 2027 porque viven en schemas distintos, y dos
+    convocatorias de la misma feria —una general y otra de un pabellón—
+    tienen cada una el suyo.
+
+    .. note:: `salon` vive aquí y no en `ConfiguracionSistema`
+
+       Es un dato del **mapa**, no de las condiciones económicas de la
+       convocatoria. `ConfiguracionSistema` se queda con lo que es:
+       precios, porcentajes, plazos y datos bancarios.
+    """
+
+    convocatoria = models.OneToOneField(
+        Convocatoria, on_delete=models.CASCADE, related_name="mapa_showfloor"
+    )
+    salon = models.CharField(
+        "salón", max_length=160, help_text="Recinto donde se monta este showfloor."
+    )
+    columnas = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+    filas = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+    # Lo que convierte la forma dibujada en superficie real, y por tanto
+    # en precio (`RN-01`). Si la retícula no es lo bastante fina para
+    # expresar las medidas reales, no hay forma de arreglarlo después sin
+    # volver a dibujar: un stand de 3 × 2.5 m no cabe en una retícula de
+    # un metro por celda, y con 0.5 sí.
+    metros_por_celda = models.DecimalField(
+        "metros por celda",
+        max_digits=4,
+        decimal_places=2,
+        default=Decimal("1.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
+    # Presentación pura: cuántos píxeles mide el lado de una celda al
+    # dibujar. **No entra en ningún cálculo.**
+    tamano_celda = models.PositiveSmallIntegerField(
+        "tamaño de la celda (px)", default=12, validators=[MinValueValidator(1)]
+    )
+    importado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "mapa del showfloor"
+        verbose_name_plural = "mapas del showfloor"
+
+    def __str__(self):
+        return f"Mapa de {self.convocatoria.nombre} ({self.salon})"
+
+    @property
+    def metros_cuadrados_vendibles(self) -> Decimal:
+        return sum(
+            (s.metros_cuadrados for s in self.stands.all()), start=Decimal("0")
+        )
+
+
+class Stand(models.Model):
+    """Un espacio del showfloor: lo que se reserva y se cobra.
+
+    Cuelga del mapa y no de la convocatoria. El modelo de datos (§3.5)
+    describe un `convocatoria_id`, y sería **una segunda fuente para lo
+    mismo**: el mapa ya es uno por convocatoria (`RN-19`), así que la
+    convocatoria de un stand es la de su mapa. Con las dos columnas, el
+    día que discreparan no habría forma de saber cuál manda.
+
+    .. note:: `metros_cuadrados` es derivado, no una columna
+
+       Sale de la forma en la retícula y de `MapaShowfloor.metros_por_celda`.
+       Con la superficie almacenada **y** dibujada habría dos fuentes para
+       la misma cifra, y el día que discreparan —alguien mueve un stand y
+       no toca el número— el mapa y la factura dirían cosas distintas sin
+       que nadie se entere. Lo que sí queda congelado es
+       `Reserva.monto_total` (`RN-01`).
+    """
+
+    class Estado(models.TextChoices):
+        DISPONIBLE = "disponible", "Disponible"
+        RESERVADO = "reservado", "Reservado"
+        OCUPADO = "ocupado", "Ocupado"
+
+    #: Lo que ve el aplicante. `Reservado` y `Ocupado` le llegan
+    #: colapsados en uno solo (`RN-09`): saber cuál de los dos es no le
+    #: sirve para nada y sí dice quién va ganando el reparto del recinto.
+    LIBRES = (Estado.DISPONIBLE,)
+
+    mapa = models.ForeignKey(
+        MapaShowfloor, on_delete=models.CASCADE, related_name="stands"
+    )
+    clave = models.CharField(
+        "clave", max_length=20, validators=[MinLengthValidator(1)]
+    )
+    etiqueta = models.CharField(
+        "etiqueta",
+        max_length=60,
+        help_text="Lo que se pinta dentro de la caja en el mapa.",
+    )
+    # Descriptiva: **no fija precio**. Dentro de una convocatoria todos
+    # los stands se cobran al mismo `costo_m2` (`RN-01`), así que dos
+    # zonas solo pueden diferir por su tamaño. Sirve para agrupar y
+    # filtrar. Pabellones a tarifas distintas son convocatorias distintas.
+    zona = models.CharField("zona", max_length=80, blank=True)
+
+    # Esquina superior izquierda, en celdas. En un stand irregular es la
+    # de su envolvente, y sirve para ordenar y para centrar la vista.
+    col = models.PositiveSmallIntegerField()
+    fila = models.PositiveSmallIntegerField()
+    # Nulos en un stand de forma irregular, que usa `rectangulos`.
+    ancho_celdas = models.PositiveSmallIntegerField(null=True, blank=True)
+    alto_celdas = models.PositiveSmallIntegerField(null=True, blank=True)
+    #: Formas en L o en T: los rectángulos en celdas cuya unión es el
+    #: stand. Hacen falta de verdad — el mapa de 2026 tiene tres.
+    rectangulos = models.JSONField(null=True, blank=True)
+
+    estado = models.CharField(
+        max_length=12, choices=Estado.choices, default=Estado.DISPONIBLE
+    )
+    incluye = models.TextField(
+        "qué incluye",
+        blank=True,
+        help_text="Estructura, contactos, exhibidores, mobiliario…",
+    )
+
+    class Meta:
+        verbose_name = "stand"
+        verbose_name_plural = "stands"
+        ordering = ["fila", "col"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["mapa", "clave"], name="una_clave_por_mapa"
+            ),
+            # O rectangular con sus dos medidas, o irregular con su lista.
+            # Ni las tres cosas ni ninguna: sin esto, un stand sin forma
+            # mide cero metros y se cobra a cero (`RN-01`).
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        ancho_celdas__isnull=False,
+                        alto_celdas__isnull=False,
+                        rectangulos__isnull=True,
+                    )
+                    | Q(
+                        ancho_celdas__isnull=True,
+                        alto_celdas__isnull=True,
+                        rectangulos__isnull=False,
+                    )
+                ),
+                name="un_stand_es_rectangular_o_irregular",
+            ),
+        ]
+
+    def __str__(self):
+        return self.clave
+
+    @property
+    def formas(self) -> list[dict]:
+        """Los rectángulos que componen el stand, sea de la forma que sea.
+
+        Existe para que nadie tenga que preguntar si es irregular antes
+        de medirlo o de dibujarlo. Es el único sitio donde se mira
+        `rectangulos`.
+        """
+        if self.rectangulos:
+            return self.rectangulos
+        return [
+            {
+                "col": self.col,
+                "fila": self.fila,
+                "ancho_celdas": self.ancho_celdas,
+                "alto_celdas": self.alto_celdas,
+            }
+        ]
+
+    @property
+    def celdas(self) -> set[tuple[int, int]]:
+        """Qué celdas ocupa. Es lo que detecta que dos stands se pisan."""
+        return {
+            (c, f)
+            for r in self.formas
+            for c in range(r["col"], r["col"] + r["ancho_celdas"])
+            for f in range(r["fila"], r["fila"] + r["alto_celdas"])
+        }
+
+    @property
+    def metros_cuadrados(self) -> Decimal:
+        """La superficie, derivada de la forma y de la retícula.
+
+        Se cuentan **celdas**, no se multiplican anchos: un stand en L no
+        es su envolvente, y cobrarle el hueco sería cobrarle el espacio
+        de sus vecinos.
+        """
+        lado = self.mapa.metros_por_celda
+        return len(self.celdas) * lado * lado
+
+    def precio(self, costo_m2: Decimal) -> Decimal:
+        """`m² × costo_m2` (`RN-01`).
+
+        Recibe el costo en vez de ir a buscarlo para no hacer una
+        consulta por stand al pintar un mapa de 151.
+        """
+        return self.metros_cuadrados * costo_m2
+
+    @property
+    def esta_libre(self) -> bool:
+        return self.estado in self.LIBRES
+
+
+class DecoracionMapa(models.Model):
+    """Lo que se dibuja en el mapa y **no** es un stand.
+
+    Escenarios, salas, bodegas, accesos, rótulos del recinto. No se
+    reserva, no tiene precio y no participa en ninguna regla de negocio —
+    pero sin ella el mapa son cajas flotando y nadie se ubica.
+
+    Es una entidad y no un campo JSON del mapa porque el administrador
+    las edita desde el mismo editor que los stands (`CU-STD-033`), y un
+    rótulo mal puesto se corrige tan a menudo como un stand. Guardarlas
+    como un blob haría que cualquier corrección reescribiera el mapa
+    entero.
+    """
+
+    class Tipo(models.TextChoices):
+        RECTANGULO = "rectangulo", "Rectángulo"
+        TEXTO = "texto", "Texto"
+
+    mapa = models.ForeignKey(
+        MapaShowfloor, on_delete=models.CASCADE, related_name="decoraciones"
+    )
+    tipo = models.CharField(max_length=12, choices=Tipo.choices)
+    col = models.PositiveSmallIntegerField()
+    fila = models.PositiveSmallIntegerField()
+    # Nulos cuando `tipo = texto`: un rótulo no tiene superficie.
+    ancho_celdas = models.PositiveSmallIntegerField(null=True, blank=True)
+    alto_celdas = models.PositiveSmallIntegerField(null=True, blank=True)
+    color = models.CharField(max_length=20, blank=True)
+    etiqueta = models.CharField(max_length=120)
+
+    class Meta:
+        verbose_name = "decoración del mapa"
+        verbose_name_plural = "decoraciones del mapa"
+        ordering = ["fila", "col"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(tipo="texto", ancho_celdas__isnull=True, alto_celdas__isnull=True)
+                    | Q(
+                        tipo="rectangulo",
+                        ancho_celdas__isnull=False,
+                        alto_celdas__isnull=False,
+                    )
+                ),
+                name="un_rectangulo_tiene_medidas_y_un_texto_no",
+            ),
+        ]
+
+    def __str__(self):
+        return self.etiqueta

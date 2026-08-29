@@ -642,3 +642,60 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 /* Y al marcarla se nota que quedó marcada, que es lo que confirma que el
    paso obligatorio está resuelto. */
 .nota-elegible:has(input:checked) { border-color: var(--ok-600); }
+
+/* ═══ El mapa del showfloor (STD · CU-STD-009, 010, 032) ═══════
+   Sin equivalente en el prototipo: STD no tiene pantallas ahí, y un
+   plano de recinto no se parece a nada de lo que ya existe.
+
+   El SVG lleva las coordenadas en **celdas** —una celda es un metro— y
+   el navegador lo escala. Por eso los grosores de línea van en decimales
+   (0.28 de celda ≈ 28 cm de pasillo dibujado) y no en píxeles: en
+   píxeles se engordarían al acercar el mapa. */
+
+.mapa-cabecera {
+  display: flex; flex-wrap: wrap; gap: 14px 26px;
+  align-items: flex-end; justify-content: space-between; margin-bottom: 14px;
+}
+.mapa-cabecera h3 { margin: 0 0 2px; font-size: 18px; color: var(--color-azul-institucional); }
+.mapa-cabecera p { margin: 0; }
+
+.mapa-leyenda { display: flex; flex-wrap: wrap; gap: 8px 18px; list-style: none; margin: 0; padding: 0; }
+.mapa-leyenda li { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--gris-700); }
+.mapa-muestra { width: 15px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
+
+/* El lienzo desborda a lo ancho y no arrastra a la página con él: un
+   plano de 167 m no cabe en ninguna pantalla, y hacer que el `body`
+   entero se desplace de lado rompe el resto del panel. */
+.mapa-lienzo {
+  overflow-x: auto; background: var(--color-blanco);
+  border: 1px solid var(--gris-200); border-radius: var(--radio);
+  box-shadow: var(--sombra-sm); padding: 12px;
+}
+.mapa { display: block; min-width: 900px; width: 100%; height: auto; }
+
+.mapa-espacio path { fill: var(--azul-600); stroke: var(--color-blanco); stroke-width: .28; paint-order: stroke fill; }
+.mapa-espacio text {
+  fill: var(--color-blanco); text-anchor: middle; dominant-baseline: central;
+  font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none;
+}
+/* Solo lo reservable responde al puntero. Lo demás no es pulsable, y
+   fingir que lo es cuesta un clic y una decepción. */
+a.mapa-espacio { cursor: pointer; }
+a.mapa-espacio:hover path, a.mapa-espacio:focus-visible path { fill: var(--color-azul-institucional); }
+a.mapa-espacio:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
+
+.mapa-espacio.es-ocupado path { fill: var(--gris-500); }
+.mapa-espacio.es-reservado path { fill: var(--color-dorado-encabezado); }
+
+.mapa-muestra.es-disponible { background: var(--azul-600); }
+.mapa-muestra.es-ocupado { background: var(--gris-500); }
+.mapa-muestra.es-reservado { background: var(--color-dorado-encabezado); }
+.mapa-muestra.es-recinto { background: var(--gris-200); border: 1px solid var(--gris-300); }
+
+/* Las áreas de la feria —salas, bodega, oficina— van apagadas: están
+   para ubicarse, no para elegirlas. */
+.mapa-recinto path { fill: var(--gris-200); stroke: var(--color-blanco); stroke-width: .28; paint-order: stroke fill; }
+.mapa-recinto text {
+  fill: var(--gris-700); text-anchor: middle; dominant-baseline: central;
+  font-weight: 600; pointer-events: none;
+}

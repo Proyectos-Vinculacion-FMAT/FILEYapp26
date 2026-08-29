@@ -14,17 +14,29 @@ solicitud siga pendiente. Por eso `Solicitud` no deja cambiar el estado
 desde aquí.
 """
 
-from django.contrib import admin
+import json
 
+from django import forms
+from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect, render
+from django.urls import path, reverse
+
+from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from comun.admin_feria import admin_feria
+
+from .servicios import mapas
 
 from .models import (
     ConfiguracionSistema,
+    DecoracionMapa,
     Documento,
     Editorial,
+    MapaShowfloor,
     Notificacion,
     SelloEditorial,
     Solicitud,
+    Stand,
 )
 
 
@@ -113,3 +125,158 @@ class NotificacionAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, peticion, obj=None):
         return False
+
+
+# ── El mapa del showfloor ─────────────────────────────────────
+
+
+class ImportarMapaForm(forms.Form):
+    """El archivo y la confirmación de `CU-STD-039`."""
+
+    convocatoria = forms.ModelChoiceField(
+        queryset=Convocatoria.objects.none(),
+        label="Convocatoria de stands",
+        help_text="El mapa es de una convocatoria, no de la feria (RN-19).",
+    )
+    archivo = forms.FileField(
+        label="Archivo del mapa",
+        help_text="JSON en formato «filey-mapa/1». Ver scripts/derivar-mapa/.",
+    )
+    confirmar = forms.BooleanField(
+        required=False,
+        label="Reemplazar el mapa que ya exista",
+        help_text=(
+            "Borra todos sus espacios. Sin marcar, una convocatoria que ya "
+            "tiene mapa se rechaza."
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["convocatoria"].queryset = Convocatoria.objects.filter(
+            tipo=TipoConvocatoria.STD
+        )
+
+    def clean_archivo(self):
+        archivo = self.cleaned_data["archivo"]
+        try:
+            return json.loads(archivo.read().decode("utf-8"))
+        except UnicodeDecodeError:
+            raise forms.ValidationError("El archivo no es texto UTF-8.") from None
+        except json.JSONDecodeError as exc:
+            raise forms.ValidationError(f"No es JSON válido: {exc}") from None
+
+
+@admin.register(MapaShowfloor, site=admin_feria)
+class MapaShowfloorAdmin(admin.ModelAdmin):
+    """El showfloor de cada convocatoria, y la pantalla que lo carga.
+
+    **No se da de alta a mano ni se edita aquí.** Un mapa son cientos de
+    filas con una geometría que tiene que cuadrar entre sí; teclearla en
+    un formulario es imposible en la práctica y garantiza dejarla a
+    medias. Se importa entera o no se importa (`CU-STD-039`).
+    """
+
+    list_display = ("convocatoria", "salon", "columnas", "filas", "importado_en")
+    list_select_related = ("convocatoria",)
+
+    def has_add_permission(self, peticion):
+        return False
+
+    def has_change_permission(self, peticion, obj=None):
+        return False
+
+    def get_urls(self):
+        return [
+            path(
+                "importar/",
+                self.admin_site.admin_view(self.importar),
+                name="stands_mapashowfloor_importar",
+            ),
+            *super().get_urls(),
+        ]
+
+    def _url_listado(self) -> str:
+        """El listado de mapas, en **este** sitio de admin.
+
+        Se arma con `admin_site.name` y no con el prefijo `admin:` de
+        siempre: hay dos sitios de admin, y el de la edición se llama
+        `admin_feria`. Escribir `admin:` aquí resuelve al otro —el que
+        corre sobre `public`— o revienta con `NoReverseMatch`.
+        """
+        return reverse(
+            f"{self.admin_site.name}:stands_mapashowfloor_changelist"
+        )
+
+    def importar(self, peticion):
+        """`CU-STD-039`. Solo el operador de la plataforma.
+
+        `is_staff` abre este admin entero, así que no basta: importar
+        reemplaza el showfloor de una convocatoria y es una operación de
+        montaje, no de operación diaria. Hasta que exista un editor con
+        vista previa, el sitio correcto es la herramienta del equipo
+        técnico (`ADR-0005`).
+        """
+        if not peticion.user.is_superuser:
+            raise PermissionDenied(
+                "Importar un mapa reemplaza el showfloor entero de una "
+                "convocatoria: lo hace el operador de la plataforma."
+            )
+
+        formulario = ImportarMapaForm(peticion.POST or None, peticion.FILES or None)
+        if peticion.method == "POST" and formulario.is_valid():
+            try:
+                resumen = mapas.importar(
+                    convocatoria=formulario.cleaned_data["convocatoria"],
+                    datos=formulario.cleaned_data["archivo"],
+                    confirmado=formulario.cleaned_data["confirmar"],
+                )
+            except mapas.ImportacionRechazada as exc:
+                # Como error del formulario y no como `messages.error`: se
+                # queda con lo capturado y el archivo se vuelve a elegir
+                # en el mismo sitio donde se dice qué falló.
+                formulario.add_error(None, str(exc))
+            else:
+                self.message_user(peticion, str(resumen), messages.SUCCESS)
+                return redirect(self._url_listado())
+
+        return render(
+            peticion,
+            "admin/stands/importar_mapa.html",
+            {
+                **self.admin_site.each_context(peticion),
+                "title": "Importar el mapa del showfloor",
+                "form": formulario,
+                "opts": self.model._meta,
+                "url_listado": self._url_listado(),
+            },
+        )
+
+
+@admin.register(Stand, site=admin_feria)
+class StandAdmin(admin.ModelAdmin):
+    """Consulta y desatasco. La corrección con vista previa es `CU-STD-033`.
+
+    `estado` sí se puede tocar aquí, a propósito: mientras no exista
+    `Reserva`, es la única forma de desbloquear un espacio que quedó
+    marcado. Cuando la reserva exista, esto tendrá que pasar a solo
+    lectura — moverlo a mano dejaría un stand libre con una reserva
+    apuntándolo.
+    """
+
+    list_display = ("clave", "etiqueta", "zona", "estado", "col", "fila")
+    list_filter = ("estado", "zona", "mapa__convocatoria")
+    search_fields = ("clave", "etiqueta")
+    list_select_related = ("mapa",)
+    readonly_fields = ("mapa", "clave", "col", "fila", "ancho_celdas",
+                       "alto_celdas", "rectangulos")
+
+    def has_add_permission(self, peticion):
+        return False
+
+
+@admin.register(DecoracionMapa, site=admin_feria)
+class DecoracionMapaAdmin(admin.ModelAdmin):
+    list_display = ("etiqueta", "tipo", "col", "fila")
+    list_filter = ("tipo", "mapa__convocatoria")
+    list_select_related = ("mapa",)
