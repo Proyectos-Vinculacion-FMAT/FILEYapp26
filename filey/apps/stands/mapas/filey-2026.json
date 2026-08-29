@@ -1,0 +1,1512 @@
+{
+ "formato": "filey-mapa/1",
+ "origen": "Derivado de «Plano FILEY 2026 Salón Chichén Itzá.pdf» (docs/soporte/documentos proporcionados por FILEY/…). Ver scripts/derivar-mapa/README.md.",
+ "mapa": {
+  "salon": "Salón Chichén Itzá",
+  "columnas": 167,
+  "filas": 59,
+  "metros_por_celda": 1.0,
+  "tamano_celda": 12
+ },
+ "stands": [
+  {
+   "clave": "1",
+   "etiqueta": "1",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 51,
+   "ancho_celdas": 9,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "1A",
+   "etiqueta": "1A",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "1B",
+   "etiqueta": "1B",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "2",
+   "etiqueta": "2",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 51,
+   "ancho_celdas": 12,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "2A",
+   "etiqueta": "2A",
+   "estado": "Disponible",
+   "col": 75,
+   "fila": 53,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "3",
+   "etiqueta": "3",
+   "estado": "Disponible",
+   "col": 81,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "4",
+   "etiqueta": "4",
+   "estado": "Disponible",
+   "col": 75,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "5",
+   "etiqueta": "5",
+   "estado": "Disponible",
+   "col": 78,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "6",
+   "etiqueta": "6",
+   "estado": "Disponible",
+   "col": 81,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "7",
+   "etiqueta": "7",
+   "estado": "Disponible",
+   "col": 84,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "8",
+   "etiqueta": "8",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "9",
+   "etiqueta": "9",
+   "estado": "Disponible",
+   "col": 95,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "10",
+   "etiqueta": "10",
+   "estado": "Disponible",
+   "col": 98,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "11",
+   "etiqueta": "11",
+   "estado": "Disponible",
+   "col": 101,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "12",
+   "etiqueta": "12",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "13",
+   "etiqueta": "13",
+   "estado": "Disponible",
+   "col": 95,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "14",
+   "etiqueta": "14",
+   "estado": "Disponible",
+   "col": 98,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "15",
+   "etiqueta": "15",
+   "estado": "Disponible",
+   "col": 101,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "16",
+   "etiqueta": "16",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "17",
+   "etiqueta": "17",
+   "estado": "Disponible",
+   "col": 114,
+   "fila": 53,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "18",
+   "etiqueta": "18",
+   "estado": "Disponible",
+   "col": 117,
+   "fila": 53,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "19",
+   "etiqueta": "19",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "20",
+   "etiqueta": "20",
+   "estado": "Disponible",
+   "col": 114,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "21",
+   "etiqueta": "21",
+   "estado": "Disponible",
+   "col": 117,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "22",
+   "etiqueta": "22",
+   "estado": "Disponible",
+   "col": 120,
+   "fila": 51,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "23",
+   "etiqueta": "23",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 51,
+   "ancho_celdas": 12,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "24",
+   "etiqueta": "24",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "24A",
+   "etiqueta": "24A",
+   "estado": "Disponible",
+   "col": 41,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "24B",
+   "etiqueta": "24B",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 45,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "25",
+   "etiqueta": "25",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "25A",
+   "etiqueta": "25A",
+   "estado": "Disponible",
+   "col": 41,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "25B",
+   "etiqueta": "25B",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "26",
+   "etiqueta": "26",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "27",
+   "etiqueta": "27",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "28",
+   "etiqueta": "28",
+   "estado": "Disponible",
+   "col": 59,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "29",
+   "etiqueta": "29",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "30",
+   "etiqueta": "30",
+   "estado": "Disponible",
+   "col": 59,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "31",
+   "etiqueta": "31",
+   "estado": "Disponible",
+   "col": 62,
+   "fila": 43,
+   "ancho_celdas": 6,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "32",
+   "etiqueta": "32",
+   "estado": "Disponible",
+   "col": 75,
+   "fila": 45,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "33",
+   "etiqueta": "33",
+   "estado": "Disponible",
+   "col": 81,
+   "fila": 45,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "34",
+   "etiqueta": "34",
+   "estado": "Disponible",
+   "col": 75,
+   "fila": 43,
+   "ancho_celdas": 12,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "35",
+   "etiqueta": "35",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 45,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "36",
+   "etiqueta": "36",
+   "estado": "Disponible",
+   "col": 98,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "37",
+   "etiqueta": "37",
+   "estado": "Disponible",
+   "col": 101,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "38",
+   "etiqueta": "38",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 43,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "39",
+   "etiqueta": "39",
+   "estado": "Disponible",
+   "col": 98,
+   "fila": 43,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "40",
+   "etiqueta": "40",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 45,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "41",
+   "etiqueta": "41",
+   "estado": "Disponible",
+   "col": 117,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "42",
+   "etiqueta": "42",
+   "estado": "Disponible",
+   "col": 120,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "43",
+   "etiqueta": "43",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 43,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "44",
+   "etiqueta": "44",
+   "estado": "Disponible",
+   "col": 117,
+   "fila": 43,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "45",
+   "etiqueta": "45",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 45,
+   "ancho_celdas": 12,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "46",
+   "etiqueta": "46",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "46A",
+   "etiqueta": "46A",
+   "estado": "Disponible",
+   "col": 132,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "47",
+   "etiqueta": "47",
+   "estado": "Disponible",
+   "col": 135,
+   "fila": 43,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "48",
+   "etiqueta": "48",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "49",
+   "etiqueta": "49",
+   "estado": "Disponible",
+   "col": 150,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "50",
+   "etiqueta": "50",
+   "estado": "Disponible",
+   "col": 153,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "51",
+   "etiqueta": "51",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "52",
+   "etiqueta": "52",
+   "estado": "Disponible",
+   "col": 150,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "53",
+   "etiqueta": "53",
+   "estado": "Disponible",
+   "col": 153,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "54",
+   "etiqueta": "54",
+   "estado": "Disponible",
+   "col": 156,
+   "fila": 43,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "54A",
+   "etiqueta": "54A",
+   "estado": "Disponible",
+   "col": 156,
+   "fila": 45,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "55",
+   "etiqueta": "55",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "55A",
+   "etiqueta": "55A",
+   "estado": "Disponible",
+   "col": 41,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "56",
+   "etiqueta": "56",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 38,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "57",
+   "etiqueta": "57",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 36,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "58",
+   "etiqueta": "58",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 36,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "59",
+   "etiqueta": "59",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 36,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "60",
+   "etiqueta": "60",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "61",
+   "etiqueta": "61",
+   "estado": "Disponible",
+   "col": 59,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "62",
+   "etiqueta": "62",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 36,
+   "ancho_celdas": null,
+   "alto_celdas": null,
+   "rectangulos": [
+    {
+     "col": 56,
+     "fila": 36,
+     "ancho_celdas": 12,
+     "alto_celdas": 2
+    },
+    {
+     "col": 62,
+     "fila": 38,
+     "ancho_celdas": 6,
+     "alto_celdas": 2
+    }
+   ]
+  },
+  {
+   "clave": "63",
+   "etiqueta": "63",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 28,
+   "ancho_celdas": 9,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "64",
+   "etiqueta": "64",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 30,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "65",
+   "etiqueta": "65",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 28,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "66",
+   "etiqueta": "66",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 28,
+   "ancho_celdas": 3,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "67",
+   "etiqueta": "67",
+   "estado": "Disponible",
+   "col": 59,
+   "fila": 28,
+   "ancho_celdas": 9,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "68",
+   "etiqueta": "68",
+   "estado": "Disponible",
+   "col": 75,
+   "fila": 29,
+   "ancho_celdas": 12,
+   "alto_celdas": 10,
+   "ocupante_2026": "Grupo Planeta"
+  },
+  {
+   "clave": "69",
+   "etiqueta": "69",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 29,
+   "ancho_celdas": 12,
+   "alto_celdas": 10,
+   "ocupante_2026": "Universidad Autónoma de Yucatán"
+  },
+  {
+   "clave": "70",
+   "etiqueta": "70",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 29,
+   "ancho_celdas": 12,
+   "alto_celdas": 10,
+   "ocupante_2026": "Penguin Random House"
+  },
+  {
+   "clave": "71",
+   "etiqueta": "71",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 29,
+   "ancho_celdas": 6,
+   "alto_celdas": 10,
+   "ocupante_2026": "Delfín Editorial"
+  },
+  {
+   "clave": "72",
+   "etiqueta": "72",
+   "estado": "Disponible",
+   "col": 135,
+   "fila": 29,
+   "ancho_celdas": 6,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "73",
+   "etiqueta": "73",
+   "estado": "Disponible",
+   "col": 135,
+   "fila": 33,
+   "ancho_celdas": 6,
+   "alto_celdas": 6
+  },
+  {
+   "clave": "74",
+   "etiqueta": "74",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "75",
+   "etiqueta": "75",
+   "estado": "Disponible",
+   "col": 150,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "76",
+   "etiqueta": "76",
+   "estado": "Disponible",
+   "col": 153,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "77",
+   "etiqueta": "77",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 36,
+   "ancho_celdas": 9,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "78",
+   "etiqueta": "78",
+   "estado": "Disponible",
+   "col": 156,
+   "fila": 36,
+   "ancho_celdas": 3,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "79",
+   "etiqueta": "79",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 30,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "80",
+   "etiqueta": "80",
+   "estado": "Disponible",
+   "col": 150,
+   "fila": 30,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "81",
+   "etiqueta": "81",
+   "estado": "Disponible",
+   "col": 153,
+   "fila": 30,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "82",
+   "etiqueta": "82",
+   "estado": "Disponible",
+   "col": 156,
+   "fila": 30,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "83",
+   "etiqueta": "83",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 28,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "84",
+   "etiqueta": "84",
+   "estado": "Disponible",
+   "col": 153,
+   "fila": 28,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "85",
+   "etiqueta": "85",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 22,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "86",
+   "etiqueta": "86",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 22,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "87",
+   "etiqueta": "87",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 22,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "88",
+   "etiqueta": "88",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 20,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "89",
+   "etiqueta": "89",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 20,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "90",
+   "etiqueta": "90",
+   "estado": "Disponible",
+   "col": 47,
+   "fila": 20,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "91",
+   "etiqueta": "91",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 22,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "92",
+   "etiqueta": "92",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 20,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "93",
+   "etiqueta": "93",
+   "estado": "Disponible",
+   "col": 59,
+   "fila": 20,
+   "ancho_celdas": 9,
+   "alto_celdas": 4,
+   "ocupante_2026": "Librerías Gandhi"
+  },
+  {
+   "clave": "94",
+   "etiqueta": "94",
+   "estado": "Disponible",
+   "col": 74,
+   "fila": 22,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "95",
+   "etiqueta": "95",
+   "estado": "Disponible",
+   "col": 74,
+   "fila": 20,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "96",
+   "etiqueta": "96",
+   "estado": "Disponible",
+   "col": 80,
+   "fila": 20,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "97",
+   "etiqueta": "97",
+   "estado": "Disponible",
+   "col": 80,
+   "fila": 20,
+   "ancho_celdas": null,
+   "alto_celdas": null,
+   "rectangulos": [
+    {
+     "col": 83,
+     "fila": 20,
+     "ancho_celdas": 3,
+     "alto_celdas": 2
+    },
+    {
+     "col": 80,
+     "fila": 22,
+     "ancho_celdas": 6,
+     "alto_celdas": 2
+    }
+   ]
+  },
+  {
+   "clave": "98",
+   "etiqueta": "98",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 22,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "99",
+   "etiqueta": "99",
+   "estado": "Disponible",
+   "col": 98,
+   "fila": 22,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "100",
+   "etiqueta": "100",
+   "estado": "Disponible",
+   "col": 92,
+   "fila": 20,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "101",
+   "etiqueta": "101",
+   "estado": "Disponible",
+   "col": 98,
+   "fila": 20,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "102",
+   "etiqueta": "102",
+   "estado": "Disponible",
+   "col": 101,
+   "fila": 20,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "103",
+   "etiqueta": "103",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 22,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "104",
+   "etiqueta": "104",
+   "estado": "Disponible",
+   "col": 114,
+   "fila": 22,
+   "ancho_celdas": 6,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "105",
+   "etiqueta": "105",
+   "estado": "Disponible",
+   "col": 120,
+   "fila": 22,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "106",
+   "etiqueta": "106",
+   "estado": "Disponible",
+   "col": 111,
+   "fila": 20,
+   "ancho_celdas": 12,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "107",
+   "etiqueta": "107",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 20,
+   "ancho_celdas": 12,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "108",
+   "etiqueta": "108",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 22,
+   "ancho_celdas": 9,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "109",
+   "etiqueta": "109",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 20,
+   "ancho_celdas": null,
+   "alto_celdas": null,
+   "rectangulos": [
+    {
+     "col": 147,
+     "fila": 20,
+     "ancho_celdas": 12,
+     "alto_celdas": 2
+    },
+    {
+     "col": 156,
+     "fila": 22,
+     "ancho_celdas": 3,
+     "alto_celdas": 2
+    }
+   ]
+  },
+  {
+   "clave": "110",
+   "etiqueta": "110",
+   "estado": "Disponible",
+   "col": 165,
+   "fila": 25,
+   "ancho_celdas": 2,
+   "alto_celdas": 6
+  },
+  {
+   "clave": "111",
+   "etiqueta": "111",
+   "estado": "Disponible",
+   "col": 165,
+   "fila": 31,
+   "ancho_celdas": 2,
+   "alto_celdas": 6
+  },
+  {
+   "clave": "112",
+   "etiqueta": "112",
+   "estado": "Disponible",
+   "col": 165,
+   "fila": 37,
+   "ancho_celdas": 2,
+   "alto_celdas": 12
+  },
+  {
+   "clave": "113",
+   "etiqueta": "113",
+   "estado": "Disponible",
+   "col": 20,
+   "fila": 36,
+   "ancho_celdas": 6,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "114",
+   "etiqueta": "114",
+   "estado": "Disponible",
+   "col": 26,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "115",
+   "etiqueta": "115",
+   "estado": "Disponible",
+   "col": 29,
+   "fila": 38,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "116",
+   "etiqueta": "116",
+   "estado": "Disponible",
+   "col": 26,
+   "fila": 36,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "117",
+   "etiqueta": "117",
+   "estado": "Disponible",
+   "col": 29,
+   "fila": 36,
+   "ancho_celdas": 3,
+   "alto_celdas": 2
+  },
+  {
+   "clave": "118",
+   "etiqueta": "118",
+   "estado": "Disponible",
+   "col": 20,
+   "fila": 28,
+   "ancho_celdas": 5,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "119",
+   "etiqueta": "119",
+   "estado": "Disponible",
+   "col": 25,
+   "fila": 28,
+   "ancho_celdas": 4,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "120",
+   "etiqueta": "120",
+   "estado": "Disponible",
+   "col": 29,
+   "fila": 28,
+   "ancho_celdas": 3,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "121",
+   "etiqueta": "121",
+   "estado": "Disponible",
+   "col": 11,
+   "fila": 34,
+   "ancho_celdas": 4,
+   "alto_celdas": 6
+  },
+  {
+   "clave": "122",
+   "etiqueta": "122",
+   "estado": "Disponible",
+   "col": 11,
+   "fila": 28,
+   "ancho_celdas": 4,
+   "alto_celdas": 6
+  },
+  {
+   "clave": "123",
+   "etiqueta": "123",
+   "estado": "Disponible",
+   "col": 11,
+   "fila": 22,
+   "ancho_celdas": 4,
+   "alto_celdas": 6
+  },
+  {
+   "clave": "124",
+   "etiqueta": "124",
+   "estado": "Disponible",
+   "col": 38,
+   "fila": 13,
+   "ancho_celdas": 6,
+   "alto_celdas": 3
+  },
+  {
+   "clave": "125",
+   "etiqueta": "125",
+   "estado": "Disponible",
+   "col": 44,
+   "fila": 10,
+   "ancho_celdas": 12,
+   "alto_celdas": 6,
+   "ocupante_2026": "Fondo de Cultura Económica"
+  },
+  {
+   "clave": "126",
+   "etiqueta": "126",
+   "estado": "Disponible",
+   "col": 56,
+   "fila": 10,
+   "ancho_celdas": 6,
+   "alto_celdas": 6,
+   "ocupante_2026": "SEDECULTA"
+  },
+  {
+   "clave": "127",
+   "etiqueta": "127",
+   "estado": "Disponible",
+   "col": 62,
+   "fila": 10,
+   "ancho_celdas": 8,
+   "alto_celdas": 6,
+   "ocupante_2026": "La Jornada Maya"
+  },
+  {
+   "clave": "128",
+   "etiqueta": "128",
+   "estado": "Disponible",
+   "col": 76,
+   "fila": 11,
+   "ancho_celdas": 10,
+   "alto_celdas": 6,
+   "ocupante_2026": "Ayuntamiento de Mérida"
+  },
+  {
+   "clave": "129",
+   "etiqueta": "129",
+   "estado": "Disponible",
+   "col": 87,
+   "fila": 11,
+   "ancho_celdas": 10,
+   "alto_celdas": 6,
+   "ocupante_2026": "Sanborns"
+  },
+  {
+   "clave": "130",
+   "etiqueta": "130",
+   "estado": "Disponible",
+   "col": 102,
+   "fila": 11,
+   "ancho_celdas": 8,
+   "alto_celdas": 6,
+   "ocupante_2026": "Comunicación Institucional"
+  },
+  {
+   "clave": "131",
+   "etiqueta": "131",
+   "estado": "Disponible",
+   "col": 110,
+   "fila": 11,
+   "ancho_celdas": 15,
+   "alto_celdas": 6,
+   "ocupante_2026": "SEGEY"
+  },
+  {
+   "clave": "132",
+   "etiqueta": "132",
+   "estado": "Disponible",
+   "col": 127,
+   "fila": 0,
+   "ancho_celdas": 7,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "133",
+   "etiqueta": "133",
+   "estado": "Disponible",
+   "col": 134,
+   "fila": 0,
+   "ancho_celdas": 7,
+   "alto_celdas": 4,
+   "ocupante_2026": "Novedades"
+  },
+  {
+   "clave": "134",
+   "etiqueta": "134",
+   "estado": "Disponible",
+   "col": 141,
+   "fila": 0,
+   "ancho_celdas": 5,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "135",
+   "etiqueta": "135",
+   "estado": "Disponible",
+   "col": 147,
+   "fila": 0,
+   "ancho_celdas": 5,
+   "alto_celdas": 4
+  },
+  {
+   "clave": "136",
+   "etiqueta": "136",
+   "estado": "Disponible",
+   "col": 152,
+   "fila": 0,
+   "ancho_celdas": 12,
+   "alto_celdas": 4,
+   "ocupante_2026": "Océano"
+  },
+  {
+   "clave": "137",
+   "etiqueta": "137",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 11,
+   "ancho_celdas": 9,
+   "alto_celdas": 3,
+   "ocupante_2026": "VR Editoras"
+  },
+  {
+   "clave": "138",
+   "etiqueta": "138",
+   "estado": "Disponible",
+   "col": 129,
+   "fila": 8,
+   "ancho_celdas": 3,
+   "alto_celdas": 3
+  },
+  {
+   "clave": "139",
+   "etiqueta": "139",
+   "estado": "Disponible",
+   "col": 132,
+   "fila": 8,
+   "ancho_celdas": 3,
+   "alto_celdas": 3
+  },
+  {
+   "clave": "140",
+   "etiqueta": "140",
+   "estado": "Disponible",
+   "col": 135,
+   "fila": 8,
+   "ancho_celdas": 3,
+   "alto_celdas": 3
+  },
+  {
+   "clave": "141",
+   "etiqueta": "141",
+   "estado": "Disponible",
+   "col": 143,
+   "fila": 8,
+   "ancho_celdas": 9,
+   "alto_celdas": 6,
+   "ocupante_2026": "UABC"
+  }
+ ],
+ "decoraciones": [
+  {
+   "tipo": "rectangulo",
+   "col": 0,
+   "fila": 4,
+   "ancho_celdas": 3,
+   "alto_celdas": 2,
+   "etiqueta": "Seguridad"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 3,
+   "fila": 4,
+   "ancho_celdas": 3,
+   "alto_celdas": 2,
+   "etiqueta": "Limpieza"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 6,
+   "fila": 4,
+   "ancho_celdas": 20,
+   "alto_celdas": 18,
+   "etiqueta": "Bodega de expositores"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 20,
+   "fila": 10,
+   "ancho_celdas": 12,
+   "alto_celdas": 12,
+   "etiqueta": "Sala Hernán Lara Zavala"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 38,
+   "fila": 10,
+   "ancho_celdas": 6,
+   "alto_celdas": 3,
+   "etiqueta": "Botiquín"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 156,
+   "fila": 11,
+   "ancho_celdas": 5,
+   "alto_celdas": 1,
+   "etiqueta": "Módulo de información"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 7,
+   "fila": 22,
+   "ancho_celdas": 4,
+   "alto_celdas": 18,
+   "etiqueta": "Oficina FILEY"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 7,
+   "fila": 42,
+   "ancho_celdas": 8,
+   "alto_celdas": 15,
+   "etiqueta": "Prensa FILEY-UADY"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 20,
+   "fila": 45,
+   "ancho_celdas": 12,
+   "alto_celdas": 12,
+   "etiqueta": "Sala Effy Luz Vázquez"
+  },
+  {
+   "tipo": "rectangulo",
+   "col": 153,
+   "fila": 51,
+   "ancho_celdas": 12,
+   "alto_celdas": 8,
+   "etiqueta": "Sala José Emilio Pacheco"
+  }
+ ]
+}

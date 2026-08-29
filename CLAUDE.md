@@ -91,7 +91,9 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   A2, el dictamen con su aviso por correo, los adjuntos con permiso, y `ConfiguracionSistema`
   (CU-STD-034) editable desde `/f/<slug>/django-admin/` mientras no exista A10. **Falta todo lo
   que cuelga del mapa**: `MapaShowfloor`, `Stand`, `DecoracionMapa`, `Reserva`, `Movimiento`, y
-  con ellos CU-STD-009 a 033 y 035 a 039.
+  con ellos CU-STD-009 a 033 y 035 a 039. El **mapa sí existe ya como dato**:
+  `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel por
+  `scripts/derivar-mapa/`; es la entrada que CU-STD-039 tiene que saber leer.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel

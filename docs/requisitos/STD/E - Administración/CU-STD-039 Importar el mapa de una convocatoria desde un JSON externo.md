@@ -26,6 +26,27 @@ reglas_de_negocio:
 > `filey-map.json` es la fuente y nadie sabe qué versión está viva. Después de importarlo, la
 > fuente es la base y el JSON es un formato de intercambio.
 
+> [!note] El JSON de 2026 ya existe (2026-08-28)
+> Se derivó del plano en papel —`Plano FILEY 2026 Salón Chichén Itzá.pdf`, que es una imagen de
+> Photoshop sin capa de texto— midiendo la geometría sobre los píxeles y leyendo los números a
+> mano. Está en `filey/apps/stands/mapas/filey-2026.json`: **151 espacios, 2 628 m² vendibles,
+> retícula de 167 × 59 m**, con `formato: "filey-mapa/1"`, que es el que este caso de uso tiene
+> que saber leer.
+>
+> Cómo se hizo y qué se dio por supuesto: `scripts/derivar-mapa/README.md`. Lo que conviene
+> tener presente al implementar esto:
+>
+> - **Tres stands son irregulares** (62, 97 y 109: una banda al fondo con retorno lateral). Van
+>   con `ancho_celdas`/`alto_celdas` en `null` y su forma en `rectangulos`. Un importador que
+>   solo lea los cuatro campos rectangulares les cobrará el hueco de la L, que es de sus
+>   vecinos.
+> - **`ocupante_2026` no se importa.** Es quién estuvo en 2026, guardado porque el plano es el
+>   único registro que lo tiene; el estado que se importa es `Disponible` para todos.
+> - **El tamaño del salón no está verificado.** Los 167 × 59 m salen de aplicar al dibujo la
+>   escala del stand tipo (3 × 2 m, del precio del cliente). Si el recinto real es más chico, lo
+>   que encoge son los pasillos: la superficie de cada espacio, y por tanto su precio, no
+>   depende del tamaño del recinto.
+
 ## Objetivo
 
 Cargar el showfloor de una convocatoria a partir de un archivo JSON en el formato del componente

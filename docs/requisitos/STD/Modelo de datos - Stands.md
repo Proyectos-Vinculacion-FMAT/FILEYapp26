@@ -625,6 +625,12 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 > `MapaShowfloor` da la retícula, `Stand` da las formas y los estados, y `DecoracionMapa` el
 > resto del recinto. No queda ningún dato del mapa fuera de la base: el archivo
 > `filey-map.json` que usó el prototipo pasa a ser un **fixture de ejemplo**, no una fuente.
+>
+> **Comprobado el 2026-08-28 contra un mapa real.** El plano de 2026 se derivó entero a este
+> modelo (`filey/apps/stands/mapas/filey-2026.json`, 151 espacios) y no hizo falta ningún campo
+> que no estuviera ya aquí. Lo que sí se usó y conviene no perder de vista: `rectangulos` hace
+> falta de verdad —hay tres stands en L—, y `zona` quedó **nulo en los 151**, porque el plano no
+> agrupa por pabellones y ponerle nombre a las zonas habría sido inventarlas.
 
 ### 3.14 DecoracionMapa
 > Lo que se dibuja en el mapa y **no** es un stand: escenarios, servicios, accesos, rótulos del
