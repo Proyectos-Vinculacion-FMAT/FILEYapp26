@@ -33,7 +33,20 @@ from comun.validadores import telefono as validar_telefono
 
 
 class Giro(models.TextChoices):
-    """A qué se dedica la editorial. Viene de la Ficha de Registro."""
+    """A qué se dedica la editorial. Viene de la Ficha de Registro.
+
+    Son **solo estos tres**, y es una decisión, no un descuido. Las bases
+    de participación admiten además "instituciones de educación superior,
+    librerías, asociaciones civiles y dependencias gubernamentales", así
+    que los dos documentos se contradicen. Se le hace caso a la ficha
+    (decisión del equipo, 2026-08-28): es el formulario que la gente
+    llena y firma, mientras que las bases describen **quién puede
+    participar**, no cómo se clasifica.
+
+    Una universidad sí puede exponer; al llenar la ficha elige el giro
+    que más se le parezca. Si eso resulta incómodo, la salida es añadir
+    una opción aquí, no volver a abrir la contradicción.
+    """
 
     EDITOR = "editor", "Editor"
     LIBRERO = "librero", "Librero"
@@ -50,7 +63,13 @@ MATERIALES = [
     "Otro",
 ]
 
-#: Sobre qué. Las 59 de la Ficha de Registro, p. 2, en su orden.
+#: Sobre qué. Las 61 de la Ficha de Registro, p. 2, en su orden.
+#:
+#: Contrastadas contra la ficha y dadas por buenas el 2026-08-28. Hizo
+#: falta mirarlas: la ficha es un escaneo sin capa de texto, así que
+#: estas 61 se transcribieron leyendo la imagen columna por columna, y
+#: una lista así de larga leída de un escaneo es donde se esconde una
+#: errata.
 #:
 #: .. note:: Dos correcciones sobre el papel
 #:

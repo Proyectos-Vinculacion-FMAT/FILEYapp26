@@ -171,30 +171,36 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 > Se descartó por decisión del equipo — el básico 3×2 son $15,000, que es exactamente el
 > `costo_m2` de $2,500 por sus 6 m², así que la distinción no cambia ni el precio ni el modelo.
 >
-> **Pendiente de resolver con el cliente:** las bases admiten *"instituciones de educación
+> **Resuelto el 2026-08-28 — manda la ficha.** Las bases admiten *"instituciones de educación
 > superior, librerías, asociaciones civiles y dependencias gubernamentales"*, pero la ficha solo
-> ofrece `Editor / Librero / Distribuidor` en el campo `giro`. Los dos documentos se contradicen;
-> el modelo sigue a la ficha.
+> ofrece `Editor / Librero / Distribuidor` en el campo `giro`. Los dos documentos se
+> contradicen y **se le hace caso solo a la ficha**: es el formulario que la gente llena y
+> firma, y las bases describen quién puede participar, no cómo se clasifica.
+>
+> Consecuencia práctica: una universidad o una asociación civil sí puede exponer, y al llenar
+> la ficha elige el giro que más se le parezca. Si eso resulta incómodo en la práctica, la
+> salida es ampliar `Giro`, no reabrir la contradicción.
 >
 > Y las bases confirman que la deuda de `es_recurrente` (§2.a) es una **regla operativa real**:
 > *"se respetará a los participantes de la última edición"* al asignar espacios.
 
 <!-- -->
 
-> [!warning] El catálogo de temáticas está **sin verificar por una persona**
-> La ficha oficial es un **escaneo sin capa de texto**: `pdftotext` no devuelve nada, así que las
-> 61 entradas de `apps/stands/models.py::TEMATICAS` se transcribieron **leyendo la imagen** de la
-> página 2, columna por columna. La aritmética cuadra —21 + 22 + 19 impresas, menos «Pintura»,
-> que aparece repetida— pero una lista de 61 leída de un escaneo es justo donde se esconde una
-> errata.
+> [!note] El catálogo de temáticas está verificado (2026-08-28)
+> Las 61 entradas de `apps/stands/models.py::TEMATICAS` se contrastaron contra la ficha y son
+> correctas. Se dan por buenas.
 >
-> **Hay que contrastarla contra el PDF antes de abrir la convocatoria.** Es un rato de trabajo y
-> lo cubre `test_las_tematicas_son_las_de_la_ficha`, que fija la cuenta y las dos correcciones
-> conocidas (`Braile` → Braille, `Sofware` → Software).
+> Cómo se llegó a ellas, que explica por qué hacía falta verificarlas: la ficha oficial es un
+> **escaneo sin capa de texto** —`pdftotext` no devuelve nada—, así que se transcribieron
+> leyendo la imagen de la página 2, columna por columna. La aritmética cuadraba —21 + 22 + 19
+> impresas, menos «Pintura», que aparece repetida— pero una lista de 61 leída de un escaneo es
+> justo donde se esconde una errata, y por eso no se daba por buena sin que alguien la mirara.
+>
+> `test_las_tematicas_son_las_de_la_ficha` fija la cuenta y las dos erratas del impreso que sí
+> se corrigieron (`Braile` → Braille, `Sofware` → Software).
 >
 > Contexto de por qué importa: hasta el 2026-08-27 la lista tenía **nueve** entradas inventadas a
-> partir del mock del prototipo Angular. El modelo decía *"lista de temáticas (Administración,
-> Arte, Infantil, …)"*, con puntos suspensivos, y nadie había abierto el papel.
+> partir del mock del prototipo Angular.
 
 <!-- -->
 
@@ -408,8 +414,9 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 `ReservaStand` es ahora una tabla puramente de unión: qué stands entran en qué reserva.
 
 > [!warning] Se eliminó el snapshot de m² y precio — qué se gana y qué se pierde
-> **Se gana** que deje de haber dos fuentes de verdad para la misma cifra. Los m² del stand
-> están en `Stand.metros_cuadrados` y el precio se deriva de `ConfiguracionSistema.costo_m2`
+> **Se gana** que deje de haber dos fuentes de verdad para la misma cifra. Los m² del stand se
+> **derivan de su forma** en la retícula y de `MapaShowfloor.metros_por_celda` —no son una
+> columna, ver la nota de §3.5— y el precio se deriva de `ConfiguracionSistema.costo_m2`
 > (§3.11); copiarlos a la línea abría la puerta a que la copia y el original discreparan sin que
 > nadie se enterara.
 >
