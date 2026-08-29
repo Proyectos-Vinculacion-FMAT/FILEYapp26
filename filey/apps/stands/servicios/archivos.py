@@ -62,8 +62,25 @@ def puede_ver(peticion, documento: Documento) -> bool:
         return False
     if administra(peticion):
         return True
-    dueno = getattr(documento.editorial, "persona_id", None)
-    return dueno is not None and dueno == usuario.pk
+    return _de_quien_es(documento) == usuario.pk
+
+
+def _de_quien_es(documento: Documento):
+    """La persona de la que es este documento, o ``None``.
+
+    Se miran **las dos** ramas que la restricción
+    ``un_documento_cuelga_de_exactamente_una_entidad`` admite. Mirar solo
+    `editorial` dejaba al dueño de un documento colgado de una solicitud
+    sin poder abrir lo que él mismo subió, mientras quien administra sí lo
+    veía. Hoy no hay ninguno así —todo cuelga de la editorial—, pero el
+    modelo anuncia la forma y la fase de pago la va a usar para los
+    comprobantes.
+    """
+    if documento.editorial_id is not None:
+        return documento.editorial.persona_id
+    if documento.solicitud_id is not None:
+        return documento.solicitud.registro.persona_id
+    return None
 
 
 def entregar(documento: Documento):

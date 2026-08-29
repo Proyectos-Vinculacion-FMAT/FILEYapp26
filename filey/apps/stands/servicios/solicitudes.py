@@ -117,11 +117,16 @@ def _fotografia(editorial: Editorial) -> tuple[dict, list]:
 
 
 def _convocatoria_que_admite(convocatoria: Convocatoria) -> None:
-    """Que sea de stands y esté abierta.
+    """Que sea de stands, esté abierta y la edición admita escrituras.
 
-    Lo segundo lo vuelve a comprobar `FER` al crear el registro; se
-    adelanta aquí para que el error salga antes de tocar nada y con las
+    Las dos últimas las vuelve a comprobar `FER` al crear el registro; se
+    adelantan aquí para que el error salga antes de tocar nada y con las
     palabras de este dominio.
+
+    La de la edición archivada **no** era una repetición: colgaba solo del
+    alta del registro, así que el reenvío —que no crea ninguno— entraba a
+    una feria archivada por la puerta de atrás. Por eso se pregunta aquí,
+    que es por donde pasan los dos caminos.
     """
     if convocatoria.tipo != TipoConvocatoria.STD:
         raise EnvioRechazado(
@@ -131,6 +136,13 @@ def _convocatoria_que_admite(convocatoria: Convocatoria) -> None:
         raise EnvioRechazado(
             f"«{convocatoria.nombre}» no está abierta: no admite solicitudes."
         )
+    # Se traduce la excepción de `FER` a la de este dominio. La vista solo
+    # sabe de `EnvioRechazado`: una `RegistroRechazado` cruzando entera
+    # llegaba sin capturar y salía por pantalla como un 500.
+    try:
+        registros.exigir_edicion_operable()
+    except registros.RegistroRechazado as exc:
+        raise EnvioRechazado(str(exc)) from exc
 
 
 @transaction.atomic
@@ -163,11 +175,20 @@ def enviar_solicitud(
     # única comprobación que existe de que este expediente no cuelgue de
     # una convocatoria de eventos: la base no puede sostenerla porque el
     # `tipo` vive un salto más allá (`ADR-0006`).
-    registro, _ = registros.obtener_o_crear_registro(
-        convocatoria=convocatoria,
-        persona=persona,
-        tipo_esperado=TipoConvocatoria.STD,
-    )
+    #
+    # `TipoQueNoCorresponde` se deja pasar a propósito: eso no es un dato
+    # mal escrito por nadie, es este módulo llamando a donde no debe, y
+    # convertirlo en un mensaje amable lo escondería.
+    try:
+        registro, _ = registros.obtener_o_crear_registro(
+            convocatoria=convocatoria,
+            persona=persona,
+            tipo_esperado=TipoConvocatoria.STD,
+        )
+    except registros.TipoQueNoCorresponde:
+        raise
+    except registros.RegistroRechazado as exc:
+        raise EnvioRechazado(str(exc)) from exc
 
     datos, sellos = _fotografia(editorial)
     solicitud = Solicitud(

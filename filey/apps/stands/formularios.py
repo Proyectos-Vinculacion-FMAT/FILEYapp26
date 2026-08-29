@@ -240,8 +240,24 @@ class SellosForm(forms.Form):
 
         Las que ya tienen sello más una en blanco, y nunca menos de una:
         una pantalla que arranca sin ninguna caja no invita a escribir.
+
+        **Ligado se cuenta lo enviado, no lo guardado.** Si se contaran
+        los sellos guardados, un envío rechazado por otro campo volvía con
+        una sola fila visible: los cinco sellos que la persona acababa de
+        escribir seguían en el formulario y se enviaban otra vez, pero
+        `x-show` los escondía y no había forma ni de verlos ni de
+        borrarlos. Los que añadió en esta sesión no están guardados
+        todavía, así que solo la propia respuesta sabe cuántos son.
         """
-        return max(1, min(len(self.actuales) + 1, MAXIMO_SELLOS))
+        if self.is_bound:
+            llenos = sum(
+                1
+                for i in range(MAXIMO_SELLOS)
+                if (self.data.get(f"sello_{i}") or "").strip()
+            )
+        else:
+            llenos = len(self.actuales)
+        return max(1, min(llenos + 1, MAXIMO_SELLOS))
 
     def declarados(self) -> list[tuple[str, object]]:
         """Los sellos escritos, sin vacíos y sin repetir, con su carta.

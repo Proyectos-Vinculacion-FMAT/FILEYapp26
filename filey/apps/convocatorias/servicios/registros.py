@@ -53,6 +53,37 @@ def _feria_de_la_conexion() -> Feria | None:
     return Feria.objects.filter(schema_name=schema).first()
 
 
+def exigir_edicion_operable() -> Feria:
+    """Que la edición en la que estamos admita que se le escriba.
+
+    `CU-FER-006` E1: una edición archivada se consulta, no se opera. Es
+    una regla de `FER` sobre su propia edición, y por eso vive aquí y no
+    repartida entre seis módulos — repartirla es repartir seis
+    oportunidades de olvidarla.
+
+    Es **pública** y no un detalle de `obtener_o_crear_registro` porque
+    hay operaciones de módulo que no crean registro y siguen siendo
+    escrituras: reenviar una solicitud, abonar, reservar. Ésas entraban
+    en una feria archivada por la puerta de atrás, porque la única
+    comprobación colgaba del alta del registro.
+
+    :returns: la feria, ya comprobada.
+    :raises RegistroRechazado: fuera de una feria, o en una archivada.
+    """
+    feria = _feria_de_la_conexion()
+    if feria is None:
+        raise RegistroRechazado(
+            "Esto pertenece a una feria: no se puede hacer desde fuera de "
+            "una edición."
+        )
+    if feria.estado == Feria.Estado.ARCHIVADA:
+        raise RegistroRechazado(
+            f"«{feria.nombre}» está archivada: una edición cerrada se "
+            "consulta, no se le escribe."
+        )
+    return feria
+
+
 def obtener_o_crear_registro(
     *,
     convocatoria: Convocatoria,
@@ -100,21 +131,7 @@ def obtener_o_crear_registro(
             f"«{convocatoria.nombre}» no está abierta: no admite registros."
         )
 
-    # `CU-FER-006` E1: una edición archivada se consulta, no se opera.
-    # Se comprueba aquí y no en cada módulo por lo mismo que lo anterior:
-    # es una regla de `FER` sobre su propia edición, y repartirla entre
-    # seis módulos es repartir seis oportunidades de olvidarla.
-    feria = _feria_de_la_conexion()
-    if feria is None:
-        raise RegistroRechazado(
-            "Un registro pertenece a una feria: no se puede crear desde fuera "
-            "de una edición."
-        )
-    if feria.estado == Feria.Estado.ARCHIVADA:
-        raise RegistroRechazado(
-            f"«{feria.nombre}» está archivada: una edición cerrada se consulta, "
-            "no se le mandan registros nuevos."
-        )
+    feria = exigir_edicion_operable()
 
     with transaction.atomic():
         registro, se_creo = RegistroConvocatoria.objects.get_or_create(

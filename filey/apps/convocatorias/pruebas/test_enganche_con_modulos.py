@@ -317,3 +317,43 @@ def test_el_catalogo_no_consulta_una_vez_por_tarjeta(feria_2027, participante):
     # 1 el catálogo + 1 las inscripciones de esta persona. Cinco tarjetas
     # y las mismas dos consultas.
     assert len(selects) == 2
+
+
+def test_quien_ya_se_registro_en_un_modulo_sin_rutas_no_ve_un_enlace_roto(
+    client, feria_2027
+):
+    """Salió de la revisión de la fase 2: el botón decía `href="None"`.
+
+    `_url_del_modulo` devuelve `None` a propósito cuando el módulo está
+    inscrito pero sus rutas no se resuelven en este urlconf — es lo que
+    degrada la tarjeta a "Próximamente" en vez de romper el catálogo.
+    La plantilla comprobaba `ya_registrada` **antes** que la URL, así que
+    a quien ya tenía registro le imprimía el `None` literal.
+    """
+    from apps.convocatorias.modulos import Modulo, modulo_temporal
+    from apps.convocatorias.models import TipoConvocatoria
+    from apps.convocatorias.servicios import registros
+
+    roto = Modulo(
+        tipo=TipoConvocatoria.STD,
+        etiqueta="Venta de stands",
+        url_aplicar="stands:no_existe_esta_ruta",
+        url_panel=None,
+    )
+    with schema_context(feria_2027.schema_name):
+        conv = Convocatoria.objects.create(
+            tipo=TipoConvocatoria.STD, nombre="Stands", estado=Convocatoria.Estado.ABIERTA
+        )
+        persona = Persona.objects.create_user(
+            correo="quien@ejemplo.com", nombre="Quien", primer_apellido="Sea"
+        )
+        registros.obtener_o_crear_registro(
+            convocatoria=conv, persona=persona, tipo_esperado=TipoConvocatoria.STD
+        )
+
+    client.force_login(persona)
+    with modulo_temporal(roto):
+        cuerpo = client.get(feria_2027.url).content.decode()
+
+    assert 'href="None"' not in cuerpo
+    assert "Próximamente" in cuerpo

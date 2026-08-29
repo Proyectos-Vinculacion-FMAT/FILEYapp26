@@ -193,8 +193,16 @@ class Persona(AbstractBaseUser, PermissionsMixin):
         importando ``AdminFeria``: ``registros`` es la base de identidad
         y no puede depender de ``ferias``, que depende de ella (regla 4
         de CLAUDE.md).
+
+        El operador de la plataforma cuenta **sin tener fila**, que es la
+        excepción de `ADR-0005`. Sin esto se daba la contradicción de que
+        alcanzaba cualquier feria por su URL pero la puerta que lleva a
+        ellas —"mis ferias", tras ``requiere_admin``— le respondía 403; y
+        la barra superior, que pregunta por ``administra()``, le pintaba
+        de todos modos el enlace. Se lee ``is_superuser`` del propio
+        modelo, así que no hace falta importar ``ferias`` para saberlo.
         """
-        return self.ferias_admin.exists()
+        return self.is_superuser or self.ferias_admin.exists()
 
 
 class SesionOTPQuerySet(models.QuerySet):

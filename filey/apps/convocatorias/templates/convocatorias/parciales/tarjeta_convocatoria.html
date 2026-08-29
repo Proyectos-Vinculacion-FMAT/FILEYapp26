@@ -65,11 +65,16 @@
       <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
         Sin acciones todavía
       </button>
-    {% elif entrada.ya_registrada %}
+    {% comment %} Las dos ramas con enlace exigen que la URL exista. Sin el
+       `and`, quien ya estaba registrado en un módulo cuyas rutas no están
+       montadas en este urlconf se llevaba un botón a `/f/<slug>/None`:
+       `_url_del_modulo` devuelve `None` a propósito ahí, y la plantilla lo
+       imprimía tal cual. {% endcomment %}
+    {% elif entrada.ya_registrada and entrada.url_aplicar %}
       <a class="btn btn-ghost btn-block" href="{{ entrada.url_aplicar }}">
         Ver mi solicitud
       </a>
-    {% elif entrada.admite_registro %}
+    {% elif entrada.admite_registro and entrada.url_aplicar %}
       <a class="btn btn-primary btn-block" href="{{ entrada.url_aplicar }}">
         Registrarme
       </a>
