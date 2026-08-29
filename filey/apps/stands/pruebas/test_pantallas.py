@@ -240,6 +240,49 @@ def test_faltar_un_documento_no_crea_nada(client, feria_2027):
         assert not Editorial.objects.exists()
 
 
+def test_al_fallar_se_avisa_de_que_los_archivos_hay_que_volver_a_ponerlos(
+    client, feria_2027
+):
+    """Lo escrito vuelve; lo adjuntado no, y nadie lo adivina.
+
+    Un `<input type="file">` no se puede repoblar desde el servidor. Sin
+    este aviso, quien corrige un teléfono reenvía y le vuelve a faltar la
+    constancia, sin ninguna pista de por qué.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    respuesta = client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        # Con documentos, y un campo de texto mal: el envío se rechaza
+        # con los archivos ya subidos, que es cuando el aviso importa.
+        fabricas.envio(telefono_celular="no tengo"),
+        follow=True,
+    )
+
+    avisos = [m.message for m in respuesta.context["messages"]]
+    assert any("Vuelve a adjuntar los archivos" in a for a in avisos), avisos
+
+
+def test_sin_archivos_no_se_avisa_de_archivos(client, feria_2027):
+    """Decirlo cuando no se adjuntó nada solo añade ruido."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+        conv = fabricas.convocatoria()
+    client.force_login(ana)
+
+    respuesta = client.post(
+        _url(feria_2027, "solicitud", convocatoria_id=conv.pk),
+        fabricas.envio(con_documentos=False),
+        follow=True,
+    )
+
+    avisos = [m.message for m in respuesta.context["messages"]]
+    assert not any("Vuelve a adjuntar" in a for a in avisos), avisos
+
+
 def test_un_envio_rechazado_no_deja_ficha_a_medias(client, feria_2027):
     """La convocatoria puede cerrarse entre el GET y el POST.
 

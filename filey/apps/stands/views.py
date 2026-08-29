@@ -160,12 +160,20 @@ def _guardar_solicitud(peticion, convocatoria, editorial, ultima):
         # no se envía nada. Se dice **cuántos** son: "revisa los campos"
         # obliga a recorrer un formulario de treinta a ciegas.
         cuantos = sum(len(f.errors) for f in formularios.values())
-        messages.error(
-            peticion,
+        aviso = (
             f"No se envió: falta {cuantos} campo por corregir."
             if cuantos == 1
-            else f"No se envió: faltan {cuantos} campos por corregir.",
+            else f"No se envió: faltan {cuantos} campos por corregir."
         )
+        # Y hay que decir lo de los archivos. Un `<input type="file">` no
+        # se puede repoblar desde el servidor —ningún navegador acepta un
+        # `value` ahí, y es una defensa contra que una página se lleve
+        # ficheros sin permiso—, así que lo adjuntado en este envío **sí**
+        # se pierde. Callarlo deja a alguien reenviando sin entender por
+        # qué le sigue faltando la constancia.
+        if peticion.FILES:
+            aviso += " Vuelve a adjuntar los archivos: el navegador no los conserva."
+        messages.error(peticion, aviso)
         return None, formularios
 
     es_reenvio = (
@@ -177,8 +185,10 @@ def _guardar_solicitud(peticion, convocatoria, editorial, ultima):
     # y los documentos guardados y ninguna solicitud: un expediente que
     # existe a medias y que nadie va a revisar.
     #
-    # Lo capturado no se pierde igualmente (`CU-STD-001`, "en fallo"): lo
-    # conservan los formularios ligados, que vuelven a la plantilla.
+    # Lo **escrito** no se pierde igualmente (`CU-STD-001`, "en fallo"):
+    # lo conservan los formularios ligados, que vuelven a la plantilla.
+    # Lo **adjuntado** sí, y no hay forma de evitarlo sin guardar el
+    # archivo antes de validarlo; por eso se avisa arriba.
     try:
         with transaction.atomic():
             ficha = form_editorial.save(commit=False)
