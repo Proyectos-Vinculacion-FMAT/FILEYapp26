@@ -25,6 +25,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from apps.convocatorias.models import Convocatoria, RegistroConvocatoria
 from apps.registros.paises import PAISES
@@ -986,3 +987,234 @@ class DecoracionMapa(models.Model):
 
     def __str__(self):
         return self.etiqueta
+
+
+# ══ La reserva ════════════════════════════════════════════════
+
+
+class Reserva(models.Model):
+    """Los espacios que una editorial aparta, y lo que cuestan.
+
+    Cuelga de `RegistroConvocatoria` igual que `Solicitud`, y por lo
+    mismo: es lo que da a la vez la persona y **de qué convocatoria** es
+    la reserva (`RN-19`). `editorial` va además porque es quien debe el
+    dinero — el mismo par que ya tiene `Solicitud`.
+
+    .. important:: `monto_total` se congela frente al precio, no frente
+       a los descuentos
+
+       ======================================== ==================
+       Cambia el `costo_m2` de la convocatoria  **No** se recalcula
+       Cambia la forma de un stand              **No** se recalcula
+       Se consolida o vence el pronto pago      **Sí**, al momento
+       Se aplica o se retira un especial        **Sí**, al momento
+       ======================================== ==================
+
+       Un cambio de tarifa no debe alcanzar a quien ya aceptó un precio
+       (`RN-01`), pero un descuento **es** una modificación deliberada de
+       lo que esa reserva cuesta.
+    """
+
+    class Estado(models.TextChoices):
+        POR_CONFIRMAR = "por_confirmar", "Por confirmar"
+        CONFIRMADA = "confirmada", "Confirmada"
+        PAGADA = "pagada", "Pagada"
+        CANCELADA = "cancelada", "Cancelada"
+
+    #: Las que siguen ocupando espacio. Solo `cancelada` cierra
+    #: (`RN-11`): una vencida **no** libera sus stands, escala al
+    #: administrador (`RN-12`).
+    VIVAS = (Estado.POR_CONFIRMAR, Estado.CONFIRMADA, Estado.PAGADA)
+
+    registro = models.ForeignKey(
+        RegistroConvocatoria, on_delete=models.PROTECT, related_name="reservas"
+    )
+    editorial = models.ForeignKey(
+        Editorial, on_delete=models.PROTECT, related_name="reservas"
+    )
+    estado = models.CharField(
+        max_length=14, choices=Estado.choices, default=Estado.POR_CONFIRMAR
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    # `fecha_creacion` + `plazo_reserva_dias` (`RN-03`). Se guarda en vez
+    # de calcularse al vuelo porque el plazo es configurable: cambiarlo
+    # en la convocatoria movería la fecha de vencimiento de las reservas
+    # que ya estaban corriendo.
+    fecha_vencimiento_anticipo = models.DateTimeField("vencimiento del anticipo")
+    fecha_corte_pago_total = models.DateTimeField(
+        "corte del pago total", null=True, blank=True
+    )
+    #: El total **con los descuentos ya aplicados**, congelado al
+    #: reservar con el `costo_m2` de ese momento (`RN-01`).
+    monto_total = models.DecimalField(
+        "monto total",
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+
+    class Meta:
+        verbose_name = "reserva"
+        verbose_name_plural = "reservas"
+        ordering = ["-fecha_creacion"]
+
+    def __str__(self):
+        return f"Reserva de {self.editorial} ({self.get_estado_display()})"
+
+    # ── El dinero ────────────────────────────────────────────
+
+    @property
+    def monto_abonado(self) -> Decimal:
+        """Lo cubierto por movimientos validados (`RN-15`).
+
+        Hoy siempre cero: `Movimiento` llega con la fase de pago. Está
+        escrito ya —y no calculado en la plantilla— para que el día que
+        exista solo cambie el cuerpo de este método y ninguna pantalla.
+        """
+        return Decimal("0.00")
+
+    @property
+    def monto_pendiente(self) -> Decimal:
+        return self.monto_total - self.monto_abonado
+
+    @property
+    def configuracion(self):
+        """La configuración de **su** convocatoria, leída de la base.
+
+        Con `self.registro.convocatoria.configuracion_stands` bastaría,
+        pero ese descriptor cachea la fila en la instancia: quien acabe
+        de cambiar el porcentaje de anticipo seguiría viendo el de antes,
+        y de aquí sale una cifra que alguien va a pagar.
+        """
+        return ConfiguracionSistema.objects.get(
+            convocatoria_id=self.registro.convocatoria_id
+        )
+
+    @property
+    def anticipo(self) -> Decimal:
+        """El porcentaje de anticipo sobre el total **con descuento**.
+
+        `RN-02`: del total ya descontado y no del bruto. El porcentaje
+        sale de la convocatoria — 50 es su valor por omisión, no una
+        constante del sistema.
+        """
+        porcentaje = self.configuracion.porcentaje_anticipo
+        return (self.monto_total * porcentaje / 100).quantize(Decimal("0.01"))
+
+    @property
+    def esta_vencida(self) -> bool:
+        """Pasó el plazo sin cubrir el anticipo (`RN-03`, `RN-12`).
+
+        **Vencer no cancela**: la reserva sigue viva y sus stands siguen
+        ocupados. Lo que hace es escalar al administrador, que es quien
+        decide cancelar o prorrogar (`CU-STD-035`).
+        """
+        return (
+            self.estado == self.Estado.POR_CONFIRMAR
+            and timezone.now() > self.fecha_vencimiento_anticipo
+        )
+
+
+class ReservaStand(models.Model):
+    """Qué stands entran en qué reserva. Tabla de unión, y nada más.
+
+    .. warning:: No guarda ni m² ni precio, y es deliberado
+
+       **Se gana** que no haya dos fuentes para la misma cifra: los m²
+       salen de la forma del stand y el precio de `costo_m2`. **Se
+       pierde** el desglose histórico por línea — si alguien corrige el
+       mapa o cambia la tarifa, el desglose se recalcula con los valores
+       nuevos y deja de cuadrar con lo que la editorial aceptó.
+
+       Lo que sí queda congelado es `Reserva.monto_total`, así que el
+       importe cobrado no cambia: lo que cambia es **cómo se explica**.
+       El riesgo pasa de "cobramos otra cifra" a "el desglose no cuadra
+       con el total".
+
+       **Condición para que se sostenga:** ningún servicio debe reescribir
+       `monto_total` de una reserva que no esté `por_confirmar`.
+    """
+
+    reserva = models.ForeignKey(
+        Reserva, on_delete=models.CASCADE, related_name="lineas"
+    )
+    stand = models.ForeignKey(
+        Stand, on_delete=models.PROTECT, related_name="lineas_de_reserva"
+    )
+
+    class Meta:
+        verbose_name = "stand de la reserva"
+        verbose_name_plural = "stands de la reserva"
+        ordering = ["stand__fila", "stand__col"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["reserva", "stand"], name="un_stand_una_vez_por_reserva"
+            ),
+        ]
+
+    def __str__(self):
+        return self.stand.clave
+
+
+class DescuentoAplicado(models.Model):
+    """Un descuento sobre una reserva (`RN-04` a `RN-07`).
+
+    Los dos tipos **se acumulan y se aplican en secuencia**, no sumando
+    porcentajes: 10% y 15% dan un 23.5% efectivo, no un 25%. Cualquier
+    consulta que sume las dos filas para enseñar "el descuento total" da
+    un número que no es el que se cobra.
+    """
+
+    class Tipo(models.TextChoices):
+        PRONTO_PAGO = "pronto_pago", "Pronto pago"
+        ESPECIAL = "especial", "Especial"
+
+    #: El orden en que se aplican. El pronto pago primero, que es el que
+    #: el expositor ya conocía al reservar. El total no depende del orden
+    #: —la multiplicación es conmutativa— pero el desglose sí se lee.
+    ORDEN = (Tipo.PRONTO_PAGO, Tipo.ESPECIAL)
+
+    reserva = models.ForeignKey(
+        Reserva, on_delete=models.CASCADE, related_name="descuentos"
+    )
+    tipo = models.CharField(max_length=12, choices=Tipo.choices)
+    # Se copia por fila al aplicarse: es lo que permite reconstruir el
+    # desglose aunque después cambie la configuración de la convocatoria.
+    porcentaje = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+    motivo = models.CharField(max_length=200, blank=True)
+    # Nulo cuando lo aplica el sistema: el pronto pago es automático
+    # (`CU-STD-023`), y ponerle una persona sería atribuirle una decisión
+    # que no tomó.
+    aplicado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="descuentos_aplicados",
+    )
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "descuento aplicado"
+        verbose_name_plural = "descuentos aplicados"
+        ordering = ["tipo"]
+        constraints = [
+            # `RN-05`. Vive en la base y no en la pantalla: dos
+            # administradores aplicando un especial a la vez, o el barrido
+            # del pronto pago corriendo dos veces, insertarían dos filas y
+            # el total saldría mal.
+            models.UniqueConstraint(
+                fields=["reserva", "tipo"], name="un_descuento_de_cada_tipo"
+            ),
+            models.CheckConstraint(
+                condition=(Q(tipo="pronto_pago") | ~Q(motivo="")),
+                name="un_descuento_especial_lleva_motivo",
+            ),
+            models.CheckConstraint(
+                condition=Q(porcentaje__lte=100),
+                name="un_descuento_no_pasa_del_100",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} {self.porcentaje}%"

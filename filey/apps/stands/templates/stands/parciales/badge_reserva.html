@@ -1,0 +1,23 @@
+{% comment %} ===========================================================
+   El estado de una reserva, como distintivo.
+
+   Contexto que espera:
+
+     reserva   la Reserva
+     vencida   si pasó el plazo sin cubrir el anticipo (RN-12)
+
+   `vencida` es un distintivo **aparte** y no un quinto estado: vencer no
+   cambia el estado de la reserva —sigue `por_confirmar` y sigue
+   ocupando sus espacios—, escala al administrador. Pintarlo como estado
+   haría creer que el sistema ya hizo algo con ella.
+   =========================================================== {% endcomment %}
+{% if reserva.estado == 'por_confirmar' %}
+  <span class="badge badge-pending">Por confirmar</span>
+{% elif reserva.estado == 'confirmada' %}
+  <span class="badge badge-open">Confirmada</span>
+{% elif reserva.estado == 'pagada' %}
+  <span class="badge badge-accepted">Pagada</span>
+{% else %}
+  <span class="badge badge-rejected">Cancelada</span>
+{% endif %}
+{% if vencida %}<span class="badge badge-changes">Vencida</span>{% endif %}

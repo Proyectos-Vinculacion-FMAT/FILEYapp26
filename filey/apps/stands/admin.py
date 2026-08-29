@@ -30,10 +30,13 @@ from .servicios import mapas
 from .models import (
     ConfiguracionSistema,
     DecoracionMapa,
+    DescuentoAplicado,
     Documento,
     Editorial,
     MapaShowfloor,
     Notificacion,
+    Reserva,
+    ReservaStand,
     SelloEditorial,
     Solicitud,
     Stand,
@@ -280,3 +283,49 @@ class DecoracionMapaAdmin(admin.ModelAdmin):
     list_display = ("etiqueta", "tipo", "col", "fila")
     list_filter = ("tipo", "mapa__convocatoria")
     list_select_related = ("mapa",)
+
+
+# ── La reserva ────────────────────────────────────────────────
+
+
+class LineaInline(admin.TabularInline):
+    model = ReservaStand
+    extra = 0
+    autocomplete_fields = ("stand",)
+
+
+class DescuentoInline(admin.TabularInline):
+    model = DescuentoAplicado
+    extra = 0
+
+
+@admin.register(Reserva, site=admin_feria)
+class ReservaAdmin(admin.ModelAdmin):
+    """Consulta y desatasco, no operación.
+
+    `monto_total` y `estado` son de solo lectura a propósito: los mueve
+    el cobro (`RN-13`, `RN-14`) y tocarlos aquí dejaría una reserva
+    diciendo «pagada» sin un peso detrás. Cancelar o prorrogar es
+    `CU-STD-035`, con su pantalla y su bitácora.
+    """
+
+    list_display = (
+        "editorial", "estado", "monto_total", "fecha_creacion",
+        "fecha_vencimiento_anticipo",
+    )
+    list_filter = ("estado",)
+    search_fields = ("editorial__nombre",)
+    list_select_related = ("editorial",)
+    readonly_fields = ("registro", "editorial", "estado", "monto_total",
+                       "fecha_creacion")
+    inlines = [LineaInline, DescuentoInline]
+
+    def has_add_permission(self, peticion):
+        return False
+
+
+@admin.register(DescuentoAplicado, site=admin_feria)
+class DescuentoAplicadoAdmin(admin.ModelAdmin):
+    list_display = ("reserva", "tipo", "porcentaje", "aplicado_por", "fecha")
+    list_filter = ("tipo",)
+    list_select_related = ("reserva__editorial", "aplicado_por")

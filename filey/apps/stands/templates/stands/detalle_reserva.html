@@ -1,0 +1,151 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   A · CU-STD-029 · El detalle de una reserva.
+
+   Los abonos y las acciones —cancelar, prorrogar, aplicar un descuento
+   especial— llegan con la fase de pago (CU-STD-015 a 020, 035). Aquí no
+   se pintan botones inertes: un botón que no hace nada se pulsa igual.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Reserva de {{ reserva.editorial.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Reserva de {{ reserva.editorial.nombre }}{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% if vencida %}
+  <div class="note note-warn">
+    <div class="ico">⏰</div>
+    <div>
+      <strong>Venció el plazo del anticipo y sigue sin cubrirse.</strong>
+      Los espacios siguen apartados: vencer no los libera (RN-12). Hay que
+      resolverla — cancelar o prorrogar.
+    </div>
+  </div>
+{% endif %}
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>
+        {% include "stands/parciales/badge_reserva.html" with reserva=reserva vencida=vencida %}
+      </h3>
+      <p>Creada el {{ reserva.fecha_creacion|date:"j \d\e F \d\e Y, H:i" }}.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="info-grid">
+      <div>
+        <span class="hint">Contacto</span>
+        <strong>{{ reserva.registro.persona.nombre_completo }}</strong>
+        <span class="hint">{{ reserva.registro.persona.correo }}</span>
+      </div>
+      <div>
+        <span class="hint">Total cobrado</span>
+        <strong>${{ reserva.monto_total|floatformat:2 }}</strong>
+      </div>
+      <div>
+        <span class="hint">Abonado</span>
+        <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
+      </div>
+      <div>
+        <span class="hint">Pendiente</span>
+        <strong>${{ reserva.monto_pendiente|floatformat:2 }}</strong>
+      </div>
+      <div>
+        <span class="hint">Anticipo</span>
+        <strong>${{ reserva.anticipo|floatformat:2 }}</strong>
+      </div>
+      <div>
+        <span class="hint">Vence</span>
+        <strong>{{ reserva.fecha_vencimiento_anticipo|date:"j M Y" }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Espacios</h3>
+      <p>{{ reserva.lineas.count }} en el mapa de esta convocatoria.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <table class="table">
+      <thead>
+        <tr><th>Clave</th><th class="num">Superficie</th><th>Zona</th></tr>
+      </thead>
+      <tbody>
+        {% for linea in reserva.lineas.all %}
+          <tr>
+            <td><strong>{{ linea.stand.etiqueta }}</strong></td>
+            <td class="num">{{ linea.stand.metros_cuadrados|floatformat:0 }} m²</td>
+            <td>{{ linea.stand.zona|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Cómo sale el total</h3>
+      <p>Los descuentos se aplican en secuencia, no sumando (RN-06).</p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% include "stands/parciales/desglose.html" %}
+
+    {% comment %} El desglose se recalcula desde el mapa de hoy; el total
+       cobrado está congelado. Si alguien corrigió el mapa o cambió la
+       tarifa, las dos cifras discrepan — y hay que decirlo, no dejar que
+       lo descubra alguien cuadrando una factura. {% endcomment %}
+    {% if desglose|last %}
+      {% with recalculado=desglose|last %}
+        {% if recalculado.subtotal != reserva.monto_total %}
+          <div class="note note-warn">
+            <div class="ico">⚠️</div>
+            <div>
+              <strong>El desglose ya no cuadra con lo cobrado.</strong>
+              Se cobraron ${{ reserva.monto_total|floatformat:2 }} y con los
+              valores de hoy saldrían ${{ recalculado.subtotal|floatformat:2 }}.
+              Alguien cambió la tarifa o la forma de un espacio después de
+              reservar; lo cobrado no se mueve (RN-01).
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
+    {% endif %}
+
+    {% if reserva.descuentos.all %}
+      <table class="table">
+        <thead>
+          <tr><th>Descuento</th><th class="num">%</th><th>Motivo</th><th>Lo aplicó</th></tr>
+        </thead>
+        <tbody>
+          {% for d in reserva.descuentos.all %}
+            <tr>
+              <td>{{ d.get_tipo_display }}</td>
+              <td class="num">{{ d.porcentaje }}%</td>
+              <td>{{ d.motivo|default:"—" }}</td>
+              <td>{{ d.aplicado_por.nombre_completo|default:"El sistema" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+</div>
+
+<div class="form-actions">
+  <a class="btn btn-ghost" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">
+    Volver a las reservas
+  </a>
+</div>
+
+{% endblock %}

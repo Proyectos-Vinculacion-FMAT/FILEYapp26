@@ -1,0 +1,107 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   CU-STD-013 · El estado de mi reserva.
+
+   En plural aunque casi siempre haya una: `Editorial 1—N Reserva`, y
+   quien reservó en dos tandas tiene dos. Enseñar solo la última
+   escondería una que sigue debiendo dinero.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mis reservas — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Mis reservas{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% for item in reservas %}
+  {% comment %} A1: vencida sin cubrir el anticipo. Va arriba del todo
+     porque es lo único de esta pantalla que pide una acción hoy. {% endcomment %}
+  {% if item.vencida %}
+    <div class="note note-warn">
+      <div class="ico">⏰</div>
+      <div>
+        <strong>Se venció el plazo para el anticipo.</strong>
+        Tus espacios siguen apartados, pero la reserva puede cancelarse.
+        Escríbenos para ponerte al corriente o para pedir una prórroga.
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="section-card card">
+    <div class="section-head">
+      <div>
+        <h3>
+          {{ item.reserva.lineas.count }} espacio{{ item.reserva.lineas.count|pluralize }}
+          {% include "stands/parciales/badge_reserva.html" with reserva=item.reserva vencida=item.vencida %}
+        </h3>
+        <p>Reservada el {{ item.reserva.fecha_creacion|date:"j \d\e F \d\e Y" }}.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Espacios</label>
+        <p>
+          {% for linea in item.reserva.lineas.all %}
+            <span class="badge badge-open">{{ linea.stand.etiqueta }}</span>
+          {% endfor %}
+        </p>
+      </div>
+
+      {% include "stands/parciales/desglose.html" with renglones=item.desglose %}
+
+      <div class="info-grid">
+        <div>
+          <span class="hint">Total</span>
+          <strong>${{ item.reserva.monto_total|floatformat:2 }}</strong>
+        </div>
+        <div>
+          <span class="hint">Abonado</span>
+          <strong>${{ item.reserva.monto_abonado|floatformat:2 }}</strong>
+        </div>
+        <div>
+          <span class="hint">Pendiente</span>
+          <strong>${{ item.reserva.monto_pendiente|floatformat:2 }}</strong>
+        </div>
+        <div>
+          <span class="hint">Anticipo para confirmar</span>
+          <strong>${{ item.reserva.anticipo|floatformat:2 }}</strong>
+        </div>
+        <div>
+          <span class="hint">Vence el anticipo</span>
+          <strong>{{ item.reserva.fecha_vencimiento_anticipo|date:"j M Y" }}</strong>
+        </div>
+        {% if item.reserva.fecha_corte_pago_total %}
+          <div>
+            <span class="hint">Corte del pago total</span>
+            <strong>{{ item.reserva.fecha_corte_pago_total|date:"j M Y" }}</strong>
+          </div>
+        {% endif %}
+      </div>
+
+      {% comment %} Las instrucciones de pago son CU-STD-015 y todavía no
+         existen. Se dice, en vez de dejar a alguien buscando dónde pagar. {% endcomment %}
+      <p class="hint">
+        Las instrucciones de pago te llegan por correo. Si no las ves,
+        escríbenos.
+      </p>
+    </div>
+  </div>
+{% empty %}
+  {% comment %} E1. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">🗺️</div>
+    <div>
+      <strong>Todavía no tienes ninguna reserva.</strong>
+      Elige tus espacios en el mapa del showfloor.
+    </div>
+  </div>
+  <div class="form-actions">
+    <a class="btn btn-primary" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
+      Ir al mapa
+    </a>
+  </div>
+{% endfor %}
+
+{% endblock %}

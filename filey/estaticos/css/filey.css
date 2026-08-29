@@ -699,3 +699,21 @@ a.mapa-espacio:focus-visible { outline: 2px solid var(--color-dorado-encabezado)
   fill: var(--gris-700); text-anchor: middle; dominant-baseline: central;
   font-weight: 600; pointer-events: none;
 }
+
+/* ═══ El desglose del precio (STD · CU-STD-012, 013, 029) ══════
+   Una tabla de tres columnas —concepto, importe, subtotal— donde lo que
+   importa es poder seguir la cuenta con el dedo. Por eso los números van
+   con `tabular-nums`: sin cifras de ancho fijo, las columnas bailan y
+   comparar dos renglones deja de ser inmediato. */
+
+.tabla-desglose td.num, .table td.num, .table th.num { text-align: right; }
+.tabla-desglose td { font-variant-numeric: tabular-nums; }
+.tabla-desglose th { font-weight: 600; text-align: left; }
+.tabla-desglose th .hint { margin-left: 6px; }
+.tabla-desglose tr.es-total { border-top: 2px solid var(--gris-300); }
+.tabla-desglose tr.es-total td, .tabla-desglose tr.es-total th {
+  font-weight: 700; color: var(--color-azul-institucional);
+}
+/* Un espacio que se perdió mientras la persona decidía. Apagado, no
+   tachado: sigue siendo legible porque hay que poder leer cuál era. */
+tr.es-no-disponible { opacity: .55; }

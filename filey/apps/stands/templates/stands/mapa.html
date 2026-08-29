@@ -121,6 +121,23 @@
     Los precios salen de la superficie de cada espacio a
     ${{ costo_m2|floatformat:0 }} el m² (RN-01).
   </p>
+
+  {% if not zona_admin %}
+    <div class="form-actions">
+      <a class="btn btn-primary" href="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
+        Ver mi selección
+      </a>
+      <a class="btn btn-ghost" href="{% url 'stands:mis_reservas' convocatoria_id=convocatoria.pk %}">
+        Mis reservas
+      </a>
+    </div>
+  {% else %}
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">
+        Ver las reservas
+      </a>
+    </div>
+  {% endif %}
 {% endif %}
 
 {% endblock %}

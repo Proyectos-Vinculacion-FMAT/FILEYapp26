@@ -63,6 +63,33 @@ urlpatterns = [
         views.mapa_completo,
         name="mapa_completo",
     ),
+    # La reserva. El carrito vive en la sesión, así que no lleva id.
+    path(
+        "stands/<int:convocatoria_id>/carrito/",
+        views.carrito_de_stands,
+        name="carrito",
+    ),
+    path(
+        "stands/<int:convocatoria_id>/reservar/",
+        views.reservar,
+        name="reservar",
+    ),
+    path(
+        "stands/<int:convocatoria_id>/mis-reservas/",
+        views.mis_reservas,
+        name="mis_reservas",
+    ),
+    # A · la cola de reservas y su detalle (`CU-STD-028`, `029`).
+    path(
+        "stands/<int:convocatoria_id>/reservas/",
+        views.reservas_de_la_convocatoria,
+        name="reservas",
+    ),
+    path(
+        "stands/reserva/<int:reserva_id>/",
+        views.detalle_reserva,
+        name="detalle_reserva",
+    ),
     # La entrega de adjuntos. Es la única forma de alcanzar un archivo:
     # `MEDIA_URL` no está montada en ningún urlconf (`ADR-0007`).
     path(

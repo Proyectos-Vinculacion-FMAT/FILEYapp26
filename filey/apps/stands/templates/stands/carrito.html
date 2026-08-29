@@ -1,0 +1,155 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   CU-STD-011 y CU-STD-012 · La selección y el resumen antes de reservar.
+
+   Las dos cosas en una pantalla y no en dos: para quien reserva es un
+   solo momento —"esto llevo, esto cuesta, confirmo"— y partirlo obliga a
+   volver atrás para cambiar un espacio.
+
+   El carrito **no aparta nada**. Los espacios se protegen solo al
+   confirmar, y por eso puede pasar que uno se pierda entre que se elige
+   y se confirma: se dice cuál, en vez de tirarlo en silencio.
+
+   Todo va por POST, incluido quitar. Un GET que modifica la sesión lo
+   dispara cualquier precarga del navegador y la selección se movería
+   sola.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mi selección — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Mi selección de espacios{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% if contenido.no_disponibles %}
+  {% comment %} E1. Se nombran uno por uno: quien armó una selección de
+     ocho tiene que ver **cuál** perdió. {% endcomment %}
+  <div class="note note-warn">
+    <div class="ico">⚠️</div>
+    <div>
+      <strong>Alguien reservó antes que tú
+        {% for linea in contenido.no_disponibles %}{{ linea.stand.clave }}{% if not forloop.last %}, {% endif %}{% endfor %}.</strong>
+      No entran en el total. Quítalos y elige otros en el mapa.
+    </div>
+  </div>
+{% endif %}
+
+{% if contenido.vacio %}
+  {% comment %} E2 de CU-STD-012, dicho antes de que lo intente. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">🗺️</div>
+    <div>
+      <strong>Todavía no has elegido ningún espacio.</strong>
+      Ábre el mapa y elige los que te interesen; puedes cambiarlos hasta que
+      confirmes.
+    </div>
+  </div>
+  <div class="form-actions">
+    <a class="btn btn-primary" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
+      Ir al mapa
+    </a>
+  </div>
+
+{% else %}
+  <div class="section-card card">
+    <div class="section-head">
+      <div>
+        <h3>Espacios elegidos</h3>
+        <p>El carrito no los aparta: se protegen al confirmar la reserva.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Espacio</th>
+            <th class="num">Superficie</th>
+            <th class="num">Precio</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for linea in contenido.lineas %}
+            <tr {% if not linea.disponible %}class="es-no-disponible"{% endif %}>
+              <td>
+                <strong>{{ linea.stand.etiqueta }}</strong>
+                {% if not linea.disponible %}
+                  <span class="badge badge-rejected">Ya no disponible</span>
+                {% endif %}
+              </td>
+              <td class="num">{{ linea.metros_cuadrados|floatformat:0 }} m²</td>
+              <td class="num">
+                {% if linea.disponible %}${{ linea.precio|floatformat:2 }}{% else %}—{% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="accion" value="quitar">
+                  <input type="hidden" name="clave" value="{{ linea.stand.clave }}">
+                  <button class="btn btn-ghost btn-row" type="submit">Quitar</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-card card">
+    <div class="section-head">
+      <div>
+        <h3>Lo que cuesta</h3>
+        <p>A ${{ costo_m2|floatformat:0 }} el m², por la superficie de cada espacio.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      {% include "stands/parciales/desglose.html" %}
+
+      <div class="info-grid">
+        <div>
+          <span class="hint">Para confirmar hay que cubrir</span>
+          <strong>${{ anticipo|floatformat:2 }}</strong>
+          <span class="hint">{{ porcentaje_anticipo }}% del total</span>
+        </div>
+        <div>
+          <span class="hint">Plazo para el anticipo</span>
+          <strong>{{ plazo_dias }} días</strong>
+          <span class="hint">desde que confirmes</span>
+        </div>
+      </div>
+
+      {% if fecha_pronto_pago %}
+        <div class="note note-ok">
+          <div class="ico">🏷️</div>
+          <div>
+            El descuento por pronto pago se conserva si liquidas antes del
+            <strong>{{ fecha_pronto_pago|date:"j \d\e F" }}</strong>. Después de esa
+            fecha se retira y el total vuelve a subir.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
+      Seguir eligiendo
+    </a>
+    {% comment %} Reservar es la escritura: va en su propio formulario y
+       por POST. Si no hay nada tomable, el botón no aparece — un botón que
+       solo puede fallar es una promesa rota. {% endcomment %}
+    {% if contenido.lineas|length > contenido.no_disponibles|length %}
+      <form method="post" action="{% url 'stands:reservar' convocatoria_id=convocatoria.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-primary btn-lg" type="submit">
+          Confirmar la reserva
+        </button>
+      </form>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% endblock %}

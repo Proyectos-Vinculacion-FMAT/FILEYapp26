@@ -1,0 +1,27 @@
+{% comment %} ===========================================================
+   El desglose del precio, paso a paso.
+
+   Contexto que espera:
+
+     renglones   lista de `reservas.Renglon`
+     total       la última cifra (opcional; si no, se usa el último renglón)
+
+   Se pinta **paso a paso y no como un porcentaje total** porque los
+   descuentos se aplican en secuencia: un 10% y un 15% dan un 23.5%
+   efectivo, no un 25% (RN-06). Un renglón que dijera "descuento 25%"
+   sería una cifra que no es la que se cobra.
+   =========================================================== {% endcomment %}
+<table class="table tabla-desglose">
+  <tbody>
+    {% for renglon in renglones %}
+      <tr {% if forloop.last %}class="es-total"{% endif %}>
+        <th scope="row">
+          {{ renglon.concepto }}
+          {% if renglon.porcentaje %}<span class="hint">{{ renglon.porcentaje }}%</span>{% endif %}
+        </th>
+        <td class="num">${{ renglon.importe|floatformat:2 }}</td>
+        <td class="num">${{ renglon.subtotal|floatformat:2 }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

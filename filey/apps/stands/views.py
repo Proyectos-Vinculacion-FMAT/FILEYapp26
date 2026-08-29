@@ -30,13 +30,17 @@ from .formularios import (
     EditorialForm,
     SellosForm,
 )
-from .models import Documento, Editorial, Solicitud
+from django.utils import timezone
+
+from .models import Documento, Editorial, Reserva, Solicitud
 from .servicios import (
     archivos,
+    carrito,
     configuracion,
     dibujo,
     dictamen,
     mapas,
+    reservas,
     solicitudes,
 )
 
@@ -505,5 +509,204 @@ def mapa_completo(peticion, convocatoria_id):
             "habilitada": True,
             "zona_admin": True,
             **_contexto_del_mapa(convocatoria, con_detalle=True),
+        },
+    )
+
+
+# ── U · El carrito y la reserva ───────────────────────────────
+
+
+def _exige_habilitacion(peticion, convocatoria):
+    """`RN-16`. Un 404 y no un 403 en las pantallas de reserva.
+
+    Un 403 confirmaría que ese carrito y esa reserva existen para alguien;
+    quien no está habilitado no tiene por qué enterarse de nada.
+    """
+    editorial = solicitudes.habilitada_para_reservar(convocatoria, peticion.user)
+    if editorial is None:
+        raise Http404("Todavía no puedes reservar espacios.")
+    return editorial
+
+
+@requiere_participante
+def carrito_de_stands(peticion, convocatoria_id):
+    """La selección de trabajo (`CU-STD-011`).
+
+    Agregar y quitar van por POST aunque no cambien nada persistente: un
+    GET que modifica la sesión lo dispara cualquier precarga del
+    navegador, y la selección se movería sola.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    _exige_habilitacion(peticion, convocatoria)
+
+    if peticion.method == "POST":
+        clave = (peticion.POST.get("clave") or "").strip()
+        accion = peticion.POST.get("accion")
+        if accion == "agregar" and clave:
+            carrito.agregar(peticion.session, convocatoria, clave)
+        elif accion == "quitar" and clave:
+            carrito.quitar(peticion.session, convocatoria, clave)
+        elif accion == "vaciar":
+            carrito.vaciar(peticion.session, convocatoria)
+        return redirect("stands:carrito", convocatoria_id=convocatoria.pk)
+
+    mapa = mapas.mapa_de(convocatoria)
+    if mapa is None:
+        raise Http404("Esta convocatoria no tiene mapa.")
+
+    costo_m2 = configuracion.de_la_convocatoria(convocatoria).costo_m2
+    contenido = carrito.contenido(peticion.session, convocatoria, mapa, costo_m2)
+    total, renglones = reservas.cotizar(
+        convocatoria, [linea.stand for linea in contenido.lineas if linea.disponible]
+    )
+    return render(
+        peticion,
+        "stands/carrito.html",
+        {
+            "convocatoria": convocatoria,
+            "contenido": contenido,
+            "costo_m2": costo_m2,
+            "total": total,
+            "renglones": renglones,
+            "anticipo": (
+                total * configuracion.de_la_convocatoria(convocatoria).porcentaje_anticipo
+                / 100
+            ),
+            "porcentaje_anticipo": configuracion.de_la_convocatoria(
+                convocatoria
+            ).porcentaje_anticipo,
+            "plazo_dias": configuracion.de_la_convocatoria(
+                convocatoria
+            ).plazo_reserva_dias,
+            "fecha_pronto_pago": configuracion.de_la_convocatoria(
+                convocatoria
+            ).fecha_limite_pronto_pago,
+        },
+    )
+
+
+@requiere_participante
+def reservar(peticion, convocatoria_id):
+    """Formaliza la reserva (`CU-STD-012`).
+
+    Solo POST: es la escritura de la vertical, y llegar aquí por un
+    enlace —o por volver atrás— crearía una reserva que nadie pidió.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    _exige_habilitacion(peticion, convocatoria)
+    if peticion.method != "POST":
+        return redirect("stands:carrito", convocatoria_id=convocatoria.pk)
+
+    claves = carrito.claves_en(peticion.session, convocatoria)
+    try:
+        reserva = reservas.crear(
+            convocatoria=convocatoria, persona=peticion.user, claves=claves
+        )
+    except reservas.HayEspaciosTomados as exc:
+        # Se sacan del carrito por ella: reintentar tiene que costar un
+        # clic, no volver a quitar uno por uno lo que ya se perdió.
+        for clave in exc.claves:
+            carrito.quitar(peticion.session, convocatoria, clave)
+        messages.error(peticion, str(exc))
+        return redirect("stands:carrito", convocatoria_id=convocatoria.pk)
+    except reservas.ReservaRechazada as exc:
+        messages.error(peticion, str(exc))
+        return redirect("stands:carrito", convocatoria_id=convocatoria.pk)
+
+    carrito.vaciar(peticion.session, convocatoria)
+    messages.success(
+        peticion,
+        f"Reservaste {reserva.lineas.count()} espacio"
+        f"{'s' if reserva.lineas.count() != 1 else ''}. "
+        "Tienes hasta el "
+        f"{reserva.fecha_vencimiento_anticipo:%d de %B} para cubrir el anticipo.",
+    )
+    return redirect("stands:mis_reservas", convocatoria_id=convocatoria.pk)
+
+
+@requiere_participante
+def mis_reservas(peticion, convocatoria_id):
+    """El estado de mi reserva (`CU-STD-013`).
+
+    En plural aunque casi siempre haya una: el modelo dice `Editorial
+    1—N Reserva`, y quien reservó en dos tandas tiene dos. Enseñar solo
+    la última escondería una que sigue debiendo dinero.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    _exige_habilitacion(peticion, convocatoria)
+
+    mias = list(reservas.reservas_de(convocatoria, peticion.user))
+    return render(
+        peticion,
+        "stands/mis_reservas.html",
+        {
+            "convocatoria": convocatoria,
+            "reservas": [
+                {
+                    "reserva": r,
+                    "desglose": reservas.desglose_de(r),
+                    "vencida": r.esta_vencida,
+                }
+                for r in mias
+            ],
+        },
+    )
+
+
+@requiere_admin_feria
+def reservas_de_la_convocatoria(peticion, convocatoria_id):
+    """La lista de todas las reservas, filtrable (`CU-STD-028`)."""
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+
+    estado = peticion.GET.get("estado", "")
+    busqueda = (peticion.GET.get("q") or "").strip()
+
+    cola = reservas.de_la_convocatoria(convocatoria)
+    if estado == "vencidas":
+        # No es un estado del modelo: es `por_confirmar` con el plazo
+        # pasado (`RN-12`). Se filtra en la consulta y no en la plantilla
+        # por lo mismo de siempre — lo que no se pide no debe llegar.
+        cola = cola.filter(
+            estado=Reserva.Estado.POR_CONFIRMAR,
+            fecha_vencimiento_anticipo__lt=timezone.now(),
+        )
+    elif estado in Reserva.Estado.values:
+        cola = cola.filter(estado=estado)
+    if busqueda:
+        cola = cola.filter(editorial__nombre__icontains=busqueda)
+
+    return render(
+        peticion,
+        "stands/reservas.html",
+        {
+            "convocatoria": convocatoria,
+            "reservas": cola,
+            "estado_activo": estado,
+            "busqueda": busqueda,
+            "estados": Reserva.Estado.choices,
+            "hay_filtros": bool(estado or busqueda),
+            "zona_admin": True,
+        },
+    )
+
+
+@requiere_admin_feria
+def detalle_reserva(peticion, reserva_id):
+    """El detalle de una reserva (`CU-STD-029`)."""
+    reserva = get_object_or_404(
+        Reserva.objects.select_related(
+            "editorial", "registro__persona", "registro__convocatoria"
+        ).prefetch_related("lineas__stand__mapa", "descuentos"),
+        pk=reserva_id,
+    )
+    return render(
+        peticion,
+        "stands/detalle_reserva.html",
+        {
+            "convocatoria": reserva.registro.convocatoria,
+            "reserva": reserva,
+            "desglose": reservas.desglose_de(reserva),
+            "vencida": reserva.esta_vencida,
+            "zona_admin": True,
         },
     )

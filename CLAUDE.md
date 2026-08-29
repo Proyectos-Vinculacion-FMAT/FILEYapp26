@@ -99,8 +99,16 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
     `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel
     por `scripts/derivar-mapa/`.
 
-  **Falta la reserva y el pago**: `Reserva`, `ReservaStand`, `Movimiento`,
-  `DescuentoAplicado`, y con ellos CU-STD-011 a 029, 033 y 035 a 038.
+  - **La reserva** (CU-STD-011, 012, 013, 021, 028, 029): `Reserva`, `ReservaStand` y
+    `DescuentoAplicado`; el carrito en la sesión, la reserva con los stands bloqueados
+    (`select_for_update` — es lo que sostiene «primero en confirmar gana»), y el panel de
+    reservas del administrador. **Todo el cálculo del dinero vive en
+    `servicios/reservas.py::total_con_descuentos`**, que es la única función que calcula un
+    total: los descuentos se aplican en secuencia, no sumando (RN-06).
+
+  **Falta el pago**: `Movimiento` y con él CU-STD-014 a 020, 022 a 027, 033 y 035 a 038.
+  Mientras no exista, `Reserva.monto_abonado` devuelve cero — está escrito ya para que el día
+  que llegue solo cambie ese método y ninguna pantalla.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel
