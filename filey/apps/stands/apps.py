@@ -26,7 +26,7 @@ class StandsConfig(AppConfig):
         importar modelos revienta.
         """
         from apps.convocatorias.models import TipoConvocatoria
-        from apps.convocatorias.modulos import Modulo, registrar
+        from apps.convocatorias.modulos import Modulo, SeccionPanel, registrar
 
         from .servicios import configuracion
 
@@ -34,8 +34,32 @@ class StandsConfig(AppConfig):
             Modulo(
                 tipo=TipoConvocatoria.STD,
                 etiqueta="Venta de stands",
-                url_aplicar="stands:solicitud",
-                url_panel="stands:solicitudes",
+                url_aplicar="stands:inicio",
+                url_panel="stands:panel",
+                # Las seis del prototipo de STD (`admin-layout.component`),
+                # en su orden, más el resumen. Las tres sin ruta están en
+                # el plan y no construidas: se pintan apagadas para que el
+                # menú enseñe la forma completa del módulo.
+                #
+                # El prototipo llama "Aplicaciones" a lo que aquí es
+                # "Solicitudes". Se conserva el nombre de los casos de uso
+                # y del modelo: cambiarlo dejaría la pantalla diciendo una
+                # palabra y `Solicitud` otra.
+                secciones_panel=(
+                    SeccionPanel("Resumen", "📊", "stands:panel"),
+                    SeccionPanel(
+                        "Solicitudes", "📄", "stands:solicitudes",
+                        tambien=("stands:detalle_solicitud",),
+                    ),
+                    SeccionPanel(
+                        "Reservas", "🎟️", "stands:reservas",
+                        tambien=("stands:detalle_reserva",),
+                    ),
+                    SeccionPanel("Pagos por validar", "🧾"),
+                    SeccionPanel("Expositores", "👥"),
+                    SeccionPanel("Mapa del salón", "🗺️", "stands:mapa_completo"),
+                    SeccionPanel("Configuración", "⚙️"),
+                ),
                 crear_configuracion=configuracion.crear_por_defecto,
             )
         )

@@ -25,6 +25,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 
 from apps.convocatorias.models import Convocatoria, RegistroConvocatoria
@@ -494,8 +496,12 @@ class Documento(models.Model):
        agravante — un `ContentType` dice "app.modelo", y ese par
        significaría una fila distinta en cada edición.
 
-       ``movimiento`` se añade en la fase de pago, con su columna y su
-       hueco en la restricción.
+       **El comprobante de pago no añadió aquí una cuarta rama**, al
+       revés de lo que esta nota anticipaba. Un comprobante sigue siendo
+       un documento **de su editorial** —cuelga de `editorial` como los
+       demás— y quien lo señala es `Movimiento.comprobante`, en la otra
+       dirección. Así `RN-15` cabe en una restricción de la base y esta
+       restricción no se afloja para admitir un documento suelto.
     """
 
     class Tipo(models.TextChoices):
@@ -575,6 +581,29 @@ class Documento(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} — {self.nombre_original or self.archivo.name}"
+
+
+@receiver(post_delete, sender=Documento)
+def _borrar_el_archivo_del_documento(sender, instance, **kwargs):
+    """Al borrar la fila, se borra también el archivo (`ADR-0007`).
+
+    Django **no** lo hace desde la 1.3, y con razón: en un `rollback` la
+    fila vuelve y el archivo ya no. Aquí se acepta ese riesgo porque lo
+    que se acumula si no son constancias fiscales y comprobantes de pago
+    de personas identificadas, que se quedarían en el disco —o en el
+    bucket— sin ninguna fila que los explique ni nadie que se acuerde de
+    ellos. Un archivo de menos tras un rollback es un adjunto que hay que
+    volver a subir; un archivo de más es un dato personal huérfano.
+
+    Va como señal y no en `Documento.delete()` porque el borrado real
+    ocurre casi siempre en lote —reemplazar la constancia al reenviar,
+    quitar un sello con su carta— y un `.delete()` de queryset **no**
+    llama al método del modelo. Las señales sí las emite.
+
+    `save=False`: la fila ya no existe, no hay nada que volver a guardar.
+    """
+    if instance.archivo:
+        instance.archivo.delete(save=False)
 
 
 class ConfiguracionSistema(models.Model):
@@ -1057,6 +1086,27 @@ class Reserva(models.Model):
         verbose_name = "reserva"
         verbose_name_plural = "reservas"
         ordering = ["-fecha_creacion"]
+        constraints = [
+            # `RN-23`: una editorial lleva **una** reserva por
+            # convocatoria. El expediente es uno —una editorial, un
+            # dictamen, un contrato, una cuenta por pagar— y dos reservas
+            # vivas partirían el saldo en dos cuentas que nadie sabría
+            # cuál pagar primero.
+            #
+            # Va sobre `registro` y no sobre `editorial`: el registro ya
+            # dice **persona y convocatoria**, así que la misma editorial
+            # puede tener la suya en la convocatoria general y otra en la
+            # de pabellón, que son ferias distintas del mismo salón.
+            #
+            # Es un índice parcial: solo cuenta lo vivo (`RN-11`). Una
+            # cancelada no estorba, que es lo que permite volver a
+            # empezar tras cancelar.
+            models.UniqueConstraint(
+                fields=["registro"],
+                condition=Q(estado__in=("por_confirmar", "confirmada", "pagada")),
+                name="una_reserva_viva_por_registro",
+            ),
+        ]
 
     def __str__(self):
         return f"Reserva de {self.editorial} ({self.get_estado_display()})"
@@ -1065,13 +1115,17 @@ class Reserva(models.Model):
 
     @property
     def monto_abonado(self) -> Decimal:
-        """Lo cubierto por movimientos validados (`RN-15`).
+        """Lo cubierto por movimientos **validados**.
 
-        Hoy siempre cero: `Movimiento` llega con la fase de pago. Está
-        escrito ya —y no calculado en la plantilla— para que el día que
-        exista solo cambie el cuerpo de este método y ninguna pantalla.
+        Solo los validados: lo que el aplicante registra es una
+        declaración con un papel adjunto, y hasta que alguien comprueba
+        que el dinero llegó al banco no es dinero (`CU-STD-018` paso 7).
+        Contar los pendientes confirmaría reservas que nadie pagó.
         """
-        return Decimal("0.00")
+        total = self.movimientos.filter(
+            estado=Movimiento.Estado.VALIDADO
+        ).aggregate(models.Sum("monto"))["monto__sum"]
+        return total or Decimal("0.00")
 
     @property
     def monto_pendiente(self) -> Decimal:
@@ -1218,3 +1272,112 @@ class DescuentoAplicado(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} {self.porcentaje}%"
+
+
+class Movimiento(models.Model):
+    """Un abono a una reserva, con su comprobante (`CU-STD-016`, `019`).
+
+    Nada suma al saldo hasta que alguien lo **valida** (`CU-STD-018`): lo
+    que el aplicante registra es una declaración con un papel adjunto, y
+    quien administra comprueba fuera del sistema que el dinero llegó de
+    verdad al banco. Por eso `Reserva.monto_abonado` cuenta solo los
+    `validado`, y por eso esta tabla guarda quién validó y cuándo.
+
+    .. note:: No se admite efectivo (`RN-08`)
+
+       Los tres métodos dejan rastro bancario, que es lo que hace
+       comprobable el paso 4 de `CU-STD-018`. Un abono en efectivo no se
+       puede validar contra nada.
+    """
+
+    class Metodo(models.TextChoices):
+        TRANSFERENCIA = "transferencia", "Transferencia"
+        DEPOSITO = "deposito", "Depósito"
+        CHEQUE = "cheque", "Cheque"
+
+    class Origen(models.TextChoices):
+        APLICANTE = "aplicante", "Lo registró el aplicante"
+        ADMIN_MANUAL = "admin_manual", "Lo registró la administración"
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "pendiente_validacion", "Pendiente de validación"
+        VALIDADO = "validado", "Validado"
+        RECHAZADO = "rechazado", "Rechazado"
+
+    reserva = models.ForeignKey(
+        Reserva, on_delete=models.PROTECT, related_name="movimientos"
+    )
+    monto = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
+    metodo = models.CharField("método de pago", max_length=14, choices=Metodo.choices)
+    origen = models.CharField(max_length=12, choices=Origen.choices)
+    estado = models.CharField(
+        max_length=20, choices=Estado.choices, default=Estado.PENDIENTE
+    )
+    # El papel del banco. Va aquí y no como una vuelta desde `Documento`
+    # porque así `RN-15` —un abono manual exige comprobante— cabe en una
+    # restricción de la base en vez de en una comprobación que se puede
+    # olvidar.
+    comprobante = models.ForeignKey(
+        Documento,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="movimientos",
+    )
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="movimientos_registrados",
+    )
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    validado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="movimientos_validados",
+    )
+    fecha_validacion = models.DateTimeField(null=True, blank=True)
+    # `CU-STD-018` A1 paso 3: el motivo es opcional al rechazar. Lo que no
+    # es opcional es que el aplicante lo vea en su historial
+    # (`CU-STD-017`), y sin motivo solo verá que se rechazó.
+    motivo_rechazo = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "movimiento"
+        verbose_name_plural = "movimientos"
+        ordering = ["-fecha_registro"]
+        constraints = [
+            # `RN-15`: todo abono manual del administrador lleva
+            # documento. En la base y no en el formulario a propósito —
+            # la regla dice "sin comprobante no se registra el abono", y
+            # un `manage.py shell` también es un sitio desde el que se
+            # registran abonos.
+            models.CheckConstraint(
+                condition=(
+                    Q(origen="aplicante") | Q(comprobante__isnull=False)
+                ),
+                name="un_abono_manual_lleva_comprobante",
+            ),
+            # Un movimiento resuelto dice quién y cuándo. Sin esto, uno
+            # validado sin fecha pasaría por bueno y nadie podría decir
+            # quién lo dio por bueno.
+            models.CheckConstraint(
+                condition=(
+                    Q(estado="pendiente_validacion")
+                    | Q(fecha_validacion__isnull=False, validado_por__isnull=False)
+                ),
+                name="un_movimiento_resuelto_dice_quien_y_cuando",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_metodo_display()} de ${self.monto} ({self.get_estado_display()})"
+
+    @property
+    def esta_validado(self) -> bool:
+        return self.estado == self.Estado.VALIDADO

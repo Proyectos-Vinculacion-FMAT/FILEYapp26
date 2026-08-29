@@ -308,8 +308,25 @@ input:focus, select:focus {
 input::placeholder { color: #aab3c0; }
 input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: not-allowed; }
 
+/* El campo que falló se ve de un vistazo: borde rojo y un halo tenue,
+   porque solo el borde se pierde entre treinta cajas iguales. El color
+   no va solo — el control lleva `aria-invalid` y su mensaje va ligado
+   con `aria-describedby`, para quien no lo distingue o no lo ve. */
 .field input.is-invalid,
-.field select.is-invalid { border-color: var(--err-600); }
+.field select.is-invalid,
+.field textarea.is-invalid {
+  border-color: var(--err-600);
+  box-shadow: 0 0 0 3px var(--err-050);
+}
+.field input.is-invalid:focus,
+.field select.is-invalid:focus,
+.field textarea.is-invalid:focus { outline-color: var(--err-600); }
+
+/* El hueco del mensaje existe siempre y se colapsa vacío: un nodo que
+   aparece de la nada empuja el resto del formulario hacia abajo justo
+   cuando alguien está leyendo. */
+.campo-error:empty { display: none; }
+.campo-error { display: block; margin-top: 4px; }
 
 .msg-error {
   margin: 6px 0 0;
@@ -643,14 +660,11 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
    paso obligatorio está resuelto. */
 .nota-elegible:has(input:checked) { border-color: var(--ok-600); }
 
-/* ═══ El mapa del showfloor (STD · CU-STD-009, 010, 032) ═══════
-   Sin equivalente en el prototipo: STD no tiene pantallas ahí, y un
-   plano de recinto no se parece a nada de lo que ya existe.
-
-   El SVG lleva las coordenadas en **celdas** —una celda es un metro— y
-   el navegador lo escala. Por eso los grosores de línea van en decimales
-   (0.28 de celda ≈ 28 cm de pasillo dibujado) y no en píxeles: en
-   píxeles se engordarían al acercar el mapa. */
+/* ═══ El mapa del showfloor (STD · CU-STD-009, 032) ═══════════
+   Lo dibuja un canvas de Godot en un `<iframe>` (ADR-0008), así que aquí
+   no hay nada del plano: solo su marco, el velo que lo tapa mientras
+   carga, y la tarjeta de detalle — que según el contrato del componente
+   es responsabilidad de esta página, no del canvas. */
 
 .mapa-cabecera {
   display: flex; flex-wrap: wrap; gap: 14px 26px;
@@ -662,43 +676,89 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .mapa-leyenda { display: flex; flex-wrap: wrap; gap: 8px 18px; list-style: none; margin: 0; padding: 0; }
 .mapa-leyenda li { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--gris-700); }
 .mapa-muestra { width: 15px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
-
-/* El lienzo desborda a lo ancho y no arrastra a la página con él: un
-   plano de 167 m no cabe en ninguna pantalla, y hacer que el `body`
-   entero se desplace de lado rompe el resto del panel. */
-.mapa-lienzo {
-  overflow-x: auto; background: var(--color-blanco);
-  border: 1px solid var(--gris-200); border-radius: var(--radio);
-  box-shadow: var(--sombra-sm); padding: 12px;
-}
-.mapa { display: block; min-width: 900px; width: 100%; height: auto; }
-
-.mapa-espacio path { fill: var(--azul-600); stroke: var(--color-blanco); stroke-width: .28; paint-order: stroke fill; }
-.mapa-espacio text {
-  fill: var(--color-blanco); text-anchor: middle; dominant-baseline: central;
-  font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none;
-}
-/* Solo lo reservable responde al puntero. Lo demás no es pulsable, y
-   fingir que lo es cuesta un clic y una decepción. */
-a.mapa-espacio { cursor: pointer; }
-a.mapa-espacio:hover path, a.mapa-espacio:focus-visible path { fill: var(--color-azul-institucional); }
-a.mapa-espacio:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
-
-.mapa-espacio.es-ocupado path { fill: var(--gris-500); }
-.mapa-espacio.es-reservado path { fill: var(--color-dorado-encabezado); }
-
-.mapa-muestra.es-disponible { background: var(--azul-600); }
-.mapa-muestra.es-ocupado { background: var(--gris-500); }
+/* Los mismos tres colores que usa el canvas para los mismos tres
+   estados. Si divergen, la leyenda miente. */
+.mapa-muestra.es-disponible { background: var(--ok-600); }
 .mapa-muestra.es-reservado { background: var(--color-dorado-encabezado); }
-.mapa-muestra.es-recinto { background: var(--gris-200); border: 1px solid var(--gris-300); }
+.mapa-muestra.es-ocupado { background: var(--err-600); }
 
-/* Las áreas de la feria —salas, bodega, oficina— van apagadas: están
-   para ubicarse, no para elegirlas. */
-.mapa-recinto path { fill: var(--gris-200); stroke: var(--color-blanco); stroke-width: .28; paint-order: stroke fill; }
-.mapa-recinto text {
-  fill: var(--gris-700); text-anchor: middle; dominant-baseline: central;
-  font-weight: 600; pointer-events: none;
+/* El marco es el sistema de referencia de la tarjeta: `screenRect` llega
+   en píxeles relativos a la esquina del `<iframe>`, así que el
+   contenedor tiene que ser el bloque que posiciona. */
+.mapa-marco {
+  position: relative; background: var(--color-blanco);
+  border: 1px solid var(--gris-200); border-radius: var(--radio);
+  box-shadow: var(--sombra-sm); overflow: hidden;
+  /* El alto lo pone la rejilla, para que el mapa y el carrito midan lo
+     mismo. Fijo y no `aspect-ratio`: el recinto es muy apaisado
+     (167 × 59) y su proporción dejaría el canvas de dos dedos de alto en
+     un portátil. Dentro se recorre con zoom, que es para lo que está. */
+  height: 100%;
 }
+.mapa-marco iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+/* El velo tapa el arranque de Godot con el chasis de FILEY. Lo quita el
+   puente al recibir `ready`; si los datos fallan, se queda con su otro
+   mensaje — un canvas vacío sin explicación se lee como "no hay
+   espacios libres", que es lo contrario de lo que pasa. */
+.mapa-velo {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gris-050); text-align: center;
+}
+/* **Tiene que ir después del `display: flex` de arriba.** El atributo
+   `hidden` esconde con el `display: none` de la hoja del navegador, y
+   cualquier `display` de una hoja propia le gana: sin esta regla,
+   `velo.hidden = true` no hace nada y el mapa se queda dibujado detrás
+   de la pantalla de carga, para siempre. */
+.mapa-velo[hidden] { display: none; }
+
+.mapa-velo__mensaje { display: none; flex-direction: column; gap: 4px; }
+.mapa-velo:not([data-estado]) [data-cargando] { display: flex; }
+.mapa-velo[data-estado="error"] [data-error] { display: flex; }
+
+/* El detalle va **centrado en la pantalla**, no anclado al espacio.
+   Anclado quedaba dentro de `.mapa-marco`, que recorta lo que se sale
+   (`overflow: hidden`), así que un espacio de la orilla abría su tarjeta
+   medio cortada; y en el resto de los casos tapaba justo los espacios de
+   al lado, que son los que uno está comparando.
+
+   `fixed` y no `absolute`: centrado respecto a la ventana, y fuera del
+   recorte del marco. */
+.mapa-tarjeta-fondo {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(16, 26, 48, .45);
+}
+.mapa-tarjeta-fondo[hidden] { display: none; }
+.mapa-tarjeta {
+  position: fixed; z-index: 41;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  /* Más ancho que la tarjeta de antes: ahora lleva el detalle entero
+     —superficie, medidas, precio, zona y qué incluye— y no un resumen. */
+  width: 460px; max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px); overflow-y: auto;
+  background: var(--color-blanco); border: 1px solid var(--gris-300);
+  border-radius: var(--radio); box-shadow: var(--sombra-lg); padding: 20px 22px;
+}
+/* Igual que el velo: el `display` de arriba gana sobre el del
+   atributo `hidden`, así que hace falta decirlo. */
+.mapa-tarjeta[hidden] { display: none; }
+.mapa-tarjeta h4 { margin: 0 0 8px; font-size: 16px; color: var(--color-azul-institucional); }
+.mapa-tarjeta dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 12px 0; }
+.mapa-tarjeta dt { font-size: 12.5px; color: var(--gris-500); text-transform: uppercase; letter-spacing: .05em; }
+.mapa-tarjeta dd { margin: 0; font-weight: 600; }
+.mapa-tarjeta__cuerpo .info-grid { margin-bottom: 12px; }
+.mapa-tarjeta__cuerpo .form-actions { margin-top: 16px; }
+.mapa-tarjeta h4 { padding-right: 28px; }
+.mapa-tarjeta__cerrar {
+  position: absolute; top: 8px; right: 8px; background: none; border: none;
+  cursor: pointer; font-size: 15px; color: var(--gris-500); line-height: 1;
+  padding: 4px 6px; border-radius: var(--radio-sm);
+}
+.mapa-tarjeta__cerrar:hover { background: var(--gris-100); color: var(--gris-700); }
+.badge.es-disponible { background: var(--ok-050); color: var(--ok-600); }
+.badge.es-reservado { background: #fdf3dd; color: var(--color-dorado-800); }
+.badge.es-ocupado { background: var(--err-050); color: var(--err-600); }
 
 /* ═══ El desglose del precio (STD · CU-STD-012, 013, 029) ══════
    Una tabla de tres columnas —concepto, importe, subtotal— donde lo que
@@ -717,3 +777,354 @@ a.mapa-espacio:focus-visible { outline: 2px solid var(--color-dorado-encabezado)
 /* Un espacio que se perdió mientras la persona decidía. Apagado, no
    tachado: sigue siendo legible porque hay que poder leer cuál era. */
 tr.es-no-disponible { opacity: .55; }
+
+/* =========================================================
+   Chasis del panel de administración (sidebar + contenido)
+   Portado del prototipo de EVT —mismos nombres de clase y de token—,
+   traído al usarse por primera vez en Django.
+
+   Se sigue el sidebar **persistente** de EVT y no el overlay de VIS.
+   El de VIS lo inyecta `app.js` y abre al pasar el ratón: sin
+   JavaScript no existe, y con él no habría ninguna forma de navegar el
+   panel. La regla 6 no admite eso para la navegación.
+   ========================================================= */
+
+/* La altura de la barra superior, nombrada una vez. El prototipo la
+   escribe como 67px en cuatro sitios; aquí el día que la barra cambie de
+   alto se toca esto y nada más. */
+:root { --alto-topbar: 67px; }
+
+.admin-body { display: flex; min-height: calc(100vh - var(--alto-topbar)); }
+
+.sidebar {
+  width: 240px; flex: 0 0 240px;
+  background: var(--color-blanco);
+  border-right: 1px solid var(--gris-200);
+  padding: 14px 12px;
+  /* Pegada bajo la barra superior, que también es `sticky`: el menú se
+     queda a la vista en un listado de doscientas reservas. */
+  position: sticky; top: var(--alto-topbar); align-self: flex-start;
+  height: calc(100vh - var(--alto-topbar));
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.side-section {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--gris-500); font-weight: 700; padding: 14px 12px 6px;
+}
+.side-nav { display: flex; flex-direction: column; gap: 2px; }
+.side-link {
+  display: flex; align-items: center; gap: 13px;
+  padding: 11px 13px; border-radius: var(--radio-sm);
+  color: var(--gris-700); font-size: 14.5px; font-weight: 600;
+  border-left: 3px solid transparent; cursor: pointer;
+}
+.side-link:hover { background: var(--gris-050); text-decoration: none; color: var(--color-azul-institucional); }
+.side-link .ico { font-size: 18px; width: 22px; text-align: center; }
+.side-link.active {
+  background: var(--azul-100); color: var(--color-azul-institucional-enfoque);
+  border-left-color: var(--color-azul-institucional);
+}
+.side-link:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: -2px; }
+.side-link.is-disabled { color: var(--gris-300); cursor: not-allowed; }
+.side-link.is-disabled:hover { background: transparent; color: var(--gris-300); }
+
+/* La salida, al pie y despegada del resto: no es una sección más. */
+.side-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--gris-200); }
+
+.admin-main { flex: 1; min-width: 0; background: var(--gris-050); }
+.admin-toolbar {
+  background: var(--color-blanco); border-bottom: 1px solid var(--gris-200);
+  min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+}
+.admin-toolbar .crumb { font-size: 13px; color: var(--gris-500); }
+.admin-content { padding: 26px 30px 60px; max-width: 1280px; }
+
+/* En pantalla chica la barra se tumba en una tira horizontal encima del
+   contenido, y **no** se convierte en un cajón: un cajón necesita
+   JavaScript para abrirse, y entonces sin él no habría navegación. Una
+   tira que se desplaza de lado es peor de ver y sigue funcionando. */
+@media (max-width: 920px) {
+  .admin-body { display: block; }
+  .sidebar {
+    width: auto; flex: none; height: auto; position: static;
+    border-right: none; border-bottom: 1px solid var(--gris-200);
+    display: block; overflow-x: auto;
+  }
+  .sidebar nav { display: flex; gap: 18px; align-items: center; }
+  .side-section { display: none; }
+  .side-nav { flex-direction: row; gap: 4px; }
+  .side-link { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; }
+  .side-link.active { border-left: none; border-bottom-color: var(--color-azul-institucional); }
+  .side-foot { margin: 0; padding: 0 0 8px; border-top: none; }
+  .admin-content { padding: 20px 16px 48px; }
+}
+
+/* El botón que alterna la barra, como el `sidenav.toggle()` del prototipo
+   de STD. Sin Alpine no se pinta (`x-cloak`) y la barra se queda abierta,
+   que es su estado por omisión —`mode="side" opened`— y el útil. */
+[x-cloak] { display: none !important; }
+.admin-toolbar .menu-btn {
+  background: none; border: none; cursor: pointer; font-size: 20px;
+  color: var(--gris-700); padding: 4px 8px; border-radius: var(--radio-sm);
+  line-height: 1;
+}
+.admin-toolbar .menu-btn:hover { background: var(--gris-100); }
+.admin-toolbar .menu-btn:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
+.sidebar.is-cerrada { display: none; }
+
+/* ═══ El panel de un módulo (STD) ══════════════════════════════
+   `.stat-grid` y `.stat-card` vienen del prototipo de EVT —mismos
+   nombres de clase y de token—, traídas al usarse por primera vez en
+   Django. Lo que se añade aquí es que la tarjeta sea **pulsable**: en el
+   prototipo son cifras y aquí cada una es la puerta a donde se resuelve
+   ese pendiente. */
+
+.panel-titulo {
+  font-size: 13px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--gris-500); font-weight: 700; margin: 26px 0 12px;
+}
+.panel-titulo:first-child { margin-top: 0; }
+.panel-ajustes { display: block; margin-top: 22px; }
+
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--color-blanco); border: 1px solid var(--gris-200);
+  border-radius: var(--radio); box-shadow: var(--sombra-sm);
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;
+}
+.stat-card .k { font-size: 12.5px; color: var(--gris-500); text-transform: uppercase; letter-spacing: .6px; font-weight: 700; }
+.stat-card .v { font-size: 30px; font-weight: 800; color: var(--color-azul-institucional-enfoque); line-height: 1; font-variant-numeric: tabular-nums; }
+.stat-card .foot { font-size: 12.5px; color: var(--gris-500); }
+.stat-card.accent-blue { border-top: 3px solid var(--color-azul-institucional); }
+.stat-card.accent-gold { border-top: 3px solid var(--color-dorado-encabezado); }
+.stat-card.accent-ok { border-top: 3px solid var(--ok-600); }
+.stat-card.accent-warn { border-top: 3px solid var(--warn-600); }
+.stat-card.accent-err { border-top: 3px solid var(--err-600); }
+
+/* Pulsable: sin esto parece una cifra y no una puerta. */
+a.stat-card { text-decoration: none; }
+a.stat-card:hover { border-color: var(--gris-300); box-shadow: var(--sombra-md); }
+a.stat-card:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
+
+/* La ocupación del recinto, en metros y no en espacios: vender treinta
+   espacios chicos no es vender tres grandes, y lo que sigue el dinero es
+   la superficie. Una sola barra con los tres tramos, porque lo que se lee
+   de un vistazo es la proporción entre ellos. */
+.ocupacion-cabecera {
+  display: flex; flex-wrap: wrap; gap: 12px 26px;
+  align-items: baseline; justify-content: space-between; margin-bottom: 12px;
+}
+.ocupacion-cifra {
+  font-size: 32px; font-weight: 800; line-height: 1;
+  color: var(--color-azul-institucional-enfoque);
+  font-variant-numeric: tabular-nums; margin-right: 8px;
+}
+.ocupacion-barra {
+  display: flex; height: 14px; border-radius: 999px; overflow: hidden;
+  background: var(--gris-100); margin-bottom: 20px;
+}
+.ocupacion-barra span { display: block; min-width: 2px; }
+.ocupacion-barra .es-disponible { background: var(--ok-600); }
+.ocupacion-barra .es-reservado { background: var(--color-dorado-encabezado); }
+.ocupacion-barra .es-ocupado { background: var(--err-600); }
+
+/* ═══ Mapa y carrito, lado a lado (STD · CU-STD-009 y 011) ═════
+   El prototipo de STD pone el mapa a la izquierda y la selección a la
+   derecha, y agregar un espacio actualiza la columna sin sacarte del
+   plano. 70/30 en vez de su `1fr 380px`: con 151 espacios el mapa
+   necesita todo el ancho que se le pueda dar, y el carrito no crece con
+   la selección — sus filas son de una línea. */
+
+/* Sin carrito —el mapa de quien administra— el lienzo va a todo el
+   ancho. Con la rejilla de dos columnas quedaría un 30 % vacío al lado. */
+.mapa-solo { height: min(72vh, 640px); min-height: 460px; margin-bottom: 14px; }
+
+.mapa-con-carrito {
+  display: grid;
+  grid-template-columns: 70% minmax(0, 1fr);
+  gap: 16px;
+  /* Alto compartido para que las dos columnas terminen a la vez: con
+     alturas distintas, la de al lado se lee como si le faltara algo. */
+  height: min(72vh, 640px);
+  min-height: 460px;
+  margin-bottom: 14px;
+}
+
+.carrito-lateral {
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--color-blanco); border: 1px solid var(--gris-200);
+  border-radius: var(--radio); box-shadow: var(--sombra-sm); overflow: hidden;
+}
+.carrito-cabecera {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--gris-200);
+}
+.carrito-cabecera h3 {
+  margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;
+  color: var(--color-azul-institucional);
+}
+.carrito-cuenta {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px;
+  background: var(--color-dorado-encabezado); color: var(--color-blanco);
+  font-size: 12.5px; font-weight: 700;
+}
+.carrito-aviso { margin: 12px 16px 0; }
+
+/* La lista se desplaza sola: sin esto, una selección de veinte espacios
+   estira la columna y el «Continuar» se va debajo del pliegue. */
+.carrito-cuerpo { flex: 1; overflow-y: auto; padding: 4px 16px; min-height: 0; }
+.carrito-linea {
+  display: grid; grid-template-columns: auto 1fr auto auto;
+  align-items: center; gap: 10px; padding: 11px 0;
+  border-bottom: 1px solid var(--gris-100);
+}
+.carrito-linea:last-child { border-bottom: none; }
+.carrito-clave {
+  font-weight: 700; color: var(--color-azul-institucional-enfoque);
+  font-variant-numeric: tabular-nums;
+}
+.carrito-datos { font-size: 13px; color: var(--gris-700); min-width: 0; }
+.carrito-precio { font-variant-numeric: tabular-nums; font-weight: 600; }
+.carrito-quitar {
+  background: none; border: none; cursor: pointer; padding: 4px 6px;
+  border-radius: var(--radio-sm); color: var(--gris-500); line-height: 1;
+}
+.carrito-quitar:hover { background: var(--err-050); color: var(--err-600); }
+.carrito-quitar:focus-visible { outline: 2px solid var(--err-600); outline-offset: 1px; }
+.carrito-linea.es-no-disponible { opacity: .55; }
+
+.carrito-pie {
+  padding: 14px 16px; border-top: 1px solid var(--gris-200);
+  background: var(--gris-050);
+}
+.carrito-fila {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 14px; padding: 3px 0; font-variant-numeric: tabular-nums;
+}
+.carrito-fila.es-total {
+  margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--gris-300);
+  font-weight: 700; font-size: 16px; color: var(--color-azul-institucional-enfoque);
+}
+.carrito-pie .btn { margin-top: 12px; }
+.carrito-pie .hint { display: block; margin-top: 8px; }
+
+/* El vacío invita, no regaña: dice qué hacer para llenarlo. */
+.carrito-vacio {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; padding: 24px 20px; gap: 2px;
+}
+.carrito-vacio .ico { font-size: 30px; opacity: .5; }
+.carrito-vacio p { margin: 0; }
+
+/* En pantalla chica se apilan, y el carrito va **debajo** del mapa: el
+   orden de lectura es elegir y después revisar. */
+@media (max-width: 920px) {
+  .mapa-con-carrito {
+    grid-template-columns: 1fr; height: auto; gap: 14px;
+  }
+  .mapa-marco { height: min(60vh, 460px); }
+  .carrito-lateral { max-height: 420px; }
+}
+
+/* ═══ El flujo del expositor (STD · U1 → U5) ═══════════════════
+   Tres componentes que solo existen aquí y por eso no llevan prefijo de
+   dominio: en Django no hay más flujo largo que este. El día que EVT
+   tenga el suyo, `.pasos` sube a la capa común tal cual — no depende de
+   ningún token de STD. */
+
+/* La barra de pasos. Ley Zeigarnik de `filey-identidad`: un trámite que
+   dura semanas tiene que decir siempre dónde se está y qué falta.
+
+   `flex-wrap` y no un `@media`: son cinco pasos con nombres cortos, y en
+   pantalla chica se parten solos en dos filas sin perder el orden. */
+.pasos {
+  display: flex; flex-wrap: wrap; gap: 6px 4px;
+  list-style: none; margin: 0 0 22px; padding: 0;
+}
+.paso {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--gris-500);
+  padding: 6px 14px 6px 10px;
+  border-bottom: 2px solid var(--gris-200);
+  flex: 1 1 120px;
+}
+.paso a { display: flex; align-items: center; gap: 8px; color: inherit; }
+.paso a:hover { color: var(--color-azul-institucional); }
+.paso-num {
+  flex: 0 0 22px; height: 22px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--gris-100); color: var(--gris-500);
+  font-size: 12px; font-weight: 700; line-height: 1;
+}
+.paso-nombre { white-space: nowrap; }
+.paso.es-hecho { color: var(--gris-700); border-bottom-color: var(--ok-600); }
+.paso.es-hecho .paso-num { background: var(--ok-050); color: var(--ok-600); }
+.paso.es-actual {
+  color: var(--color-azul-institucional); font-weight: 700;
+  border-bottom-color: var(--color-azul-institucional);
+}
+.paso.es-actual .paso-num {
+  background: var(--color-azul-institucional); color: var(--color-blanco);
+}
+
+/* Pestañas. Alpine las alterna y sin él se ven las dos secciones: por
+   eso el estado activo va en una clase y no en `hidden`. */
+.pestanas-tira {
+  display: flex; gap: 4px; margin-bottom: 18px;
+  border-bottom: 1px solid var(--gris-200);
+}
+.pestana {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none; cursor: pointer;
+  padding: 10px 16px; margin-bottom: -1px;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--gris-500);
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+}
+.pestana:hover { color: var(--color-azul-institucional); text-decoration: none; }
+.pestana:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: -2px; }
+.pestana.is-active {
+  color: var(--color-azul-institucional);
+  border-bottom-color: var(--color-azul-institucional);
+}
+.pestana-cuenta {
+  min-width: 20px; padding: 0 6px; border-radius: 10px;
+  background: var(--gris-100); color: var(--gris-700);
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+
+/* El progreso del pago, con sus dos umbrales dibujados: al 50% la
+   reserva se confirma (RN-13) y al 100% queda pagada (RN-14). Una barra
+   sin las marcas solo dice "vas por la mitad" y no qué pasa al llegar. */
+.progreso { margin-top: 18px; }
+.progreso-cabecera { display: flex; justify-content: space-between; align-items: baseline; }
+.progreso-cabecera strong { font-variant-numeric: tabular-nums; }
+.progreso-barra {
+  position: relative; height: 10px; margin: 6px 0 4px;
+  background: var(--gris-100); border-radius: 999px; overflow: hidden;
+}
+.progreso-hecho { display: block; height: 100%; background: var(--ok-600); }
+.progreso-marca {
+  position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 2px; background: var(--color-blanco);
+}
+.progreso-marcas {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--gris-500);
+}
+.progreso-marcas .es-alcanzada { color: var(--ok-600); font-weight: 600; }
+
+/* Los datos bancarios, tal como los captura la convocatoria. `pre-wrap`
+   respeta los saltos de línea de un CLABE escrito en su renglón. */
+.instrucciones-pago { white-space: pre-wrap; margin: 0; }
+.es-vencida { color: var(--err-600); }
+
+/* Un aviso que además ofrece la acción — "te aceptamos" con su botón.
+   `margin-left: auto` lo manda al final del renglón de lectura, que es
+   donde la ley de Fitts lo quiere. */
+.note .btn { flex: 0 0 auto; align-self: center; margin-left: auto; }

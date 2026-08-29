@@ -78,7 +78,7 @@ Homologado en
 | ------ | ------- | ------ | --------------------- | ----------------------- | ---------- |
 | `FER` | Ferias | Transversal y **global**: el registro de las ediciones de la feria y quién administra cada una. Todo lo demás ocurre dentro de una feria | Hugo Janssen | — | [`FER/CU-FER Índice.md`](<FER/CU-FER Índice.md>) · `Modelo de datos - Ferias.md` |
 | `REG` | Registros / Convocatorias | Transversal y **global**: identidad (`Persona`), acceso por OTP y la **captura** (formularios/convocatorias) de propuestas para `STD`/`EVT`/`TAL`/`VIS`; la **revisión** vive en cada dominio, no en `REG` (ver nota abajo) | Juan Manuel Miranda | — | [`REG/CU-REG Índice.md`](<REG/CU-REG Índice.md>) · `Modelo de datos - Registros.md` |
-| `STD` | Stands / Expositores | Renta, reserva, pago y confirmación de espacios en el showfloor | Hugo Janssen | Hipólito / Gilberto | [`STD/CU-STD Índice.md`](<STD/CU-STD Índice.md>) · `Modelo de datos - Stands.md` · `Proceso de alto nivel - Stands.md` |
+| `STD` | Stands / Expositores | Renta, reserva, pago y confirmación de espacios en el showfloor | Hugo Janssen | Hipólito / Gilberto | [`STD/README.md`](<STD/README.md>) (cómo se monta una edición) · [`STD/CU-STD Índice.md`](<STD/CU-STD Índice.md>) · `Modelo de datos - Stands.md` · `Proceso de alto nivel - Stands.md` |
 | `EVT` | Eventos | Actividades de público general (conversatorio, conferencia, charla, mesa redonda, presentación de libro/revista, lectura de obra, encuentro) | Juan Manuel Miranda | Hipólito | [`EVT/CU-EVT Índice.md`](<EVT/CU-EVT Índice.md>) · `Modelo de datos - Eventos.md` · `Proceso de alto nivel - Eventos.md` · `Estructura de vistas - Eventos.md` |
 | `TAL` | Talleres | Actividades de aforo reducido, normalmente infantil/juvenil | Juan Manuel Miranda | Elvira | [`TAL/CU-TAL Índice.md`](<TAL/CU-TAL Índice.md>) · `Modelo de datos - Talleres.md` · `Proceso de alto nivel - Talleres.md` |
 | `VIS` | Visitas escolares | Itinerarios de instituciones que reservan cupo en el catálogo de talleres/actividades | Isaac Ortiz | Elvira | [`VIS/CU-VIS Índice.md`](<VIS/CU-VIS Índice.md>) · `Modelo de datos - Visitas escolares.md` |
@@ -131,7 +131,7 @@ requisitos/
 ├── EVT/   → CU-EVT-NNN  (eventos generales; ver EVT/CU-EVT Índice.md)
 ├── PRG/   → CU-PRG-NNN  (programa general; ver PRG/CU-PRG Índice.md)
 ├── SAL/   → CU-SAL-NNN  (salas y salones; ver SAL/CU-SAL Índice.md)
-├── STD/   → CU-STD-NNN  (stands; incluye índice de CU, modelo de datos y proceso de alto nivel)
+├── STD/   → CU-STD-NNN  (stands; su README dice cómo se monta el showfloor de una edición)
 ├── TAL/   → CU-TAL-NNN  (actividades infantiles/juveniles; ver TAL/CU-TAL Índice.md)
 └── VIS/   → CU-VIS-NNN  (visitas escolares; ver VIS/CU-VIS Índice.md)
 ```

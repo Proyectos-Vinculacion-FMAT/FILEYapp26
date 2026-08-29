@@ -1,4 +1,6 @@
-{% extends "layouts/panel.html" %}
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Solicitudes{% endblock %}
 
 {% comment %} ===========================================================
    A1 · La cola de revisión (CU-STD-004).
@@ -31,7 +33,7 @@
   </div>
   <div class="form-actions">
     <button class="btn btn-primary" type="submit">Filtrar</button>
-    <a class="btn btn-ghost" href="{% url 'stands:mapa_completo' convocatoria_id=convocatoria.pk %}">Showfloor</a>
+    <a class="btn btn-ghost" href="{% url 'stands:mapa_completo' convocatoria_id=convocatoria.pk %}">Ver el mapa</a>
     <a class="btn btn-ghost" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">Reservas</a>
     {% if hay_filtros %}
       <a class="btn btn-ghost" href="{% url 'stands:solicitudes' convocatoria_id=convocatoria.pk %}">Quitar filtros</a>

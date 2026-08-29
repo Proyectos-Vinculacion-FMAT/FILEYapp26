@@ -8,7 +8,7 @@ tags:
 fecha: 2026-08-27
 responsable: Hugo Janssen
 ---
-# Reglas de negocio — Stands (`RN-01` … `RN-22`)
+# Reglas de negocio — Stands (`RN-01` … `RN-23`)
 
 Catálogo único de las reglas que rigen el dominio `STD`. Hasta hoy **no existía**: cada regla
 estaba definida dentro del caso de uso que la citaba, varias tenían dos redacciones distintas en
@@ -318,6 +318,29 @@ validación de formulario que se pueda saltar: sin comprobante no se registra el
 
 *Dónde se aplica:* CU-STD-019.
 
+### RN-23 · Una editorial lleva una sola reserva viva por convocatoria *(nueva — 2026-08-29)*
+
+Una editorial tiene **como mucho una reserva no cancelada** en una misma convocatoria. Si
+necesita más espacios de los que apartó, se amplía la reserva que ya tiene; no se crea otra.
+
+- **"Viva" son los tres estados de RN-11 que no cierran** (`Por confirmar`, `Confirmada`,
+  `Pagada`). Una `Cancelada` no estorba: tras cancelar se puede volver a reservar desde cero.
+- **Una vencida sigue contando**, porque vencer no libera nada (RN-12). Quien la tiene no
+  puede empezar otra por su cuenta: tiene que resolverla con la administración (CU-STD-035).
+- **El alcance es la convocatoria, no la feria.** Una edición con una convocatoria general y
+  otra de pabellón admite una reserva de la misma editorial en cada una: son dos ventas
+  distintas, con dos mapas y dos precios (RN-19).
+
+La sostiene un índice único parcial sobre `RegistroConvocatoria` —que ya dice persona y
+convocatoria— y no sobre `Editorial`, porque es el registro el que ata la reserva a **esta**
+convocatoria (RN-21 garantiza que la editorial de una persona es una sola por feria).
+
+**Consecuencia en pantalla:** el flujo del expositor no es un menú sino una secuencia, y quien
+tiene una reserva viva entra directo a su cuenta —el mapa y el carrito dejan de tener algo que
+ofrecerle—.
+
+*Dónde se aplica:* CU-STD-003, CU-STD-011, CU-STD-012, CU-STD-013.
+
 ---
 
 ## 5. Índice rápido
@@ -346,6 +369,7 @@ validación de formulario que se pueda saltar: sin comprobante no se registra el
 | RN-20 | El mapa usa los estados del dominio | Nueva |
 | RN-21 | Una editorial por persona y por feria | Nueva |
 | RN-22 | La solicitud es una fotografía; se puede reaplicar | Nueva |
+| RN-23 | Una editorial, una reserva viva por convocatoria | **Nueva** |
 
 ---
 

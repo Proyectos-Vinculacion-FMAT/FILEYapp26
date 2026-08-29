@@ -1,0 +1,107 @@
+{% comment %} ===========================================================
+   El carrito al lado del mapa (`CU-STD-011`).
+
+   Se intercambia entero por htmx cada vez que se agrega o se quita algo:
+   `hx-swap="outerHTML"` sobre `#carrito-lateral`. Por eso el `id` está
+   aquí y no en la plantilla que lo incluye — si estuviera fuera, el
+   primer intercambio se lo llevaría por delante y el segundo no
+   encontraría a dónde ir.
+
+   Contexto que espera:
+
+     contenido    un `carrito.Contenido`
+     convocatoria la del mapa
+     total        lo que costaría, con el pronto pago si aplica
+     anticipo     lo que hay que cubrir para confirmar
+
+   **No calcula nada.** El subtotal, el total y el anticipo llegan
+   resueltos: la misma función que cobra es la que cotiza, y hacer aquí
+   una división es cómo se llega a que la pantalla prometa una cifra y el
+   cargo sea otra.
+   =========================================================== {% endcomment %}
+<aside class="carrito-lateral" id="carrito-lateral">
+  <div class="carrito-cabecera">
+    <h3>
+      Tu selección
+      {% if contenido.lineas %}
+        <span class="carrito-cuenta">{{ contenido.lineas|length }}</span>
+      {% endif %}
+    </h3>
+    {% if contenido.lineas %}
+      <button class="btn btn-ghost btn-row" type="button"
+              hx-post="{% url 'stands:carrito_lateral' convocatoria_id=convocatoria.pk %}"
+              hx-vals='{"accion": "vaciar"}'
+              hx-target="#carrito-lateral"
+              hx-swap="outerHTML">
+        Vaciar
+      </button>
+    {% endif %}
+  </div>
+
+  {% if contenido.no_disponibles %}
+    {% comment %} `E1`. Se nombran uno por uno: quien armó una selección
+       de ocho tiene que ver **cuál** perdió. {% endcomment %}
+    <div class="note note-warn carrito-aviso">
+      <div class="ico">⚠️</div>
+      <div>
+        Alguien reservó antes que tú
+        {% for linea in contenido.no_disponibles %}{{ linea.stand.clave }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+        No entran en el total.
+      </div>
+    </div>
+  {% endif %}
+
+  {% if contenido.lineas %}
+    <div class="carrito-cuerpo">
+      {% for linea in contenido.lineas %}
+        <div class="carrito-linea{% if not linea.disponible %} es-no-disponible{% endif %}">
+          <span class="carrito-clave">{{ linea.stand.etiqueta }}</span>
+          <span class="carrito-datos">
+            {% if linea.stand.zona %}{{ linea.stand.zona }}<br>{% endif %}
+            <span class="hint">{{ linea.metros_cuadrados|floatformat:0 }} m²</span>
+          </span>
+          <span class="carrito-precio">
+            {% if linea.disponible %}${{ linea.precio|floatformat:0 }}{% else %}—{% endif %}
+          </span>
+          <button class="carrito-quitar" type="button"
+                  aria-label="Quitar {{ linea.stand.etiqueta }} de la selección"
+                  hx-post="{% url 'stands:carrito_lateral' convocatoria_id=convocatoria.pk %}"
+                  hx-vals='{"accion": "quitar", "clave": "{{ linea.stand.clave }}"}'
+                  hx-target="#carrito-lateral"
+                  hx-swap="outerHTML">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="carrito-pie">
+      <div class="carrito-fila">
+        <span>Espacios</span>
+        <span>{{ contenido.lineas|length }}</span>
+      </div>
+      <div class="carrito-fila">
+        <span>Superficie</span>
+        <span>{{ contenido.metros_cuadrados|floatformat:0 }} m²</span>
+      </div>
+      <div class="carrito-fila es-total">
+        <span>Subtotal</span>
+        <span>${{ total|floatformat:2 }}</span>
+      </div>
+      <a class="btn btn-primary btn-block"
+         href="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
+        Revisar y confirmar
+      </a>
+      <p class="hint">
+        En el siguiente paso ves el anticipo de ${{ anticipo|floatformat:0 }} y
+        el detalle de los descuentos.
+      </p>
+    </div>
+  {% else %}
+    {% comment %} El vacío es una invitación, no un error: dice qué hacer
+       para llenarlo. {% endcomment %}
+    <div class="carrito-vacio">
+      <span class="ico" aria-hidden="true">🛒</span>
+      <p><strong>Tu selección está vacía.</strong></p>
+      <p class="hint">Elige un espacio disponible del mapa para agregarlo.</p>
+    </div>
+  {% endif %}
+</aside>

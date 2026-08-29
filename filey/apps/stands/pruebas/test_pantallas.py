@@ -694,7 +694,7 @@ def test_la_pantalla_pinta_las_diez_filas(client, feria_2027):
     assert cuerpo.count('name="sello_') == 10
     assert cuerpo.count('name="carta_') == 10
     # Y los dos controles que Alpine acciona.
-    assert "Añadir otro sello" in cuerpo
+    assert "Agregar otro sello" in cuerpo
     assert "fileyQuitarFila" in cuerpo
 
 

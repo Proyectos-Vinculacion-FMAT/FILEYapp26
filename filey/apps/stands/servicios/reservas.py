@@ -35,6 +35,24 @@ class ReservaRechazada(Exception):
     """No se puede reservar. El mensaje dice qué falta."""
 
 
+class YaTieneReserva(ReservaRechazada):
+    """`RN-23`: esta editorial ya tiene su reserva en esta convocatoria.
+
+    Excepción propia porque no es un error del que haya que recuperarse:
+    es que la persona ya está un paso más adelante del flujo. La vista la
+    usa para mandarla a su cuenta en vez de dejarla en el carrito
+    leyendo un aviso rojo — lleva la reserva encima para poder hacerlo
+    sin volver a buscarla.
+    """
+
+    def __init__(self, reserva):
+        self.reserva = reserva
+        super().__init__(
+            "Ya tienes una reserva en esta convocatoria. "
+            "Cada editorial lleva una sola: revisa la tuya en tu cuenta."
+        )
+
+
 class HayEspaciosTomados(ReservaRechazada):
     """`CU-STD-012` E1: alguien llegó antes.
 
@@ -46,8 +64,8 @@ class HayEspaciosTomados(ReservaRechazada):
     def __init__(self, claves):
         self.claves = list(claves)
         super().__init__(
-            "Alguien reservó antes " + ", ".join(self.claves) + ". "
-            "Los quitamos de tu selección; elige otros y vuelve a intentarlo."
+            "Alguien reservó antes que tú " + ", ".join(self.claves) + ". "
+            "Los quitamos de tu selección: elige otros y vuelve a intentarlo."
         )
 
 
@@ -88,31 +106,56 @@ def total_con_descuentos(
     return subtotal, renglones
 
 
-def desglose_de(reserva: Reserva) -> list[Renglon]:
-    """El desglose de una reserva ya creada, recalculado desde el mapa.
+def bruto_de(reserva: Reserva) -> Decimal:
+    """El precio de los espacios sin descuentos, con la tarifa **de hoy**.
 
-    **No cuadra necesariamente con `monto_total`**, y es la contrapartida
-    conocida de que `ReservaStand` no guarde snapshots: si alguien
-    corrigió el mapa o cambió `costo_m2`, el subtotal de aquí sale con
-    los valores de ahora. Lo cobrado no se mueve — eso es `monto_total`,
-    que está congelado.
+    Es la contrapartida conocida de que `ReservaStand` no guarde
+    importes: si alguien cambió el `costo_m2` entre la reserva y ahora,
+    esto sale con la tarifa nueva. Por eso no se cobra de aquí —lo
+    cobrado es `monto_total`, congelado (`RN-01`)— y solo se usa para
+    enseñar el desglose y para recalcular cuando un descuento cambia,
+    que ya es una decisión deliberada de alguien.
     """
     costo_m2 = reserva.configuracion.costo_m2
-    bruto = sum(
+    return sum(
         (linea.stand.precio(costo_m2) for linea in reserva.lineas.all()),
         start=Decimal("0.00"),
     )
-    _, renglones = total_con_descuentos(bruto, _pares_de(reserva))
+
+
+def desglose_de(reserva: Reserva) -> list[Renglon]:
+    """El desglose de una reserva ya creada, recalculado desde el mapa.
+
+    **No cuadra necesariamente con `monto_total`**, por lo que dice
+    `bruto_de`. Lo cobrado no se mueve — eso es `monto_total`, que está
+    congelado.
+    """
+    _, renglones = total_con_descuentos(bruto_de(reserva), _pares_de(reserva))
     return renglones
 
 
-def _pares_de(reserva: Reserva) -> list[tuple[str, int]]:
+def total_sin_pronto_pago(reserva: Reserva) -> Decimal:
+    """Lo que costaría esta reserva si perdiera el pronto pago.
+
+    Es la cifra que `CU-STD-013` paso 5 pide enseñar junto a la fecha de
+    corte: no basta decir "se retira el descuento", hay que decir a
+    cuánto sube. Se calcula **igual que lo hará
+    `pagos.caducar_pronto_pago`** —mismo bruto, mismos descuentos menos
+    ése— para que el aviso prometa exactamente lo que se va a cobrar.
+    """
+    return total_con_descuentos(
+        bruto_de(reserva),
+        _pares_de(reserva, excluir=(DescuentoAplicado.Tipo.PRONTO_PAGO,)),
+    )[0]
+
+
+def _pares_de(reserva: Reserva, *, excluir=()) -> list[tuple[str, int]]:
     """Los descuentos de la reserva, en el orden en que se aplican."""
     por_tipo = {d.tipo: d for d in reserva.descuentos.all()}
     return [
         (por_tipo[tipo].get_tipo_display(), por_tipo[tipo].porcentaje)
         for tipo in DescuentoAplicado.ORDEN
-        if tipo in por_tipo
+        if tipo in por_tipo and tipo not in excluir
     ]
 
 
@@ -167,6 +210,7 @@ def crear(*, convocatoria: Convocatoria, persona, claves: list[str]) -> Reserva:
 
     :raises ReservaRechazada: y no se crea nada.
     :raises HayEspaciosTomados: `E1`, con las claves perdidas.
+    :raises YaTieneReserva: `RN-23`, con la reserva que ya existe.
     """
     if convocatoria.tipo != TipoConvocatoria.STD:
         raise ReservaRechazada(
@@ -201,6 +245,19 @@ def crear(*, convocatoria: Convocatoria, persona, claves: list[str]) -> Reserva:
         raise ReservaRechazada(
             "Para reservar hace falta una solicitud de expositor aceptada."
         )
+
+    # `RN-23`. Se pregunta **dentro** de la transacción y con la fila del
+    # registro bloqueada: sin el bloqueo, dos pestañas que confirman a la
+    # vez leen las dos "no tiene ninguna" y la restricción de la base es
+    # la que acaba reventando, con un `IntegrityError` en la cara de
+    # alguien en vez de este mensaje.
+    ya = (
+        Reserva.objects.select_for_update()
+        .filter(registro=aceptada.registro, estado__in=Reserva.VIVAS)
+        .first()
+    )
+    if ya is not None:
+        raise YaTieneReserva(ya)
 
     # `select_for_update` es lo que sostiene "primero en confirmar gana".
     # Se ordena por `pk` a propósito: dos peticiones que bloqueen las
@@ -271,9 +328,11 @@ def crear(*, convocatoria: Convocatoria, persona, claves: list[str]) -> Reserva:
 def reservas_de(convocatoria: Convocatoria, persona):
     """Las reservas de esta persona en esta convocatoria (`CU-STD-013`).
 
-    Devuelve todas y no "la suya": el modelo dice `Editorial 1—N
-    Reserva`, y quien reserva en dos tandas tiene dos. Enseñar solo la
-    última escondería una que sigue debiendo dinero.
+    Sigue devolviendo un conjunto y no una sola aunque `RN-23` deje una
+    viva: las canceladas se quedan, y el historial de lo que se intentó
+    es lo que explica por qué unos espacios estuvieron apartados una
+    semana. Para el flujo —"a dónde mando a esta persona"— la que
+    importa es `reserva_viva_de`.
     """
     return (
         Reserva.objects.filter(
@@ -281,6 +340,31 @@ def reservas_de(convocatoria: Convocatoria, persona):
         )
         .select_related("editorial", "registro__convocatoria")
         .prefetch_related("lineas__stand__mapa", "descuentos")
+    )
+
+
+def reserva_viva_de(convocatoria: Convocatoria, persona) -> Reserva | None:
+    """La reserva que esta persona tiene en pie, si la hay (`RN-23`).
+
+    Es **la** pregunta del ruteo del expositor: quien tiene una está en
+    el último paso del flujo —su cuenta— y no en el mapa. Vive aquí y no
+    en la vista porque la responde igual un comando de `manage.py`.
+
+    "En pie" es `VIVAS`, que incluye la vencida: vencer no libera nada
+    (`RN-12`), así que quien tiene una vencida sigue teniéndola y lo que
+    necesita es justamente llegar a la pantalla donde puede pagarla.
+    """
+    if persona is None or not getattr(persona, "is_authenticated", False):
+        return None
+    return (
+        Reserva.objects.filter(
+            registro__convocatoria=convocatoria,
+            registro__persona=persona,
+            estado__in=Reserva.VIVAS,
+        )
+        .select_related("editorial", "registro__convocatoria")
+        .prefetch_related("lineas__stand__mapa", "descuentos")
+        .first()
     )
 
 

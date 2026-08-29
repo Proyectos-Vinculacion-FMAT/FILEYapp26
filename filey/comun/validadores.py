@@ -88,3 +88,34 @@ def validar_cp(codigo: str, pais: str) -> None:
             raise ValidationError("En México el código postal son 5 dígitos.")
     elif not _CP_EXTRANJERO.match(codigo):
         raise ValidationError("Escribe un código postal válido.")
+
+
+# ── Lo mismo, dicho para el navegador ─────────────────────────
+#
+# El navegador puede avisar de un formato malo **antes** de enviar, y
+# para eso necesita la regla en un `pattern`. El riesgo evidente es tener
+# la misma regla en dos idiomas y que diverjan; por eso los patrones
+# salen de aquí, del mismo módulo que las funciones que validan de
+# verdad, y no de la plantilla ni del JavaScript.
+#
+# La comprobación del servidor **manda igual**: la del navegador es un
+# aviso temprano, y quien envíe sin JavaScript —o lo esquive— se
+# encuentra exactamente las mismas reglas.
+
+#: Al menos `MINIMO_DIGITOS_TELEFONO` dígitos, admitiendo los separadores
+#: que la gente escribe de verdad: espacios, guiones, paréntesis y `+`.
+#: Es la traducción a regex de "cuenta dígitos" de `telefono()`.
+PATRON_TELEFONO = r"(?:[^\d]*\d){%d,}[^\d]*" % MINIMO_DIGITOS_TELEFONO
+
+#: Cómo se escribe un teléfono, en palabras. Va al `title` del campo y a
+#: su ayuda, para que el aviso del navegador diga lo mismo que el nuestro.
+AYUDA_TELEFONO = (
+    f"Al menos {MINIMO_DIGITOS_TELEFONO} dígitos, con clave lada. "
+    "Ejemplo: 999 123 4567"
+)
+
+#: Cinco dígitos en México, y algo razonable fuera. El campo no sabe el
+#: país hasta que se envía —eso lo cruza `EditorialForm.clean`—, así que
+#: el patrón del navegador admite los dos y el servidor afina.
+PATRON_CP = r"[\w\s-]{3,10}"
+AYUDA_CP = "En México, 5 dígitos. Fuera, el que use el país."

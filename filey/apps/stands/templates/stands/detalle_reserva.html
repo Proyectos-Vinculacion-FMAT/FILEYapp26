@@ -1,4 +1,6 @@
-{% extends "layouts/panel.html" %}
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Reservas · Detalle{% endblock %}
 
 {% comment %} ===========================================================
    A · CU-STD-029 · El detalle de una reserva.
@@ -20,8 +22,8 @@
     <div class="ico">⏰</div>
     <div>
       <strong>Venció el plazo del anticipo y sigue sin cubrirse.</strong>
-      Los espacios siguen apartados: vencer no los libera (RN-12). Hay que
-      resolverla — cancelar o prorrogar.
+      Los espacios siguen apartados: el vencimiento no los libera. Hay que
+      resolverla: cancélala o dale una prórroga.
     </div>
   </div>
 {% endif %}
@@ -43,7 +45,7 @@
         <span class="hint">{{ reserva.registro.persona.correo }}</span>
       </div>
       <div>
-        <span class="hint">Total cobrado</span>
+        <span class="hint">Total de la reserva</span>
         <strong>${{ reserva.monto_total|floatformat:2 }}</strong>
       </div>
       <div>
@@ -95,7 +97,7 @@
   <div class="section-head">
     <div>
       <h3>Cómo sale el total</h3>
-      <p>Los descuentos se aplican en secuencia, no sumando (RN-06).</p>
+      <p>Cada descuento se aplica sobre el subtotal que dejó el anterior.</p>
     </div>
   </div>
   <div class="section-body">
@@ -111,11 +113,11 @@
           <div class="note note-warn">
             <div class="ico">⚠️</div>
             <div>
-              <strong>El desglose ya no cuadra con lo cobrado.</strong>
+              <strong>El desglose ya no coincide con lo cobrado.</strong>
               Se cobraron ${{ reserva.monto_total|floatformat:2 }} y con los
               valores de hoy saldrían ${{ recalculado.subtotal|floatformat:2 }}.
               Alguien cambió la tarifa o la forma de un espacio después de
-              reservar; lo cobrado no se mueve (RN-01).
+              reservar. Lo que ya se cobró no cambia.
             </div>
           </div>
         {% endif %}

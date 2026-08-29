@@ -54,6 +54,9 @@ flowchart LR
     U4 --> U5[U5 · Mi reserva]
     U5 --> U6[U6 · Pagos]
 
+    U1 -.->|reserva viva, RN-23| U5
+    E0 -.->|aceptada, RN-23| U2
+
     ROL -->|Administrador| A1[A1 · Solicitudes]
     A1 --> A2[A2 · Detalle de solicitud]
     A1 -.-> A3[A3 · Reservas]
@@ -132,6 +135,21 @@ flowchart LR
 - **Entidades:** Reserva, ReservaStand, Movimiento, DescuentoAplicado, Notificacion.
 
 ### U6 · Pagos
+> [!note] En la implementación, U5 y U6 son **una pantalla con tres pestañas**
+> Django las sirve juntas en `/f/<slug>/stands/<id>/mi-reserva/` («Resumen», «Pagos» y
+> «Ver en el mapa»), siguiendo al prototipo de Angular (`u5-mi-reserva`): el estado de la
+> reserva y su pago son la misma pregunta —«¿cómo voy?»— y partirlos en dos URLs obliga a ir
+> y volver para comparar el saldo con lo que se acaba de abonar. Los CU y las entidades de
+> cada bloque no cambian.
+>
+> La tercera pestaña es el «en mapa» de U5 paso 2: el plano en **modo consulta**, sin carrito
+> y sin «agregar», con los espacios propios distinguibles. Es también la respuesta a A1 de
+> `CU-STD-037` —el mapa sigue teniendo sentido para quien ya reservó— ahora que entrar al
+> módulo con una reserva viva lleva directo aquí (`RN-23`).
+>
+> Las pestañas van por `?ver=` y no por JavaScript: el canvas pesa 39 MB, y con pestañas de
+> cliente se descargaría en cada visita a la cuenta aunque nadie abriera el mapa.
+
 - **Objetivo:** pagar la reserva por abonos y dar seguimiento.
 - **Contenido (tres bloques):**
   1. **Instrucciones de pago** (transferencia / depósito / cheque; sin efectivo, RN-08).

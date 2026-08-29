@@ -1,4 +1,5 @@
 {% extends "layouts/panel.html" %}
+{% load flujo %}
 
 {% comment %} ===========================================================
    CU-STD-011 y CU-STD-012 · La selección y el resumen antes de reservar.
@@ -23,6 +24,22 @@
 
 {% block contenido %}
 
+{% barra_de_pasos paso %}
+
+{% comment %} CU-STD-037 A1 paso 3. La selección se sigue viendo —es suya—
+   pero ya no se puede confirmar, y eso se dice antes del botón que no
+   está. {% endcomment %}
+{% if not puede_reservar %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div>
+      <strong>Esta convocatoria ya cerró.</strong>
+      Puedes consultar lo que habías elegido, pero ya no se pueden apartar
+      espacios.
+    </div>
+  </div>
+{% endif %}
+
 {% if contenido.no_disponibles %}
   {% comment %} E1. Se nombran uno por uno: quien armó una selección de
      ocho tiene que ver **cuál** perdió. {% endcomment %}
@@ -42,7 +59,7 @@
     <div class="ico">🗺️</div>
     <div>
       <strong>Todavía no has elegido ningún espacio.</strong>
-      Ábre el mapa y elige los que te interesen; puedes cambiarlos hasta que
+      Abre el mapa y elige los que te interesen. Puedes cambiarlos hasta que
       confirmes.
     </div>
   </div>
@@ -57,7 +74,7 @@
     <div class="section-head">
       <div>
         <h3>Espacios elegidos</h3>
-        <p>El carrito no los aparta: se protegen al confirmar la reserva.</p>
+        <p>Elegirlos no los aparta: se apartan cuando confirmas la reserva.</p>
       </div>
     </div>
     <div class="section-body">
@@ -121,13 +138,25 @@
         </div>
       </div>
 
-      {% if fecha_pronto_pago %}
-        <div class="note note-ok">
+      {% comment %} CU-STD-012 paso 3: la nota lleva las dos cifras que
+         permiten sopesarlo —cuánto queda y a cuánto sube— y no solo la
+         fecha. Sale únicamente si el descuento está vigente: con la
+         campaña vencida no hay nada que conservar. {% endcomment %}
+      {% if porcentaje_pronto_pago %}
+        <div class="note note-gold">
           <div class="ico">🏷️</div>
           <div>
-            El descuento por pronto pago se conserva si liquidas antes del
-            <strong>{{ fecha_pronto_pago|date:"j \d\e F" }}</strong>. Después de esa
-            fecha se retira y el total vuelve a subir.
+            <strong>Llevas {{ porcentaje_pronto_pago }}% de descuento por pronto
+            pago.</strong>
+            Lo conservas si cubres el total antes del
+            <strong>{{ fecha_pronto_pago|date:"j \d\e F" }}</strong>
+            {% if dias_pronto_pago == 0 %}
+              — es hoy.
+            {% else %}
+              — {{ dias_pronto_pago }} día{{ dias_pronto_pago|pluralize }}.
+            {% endif %}
+            Después de esa fecha se retira y la reserva sube a
+            <strong>${{ total_sin_pronto_pago|floatformat:2 }}</strong>.
           </div>
         </div>
       {% endif %}
@@ -141,7 +170,7 @@
     {% comment %} Reservar es la escritura: va en su propio formulario y
        por POST. Si no hay nada tomable, el botón no aparece — un botón que
        solo puede fallar es una promesa rota. {% endcomment %}
-    {% if contenido.lineas|length > contenido.no_disponibles|length %}
+    {% if contenido.lineas|length > contenido.no_disponibles|length and puede_reservar %}
       <form method="post" action="{% url 'stands:reservar' convocatoria_id=convocatoria.pk %}">
         {% csrf_token %}
         <button class="btn btn-primary btn-lg" type="submit">

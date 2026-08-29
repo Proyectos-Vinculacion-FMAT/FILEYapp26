@@ -97,8 +97,8 @@ def solicitar_cambios(solicitud: Solicitud, *, revisor, motivo: str) -> Solicitu
     motivo = (motivo or "").strip()
     if not motivo:
         raise DictamenRechazado(
-            "Hay que decir qué cambios hacen falta: es lo que el aplicante "
-            "recibe por correo."
+            "Escribe qué cambios hacen falta: es lo que la persona recibe "
+            "por correo."
         )
     return _resolver(
         solicitud,

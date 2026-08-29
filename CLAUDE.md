@@ -53,7 +53,11 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    (schema `public`) o `TENANT_APPS` (uno por feria)—. Una app en las dos duplica sus tablas en
    todos los schemas. **PostgreSQL es obligatorio, también en desarrollo**: SQLite no tiene
    schemas y el arranque aborta si `DATABASE_URL` no apunta a Postgres.
-6. **Toda pantalla funciona sin JavaScript**, y **nada se carga de un CDN**.
+6. **Nada se carga de un CDN.** Todo lo que el navegador descarga vive en el repositorio —htmx,
+   Alpine, y los 39 MB del build de Godot del showfloor—.
+   > La otra mitad de esta regla —"toda pantalla funciona sin JavaScript"— **se retiró** en
+   > ADR-0008: el mapa es un canvas de WASM y no puede cumplirla. Las pantallas que hoy
+   > funcionan sin JavaScript siguen haciéndolo y conviene que sigan, pero ya no bloquea.
 7. Nombres en español, consistentes, tanto en código como en rutas de archivo. Sin eñes en
    identificadores ni nombres de columna (`es_dueno`, `contrasena`): la eñe arrastra
    fricción de codificación en cada herramienta que toque la base.
@@ -106,9 +110,28 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
     `servicios/reservas.py::total_con_descuentos`**, que es la única función que calcula un
     total: los descuentos se aplican en secuencia, no sumando (RN-06).
 
-  **Falta el pago**: `Movimiento` y con él CU-STD-014 a 020, 022 a 027, 033 y 035 a 038.
-  Mientras no exista, `Reserva.monto_abonado` devuelve cero — está escrito ya para que el día
-  que llegue solo cambie ese método y ninguna pantalla.
+  - **La cuenta y sus pagos** (CU-STD-013, 014, 015, 016, 017): `Movimiento`, y la pantalla
+    del expositor —`/f/<slug>/stands/<id>/mi-reserva/`— con tres pestañas por `?ver=`:
+    resumen, pagos y el plano en modo consulta. Un abono que reporta el expositor nace
+    `pendiente_validacion` y **no baja el saldo**: `Reserva.monto_abonado` solo cuenta lo
+    validado, y lo que está en revisión ocupa sitio para que nadie reporte dos veces la misma
+    transferencia. El pronto pago se aplica al reservar y **caduca**: si llega la fecha de
+    corte sin liquidar se retira y el total sube (`RN-04`, `CU-STD-023` A1). Lo hace
+    `servicios/pagos.py::caducar_pronto_pago`; mientras no exista la barrida diaria hay que
+    llamarlo desde el cron con `manage.py caducar_pronto_pago --todas`.
+
+  **El flujo del expositor es una secuencia, no un menú** (`RN-23`): solicitud → revisión →
+  espacios → confirmación → cuenta. La puerta del módulo es `stands:inicio` —a donde apunta
+  el catálogo (`ADR-0006`)— y no una pantalla: `views.paso_actual()` mira en qué paso va cada
+  quien y lo manda ahí, de modo que una solicitud aceptada entra al mapa y una reserva viva
+  entra a su cuenta. La misma función alimenta la barra de pasos (`templatetags/flujo.py`),
+  para que la barra no pueda marcar un paso distinto del que se está viendo. **Una editorial
+  lleva una sola reserva viva por convocatoria**, y lo sostiene un índice único parcial sobre
+  `registro`, no solo el servicio.
+
+  **Falta la validación del pago y el reloj**: CU-STD-018, 019, 020 y 033 tienen servicio
+  (`servicios/pagos.py`) pero no pantalla de administración —la sección «Pagos por validar»
+  se pinta apagada—, y CU-STD-022, 024, 025 y 035 a 038 siguen sin construirse.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel
@@ -123,6 +146,7 @@ cd filey && python manage.py check && python manage.py runserver
 cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, no en tests.py
 cd filey && python manage.py migrate_schemas        # migra `public` Y cada feria
 cd filey && python manage.py alta_feria --help      # crear una feria por consola (CU-FER-001)
+cd filey && python manage.py caducar_pronto_pago --todas --seco   # RN-04: qué reservas lo pierden hoy
 ./scripts/gen-inventario.sh         # reindexa el inventario CSS tras tocar un styles.css
 ./scripts/check-ui.sh               # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)
 ./scripts/preview-vis.sh            # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)

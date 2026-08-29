@@ -62,17 +62,33 @@
 
   <div class="conv-foot">
     {% if zona_admin %}
-      <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
-        Sin acciones todavía
-      </button>
+      {% comment %} El panel del módulo, si lo tiene. `url_panel` es
+         opcional en el registro a propósito —un módulo puede existir para
+         el participante antes de tener panel— así que la rama sin enlace
+         sigue existiendo y es la de los cinco tipos que aún no lo
+         construyen. {% endcomment %}
+      {% if entrada.url_panel %}
+        <a class="btn btn-primary btn-block" href="{{ entrada.url_panel }}">
+          Administrar {{ entrada.etiqueta_modulo|lower }}
+        </a>
+      {% else %}
+        <button class="btn btn-ghost btn-block btn-proximamente" type="button" disabled>
+          Sin acciones todavía
+        </button>
+      {% endif %}
     {% comment %} Las dos ramas con enlace exigen que la URL exista. Sin el
        `and`, quien ya estaba registrado en un módulo cuyas rutas no están
        montadas en este urlconf se llevaba un botón a `/f/<slug>/None`:
        `_url_del_modulo` devuelve `None` a propósito ahí, y la plantilla lo
        imprimía tal cual. {% endcomment %}
+    {% comment %} «Continuar» y no «Ver mi solicitud»: `url_aplicar` es la
+       puerta del módulo, y cada uno decide a dónde lleva según por dónde
+       vaya el trámite (`ADR-0006`). En `STD` lleva a la solicitud, al
+       mapa o a la cuenta por pagar, así que nombrar una de las tres aquí
+       es prometer la que no toca. {% endcomment %}
     {% elif entrada.ya_registrada and entrada.url_aplicar %}
       <a class="btn btn-ghost btn-block" href="{{ entrada.url_aplicar }}">
-        Ver mi solicitud
+        Continuar
       </a>
     {% elif entrada.admite_registro and entrada.url_aplicar %}
       <a class="btn btn-primary btn-block" href="{{ entrada.url_aplicar }}">

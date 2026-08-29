@@ -58,6 +58,18 @@ class Contenido:
         return not self.lineas
 
     @property
+    def metros_cuadrados(self) -> Decimal:
+        """La superficie de lo **tomable**, no de todo lo elegido.
+
+        Igual que el subtotal: contar lo que alguien ya reservó daría
+        unos metros que no se pueden comprar.
+        """
+        return sum(
+            (linea.metros_cuadrados for linea in self.lineas if linea.disponible),
+            start=Decimal("0"),
+        )
+
+    @property
     def claves(self) -> list[str]:
         return [linea.stand.clave for linea in self.lineas]
 

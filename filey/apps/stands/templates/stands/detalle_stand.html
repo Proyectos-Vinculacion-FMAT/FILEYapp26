@@ -3,10 +3,9 @@
 {% comment %} ===========================================================
    CU-STD-010 · El detalle de un espacio.
 
-   Pantalla propia y no un panel dentro del mapa: sin JavaScript el mapa
-   es un SVG con enlaces, y un enlace tiene que llevar a algún sitio
-   (regla 6). El día que se traiga con htmx, esta misma plantilla sirve
-   de respuesta parcial sin cambiar nada.
+   Pantalla propia y no solo el modal del mapa: el detalle tiene que
+   tener una URL que se pueda compartir y volver a abrir. El modal pide
+   este mismo cuerpo por htmx (`parciales/detalle_stand.html`).
 
    El precio que se enseña es el **del espacio**. Los descuentos son de
    la reserva entera (CU-STD-012), y adelantarlos aquí haría que la suma
@@ -20,79 +19,13 @@
 
 {% block contenido %}
 
-{% if not libre %}
-  <div class="note note-warn">
-    <div class="ico">🔒</div>
-    <div>
-      <strong>Este espacio ya está tomado.</strong>
-      Vuelve al mapa para elegir otro.
-    </div>
-  </div>
-{% endif %}
-
+{% comment %} El cuerpo vive en un parcial porque lo comparte con el modal
+   del mapa: ahí se pide por htmx al pulsar un espacio. Dos copias de las
+   mismas cifras es cómo se llega a que una diga una cosa y la otra otra. {% endcomment %}
 <div class="section-card card">
   <div class="section-body">
-    <div class="info-grid">
-      <div>
-        <span class="hint">Superficie</span>
-        <strong>{{ metros_cuadrados|floatformat:0 }} m²</strong>
-      </div>
-      <div>
-        <span class="hint">Medidas</span>
-        <strong>
-          {% if stand.ancho_celdas %}
-            {{ stand.ancho_celdas }} × {{ stand.alto_celdas }} m
-          {% else %}
-            Forma irregular
-          {% endif %}
-        </strong>
-      </div>
-      <div>
-        <span class="hint">Precio</span>
-        <strong>${{ precio|floatformat:0 }}</strong>
-      </div>
-      {% if stand.zona %}
-        <div>
-          <span class="hint">Zona</span>
-          <strong>{{ stand.zona }}</strong>
-        </div>
-      {% endif %}
-    </div>
-
-    <p class="hint">
-      {{ metros_cuadrados|floatformat:0 }} m² a ${{ costo_m2|floatformat:0 }} el metro
-      cuadrado. Los descuentos, si los hay, se aplican al total de tu reserva.
-    </p>
-
-    {% if stand.incluye %}
-      <div class="field">
-        <label>Qué incluye</label>
-        <p>{{ stand.incluye|linebreaksbr }}</p>
-      </div>
-    {% endif %}
+    {% include "stands/parciales/detalle_stand.html" %}
   </div>
-</div>
-
-<div class="form-actions">
-  <a class="btn btn-ghost" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
-    Volver al mapa
-  </a>
-  {% comment %} Agregar va por POST aunque solo toque la sesión: un GET que
-     la modifica lo dispara cualquier precarga del navegador y la selección
-     se movería sola. {% endcomment %}
-  {% if libre %}
-    <form method="post" action="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
-      {% csrf_token %}
-      <input type="hidden" name="accion" value="agregar">
-      <input type="hidden" name="clave" value="{{ stand.clave }}">
-      <button class="btn btn-primary btn-lg" type="submit">
-        Agregar a mi selección
-      </button>
-    </form>
-  {% endif %}
-  <a class="btn btn-ghost" href="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
-    Ver mi selección
-  </a>
 </div>
 
 {% endblock %}

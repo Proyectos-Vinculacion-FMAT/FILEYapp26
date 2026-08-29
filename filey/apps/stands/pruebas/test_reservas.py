@@ -34,15 +34,13 @@ pytestmark = pytest.mark.django_db
 
 def _mapa():
     return {
-        "formato": "filey-mapa/1",
-        "mapa": {"salon": "Salón de pruebas", "columnas": 30, "filas": 10,
-                 "metros_por_celda": 1.0, "tamano_celda": 12},
+        "grid": {"salon": "Salón de pruebas", "cols": 30, "rows": 10,
+                 "meters_per_cell": 1.0, "cell_size": 32},
         "stands": [
-            {"clave": f"A{i}", "etiqueta": f"A{i}", "col": i * 3, "fila": 0,
-             "ancho_celdas": 3, "alto_celdas": 2}
+            {"id": f"A{i}", "label": f"A{i}", "col": i * 3, "row": 0, "w": 3, "h": 2}
             for i in range(1, 6)
         ],
-        "decoraciones": [],
+        "decorations": [],
     }
 
 

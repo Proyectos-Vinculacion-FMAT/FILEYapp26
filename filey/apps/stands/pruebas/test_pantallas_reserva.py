@@ -21,7 +21,7 @@ from apps.ferias.models import AdminFeria
 from apps.registros.models import Persona
 
 from ..models import Reserva, Solicitud, Stand
-from ..servicios import configuracion, mapas, reservas, solicitudes
+from ..servicios import carrito, configuracion, mapas, reservas, solicitudes
 from . import fabricas
 
 pytestmark = pytest.mark.django_db
@@ -35,15 +35,13 @@ def _url(feria, nombre, **kwargs):
 
 def _mapa():
     return {
-        "formato": "filey-mapa/1",
-        "mapa": {"salon": "Salón de pruebas", "columnas": 30, "filas": 10,
-                 "metros_por_celda": 1.0, "tamano_celda": 12},
+        "grid": {"salon": "Salón de pruebas", "cols": 30, "rows": 10,
+                 "meters_per_cell": 1.0, "cell_size": 32},
         "stands": [
-            {"clave": f"A{i}", "etiqueta": f"A{i}", "col": i * 3, "fila": 0,
-             "ancho_celdas": 3, "alto_celdas": 2}
+            {"id": f"A{i}", "label": f"A{i}", "col": i * 3, "row": 0, "w": 3, "h": 2}
             for i in range(1, 6)
         ],
-        "decoraciones": [],
+        "decorations": [],
     }
 
 
@@ -199,11 +197,16 @@ def test_confirmar_crea_la_reserva_y_vacia_el_carrito(client, listo):
         assert reserva.monto_total == Decimal("30000.00")
         assert reserva.lineas.count() == 2
 
-    # Y el carrito quedó vacío: si no, volver atrás reservaría otra vez.
-    cuerpo = client.get(
-        _url(feria, "stands:carrito", convocatoria_id=conv.pk)
-    ).content.decode()
-    assert "Todavía no has elegido" in cuerpo
+    # Y volver al carrito ya no enseña nada que elegir: con una reserva
+    # viva, el carrito manda a la cuenta (`RN-23`).
+    respuesta = client.get(_url(feria, "stands:carrito", convocatoria_id=conv.pk))
+
+    assert respuesta.status_code == 302
+    assert respuesta.url.endswith(
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
+    )
+    with schema_context(feria.schema_name):
+        assert carrito.claves_en(client.session, conv) == []
 
 
 def test_lo_que_dice_el_resumen_es_lo_que_se_cobra(client, listo):
@@ -260,7 +263,7 @@ def test_si_alguien_llego_antes_se_sacan_del_carrito_solos(client, listo):
     )
 
     cuerpo = respuesta.content.decode()
-    assert "Alguien reservó antes A1" in cuerpo
+    assert "Alguien reservó antes que tú A1" in cuerpo
     assert 'value="A1"' not in cuerpo, "A1 sigue en el carrito"
     assert 'value="A2"' in cuerpo, "A2 se perdió sin motivo"
     with schema_context(feria.schema_name):
@@ -289,7 +292,7 @@ def test_mi_reserva_dice_total_abonado_pendiente_y_fechas(client, listo):
     client.post(_url(feria, "stands:reservar", convocatoria_id=conv.pk))
 
     cuerpo = client.get(
-        _url(feria, "stands:mis_reservas", convocatoria_id=conv.pk)
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
     assert "15000.00" in cuerpo
@@ -304,7 +307,7 @@ def test_sin_reserva_se_manda_al_mapa(client, listo):
     client.force_login(ana)
 
     cuerpo = client.get(
-        _url(feria, "stands:mis_reservas", convocatoria_id=conv.pk)
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
     assert "Todavía no tienes ninguna reserva" in cuerpo
@@ -323,7 +326,7 @@ def test_una_vencida_lo_avisa_sin_cambiar_de_estado(client, listo):
         )
 
     cuerpo = client.get(
-        _url(feria, "stands:mis_reservas", convocatoria_id=conv.pk)
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
     assert "Se venció el plazo" in cuerpo
@@ -348,7 +351,7 @@ def test_no_veo_las_reservas_de_otra_editorial(client, listo):
     client.force_login(beto)
 
     cuerpo = client.get(
-        _url(feria, "stands:mis_reservas", convocatoria_id=conv.pk)
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
     assert "Todavía no tienes ninguna reserva" in cuerpo
@@ -432,7 +435,7 @@ def test_el_detalle_avisa_si_el_desglose_dejo_de_cuadrar(client, listo):
         _url(feria, "stands:detalle_reserva", reserva_id=reserva_pk)
     ).content.decode()
 
-    assert "ya no cuadra con lo cobrado" in cuerpo
+    assert "ya no coincide con lo cobrado" in cuerpo
     assert "15000.00" in cuerpo  # lo cobrado
     assert "18000.00" in cuerpo  # lo que saldría hoy
 
@@ -451,4 +454,410 @@ def test_el_detalle_no_avisa_cuando_todo_cuadra(client, listo):
         _url(feria, "stands:detalle_reserva", reserva_id=reserva_pk)
     ).content.decode()
 
-    assert "ya no cuadra" not in cuerpo
+    assert "ya no coincide" not in cuerpo
+
+
+# ── El panel del módulo ───────────────────────────────────────
+
+
+def test_el_panel_no_repite_el_menu_de_la_barra_lateral(client, listo):
+    """Dos menús del mismo sistema es uno que se queda atrás.
+
+    Las secciones las lista la barra lateral, que está en todas las
+    pantallas del módulo. Repetirlas en el panel obligaría a acordarse de
+    los dos sitios el día que se añada una.
+    """
+    feria, conv, _ = listo
+    client.force_login(_admin_de(feria))
+
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    # Una sola vez cada enlace, y el que las pinta es el `<aside>`.
+    solicitudes_url = _url(feria, "stands:solicitudes", convocatoria_id=conv.pk)
+    assert cuerpo.count(f'href="{solicitudes_url}"') == 1
+    assert cuerpo.index("<aside") < cuerpo.index(f'href="{solicitudes_url}"')
+
+
+def test_el_panel_avisa_de_lo_que_falta_configurar(client, feria_2027):
+    """Sin precio y sin mapa el módulo se ve entero y no se puede operar.
+
+    Las solicitudes entran, nadie puede reservar y todos los precios
+    salen en cero. Hasta ahora eso solo se descubría abriendo una
+    pantalla y encontrándola vacía.
+    """
+    with schema_context(feria_2027.schema_name):
+        conv = fabricas.convocatoria()
+    client.force_login(_admin_de(feria_2027))
+
+    cuerpo = client.get(
+        _url(feria_2027, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert "Falta configurar los stands" in cuerpo
+    assert "costo por m² está en cero" in cuerpo
+    assert "No hay mapa del salón" in cuerpo
+
+
+def test_configurado_el_panel_no_da_la_lata(client, listo):
+    """El aviso tiene que ser señal, no ruido de fondo."""
+    feria, conv, _ = listo
+    client.force_login(_admin_de(feria))
+
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert "Falta configurar los stands" not in cuerpo
+
+
+def test_el_panel_saca_las_vencidas_a_la_cara(client, listo):
+    """`RN-12`: vencer no cancela, así que alguien tiene que decidir."""
+    feria, conv, ana = listo
+    client.force_login(ana)
+    _agregar(client, feria, conv, "A1")
+    client.post(_url(feria, "stands:reservar", convocatoria_id=conv.pk))
+    with schema_context(feria.schema_name):
+        Reserva.objects.update(
+            fecha_vencimiento_anticipo=timezone.now() - timezone.timedelta(days=1)
+        )
+
+    client.force_login(_admin_de(feria))
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    # Como tarjeta pulsable, no como aviso suelto: lo que hace falta es
+    # llegar a resolverla, no enterarse.
+    assert "Reservas vencidas" in cuerpo
+    assert "estado=vencidas" in cuerpo
+
+
+def test_el_aplicante_no_entra_al_panel(client, listo):
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    respuesta = client.get(_url(feria, "stands:panel", convocatoria_id=conv.pk))
+
+    assert respuesta.status_code == 403
+
+
+def test_el_panel_no_ensena_ceros_cuando_no_hay_nada(client, listo):
+    """Tres tarjetas diciendo «0» se leen como trabajo pendiente.
+
+    Durante el medio segundo que se tarda en leer el número, «0
+    solicitudes por revisar» y «3 solicitudes por revisar» ocupan el
+    mismo sitio y tienen la misma forma.
+    """
+    feria, conv, _ = listo
+    client.force_login(_admin_de(feria))
+
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert "Nada pendiente" in cuerpo
+    assert "Solicitudes por revisar" not in cuerpo
+
+
+def test_lo_accionable_enlaza_y_el_estado_no(client, listo):
+    """La diferencia entre las dos zonas del panel.
+
+    Una cifra que pide algo tiene que llevar a donde se hace; una que
+    describe cómo va, no lleva a ninguna parte. Mezclarlas deja «3
+    solicitudes por revisar» con el mismo peso que «$2 500 el m²».
+    """
+    feria, conv, ana = listo
+    with schema_context(feria.schema_name):
+        # Una solicitud de otra persona, sin dictaminar.
+        beto = fabricas.persona(correo="beto@ejemplo.com", nombre="Beto")
+        solicitudes.enviar_solicitud(
+            convocatoria=conv, persona=beto, editorial=fabricas.editorial(beto)
+        )
+    client.force_login(_admin_de(feria))
+
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    # Lo accionable es un `<a>`.
+    assert '<a class="stat-card accent-blue"' in cuerpo
+    # El estado no: va en la zona de abajo, sin enlace.
+    zona = cuerpo.split("Cómo va el recinto", 1)[1]
+    assert "Comprometido" in zona
+    assert "stat-card" not in zona
+
+
+def test_la_ocupacion_se_mide_en_metros_y_no_en_espacios(client, listo):
+    """Vender treinta espacios chicos no es vender tres grandes.
+
+    Lo que sigue el dinero es la superficie; contar cajas daría una barra
+    que avanza mientras la recaudación no se mueve.
+    """
+    feria, conv, ana = listo
+    client.force_login(ana)
+    _agregar(client, feria, conv, "A1")
+    client.post(_url(feria, "stands:reservar", convocatoria_id=conv.pk))
+
+    client.force_login(_admin_de(feria))
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    # Cinco espacios de 6 m² = 30; uno reservado deja 24 libres.
+    assert "24 m²" in cuerpo
+    assert "libres de 30" in cuerpo
+    # Y la barra lleva los tres tramos con los mismos colores del mapa.
+    assert 'class="ocupacion-barra"' in cuerpo
+    assert 'class="es-reservado"' in cuerpo
+
+
+def test_el_dinero_separa_lo_comprometido_de_lo_cobrado(client, listo):
+    """Son dos cifras distintas y confundirlas es contar dinero que no
+    ha entrado: una reserva viva compromete su total, y lo cobrado son
+    solo los abonos validados."""
+    feria, conv, ana = listo
+    client.force_login(ana)
+    _agregar(client, feria, conv, "A1")
+    client.post(_url(feria, "stands:reservar", convocatoria_id=conv.pk))
+
+    client.force_login(_admin_de(feria))
+    cuerpo = client.get(
+        _url(feria, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert "Comprometido" in cuerpo and "15000.00" in cuerpo
+    assert "Cobrado" in cuerpo and "0.00" in cuerpo
+
+
+def test_sin_mapa_no_se_inventa_una_barra(client, feria_2027):
+    """Una barra plana sin explicación se lee como «todo vendido»."""
+    with schema_context(feria_2027.schema_name):
+        conv = fabricas.convocatoria()
+    client.force_login(_admin_de(feria_2027))
+
+    cuerpo = client.get(
+        _url(feria_2027, "stands:panel", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert "ocupacion-barra" not in cuerpo
+    assert "Todavía no hay ningún mapa cargado" in cuerpo
+
+
+# ── El carrito al lado del mapa (CU-STD-011) ──────────────────
+#
+# El prototipo de STD pone el mapa a la izquierda y la selección a la
+# derecha, y agregar un espacio actualiza la columna **sin sacarte del
+# plano**. Aquí eso lo hace htmx: recargar costaría volver a bajar los
+# 39 MB del canvas y perder el zoom donde estabas.
+
+
+def _mapa_url(feria, conv):
+    return _url(feria, "stands:mapa", convocatoria_id=conv.pk)
+
+
+def _lateral(feria, conv):
+    return _url(feria, "stands:carrito_lateral", convocatoria_id=conv.pk)
+
+
+def test_el_mapa_trae_el_carrito_al_lado(client, listo):
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    cuerpo = client.get(_mapa_url(feria, conv)).content.decode()
+
+    assert 'class="mapa-con-carrito"' in cuerpo
+    assert 'id="carrito-lateral"' in cuerpo
+    assert "Tu selección está vacía" in cuerpo
+
+
+def test_el_carrito_llega_pintado_con_la_pagina(client, listo):
+    """Y no vacío para llenarse al primer intercambio.
+
+    Nacer vacío y llenarse de golpe se lee como si se hubiera perdido lo
+    elegido antes.
+    """
+    feria, conv, ana = listo
+    client.force_login(ana)
+    client.post(_lateral(feria, conv), {"accion": "agregar", "clave": "A1"})
+
+    cuerpo = client.get(_mapa_url(feria, conv)).content.decode()
+
+    assert "A1" in cuerpo.split('id="carrito-lateral"', 1)[1]
+
+
+def test_agregar_no_saca_del_mapa(client, listo):
+    """Devuelve **solo el carrito**, no una redirección ni la página.
+
+    Es lo que hace que el plano se quede donde estaba.
+    """
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    respuesta = client.post(
+        _lateral(feria, conv), {"accion": "agregar", "clave": "A1"}
+    )
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.content.decode()
+    assert cuerpo.lstrip().startswith("<aside")
+    assert "mapa-canvas" not in cuerpo, "devolvió la página entera"
+    assert "15000" in cuerpo.replace(",", "")
+
+
+def test_el_carrito_lateral_suma_y_resta(client, listo):
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    client.post(_lateral(feria, conv), {"accion": "agregar", "clave": "A1"})
+    cuerpo = client.post(
+        _lateral(feria, conv), {"accion": "agregar", "clave": "A2"}
+    ).content.decode()
+    assert "30000" in cuerpo.replace(",", "")
+    assert "12 m²" in cuerpo
+
+    cuerpo = client.post(
+        _lateral(feria, conv), {"accion": "quitar", "clave": "A1"}
+    ).content.decode()
+    assert "15000" in cuerpo.replace(",", "")
+
+    cuerpo = client.post(_lateral(feria, conv), {"accion": "vaciar"}).content.decode()
+    assert "Tu selección está vacía" in cuerpo
+
+
+def test_lo_que_alguien_tomo_antes_no_suma_pero_se_ve(client, listo):
+    """`E1`, también en la columna de al lado."""
+    feria, conv, ana = listo
+    client.force_login(ana)
+    client.post(_lateral(feria, conv), {"accion": "agregar", "clave": "A1"})
+    client.post(_lateral(feria, conv), {"accion": "agregar", "clave": "A2"})
+    with schema_context(feria.schema_name):
+        Stand.objects.filter(clave="A1").update(estado=Stand.Estado.RESERVADO)
+
+    cuerpo = client.get(_lateral(feria, conv)).content.decode()
+
+    # Con los espacios colapsados: la plantilla parte la frase en dos
+    # líneas y esa aserción se rompería con cualquier reindentado.
+    plano = re.sub(r"\s+", " ", cuerpo)
+    assert "Alguien reservó antes que tú A1" in plano
+    assert "es-no-disponible" in cuerpo
+    # Y el subtotal cuenta solo lo tomable.
+    assert "15000" in cuerpo.replace(",", "")
+
+
+def test_la_misma_cifra_en_el_carrito_lateral_y_en_el_de_confirmar(client, listo):
+    """Salen de la misma función a propósito.
+
+    Dos cálculos para lo mismo es cómo se llega a que una pantalla
+    prometa un total y la siguiente cobre otro.
+    """
+    feria, conv, ana = listo
+    with schema_context(feria.schema_name):
+        cfg = configuracion.de_la_convocatoria(conv)
+        cfg.fecha_limite_pronto_pago = timezone.localdate() + timezone.timedelta(days=5)
+        cfg.save(update_fields=["fecha_limite_pronto_pago"])
+    client.force_login(ana)
+
+    lateral = client.post(
+        _lateral(feria, conv), {"accion": "agregar", "clave": "A1"}
+    ).content.decode()
+    confirmar = client.get(
+        _url(feria, "stands:carrito", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    # 15 000 − 10% de pronto pago.
+    assert "13500.00" in lateral
+    assert "13500.00" in confirmar
+
+
+def test_el_admin_no_lleva_carrito_al_lado(client, listo):
+    """Quien administra no compra espacios."""
+    feria, conv, _ = listo
+    client.force_login(_admin_de(feria))
+
+    cuerpo = client.get(
+        _url(feria, "stands:mapa_completo", convocatoria_id=conv.pk)
+    ).content.decode()
+
+    assert 'id="carrito-lateral"' not in cuerpo
+    assert 'data-campo="agregar"' not in cuerpo
+
+
+def test_sin_habilitacion_no_hay_carrito_lateral(client, listo):
+    """`RN-16`, con 404 como el resto de las pantallas de reserva."""
+    feria, conv, _ = listo
+    with schema_context(feria.schema_name):
+        otro = fabricas.persona(correo="otro@ejemplo.com", nombre="Otro")
+    client.force_login(otro)
+
+    assert client.get(_lateral(feria, conv)).status_code == 404
+
+
+def test_el_modal_pide_el_detalle_al_servidor(client, listo):
+    """Y no lo compone en JavaScript con lo que manda el canvas.
+
+    El canvas no conoce la zona ni el «qué incluye», así que un modal
+    armado en el navegador enseñaba un detalle recortado — y calculaba el
+    precio por su cuenta, que es la parte cara del error.
+    """
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    cuerpo = client.get(_mapa_url(feria, conv)).content.decode()
+
+    tarjeta = cuerpo.split('id="mapa-tarjeta"', 1)[1]
+    assert "data-url-detalle=" in tarjeta
+    assert 'id="mapa-tarjeta-cuerpo"' in tarjeta
+    # Y no lleva el botón de «ver detalle»: el modal **es** el detalle.
+    assert "Ver detalle" not in tarjeta
+
+
+def test_el_detalle_para_el_modal_llega_sin_chasis(client, listo):
+    """Devolver la página entera metería otro chasis dentro del diálogo."""
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    respuesta = client.get(
+        _url(feria, "stands:detalle_stand", convocatoria_id=conv.pk, clave="A1"),
+        headers={"HX-Request": "true"},
+    )
+
+    cuerpo = respuesta.content.decode()
+    assert "<html" not in cuerpo
+    assert "topbar" not in cuerpo
+    # Y trae el detalle entero, con el «agregar» apuntando al carrito.
+    assert "Superficie" in cuerpo and "15000" in cuerpo.replace(",", "")
+    assert f'hx-post="{_lateral(feria, conv)}"' in cuerpo
+    assert 'hx-target="#carrito-lateral"' in cuerpo
+    # Sin «volver al mapa»: ya se está en él.
+    assert "Volver al mapa" not in cuerpo
+
+
+def test_la_pantalla_propia_del_espacio_sigue_completa(client, listo):
+    """Es la que funciona pegando la URL, y sin JavaScript."""
+    feria, conv, ana = listo
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria, "stands:detalle_stand", convocatoria_id=conv.pk, clave="A1")
+    ).content.decode()
+
+    assert "<html" in cuerpo
+    assert "Volver al mapa" in cuerpo
+    assert "Superficie" in cuerpo
+
+
+def test_un_espacio_tomado_no_ofrece_agregarlo(client, listo):
+    feria, conv, ana = listo
+    with schema_context(feria.schema_name):
+        Stand.objects.filter(clave="A1").update(estado=Stand.Estado.RESERVADO)
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria, "stands:detalle_stand", convocatoria_id=conv.pk, clave="A1"),
+        headers={"HX-Request": "true"},
+    ).content.decode()
+
+    assert "ya está tomado" in cuerpo
+    assert 'data-campo="agregar"' not in cuerpo

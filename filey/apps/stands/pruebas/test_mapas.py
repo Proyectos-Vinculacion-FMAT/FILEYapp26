@@ -37,26 +37,27 @@ def archivo_2026():
     return json.loads(MAPA_2026.read_text(encoding="utf-8"))
 
 
+def _reticula(datos):
+    """La retícula ya validada, para llamar al validador de stands suelto."""
+    return mapas._validar_reticula(datos["grid"])
+
+
 def _minimo(**cambios):
     """El archivo más pequeño que se puede importar."""
     datos = {
-        "formato": "filey-mapa/1",
-        "mapa": {
+        "grid": {
             "salon": "Salón de pruebas",
-            "columnas": 20,
-            "filas": 10,
-            "metros_por_celda": 1.0,
-            "tamano_celda": 12,
+            "cols": 20,
+            "rows": 10,
+            "meters_per_cell": 1.0,
+            "cell_size": 32,
         },
         "stands": [
-            {"clave": "A1", "etiqueta": "A1", "col": 0, "fila": 0,
-             "ancho_celdas": 3, "alto_celdas": 2},
-            {"clave": "A2", "etiqueta": "A2", "col": 3, "fila": 0,
-             "ancho_celdas": 3, "alto_celdas": 2},
+            {"id": "A1", "label": "A1", "col": 0, "row": 0, "w": 3, "h": 2},
+            {"id": "A2", "label": "A2", "col": 3, "row": 0, "w": 3, "h": 2},
         ],
-        "decoraciones": [
-            {"tipo": "rectangulo", "etiqueta": "Acceso", "col": 0, "fila": 8,
-             "ancho_celdas": 4, "alto_celdas": 2},
+        "decorations": [
+            {"type": "rect", "label": "Acceso", "col": 0, "row": 8, "w": 4, "h": 2},
         ],
     }
     datos.update(cambios)
@@ -112,9 +113,9 @@ def test_un_stand_nace_disponible_diga_lo_que_diga_el_archivo():
     """`RN-10`. Importar el estado dejaría escrito que algo está
     reservado sin que exista la reserva que lo respalda."""
     datos = _minimo()
-    datos["stands"][0]["estado"] = "ocupado"
+    datos["stands"][0]["status"] = "ocupado"
 
-    limpios = mapas._validar_stands(datos["stands"], datos["mapa"])
+    limpios = mapas._validar_stands(datos["stands"], _reticula(datos))
 
     assert all(s["estado"] == Stand.Estado.DISPONIBLE for s in limpios)
 
@@ -122,11 +123,13 @@ def test_un_stand_nace_disponible_diga_lo_que_diga_el_archivo():
 def test_el_precio_del_archivo_no_se_guarda():
     """Se deriva de la superficie y del `costo_m2` (`RN-01`)."""
     datos = _minimo()
-    datos["stands"][0]["precio"] = 999
+    datos["stands"][0]["price"] = 999
+    datos["stands"][0]["dimensions_text"] = "6m × 6m"
 
-    limpios = mapas._validar_stands(datos["stands"], datos["mapa"])
+    limpios = mapas._validar_stands(datos["stands"], _reticula(datos))
 
-    assert "precio" not in limpios[0]
+    assert "price" not in limpios[0]
+    assert "dimensions_text" not in limpios[0]
 
 
 def test_el_ocupante_de_2026_no_llega_a_la_base(feria_2027, archivo_2026):
@@ -146,22 +149,22 @@ def test_el_ocupante_de_2026_no_llega_a_la_base(feria_2027, archivo_2026):
 @pytest.mark.parametrize(
     "romper, mensaje",
     [
-        (lambda d: d.pop("formato"), "sin declarar"),
-        (lambda d: d.update(formato="otra-cosa/9"), "otra-cosa/9"),
-        (lambda d: d.pop("mapa"), "retícula"),
-        (lambda d: d["mapa"].update(salon=""), "salón"),
-        (lambda d: d["mapa"].update(columnas=0), "entero"),
-        (lambda d: d["mapa"].update(metros_por_celda=0), "mayor que cero"),
+        (lambda d: d.pop("grid"), "retícula"),
+        (lambda d: d["grid"].update(cols=0), "entero"),
+        (lambda d: d["grid"].update(rows="muchas"), "entero"),
+        (lambda d: d["grid"].update(meters_per_cell=0), "mayor que cero"),
+        (lambda d: d["grid"].update(meters_per_cell="ancho"), "no es un número"),
         (lambda d: d.update(stands=[]), "ningún espacio"),
-        (lambda d: d["stands"][1].update(clave=""), "no tiene clave"),
-        (lambda d: d["stands"][1].update(clave="A1"), "dos veces"),
+        (lambda d: d["stands"][1].update(id=""), "no tiene `id`"),
+        (lambda d: d["stands"][1].update(id="A1"), "dos veces"),
         (lambda d: d["stands"][1].update(col=19), "se sale"),
         (lambda d: d["stands"][1].update(col=0), "se pisan"),
-        (lambda d: d["stands"][1].update(ancho_celdas=0), "entero"),
-        (lambda d: d["stands"][1].update(rectangulos=[]), "vacío"),
-        (lambda d: d["decoraciones"][0].update(etiqueta=""), "rótulo"),
-        (lambda d: d["decoraciones"][0].update(tipo="circulo"), "desconocido"),
-        (lambda d: d["decoraciones"][0].update(fila=9), "se sale"),
+        (lambda d: d["stands"][1].update(w=0), "entero"),
+        (lambda d: d["stands"][1].update(rects=[]), "vacío"),
+        (lambda d: d.update(decorations="no es lista"), "tiene que ser una lista"),
+        (lambda d: d["decorations"][0].update(label=""), "rótulo"),
+        (lambda d: d["decorations"][0].update(type="circulo"), "desconocido"),
+        (lambda d: d["decorations"][0].update(row=9), "se sale"),
     ],
 )
 def test_un_archivo_malo_se_rechaza_diciendo_donde(feria_2027, romper, mensaje):
@@ -187,16 +190,15 @@ def test_los_stands_en_l_no_se_toman_por_solapes(feria_2027):
     datos = _minimo()
     datos["stands"] = [
         {
-            "clave": "L",
-            "etiqueta": "L",
-            "rectangulos": [
-                {"col": 0, "fila": 0, "ancho_celdas": 12, "alto_celdas": 2},
-                {"col": 6, "fila": 2, "ancho_celdas": 6, "alto_celdas": 2},
+            "id": "L",
+            "label": "L",
+            "rects": [
+                {"col": 0, "row": 0, "w": 12, "h": 2},
+                {"col": 6, "row": 2, "w": 6, "h": 2},
             ],
         },
         # Justo en el hueco de la L.
-        {"clave": "dentro", "etiqueta": "dentro", "col": 0, "fila": 2,
-         "ancho_celdas": 6, "alto_celdas": 2},
+        {"id": "dentro", "label": "dentro", "col": 0, "row": 2, "w": 6, "h": 2},
     ]
 
     with schema_context(feria_2027.schema_name):
@@ -226,8 +228,7 @@ def test_confirmado_el_mapa_anterior_se_reemplaza_entero(feria_2027):
 
         otro = _minimo()
         otro["stands"] = [
-            {"clave": "Z9", "etiqueta": "Z9", "col": 0, "fila": 0,
-             "ancho_celdas": 3, "alto_celdas": 2}
+            {"id": "Z9", "label": "Z9", "col": 0, "row": 0, "w": 3, "h": 2}
         ]
         resumen = mapas.importar(convocatoria=conv, datos=otro, confirmado=True)
 
@@ -470,3 +471,232 @@ def test_el_mapa_se_registra_en_el_admin_de_la_edicion():
     for modelo in (MapaShowfloor, Stand, DecoracionMapa):
         assert modelo in admin_feria._registry, modelo.__name__
         assert modelo not in admin_de_django.site._registry, modelo.__name__
+
+
+@pytest.mark.parametrize("clave", ["A/1", "A?1", "A#1", "../x", "A 1"])
+def test_una_clave_que_no_cabe_en_una_url_se_rechaza(feria_2027, clave):
+    """La clave viaja en `…/mapa/<clave>/` y la arma también el JavaScript.
+
+    Sin esto el mapa se ve perfecto y el enlace de ese espacio no
+    resuelve —o apunta a otra parte— hasta que alguien lo pulsa.
+    """
+    datos = _minimo()
+    datos["stands"][1]["id"] = clave
+
+    with schema_context(feria_2027.schema_name):
+        with pytest.raises(mapas.ImportacionRechazada, match="no sirve como clave"):
+            mapas.importar(convocatoria=fabricas.convocatoria(), datos=datos)
+
+
+def test_las_claves_del_plano_de_2026_si_caben(feria_2027, archivo_2026):
+    """`24B`, `55A`, `109`… — la regla no puede dejar fuera el mapa real."""
+    with schema_context(feria_2027.schema_name):
+        resumen = mapas.importar(
+            convocatoria=fabricas.convocatoria(), datos=archivo_2026
+        )
+
+        assert resumen.stands == 151
+
+
+# ── El mapa desde la configuración de la convocatoria ─────────
+#
+# Es la pantalla donde ya se pone el precio, así que montar una edición
+# es una sola: precio y mapa juntos. Va aquí y no en el admin de
+# `Convocatoria` porque `apps/convocatorias` nunca nombra a un vertical
+# (`ADR-0006`).
+
+
+def _url_configuracion(feria, pk):
+    return f"{feria.url}django-admin/stands/configuracionsistema/{pk}/change/"
+
+
+def _configuracion_de(feria, **cambios):
+    from apps.stands.servicios import configuracion as servicio
+
+    with schema_context(feria.schema_name):
+        conv = fabricas.convocatoria()
+        cfg = servicio.de_la_convocatoria(conv)
+        for campo, valor in cambios.items():
+            setattr(cfg, campo, valor)
+        if cambios:
+            cfg.save()
+        return conv, cfg.pk
+
+
+def _campos_base(cfg_pk, conv_pk):
+    """Lo que el formulario exige aunque solo se quiera subir el mapa."""
+    return {
+        "convocatoria": conv_pk,
+        "costo_m2": "2500.00",
+        "porcentaje_anticipo": "50",
+        "plazo_reserva_dias": "30",
+        "descuento_pronto_pago": "10",
+        "instrucciones_pago": "",
+    }
+
+
+def test_el_operador_carga_el_mapa_desde_la_configuracion(client, feria_2027):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.registros.models import Persona
+
+    conv, cfg_pk = _configuracion_de(feria_2027)
+    operador = Persona.objects.create_superuser(correo="raiz@filey.org", password="x")
+    client.force_login(operador)
+
+    respuesta = client.post(
+        _url_configuracion(feria_2027, cfg_pk),
+        {
+            **_campos_base(cfg_pk, conv.pk),
+            "mapa_json": SimpleUploadedFile(
+                "mapa.json", json.dumps(_minimo()).encode("utf-8")
+            ),
+        },
+        follow=True,
+    )
+
+    assert respuesta.status_code == 200
+    with schema_context(feria_2027.schema_name):
+        assert Stand.objects.count() == 2
+        # Y el precio se guardó en el mismo viaje.
+        from apps.stands.models import ConfiguracionSistema
+
+        assert ConfiguracionSistema.objects.get(pk=cfg_pk).costo_m2 == Decimal("2500.00")
+
+
+def test_quien_no_es_operador_no_ve_el_campo(client, feria_2027):
+    """`is_staff` abre esta pantalla porque poner un precio es diario.
+
+    Importar un mapa no lo es: reemplaza el showfloor entero (`ADR-0005`).
+    """
+    from apps.registros.models import Persona
+
+    _, cfg_pk = _configuracion_de(feria_2027)
+    del_equipo = Persona.objects.create_user(
+        correo="becario@filey.org", nombre="Beto", primer_apellido="Chan"
+    )
+    del_equipo.is_staff = True
+    del_equipo.is_superuser = False
+    del_equipo.save(update_fields=["is_staff", "is_superuser"])
+    from django.contrib.auth.models import Permission
+
+    del_equipo.user_permissions.add(
+        *Permission.objects.filter(content_type__app_label="stands")
+    )
+    client.force_login(del_equipo)
+
+    cuerpo = client.get(_url_configuracion(feria_2027, cfg_pk)).content.decode()
+
+    assert "costo_m2" in cuerpo, "no llegó a la pantalla de configuración"
+    assert "mapa_json" not in cuerpo
+    assert "Mapa del salón" not in cuerpo
+
+
+def test_y_si_lo_manda_de_todos_modos_se_rechaza(client, feria_2027):
+    """Esconder un campo no es una comprobación.
+
+    El formulario admite lo que se le mande, así que el guardado lo
+    vuelve a preguntar. Sin esto, `is_staff` podría reemplazar un
+    showfloor con un `curl`.
+    """
+    from django.contrib.auth.models import Permission
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.registros.models import Persona
+
+    conv, cfg_pk = _configuracion_de(feria_2027)
+    del_equipo = Persona.objects.create_user(
+        correo="becario@filey.org", nombre="Beto", primer_apellido="Chan"
+    )
+    del_equipo.is_staff = True
+    del_equipo.save(update_fields=["is_staff"])
+    del_equipo.user_permissions.add(
+        *Permission.objects.filter(content_type__app_label="stands")
+    )
+    client.force_login(del_equipo)
+
+    respuesta = client.post(
+        _url_configuracion(feria_2027, cfg_pk),
+        {
+            **_campos_base(cfg_pk, conv.pk),
+            "mapa_json": SimpleUploadedFile(
+                "mapa.json", json.dumps(_minimo()).encode("utf-8")
+            ),
+        },
+    )
+
+    assert respuesta.status_code == 403
+    with schema_context(feria_2027.schema_name):
+        assert not Stand.objects.exists()
+
+
+def test_reemplazar_desde_la_configuracion_pide_la_casilla(client, feria_2027):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.registros.models import Persona
+
+    conv, cfg_pk = _configuracion_de(feria_2027)
+    with schema_context(feria_2027.schema_name):
+        mapas.importar(convocatoria=conv, datos=_minimo())
+    operador = Persona.objects.create_superuser(correo="raiz@filey.org", password="x")
+    client.force_login(operador)
+
+    otro = _minimo()
+    otro["stands"] = [{"id": "Z9", "label": "Z9", "col": 0, "row": 0, "w": 3, "h": 2}]
+    respuesta = client.post(
+        _url_configuracion(feria_2027, cfg_pk),
+        {
+            **_campos_base(cfg_pk, conv.pk),
+            "mapa_json": SimpleUploadedFile(
+                "mapa.json", json.dumps(otro).encode("utf-8")
+            ),
+        },
+        follow=True,
+    )
+
+    # El mapa no se tocó, y se dijo por qué **sin** tirar el guardado del
+    # resto: un 500 haría creer que tampoco se guardó el precio.
+    assert "hay que confirmarlo" in respuesta.content.decode()
+    with schema_context(feria_2027.schema_name):
+        assert sorted(s.clave for s in Stand.objects.all()) == ["A1", "A2"]
+
+
+def test_la_pantalla_dice_que_mapa_hay_hoy(client, feria_2027):
+    """Es lo que decide si hace falta marcar la casilla de reemplazo."""
+    from apps.registros.models import Persona
+
+    conv, cfg_pk = _configuracion_de(feria_2027)
+    operador = Persona.objects.create_superuser(correo="raiz@filey.org", password="x")
+    client.force_login(operador)
+
+    sin_mapa = client.get(_url_configuracion(feria_2027, cfg_pk)).content.decode()
+    assert "Sin mapa" in sin_mapa
+
+    with schema_context(feria_2027.schema_name):
+        mapas.importar(convocatoria=conv, datos=_minimo())
+
+    con_mapa = client.get(_url_configuracion(feria_2027, cfg_pk)).content.decode()
+    assert "2 espacios" in con_mapa
+    assert "Salón de pruebas" in con_mapa
+
+
+def test_un_archivo_que_no_es_json_es_un_error_del_campo(client, feria_2027):
+    """Y no un 500 a medio guardar: es lo que pasa al subir el PDF."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.registros.models import Persona
+
+    conv, cfg_pk = _configuracion_de(feria_2027)
+    operador = Persona.objects.create_superuser(correo="raiz@filey.org", password="x")
+    client.force_login(operador)
+
+    respuesta = client.post(
+        _url_configuracion(feria_2027, cfg_pk),
+        {
+            **_campos_base(cfg_pk, conv.pk),
+            "mapa_json": SimpleUploadedFile("plano.pdf", b"%PDF-1.4 no soy json"),
+        },
+    )
+
+    assert respuesta.status_code == 200
+    assert "No es JSON válido" in respuesta.content.decode()

@@ -79,16 +79,82 @@ class SolicitudAdmin(admin.ModelAdmin):
         return False
 
 
+class ConfiguracionConMapaForm(forms.ModelForm):
+    """La configuración de la convocatoria, con su mapa al lado.
+
+    `mapa_json` **no es un campo del modelo**: el mapa no se guarda como
+    archivo, se traduce a `MapaShowfloor`, `Stand` y `DecoracionMapa`
+    (`CU-STD-039`). Es un campo del formulario, y lo que hace al guardar
+    lo decide el admin.
+
+    .. note:: Por qué aquí y no en el admin de `Convocatoria`
+
+       `apps/convocatorias` **nunca nombra a un vertical** (`ADR-0006`),
+       así que su pantalla no puede tener un campo de mapa de stands.
+       Ésta es la configuración *de esta convocatoria* para este módulo
+       —su nombre en pantalla es literalmente «configuración de la
+       convocatoria»— y es donde ya se pone el precio. Con esto, montar
+       una edición es una sola pantalla.
+    """
+
+    mapa_json = forms.FileField(
+        required=False,
+        label="Cargar el mapa del showfloor",
+        help_text=(
+            "JSON en el formato de event-stand-map (grid / stands / "
+            "decorations). Ver docs/requisitos/STD/README.md."
+        ),
+    )
+    reemplazar_mapa = forms.BooleanField(
+        required=False,
+        label="Reemplazar el mapa que ya exista",
+        help_text=(
+            "Borra todos sus espacios. Sin marcar, una convocatoria que ya "
+            "tiene mapa se rechaza."
+        ),
+    )
+
+    class Meta:
+        model = ConfiguracionSistema
+        fields = "__all__"
+
+    def clean_mapa_json(self):
+        """Se lee y se valida **antes de guardar nada**.
+
+        Así un archivo que no es JSON —el PDF del plano, por ejemplo—
+        sale como error de este campo y no como un 500 a medio guardar.
+        """
+        archivo = self.cleaned_data.get("mapa_json")
+        if not archivo:
+            return None
+        try:
+            return json.loads(archivo.read().decode("utf-8"))
+        except UnicodeDecodeError:
+            raise forms.ValidationError("El archivo no es texto UTF-8.") from None
+        except json.JSONDecodeError as exc:
+            raise forms.ValidationError(f"No es JSON válido: {exc}") from None
+
+
 @admin.register(ConfiguracionSistema, site=admin_feria)
 class ConfiguracionSistemaAdmin(admin.ModelAdmin):
-    """Precios y plazos de una convocatoria (`CU-STD-034`, provisional).
+    """Precios, plazos y el mapa de una convocatoria (`CU-STD-034`, `039`).
 
     La pantalla propia es A10 y no existe todavía; mientras tanto es
     desde aquí. **El alta no se ofrece**: la fila la crea el alta de la
     convocatoria (`CU-FER-005` paso 6), y crear una a mano dejaría dos
     para la misma convocatoria o una huérfana.
+
+    .. important:: El mapa solo lo carga el operador de la plataforma
+
+       Esta pantalla la abre cualquiera con `is_staff`, porque poner un
+       precio es operación diaria. **Importar un mapa no**: reemplaza el
+       showfloor entero (`ADR-0005`). Por eso los dos campos del mapa
+       solo se le enseñan al superusuario **y el guardado lo vuelve a
+       comprobar** — esconder un campo no es una comprobación, y el
+       formulario admite lo que se le mande.
     """
 
+    form = ConfiguracionConMapaForm
     list_display = (
         "convocatoria",
         "costo_m2",
@@ -98,9 +164,91 @@ class ConfiguracionSistemaAdmin(admin.ModelAdmin):
         "fecha_limite_pronto_pago",
     )
     list_select_related = ("convocatoria",)
+    readonly_fields = ("resumen_del_mapa",)
 
     def has_add_permission(self, peticion):
         return False
+
+    def get_fieldsets(self, peticion, obj=None):
+        economicas = (
+            None,
+            {
+                "fields": (
+                    "convocatoria",
+                    "costo_m2",
+                    "porcentaje_anticipo",
+                    "plazo_reserva_dias",
+                    "descuento_pronto_pago",
+                    "fecha_limite_pronto_pago",
+                    "instrucciones_pago",
+                )
+            },
+        )
+        if not peticion.user.is_superuser:
+            return (economicas,)
+        return (
+            economicas,
+            (
+                "Mapa del showfloor",
+                {
+                    "fields": ("resumen_del_mapa", "mapa_json", "reemplazar_mapa"),
+                    "description": (
+                        "El mapa se traduce a espacios al guardar; no se "
+                        "guarda como archivo."
+                    ),
+                },
+            ),
+        )
+
+    @admin.display(description="Mapa actual")
+    def resumen_del_mapa(self, obj):
+        """Qué hay cargado hoy, antes de decidir si se reemplaza.
+
+        Sin esto hay que ir a otra pantalla a averiguar si la convocatoria
+        ya tiene mapa, que es justo lo que decide si hace falta marcar la
+        casilla de reemplazo.
+        """
+        if obj is None or obj.pk is None:
+            return "—"
+        mapa = MapaShowfloor.objects.filter(convocatoria=obj.convocatoria).first()
+        if mapa is None:
+            return "Sin mapa. Carga uno para que se pueda reservar."
+        return (
+            f"{mapa.salon} · {mapa.stands.count()} espacios · "
+            f"{mapa.metros_cuadrados_vendibles:.0f} m² vendibles · "
+            f"retícula de {mapa.columnas}×{mapa.filas} m"
+        )
+
+    def save_model(self, peticion, obj, form, change):
+        """Guarda la configuración y, si vino un mapa, lo importa.
+
+        En este orden y **no en una sola transacción, a propósito**: el
+        precio y el mapa son dos cosas independientes, y que un archivo
+        malo tire también el cambio de `costo_m2` sería castigar dos veces
+        por un error.
+        """
+        super().save_model(peticion, obj, form, change)
+
+        datos = form.cleaned_data.get("mapa_json")
+        if not datos:
+            return
+        if not peticion.user.is_superuser:
+            raise PermissionDenied(
+                "Importar un mapa reemplaza el showfloor entero de una "
+                "convocatoria: lo hace el operador de la plataforma."
+            )
+        try:
+            resumen = mapas.importar(
+                convocatoria=obj.convocatoria,
+                datos=datos,
+                confirmado=form.cleaned_data.get("reemplazar_mapa", False),
+            )
+        except mapas.ImportacionRechazada as exc:
+            # Como aviso y no como excepción: la configuración **sí** se
+            # guardó, y un 500 haría creer que no.
+            self.message_user(peticion, f"El mapa no se cargó: {exc}", messages.ERROR)
+        else:
+            self.message_user(peticion, str(resumen), messages.SUCCESS)
 
 
 @admin.register(Documento, site=admin_feria)

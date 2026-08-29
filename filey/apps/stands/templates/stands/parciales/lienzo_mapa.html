@@ -1,0 +1,78 @@
+{% load static %}
+
+{% comment %} ===========================================================
+   El lienzo del showfloor: el canvas, su velo y el detalle del espacio.
+
+   **Es el mismo para los dos públicos** — `CU-STD-009` (aplicante) y
+   `CU-STD-032` (admin)— y por eso vive aquí y no repetido en la
+   plantilla. Estaba escrito en línea, y así cualquier arreglo se hacía
+   en una vista y se olvidaba en la otra: el velo que no se quitaba se
+   arregló primero solo para quien aplica.
+
+   Lo único que cambia entre los dos es de qué URL bajan los datos, y eso
+   ya lo decidió la vista: `RN-09` colapsa `reservado` y `ocupado` para
+   quien aplica, y el recorte ocurre en el servidor. El canvas es el
+   mismo y no sabe nada del asunto.
+
+   Contexto que espera:
+
+     mapa        el MapaShowfloor
+     url_datos   de dónde baja el JSON el puente de `filey.js`
+     zona_admin  para no ofrecer «agregar» a quien no compra espacios
+   =========================================================== {% endcomment %}
+<div class="mapa-marco">
+  {% comment %} El velo lo quita el puente al recibir `ready`, o al
+     entregar los datos. Va aquí y no dentro del canvas a propósito:
+     mientras el WASM baja, lo que se ve es el chasis de FILEY y no la
+     pantalla de arranque de Godot. {% endcomment %}
+  <div class="mapa-velo" id="mapa-velo">
+    <div class="mapa-velo__mensaje" data-cargando>
+      <strong>Cargando el plano…</strong>
+      <span class="hint">La primera vez tarda un poco más.</span>
+    </div>
+    <div class="mapa-velo__mensaje" data-error>
+      <strong>No se pudo cargar el plano.</strong>
+      <span class="hint">Recarga la página. Si sigue igual, escríbenos.</span>
+    </div>
+  </div>
+
+  {% comment %} `?hostOrigin=` fija a quién le habla el canvas y de quién
+     acepta mensajes; sin él usa `*`, que vale en desarrollo y no en
+     producción. El `?v=` es lo que invalida la caché tras reexportar: va
+     a mano porque el build **no se versiona por hash** — su `index.js`
+     pide el `.wasm` por su nombre (ver `comun/estaticos.py`). {% endcomment %}
+  <iframe id="mapa-canvas"
+          src="{% static 'mapa/index.html' %}?v=1&hostOrigin={{ request.scheme }}://{{ request.get_host }}"
+          data-datos="{{ url_datos }}"
+          title="Plano de {{ mapa.salon }}"></iframe>
+</div>
+
+{% comment %} El detalle del espacio. Es de esta página y no del canvas: el
+   contrato deja aquí el diseño, las palabras, el formato del precio y el
+   «agregar», para que cambien sin reexportar 39 MB de WASM.
+
+   **Centrado y con fondo, no anclado al espacio pulsado.** Anclado
+   quedaba dentro de `.mapa-marco`, que recorta lo que se sale
+   (`overflow: hidden`), así que un espacio de la orilla abría su tarjeta
+   medio cortada; y en el resto de los casos tapaba justo los espacios de
+   al lado, que son los que uno está comparando.
+
+   Va **fuera** del marco por lo mismo: dentro volvería a recortarse.
+
+   Los textos de estado y la plantilla de URL vienen en `data-` porque el
+   JavaScript no debe inventar ni palabras ni direcciones. {% endcomment %}
+<div class="mapa-tarjeta-fondo" id="mapa-tarjeta-fondo" hidden></div>
+<div class="mapa-tarjeta" id="mapa-tarjeta" hidden
+     role="dialog" aria-modal="true" aria-labelledby="mapa-tarjeta-titulo"
+     data-url-detalle="{% url 'stands:detalle_stand' convocatoria_id=convocatoria.pk clave='__CLAVE__' %}">
+  <button type="button" class="mapa-tarjeta__cerrar" data-campo="cerrar"
+          aria-label="Cerrar el detalle">✕</button>
+  <h4 id="mapa-tarjeta-titulo">Espacio <span data-campo="clave"></span></h4>
+  {% comment %} El cuerpo lo trae htmx de `stands:detalle_stand`, que es la
+     misma vista que sirve la pantalla propia. Así el modal enseña el
+     detalle **entero** —zona y «qué incluye» incluidos, que el canvas no
+     conoce— y no hay dos sitios calculando el precio. {% endcomment %}
+  <div class="mapa-tarjeta__cuerpo" id="mapa-tarjeta-cuerpo">
+    <p class="hint">Cargando el detalle…</p>
+  </div>
+</div>

@@ -1,4 +1,6 @@
-{% extends "layouts/panel.html" %}
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Solicitudes · Detalle{% endblock %}
 
 {% comment %} ===========================================================
    A2 · Revisar y resolver una solicitud (CU-STD-005, 006, 007).
@@ -121,7 +123,7 @@
                 {{ aviso.get_tipo_display }} ·
                 {{ aviso.fecha_envio|date:"j M Y, H:i" }}
                 {% if aviso.estado == 'fallida' %}
-                  <span class="badge badge-rejected">No salió</span>
+                  <span class="badge badge-rejected">No se envió</span>
                   <span class="hint">{{ aviso.detalle_error }}</span>
                 {% endif %}
               </li>

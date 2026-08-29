@@ -1,0 +1,486 @@
+{% extends "layouts/panel.html" %}
+{% load flujo %}
+
+{% comment %} ===========================================================
+   U5 y U6 · Mi reserva y sus pagos (CU-STD-013, 014, 015, 016, 017).
+
+   Las dos vistas del documento de estructura en **una sola pantalla con
+   pestañas**, como el prototipo de Angular (`u5-mi-reserva`): el estado
+   de la reserva y su pago son la misma pregunta —"¿cómo voy?"— y
+   partirlos en dos URLs obliga a ir y volver para comparar el saldo con
+   lo que se acaba de abonar.
+
+   Es el último paso del flujo y el único al que se vuelve: quien tiene
+   una reserva entra aquí cada vez, hasta terminar de pagarla.
+
+   Las pestañas van **por URL** (`?ver=`) y no por JavaScript. No es
+   nostalgia: la tercera es el plano, y el canvas pesa 39 MB — con
+   pestañas de cliente se descargarían en cada visita a la cuenta aunque
+   nadie abriera el mapa. Además cada pestaña queda enlazable, que es lo
+   que permite mandar aquí desde el correo o desde CU-STD-012 paso 8.
+
+   Contexto que espera:
+
+     reserva            la Reserva viva, o None
+     desglose           los renglones del precio (RN-06)
+     recalculado        el subtotal del desglose, para contrastarlo
+     vencida            pasó el plazo del anticipo (RN-12)
+     falta_para_el_anticipo  lo mínimo para que deje de peligrar
+     movimientos        los abonos, con su comprobante
+     en_revision        lo reportado y todavía sin validar
+     form_abono         el formulario de CU-STD-016
+     ajustes            la ConfiguracionSistema de la convocatoria
+     porcentaje_pagado  cuánto del total lleva cubierto
+     pronto_pago        el aviso de CU-STD-013 paso 5, o None
+     ver                qué pestaña se está pintando
+     mapa, url_datos, mis_claves   el plano de la tercera
+     cerradas           las reservas canceladas, como antecedente
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mi reserva — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Mi reserva{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% barra_de_pasos paso %}
+
+{% if reserva %}
+  {% comment %} CU-STD-014. Va arriba del todo porque es lo único de esta
+     pantalla que pide una acción hoy. {% endcomment %}
+  {% if vencida %}
+    <div class="note note-warn">
+      <div class="ico">⏰</div>
+      <div>
+        <strong>Se venció el plazo para el anticipo.</strong>
+        Tus espacios siguen apartados, pero la reserva puede cancelarse.
+        Para que deje de peligrar faltan
+        <strong>${{ falta_para_el_anticipo|floatformat:2 }}</strong>.
+        <a href="?ver=pagos">Reportar un abono</a> o escríbenos para pedir una
+        prórroga.
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="section-card card">
+    <div class="section-head">
+      <div>
+        <h3>
+          Reserva #{{ reserva.pk }}
+          {% include "stands/parciales/badge_reserva.html" with reserva=reserva vencida=vencida %}
+        </h3>
+        <p>
+          {{ reserva.lineas.count }} espacio{{ reserva.lineas.count|pluralize }},
+          reservados el {{ reserva.fecha_creacion|date:"j \d\e F \d\e Y" }}.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pestanas">
+    <nav class="pestanas-tira" aria-label="Secciones de mi reserva">
+      <a class="pestana{% if ver == 'resumen' %} is-active{% endif %}" href="?ver=resumen"
+         {% if ver == 'resumen' %}aria-current="page"{% endif %}>Resumen</a>
+      <a class="pestana{% if ver == 'pagos' %} is-active{% endif %}" href="?ver=pagos"
+         {% if ver == 'pagos' %}aria-current="page"{% endif %}>
+        Pagos
+        {% if movimientos %}<span class="pestana-cuenta">{{ movimientos|length }}</span>{% endif %}
+      </a>
+      {% if mapa %}
+        <a class="pestana{% if ver == 'mapa' %} is-active{% endif %}" href="?ver=mapa"
+           {% if ver == 'mapa' %}aria-current="page"{% endif %}>Ver en el mapa</a>
+      {% endif %}
+    </nav>
+
+    {% comment %} ── Resumen ── {% endcomment %}
+    {% if ver == 'resumen' %}
+      <div class="section-card card">
+        <div class="section-head">
+          <div>
+            <h3>Lo que cuesta</h3>
+            <p>Con los descuentos ya aplicados, en el orden en que se aplican.</p>
+          </div>
+        </div>
+        <div class="section-body">
+          {% include "stands/parciales/desglose.html" with renglones=desglose %}
+
+          {% comment %} El desglose se recalcula con la tarifa de hoy y el
+             total está congelado (RN-01). Si dejaron de coincidir hay que
+             decirlo: dos cifras distintas una debajo de otra, sin
+             explicación, se leen como un error de la feria. {% endcomment %}
+          {% if recalculado and recalculado != reserva.monto_total %}
+            <div class="note note-info">
+              <div class="ico">ℹ️</div>
+              <div>
+                <strong>El desglose de arriba no es lo que te cobramos.</strong>
+                Cambió la tarifa o la forma de un espacio después de que
+                reservaste. Tu reserva sigue en
+                <strong>${{ reserva.monto_total|floatformat:2 }}</strong>: el
+                precio que aceptaste no se mueve.
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="info-grid">
+            <div>
+              <span class="hint">Total de la reserva</span>
+              <strong>${{ reserva.monto_total|floatformat:2 }}</strong>
+            </div>
+            <div>
+              <span class="hint">Anticipo para confirmar</span>
+              <strong>${{ reserva.anticipo|floatformat:2 }}</strong>
+              <span class="hint">{{ ajustes.porcentaje_anticipo }}% del total</span>
+            </div>
+            <div>
+              <span class="hint">Abonado</span>
+              <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
+            </div>
+            <div>
+              <span class="hint">Te falta</span>
+              <strong>${{ reserva.monto_pendiente|floatformat:2 }}</strong>
+            </div>
+          </div>
+
+          {% comment %} Los dos umbrales dibujados sobre la barra: al 50%
+             la reserva se confirma (RN-13) y al 100% queda pagada
+             (RN-14). Sin las marcas, la barra solo dice "vas por la
+             mitad" y no **qué pasa** al llegar. {% endcomment %}
+          <div class="progreso">
+            <div class="progreso-cabecera">
+              <span class="hint">Lo que llevas cubierto</span>
+              <strong>{{ porcentaje_pagado }}%</strong>
+            </div>
+            <div class="progreso-barra">
+              <span class="progreso-hecho" style="width: {{ porcentaje_pagado }}%"></span>
+              <span class="progreso-marca" data-en="50"></span>
+            </div>
+            <div class="progreso-marcas">
+              <span class="{% if porcentaje_pagado >= 50 %}es-alcanzada{% endif %}">
+                50% · se confirma
+              </span>
+              <span class="{% if porcentaje_pagado >= 100 %}es-alcanzada{% endif %}">
+                100% · queda pagada
+              </span>
+            </div>
+          </div>
+
+          {% comment %} CU-STD-013 paso 5: el pronto pago no está ganado
+             hasta liquidar. Se dice cuánto queda y a cuánto sube el total
+             si se deja pasar — con la fecha sola no hay nada que
+             sopesar. {% endcomment %}
+          {% if pronto_pago %}
+            <div class="note {% if pronto_pago.vencido %}note-warn{% else %}note-gold{% endif %}">
+              <div class="ico">🏷️</div>
+              <div>
+                {% if pronto_pago.vencido %}
+                  <strong>Se pasó la fecha del pronto pago.</strong>
+                  El descuento del {{ pronto_pago.porcentaje }}% se retira y tu
+                  reserva vuelve a
+                  <strong>${{ pronto_pago.total_sin_el|floatformat:2 }}</strong>.
+                {% else %}
+                  <strong>Conservas el {{ pronto_pago.porcentaje }}% de descuento
+                  si cubres el total antes del
+                  {{ pronto_pago.fecha|date:"j \d\e F" }}</strong>
+                  {% if pronto_pago.dias == 0 %}
+                    — es hoy.
+                  {% else %}
+                    — {{ pronto_pago.dias }} día{{ pronto_pago.dias|pluralize }}.
+                  {% endif %}
+                  Después de esa fecha tu reserva sube a
+                  <strong>${{ pronto_pago.total_sin_el|floatformat:2 }}</strong>.
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="section-card card">
+        <div class="section-head">
+          <div>
+            <h3>Fechas</h3>
+            <p>Lo que hay que cubrir y para cuándo.</p>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="info-grid">
+            <div>
+              <span class="hint">Vence el anticipo</span>
+              <strong{% if vencida %} class="es-vencida"{% endif %}>
+                {{ reserva.fecha_vencimiento_anticipo|date:"j \d\e F \d\e Y" }}
+              </strong>
+            </div>
+            {% if reserva.fecha_corte_pago_total %}
+              <div>
+                <span class="hint">Corte del pago total</span>
+                <strong>{{ reserva.fecha_corte_pago_total|date:"j \d\e F \d\e Y" }}</strong>
+              </div>
+            {% endif %}
+            {% if ajustes.fecha_limite_pronto_pago %}
+              <div>
+                <span class="hint">Límite del pronto pago</span>
+                <strong>{{ ajustes.fecha_limite_pronto_pago|date:"j \d\e F \d\e Y" }}</strong>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card card">
+        <div class="section-head">
+          <div>
+            <h3>Tus espacios</h3>
+            <p>Quedaron apartados al confirmar la reserva.</p>
+          </div>
+        </div>
+        <div class="section-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Espacio</th>
+                <th>Zona</th>
+                <th class="num">Superficie</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for linea in reserva.lineas.all %}
+                <tr>
+                  <td><strong>{{ linea.stand.etiqueta }}</strong></td>
+                  <td>{{ linea.stand.zona|default:"—" }}</td>
+                  <td class="num">{{ linea.stand.metros_cuadrados|floatformat:0 }} m²</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} ── Pagos ── {% endcomment %}
+    {% if ver == 'pagos' %}
+      {% comment %} CU-STD-015. Lo primero, porque es lo que hay que leer
+         **antes** de pagar; el formulario de abajo solo sirve para
+         reportar un pago que ya se hizo. {% endcomment %}
+      <div class="section-card card">
+        <div class="section-head">
+          <div>
+            <h3>Cómo pagar</h3>
+            <p>Transferencia, depósito o cheque. No recibimos efectivo.</p>
+          </div>
+        </div>
+        <div class="section-body">
+          {% if ajustes.instrucciones_pago %}
+            <p class="instrucciones-pago">{{ ajustes.instrucciones_pago|linebreaksbr }}</p>
+          {% else %}
+            <div class="note note-info">
+              <div class="ico">🏦</div>
+              <div>
+                <strong>Todavía no publicamos los datos bancarios.</strong>
+                Escríbenos y te los mandamos para que puedas abonar.
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% comment %} El formulario solo mientras quede algo que reportar
+         (CU-STD-016: saldo pendiente mayor que cero). Ofrecerlo con la
+         reserva cubierta es ofrecer un botón que solo puede contestar
+         "el abono es mayor que el saldo pendiente de $0.00". {% endcomment %}
+      {% if reserva.monto_pendiente > 0 %}
+        <div class="section-card card">
+          <div class="section-head">
+            <div>
+              <h3>Reportar un abono</h3>
+              <p>
+                Lo revisamos contra el banco antes de sumarlo a tu saldo, así que
+                no aparece de inmediato.
+              </p>
+            </div>
+          </div>
+          <div class="section-body">
+            {% if en_revision %}
+              <div class="note note-info">
+                <div class="ico">⏳</div>
+                <div>
+                  Tienes <strong>${{ en_revision|floatformat:2 }}</strong> en
+                  revisión. Ya los estamos comprobando contra el banco: no hace
+                  falta que los vuelvas a reportar.
+                </div>
+              </div>
+            {% endif %}
+            <form method="post" enctype="multipart/form-data"
+                  action="{% url 'stands:registrar_abono' convocatoria_id=convocatoria.pk %}">
+              {% csrf_token %}
+              <div class="grid-2">
+                {% include "stands/parciales/campo.html" with campo=form_abono.monto %}
+                {% include "stands/parciales/campo.html" with campo=form_abono.metodo %}
+              </div>
+              {% include "stands/parciales/campo.html" with campo=form_abono.comprobante %}
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Reportar el abono</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="note note-ok">
+          <div class="ico">✅</div>
+          <div>
+            <strong>Tu reserva está cubierta.</strong>
+            No queda saldo por pagar. Si abonaste de más, escríbenos.
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="section-card card">
+        <div class="section-head">
+          <div>
+            <h3>Lo que has abonado</h3>
+            <p>Cada abono con su estado. Solo los validados bajan el saldo.</p>
+          </div>
+        </div>
+        <div class="section-body">
+          {% if movimientos %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th class="num">Monto</th>
+                  <th>Método</th>
+                  <th>Estado</th>
+                  <th>Comprobante</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for movimiento in movimientos %}
+                  <tr>
+                    <td>{{ movimiento.fecha_registro|date:"j M Y" }}</td>
+                    <td class="num">${{ movimiento.monto|floatformat:2 }}</td>
+                    <td>{{ movimiento.get_metodo_display }}</td>
+                    <td>
+                      {% if movimiento.estado == 'validado' %}
+                        <span class="badge badge-accepted">Validado</span>
+                      {% elif movimiento.estado == 'rechazado' %}
+                        <span class="badge badge-rejected">Rechazado</span>
+                        {% if movimiento.motivo_rechazo %}
+                          <span class="hint">{{ movimiento.motivo_rechazo }}</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="badge badge-pending">En revisión</span>
+                      {% endif %}
+                      {% if movimiento.origen == 'admin_manual' %}
+                        <span class="hint">Lo registró la feria</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if movimiento.comprobante %}
+                        <a href="{% url 'stands:documento' documento_id=movimiento.comprobante.pk %}">Ver</a>
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            {% comment %} CU-STD-017 E1. {% endcomment %}
+            <p class="hint">Todavía no has reportado ningún abono.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} ── El plano, en modo consulta ──
+
+       CU-STD-013 paso 2 («en mapa y/o lista») y CU-STD-037 A1: el mapa
+       sigue teniendo sentido para quien ya reservó — es donde ve **dónde
+       le tocó**. Lo que no lleva es carrito ni «agregar»: su editorial ya
+       tiene su reserva (RN-23), y esta pestaña es para mirar.
+
+       Sus espacios llegan como `reservado` desde el servidor
+       (`servicios/mapa_json.py`), que es el tercer color del componente.
+       No rompe RN-09: lo que esa regla esconde es lo de los demás, y
+       todos los ajenos siguen llegando colapsados en `ocupado`. {% endcomment %}
+    {% if ver == 'mapa' %}
+      <div class="mapa-cabecera">
+        <div>
+          <h3>{{ mapa.salon }}</h3>
+          <p class="hint">
+            Tus espacios van marcados. Pulsa cualquiera para ver su detalle.
+          </p>
+        </div>
+        <ul class="mapa-leyenda">
+          <li><span class="mapa-muestra es-reservado"></span> Tus espacios</li>
+          <li><span class="mapa-muestra es-disponible"></span> Disponible</li>
+          <li><span class="mapa-muestra es-ocupado"></span> Ocupado</li>
+        </ul>
+      </div>
+      <div class="mapa-solo">
+        {% include "stands/parciales/lienzo_mapa.html" %}
+      </div>
+      <p class="hint">
+        {% for linea in reserva.lineas.all %}
+          <span class="badge badge-open">{{ linea.stand.etiqueta }}</span>
+        {% endfor %}
+      </p>
+    {% endif %}
+  </div>
+
+{% else %}
+  {% comment %} E1: llegó aquí sin reserva —por la URL, o tras cancelar la
+     que tenía—. La puerta del módulo no manda aquí en ese caso. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">🗺️</div>
+    <div>
+      <strong>Todavía no tienes ninguna reserva.</strong>
+      Elige tus espacios en el mapa del salón para apartarlos.
+    </div>
+  </div>
+  <div class="form-actions">
+    <a class="btn btn-primary" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
+      Ir al mapa
+    </a>
+  </div>
+{% endif %}
+
+{% if cerradas %}
+  <div class="section-card card">
+    <div class="section-head">
+      <div>
+        <h3>Reservas anteriores</h3>
+        <p>Canceladas. Sus espacios volvieron al mapa.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Reserva</th>
+            <th>Espacios</th>
+            <th class="num">Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for anterior in cerradas %}
+            <tr>
+              <td>#{{ anterior.pk }}</td>
+              <td>
+                {% for linea in anterior.lineas.all %}
+                  <span class="badge badge-open">{{ linea.stand.clave }}</span>
+                {% endfor %}
+              </td>
+              <td class="num">${{ anterior.monto_total|floatformat:2 }}</td>
+              <td>{% include "stands/parciales/badge_reserva.html" with reserva=anterior vencida=False %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

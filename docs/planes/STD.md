@@ -89,7 +89,7 @@ Ver §4. Queda una que bloquea una fase: quién invoca la barrida diaria de la f
 | Decisión | Qué bloquea | Estado |
 | --- | --- | --- |
 | **Almacenamiento de archivos** | Fase 2 (`CU-STD-001`) | ✅ [ADR-0007](<../adr/0007-los-archivos-empiezan-en-disco.md>) — 2026-08-27 |
-| **Quién invoca la barrida diaria** | Fase 6 | Pendiente |
+| **Quién invoca la barrida diaria** | Fase 6 | ✅ Workflow programado de GitHub Actions — 2026-08-29 |
 
 **Almacenamiento — decidido y construido.** Empieza en disco y el paso a un almacén de objetos
 es una variable de entorno, no código. Con eso la fase 2 deja de estar bloqueada. Lo que queda
@@ -97,14 +97,29 @@ es una deuda con nombre: mientras Render siga en `plan: free` no hay disco persi
 archivos se pierden en cada commit a la rama desplegada — `manage.py check --deploy` lo dice en
 voz alta (`comun.W001`) para que no se olvide.
 
-**La barrida — sigue abierto, y es más pequeño de lo que parecía.** Lo que hace falta es **un**
-comando de `manage.py`, idempotente, que corra una vez al día; no un planificador para seis
-procesos (ver la fase 6). Lo único que falta decidir es quién lo invoca:
+**La barrida — decidida el 2026-08-29: workflow programado de GitHub Actions.** Lo que hace
+falta es **un** comando de `manage.py`, idempotente, que corra una vez al día; no un
+planificador para seis procesos (ver la fase 6).
 
-| Opción | Nota |
-| --- | --- |
-| **Workflow programado de GitHub Actions** | Ya hay tres workflows en el repositorio y uno más no cuesta nada. Correría contra Supabase, que es el mismo patrón que ya usan las migraciones. |
-| **Cron Job de Render** | Servicio de pago aparte. Correría dentro del contenedor, con el mismo entorno que la aplicación. |
+Se eligió Actions porque **el patrón ya existe y funciona**: `deploy.yml` corre
+`migrate_schemas` y `ensure_superuser` contra Supabase con `SUPABASE_DB_URL` en los secretos.
+Un workflow con `schedule:` es ese mismo bloque con otro disparador.
+
+> [!note] Supabase no era una opción, aunque lo pareciera
+> Su único reloj es `pg_cron`, que ejecuta **SQL dentro de Postgres**. La barrida manda dos
+> correos (`CU-STD-024` y `CU-STD-025`) por el backend de Resend y escribe una `Notificacion`
+> por envío. Partirla entre SQL y Python dejaría la misma regla de negocio en dos lenguajes y
+> rompería la regla 3.
+
+> [!warning] Lo que Actions cuesta, y hay que asumir a sabiendas
+> `RESEND_API_KEY` **no está hoy en los secretos de GitHub** y tendrá que estar. Con eso las
+> credenciales de producción viven en **dos** sitios —Render y GitHub—: un secreto más que rotar
+> y un sitio más desde el que se puede mandar correo con la identidad de FILEY.
+>
+> La alternativa que lo evita es que la barrida sea una **URL protegida por token** que el
+> workflow golpea: corre dentro del contenedor, con su entorno, y el disparador no necesita más
+> credencial que el token. Es más código y menos superficie de secreto; queda anotada por si al
+> montar la fase 6 se prefiere.
 
 No bloquea la fase 2.
 
@@ -139,6 +154,17 @@ No bloquea la fase 2.
 ### Fase 3 · El mapa
 
 > `CU-STD-037`, `038`, `039` · vistas U2, A8 · **necesita** la fase 2.
+
+> [!important] Construida el 2026-08-29, y con una corrección de rumbo
+> Se construyó primero **en SVG servido por el servidor**, por no releer este plan: aquí decía
+> Godot y el `CU-STD.csv` marca `Embedded Godot View`. Corregido con
+> [ADR-0008](<../adr/0008-el-mapa-corre-en-el-navegador.md>), que además retira la mitad de la
+> regla 6 que el canvas no puede cumplir.
+>
+> Lo que quedó: el build vendorizado en `filey/estaticos/mapa/` **fuera del manifiesto**
+> (`comun/estaticos.py` — el riesgo Alto de §3, cerrado y con prueba), el puente `postMessage`
+> en `filey.js`, los dos endpoints de datos con el recorte de `RN-09` **antes de serializar**, y
+> la tarjeta de detalle del lado de la página, que es donde el contrato del componente la pone.
 
 - `MapaShowfloor`, `Stand` con su forma en celdas, `DecoracionMapa`.
 - Importar un JSON externo (`CU-STD-039`) desde el admin de la edición, que ya está construido.
@@ -190,8 +216,11 @@ reservas `Por confirmar`, y de las que ya pasaron su `fecha_vencimiento_anticipo
 disparan *durante la reevaluación del saldo*, o sea dentro de validar un abono, en la misma
 petición y de forma síncrona. No hay nada que esperar.
 
-`CU-STD-023` —el 10% por pronto pago— está a caballo: se aplica al validar el abono, y la
-barrida solo lo recoge en casos de borde.
+`CU-STD-023` —el 10% por pronto pago— está a caballo: se aplica al reservar, se consolida al
+liquidar, y **caduca con el reloj**. Esa última mitad ya está escrita —
+`servicios/pagos.py::caducar_pronto_pago` y `manage.py caducar_pronto_pago`, del 2026-08-29 —
+porque sin ella el descuento no se retiraba nunca y el carrito prometía lo contrario. Lo que
+falta es que la barrida la llame: hoy hay que ponerla en el cron a mano.
 
 > [!warning] La barrida tiene que recorrer los schemas, no las filas
 > `Reserva` vive en el schema de cada feria y ninguna consulta lleva filtro de edición
@@ -221,8 +250,8 @@ barrida solo lo recoge en casos de borde.
 
 | Riesgo | Nivel | Por qué importa |
 | --- | --- | --- |
-| El build de Godot pesa 39.5 MB | **Alto** | Nada se carga de un CDN (regla 6), así que vive en el repositorio. `CompressedManifestStaticFilesStorage` reescribe URLs dentro del JS al hacer `collectstatic`, e `index.js` referencia el `.wasm` por nombre: hay que excluir ese directorio del manifiesto o el mapa deja de cargar **solo en producción**. |
-| El prototipo de `STD` no está en `prototipo/` | **Alto** | La referencia visual es una app Angular con Angular Material, un sistema de componentes que `filey.css` no tiene. Portar U1–U6 y A1–A10 no es mecánico: hay que decidir con `filey-identidad` qué se traduce y qué se rehace. |
+| ~~El build de Godot pesa 39.5 MB~~ | **Cerrado** | 2026-08-29. Vive en `filey/estaticos/mapa/` y `comun/estaticos.py` lo deja sin hashear **pero dentro del manifiesto** — sacarlo del todo rompía `{% static %}` con `Missing staticfiles manifest entry`, que era el mismo fallo por otra puerta. Cubierto por `comun/pruebas/test_estaticos.py`. |
+| El prototipo de `STD` no está en `prototipo/` | **Alto** | Vive en `/Users/janssen/Projects/Filey/STD` (Angular + Material) y el componente de mapa en `/Users/janssen/Projects/Filey/event-stand-map`. **Que no estén en este repositorio ya costó una fase**: se dieron por inexistentes y se construyó el mapa en SVG. Portar U1–U6 y A1–A10 sigue sin ser mecánico. |
 | La invariante del tipo es de código | Medio | Nada en el esquema impide colgar una `Solicitud` de stands de un registro cuya convocatoria es de eventos. Se comprueba en el servicio y hay prueba, pero la base no lo sostiene (ADR-0006). |
 | Una vista de participante dentro de una feria enlaza fuera | Bajo | `requiere_participante` redirigía con `reverse("registros:acceso")`, que no resuelve dentro de `/f/<slug>/`. No se había notado porque ninguna vista de participante vivía dentro de una feria; U1 fue la primera. Corregido con `url_publica` y con prueba, pero es el patrón que va a volver en `EVT` y en `VIS`. |
 | `stand-map-host` sigue en inglés | Medio | No está bajo git y tiene dos parches LAN aplicados a mano. Hoy funciona porque su build y sus datos son igual de viejos; al refrescarlo hay que reaplicar los parches y traducir los JSON en el mismo paso. |

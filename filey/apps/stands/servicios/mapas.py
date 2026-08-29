@@ -6,29 +6,52 @@ filas, y a partir de ahí lo vuelve a generar él (`CU-STD-037`, `038`).
 Eso es lo que convierte el mapa en un dato del sistema en vez de un
 archivo suelto del que nadie sabe qué versión está viva.
 
-.. note:: Qué formato se lee
+.. note:: Se lee el formato del componente de mapa
 
-   `filey-mapa/1`, que es el que produce `scripts/derivar-mapa/` y en el
-   que está el mapa de 2026. `CU-STD-039` menciona además las claves del
-   componente de mapa (`grid`, `stands`, `decorations`); ese archivo no
-   existe en el repositorio, así que se lee lo que sí hay. El campo
-   `formato` está justo para poder añadir el otro lector el día que
-   aparezca sin tocar nada de lo de aquí.
+   `grid` / `stands` / `decorations`, el que describe
+   `docs/bridge_protocol.md` de `event-stand-map` (`ADR-0008`). Es el
+   mismo que el editor produce en su mensaje `saveMap`, así que lo que
+   salga del editor entra por aquí sin traducción.
+
+   .. warning:: Reimportar un `saveMap` **pierde dos campos**
+
+      `salon` y `includes` son de FILEY y no del contrato: el canvas no
+      los conoce, así que su `to_dict()` no los devuelve. Un mapa que
+      salga del editor y vuelva por aquí deja el recinto en «Sin
+      especificar» y borra el «qué incluye» de los 151 espacios, sin
+      protestar.
+
+      Hoy no puede pasar —el editor está fuera de alcance por
+      `CU-STD-039`—, y el día que entre hay que resolverlo antes:
+      conservando los valores que ya tenía cada `Stand` en vez de
+      reemplazarlos, o llevando los dos campos fuera del mapa.
+
+   Las claves van **en inglés** y es la única parte del sistema donde
+   eso pasa. No es un descuido de la regla 7: es un formato de
+   intercambio con un componente externo, y renombrarlo obligaría a
+   traducir en los dos sentidos justo en el camino donde un error
+   enseña a un aplicante quién reservó qué.
 
 .. important:: Tres campos se aceptan y se tiran
 
-   ============== =========================================================
-   `estado`       Lo produce el sistema: un stand nace `Disponible` y
-                  cambia al reservarse (`RN-10`). Importarlo dejaría
-                  escrito que un espacio está reservado sin que exista la
-                  reserva que lo respalda.
-   `precio`       Se deriva de la superficie y del `costo_m2` de la
-                  convocatoria (`RN-01`).
-   `ocupante_2026` Es quién estuvo, no quién está.
-   ============== =========================================================
+   ================ =======================================================
+   `status`         Lo produce el sistema: un stand nace `disponible` y
+                    cambia al reservarse (`RN-10`). Importarlo dejaría
+                    escrito que un espacio está reservado sin que exista
+                    la reserva que lo respalda.
+   `price`          Se deriva de la superficie y del `costo_m2` de la
+                    convocatoria (`RN-01`).
+   `dimensions_text` La superficie sale de la forma y de
+                    `meters_per_cell`.
+   ================ =======================================================
+
+   Los tres se aceptan sin protestar —vienen en el formato del
+   componente— y no se guardan. Al volver a generar el JSON salen
+   calculados.
 """
 
 import logging
+import re
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -41,7 +64,15 @@ from ..models import DecoracionMapa, MapaShowfloor, Stand
 
 logger = logging.getLogger(__name__)
 
-FORMATO = "filey-mapa/1"
+#: Cuántas celdas mide el lado de una celda al dibujar, si el archivo no
+#: lo dice. Es presentación pura y no entra en ningún cálculo.
+CELDA_POR_OMISION = 32
+
+#: Qué puede llevar la clave de un espacio. Es estrecho a propósito: la
+#: clave va **dentro de una URL** y la compone también el JavaScript del
+#: mapa, sin escaparla. Las del plano de 2026 —`24B`, `55A`, `109`— caben
+#: de sobra.
+CLAVE_ADMISIBLE = re.compile(r"^[\w-]+$", re.UNICODE)
 
 
 class ImportacionRechazada(Exception):
@@ -173,15 +204,9 @@ def _validar(datos: dict) -> tuple[dict, list[dict], list[dict]]:
     if not isinstance(datos, dict):
         raise ImportacionRechazada("El archivo no es un objeto JSON.")
 
-    formato = datos.get("formato")
-    if formato != FORMATO:
-        raise ImportacionRechazada(
-            f"Formato «{formato or 'sin declarar'}»; esto lee «{FORMATO}»."
-        )
-
-    mapa = _validar_reticula(datos.get("mapa"))
+    mapa = _validar_reticula(datos.get("grid"))
     stands = _validar_stands(datos.get("stands"), mapa)
-    decoraciones = _validar_decoraciones(datos.get("decoraciones") or [], mapa)
+    decoraciones = _validar_decoraciones(datos.get("decorations") or [], mapa)
     return mapa, stands, decoraciones
 
 
@@ -193,43 +218,49 @@ def _entero(valor, campo: str, minimo: int = 0) -> int:
     return valor
 
 
-def _validar_reticula(mapa) -> dict:
-    if not isinstance(mapa, dict):
-        raise ImportacionRechazada("Falta la retícula (`mapa`).")
-    salon = (mapa.get("salon") or "").strip()
-    if not salon:
-        raise ImportacionRechazada("La retícula no dice en qué salón se monta.")
+def _validar_reticula(grid) -> dict:
+    """`grid` → los campos de `MapaShowfloor`.
+
+    `salon` no está en el contrato del componente —al canvas le da igual
+    en qué recinto se monta— y aquí sí hace falta, así que se admite
+    fuera de `grid`, en la raíz del archivo, y se le pone un valor
+    genérico si no viene. Rechazar por eso dejaría un mapa correcto sin
+    poder cargarse por un rótulo.
+    """
+    if not isinstance(grid, dict):
+        raise ImportacionRechazada("Falta la retícula (`grid`).")
     try:
-        metros = Decimal(str(mapa.get("metros_por_celda", "1")))
+        metros = Decimal(str(grid.get("meters_per_cell", "1")))
     except (ArithmeticError, ValueError):
         raise ImportacionRechazada(
-            f"`metros_por_celda` no es un número: {mapa.get('metros_por_celda')!r}."
+            f"`meters_per_cell` no es un número: {grid.get('meters_per_cell')!r}."
         ) from None
     if metros <= 0:
-        raise ImportacionRechazada("`metros_por_celda` tiene que ser mayor que cero.")
+        raise ImportacionRechazada("`meters_per_cell` tiene que ser mayor que cero.")
     return {
-        "salon": salon[:160],
-        "columnas": _entero(mapa.get("columnas"), "mapa.columnas", 1),
-        "filas": _entero(mapa.get("filas"), "mapa.filas", 1),
+        "salon": str(grid.get("salon") or "Sin especificar")[:160],
+        "columnas": _entero(grid.get("cols"), "grid.cols", 1),
+        "filas": _entero(grid.get("rows"), "grid.rows", 1),
         "metros_por_celda": metros,
-        "tamano_celda": _entero(mapa.get("tamano_celda", 12), "mapa.tamano_celda", 1),
+        "tamano_celda": _entero(
+            grid.get("cell_size", CELDA_POR_OMISION), "grid.cell_size", 1
+        ),
     }
 
 
 def _rectangulos_de(entrada: dict, donde: str) -> list[dict]:
-    """La forma, sea rectangular o irregular, ya comprobada."""
-    crudos = entrada.get("rectangulos")
+    """La forma, en las claves **del dominio**.
+
+    Aquí se cruza la frontera: entra `col`/`row`/`w`/`h` del contrato y
+    sale `col`/`fila`/`ancho_celdas`/`alto_celdas`, que es lo que guarda
+    `Stand`. Es el único sitio del sistema donde se traduce, y por eso
+    está en una sola función.
+    """
+    crudos = entrada.get("rects")
     if crudos is None:
-        crudos = [
-            {
-                "col": entrada.get("col"),
-                "fila": entrada.get("fila"),
-                "ancho_celdas": entrada.get("ancho_celdas"),
-                "alto_celdas": entrada.get("alto_celdas"),
-            }
-        ]
+        crudos = [entrada]
     elif not isinstance(crudos, list) or not crudos:
-        raise ImportacionRechazada(f"{donde}: `rectangulos` está vacío o no es lista.")
+        raise ImportacionRechazada(f"{donde}: `rects` está vacío o no es lista.")
 
     limpios = []
     for i, r in enumerate(crudos):
@@ -238,9 +269,9 @@ def _rectangulos_de(entrada: dict, donde: str) -> list[dict]:
         limpios.append(
             {
                 "col": _entero(r.get("col"), f"{donde}.col"),
-                "fila": _entero(r.get("fila"), f"{donde}.fila"),
-                "ancho_celdas": _entero(r.get("ancho_celdas"), f"{donde}.ancho", 1),
-                "alto_celdas": _entero(r.get("alto_celdas"), f"{donde}.alto", 1),
+                "fila": _entero(r.get("row"), f"{donde}.row"),
+                "ancho_celdas": _entero(r.get("w"), f"{donde}.w", 1),
+                "alto_celdas": _entero(r.get("h"), f"{donde}.h", 1),
             }
         )
     return limpios
@@ -266,11 +297,21 @@ def _validar_stands(stands, mapa: dict) -> list[dict]:
     for i, s in enumerate(stands):
         if not isinstance(s, dict):
             raise ImportacionRechazada(f"El espacio {i} no es un objeto.")
-        clave = str(s.get("clave") or "").strip()
+        clave = str(s.get("id") or "").strip()
         if not clave:
-            raise ImportacionRechazada(f"El espacio {i} no tiene clave.")
+            raise ImportacionRechazada(f"El espacio {i} no tiene `id`.")
+        # La clave **viaja dentro de una URL** —`…/mapa/<clave>/`— y la
+        # arma también el JavaScript de la tarjeta del mapa, que no la
+        # escapa. Una con `/`, `?` o `#` deja un enlace que no resuelve o
+        # que apunta a otra parte, y el mapa se ve perfecto hasta que
+        # alguien pulsa ese espacio.
+        if not CLAVE_ADMISIBLE.match(clave):
+            raise ImportacionRechazada(
+                f"El `id` «{clave}» no sirve como clave: solo letras, "
+                "números, guion y guion bajo."
+            )
         if clave in claves:
-            raise ImportacionRechazada(f"La clave «{clave}» aparece dos veces.")
+            raise ImportacionRechazada(f"El `id` «{clave}» aparece dos veces.")
         claves.add(clave)
 
         donde = f"El espacio «{clave}»"
@@ -280,7 +321,7 @@ def _validar_stands(stands, mapa: dict) -> list[dict]:
         # Que dos espacios no se pisen. Se comprueba **celda a celda** y
         # no por envolvente: un stand en L tiene el hueco de la L ocupado
         # por sus vecinos, y con envolventes esto rechazaría un mapa
-        # correcto.
+        # correcto. El de 2026 tiene tres.
         for r in rects:
             for c in range(r["col"], r["col"] + r["ancho_celdas"]):
                 for f in range(r["fila"], r["fila"] + r["alto_celdas"]):
@@ -295,9 +336,9 @@ def _validar_stands(stands, mapa: dict) -> list[dict]:
         limpios.append(
             {
                 "clave": clave[:20],
-                "etiqueta": str(s.get("etiqueta") or clave)[:60],
-                "zona": str(s.get("zona") or "")[:80],
-                "incluye": str(s.get("incluye") or ""),
+                "etiqueta": str(s.get("label") or clave)[:60],
+                "zona": str(s.get("zone") or "")[:80],
+                "incluye": str(s.get("includes") or ""),
                 "col": min(r["col"] for r in rects),
                 "fila": min(r["fila"] for r in rects),
                 "ancho_celdas": None if irregular else rects[0]["ancho_celdas"],
@@ -312,33 +353,45 @@ def _validar_stands(stands, mapa: dict) -> list[dict]:
 
 def _validar_decoraciones(decoraciones, mapa: dict) -> list[dict]:
     if not isinstance(decoraciones, list):
-        raise ImportacionRechazada("`decoraciones` tiene que ser una lista.")
+        raise ImportacionRechazada("`decorations` tiene que ser una lista.")
+
+    #: `rect` y `text` en el contrato; `rectangulo` y `texto` en el modelo.
+    TIPOS = {
+        "rect": DecoracionMapa.Tipo.RECTANGULO,
+        "text": DecoracionMapa.Tipo.TEXTO,
+    }
 
     limpias = []
     for i, d in enumerate(decoraciones):
         if not isinstance(d, dict):
             raise ImportacionRechazada(f"La decoración {i} no es un objeto.")
-        etiqueta = str(d.get("etiqueta") or "").strip()
+        tipo_crudo = d.get("type") or "rect"
+        if tipo_crudo not in TIPOS:
+            raise ImportacionRechazada(f"La decoración {i}: tipo «{tipo_crudo}» desconocido.")
+        tipo = TIPOS[tipo_crudo]
+
+        # Un rectángulo se rotula con `label` y un texto con `text`: son
+        # dos claves distintas en el contrato para el mismo campo aquí.
+        etiqueta = str(
+            (d.get("text") if tipo == DecoracionMapa.Tipo.TEXTO else d.get("label"))
+            or ""
+        ).strip()
         if not etiqueta:
             raise ImportacionRechazada(f"La decoración {i} no tiene rótulo.")
 
         donde = f"La decoración «{etiqueta}»"
-        tipo = d.get("tipo") or DecoracionMapa.Tipo.RECTANGULO
-        if tipo not in DecoracionMapa.Tipo.values:
-            raise ImportacionRechazada(f"{donde}: tipo «{tipo}» desconocido.")
-
         fila = {
             "tipo": tipo,
             "etiqueta": etiqueta[:120],
             "color": str(d.get("color") or "")[:20],
             "col": _entero(d.get("col"), f"{donde}.col"),
-            "fila": _entero(d.get("fila"), f"{donde}.fila"),
+            "fila": _entero(d.get("row"), f"{donde}.row"),
             "ancho_celdas": None,
             "alto_celdas": None,
         }
         if tipo == DecoracionMapa.Tipo.RECTANGULO:
-            fila["ancho_celdas"] = _entero(d.get("ancho_celdas"), f"{donde}.ancho", 1)
-            fila["alto_celdas"] = _entero(d.get("alto_celdas"), f"{donde}.alto", 1)
+            fila["ancho_celdas"] = _entero(d.get("w"), f"{donde}.w", 1)
+            fila["alto_celdas"] = _entero(d.get("h"), f"{donde}.h", 1)
             _dentro_de([fila], mapa, donde)
         elif fila["col"] >= mapa["columnas"] or fila["fila"] >= mapa["filas"]:
             raise ImportacionRechazada(f"{donde} se sale de la retícula.")

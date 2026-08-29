@@ -168,7 +168,7 @@ def enviar_solicitud(
         raise EnvioRechazado(
             "Ya tienes una solicitud en esta convocatoria "
             f"({viva.get_estado_display().lower()}). "
-            "No se puede enviar otra mientras siga en juego."
+            "No puedes enviar otra mientras esa siga abierta."
         )
 
     # El registro se pide a `FER` declarando el tipo que esperamos. Es la
@@ -221,8 +221,8 @@ def reenviar_solicitud(solicitud: Solicitud) -> Solicitud:
     """
     if solicitud.estado != Solicitud.Estado.CAMBIOS_SOLICITADOS:
         raise EnvioRechazado(
-            "Solo se reenvía una solicitud a la que se le pidieron cambios. "
-            f"Ésta está {solicitud.get_estado_display().lower()}."
+            "Solo puedes reenviar una solicitud cuando te pedimos cambios. "
+            f"Esta está {solicitud.get_estado_display().lower()}."
         )
 
     _convocatoria_que_admite(solicitud.registro.convocatoria)
