@@ -16,7 +16,7 @@ dependencias:
 
 ## Descripción
 
-El administrador accede a un listado maestro que contiene todas las reservas del evento, con la capacidad de buscar, filtrar por estado, y detectar fácilmente aquellas reservas que tienen saldos pendientes, próximos vencimientos o notificaciones de vencimiento.
+El administrador accede a un listado maestro que contiene todas las reservas de esta convocatoria, con la capacidad de buscar, filtrar por estado, y detectar fácilmente aquellas reservas que tienen saldos pendientes, próximos vencimientos o notificaciones de vencimiento.
 
 ## Actores
 
@@ -33,7 +33,7 @@ El administrador selecciona la opción de "Reservas" en el menú de navegación 
 ## Flujo principal
 
 1. El administrador ingresa a la sección de reservas.
-2. El sistema recupera todas las reservas asociadas al evento vigente.
+2. El sistema recupera todas las reservas de la convocatoria en curso.
 3. El sistema muestra una tabla o listado con columnas clave: Identificador de reserva, Editorial, Estado (`Por confirmar`, `Confirmada`, `Pagada`, `Cancelada`), Stands ocupados, Monto total y Saldo pendiente.
 4. El sistema resalta visualmente las reservas vencidas (ver CU-STD-024) para priorizar su atención.
 5. El administrador utiliza los controles de búsqueda (por nombre de editorial) o filtros (por estado) para localizar un registro en específico.
@@ -48,7 +48,7 @@ El administrador selecciona la opción de "Reservas" en el menú de navegación 
 ## Excepciones
 
 ### E1. Lista vacía
-1. En el paso 2, el sistema detecta que aún no hay reservas creadas para el evento.
+1. En el paso 2, el sistema detecta que aún no hay reservas creadas en esta convocatoria.
 2. El sistema muestra un mensaje indicando que no se encontraron reservas.
 
 ## Postcondiciones

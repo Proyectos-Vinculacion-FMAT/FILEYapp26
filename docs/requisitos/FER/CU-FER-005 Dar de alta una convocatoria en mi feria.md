@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: "0.2"
+version: "0.3"
 tags:
   - tipo/caso-de-uso
   - dom/fer
@@ -66,10 +66,21 @@ Abrirla al público es un acto distinto y deliberado (CU-FER-008).
 > rechaza (E2), el aviso de A2 se muestra, y las validaciones de nombre y fechas se cumplen. La
 > lógica no está en la pantalla: vive en `apps/convocatorias/servicios/altas.py`, que es a quien
 > llamará también la pantalla del panel cuando se construya.
+
+<!-- -->
+
+> [!note] El paso 6 y E1 ya están construidos — falta quien los conteste (2026-08-27)
+> El alta le pregunta al **registro de módulos** ([ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>))
+> quién sirve el tipo de la convocatoria y llama al callback que ese módulo dejó inscrito,
+> **dentro de la misma transacción**. Si el callback revienta, la transacción se deshace entera
+> y no queda ni la convocatoria: eso es E1, y está probado.
 >
-> Siguen sin construirse la `ConfiguracionSistema` de `STD` (paso 6 y E1) y la entrada de
-> `BitacoraFER`: ninguno de los dos modelos existe todavía. El servicio ya crea la convocatoria
-> dentro de una transacción, que es donde entrarán los dos.
+> Lo que falta no es el mecanismo sino el módulo: `apps/stands` no existe, así que hoy nadie
+> se inscribe para `STD` y la convocatoria se crea sin configuración. **Que no haya módulo no es
+> un error** y no bloquea el alta — es el estado normal de los tres tipos.
+>
+> Sigue sin construirse la entrada de `BitacoraFER`, cuyo modelo no existe. Va en esa misma
+> transacción cuando exista.
 
 ## Disparador
 

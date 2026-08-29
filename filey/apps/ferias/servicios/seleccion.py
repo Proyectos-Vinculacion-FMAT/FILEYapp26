@@ -14,6 +14,7 @@ una feria sí es de la vista — eso es traducción a HTTP, no negocio.
 
 from django.db.models import QuerySet
 
+from .. import permisos
 from ..models import AdminFeria, Feria
 
 
@@ -38,7 +39,7 @@ def ferias_para_participante() -> QuerySet[Feria]:
     return Feria.reales.filter(estado=Feria.Estado.ACTIVA)
 
 
-def ferias_administradas(persona) -> QuerySet[AdminFeria]:
+def ferias_administradas(persona) -> list[AdminFeria]:
     """Los accesos de esta persona, uno por feria que administra.
 
     Devuelve ``AdminFeria`` y no ``Feria`` a propósito: la pantalla
@@ -50,8 +51,22 @@ def ferias_administradas(persona) -> QuerySet[AdminFeria]:
     Quien administra una edición tiene motivos para entrar a una que
     está en preparación (montarla) o archivada (consultarla): lo que
     cambia entonces es lo que puede hacer dentro, no si la ve.
+
+    Para el operador de la plataforma son **todas** (`ADR-0005`), y las
+    filas se arman sin guardarlas: la excepción del ADR es precisamente
+    no necesitar fila en ``AdminFeria``, así que crearla aquí la
+    contradiría. Sin esto, un operador entraba a cualquier feria
+    escribiendo su URL pero la lista que lleva a ellas le salía vacía —
+    que es justo el caso que ADR-0005 existe para resolver, el de una
+    edición cuyo dueño se fue.
     """
-    return (
+    if permisos.es_operador_la_cuenta(persona):
+        return [
+            AdminFeria(feria=feria, persona=persona, es_dueno=True)
+            for feria in Feria.reales.order_by("-creada_en")
+        ]
+
+    return list(
         AdminFeria.objects.filter(persona=persona)
         .select_related("feria")
         .exclude(feria__schema_name="public")

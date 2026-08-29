@@ -37,7 +37,7 @@ El administrador abre la sección de Solicitudes del panel.
 
 ### En éxito
 
-- Se muestra la lista de solicitudes del evento según los filtros aplicados.
+- Se muestra la lista de solicitudes **de esta convocatoria** según los filtros aplicados.
 
 ### En fallo
 
@@ -46,7 +46,7 @@ El administrador abre la sección de Solicitudes del panel.
 ## Flujo principal
 
 1. El administrador abre la sección de Solicitudes.
-2. El sistema muestra las solicitudes del evento con su estado (`pendiente` / `aceptada` / `rechazada` / `cambios_solicitados`), la editorial y la fecha de envío.
+2. El sistema muestra las solicitudes de esta convocatoria con su estado (`pendiente` / `aceptada` / `rechazada` / `cambios_solicitados`), la editorial y la fecha de envío.
 3. El administrador aplica filtros (estado y/o búsqueda por editorial).
 4. El sistema actualiza la lista conforme a los filtros.
 5. El administrador selecciona una solicitud para ver su detalle (CU-STD-005).
@@ -56,7 +56,7 @@ El administrador abre la sección de Solicitudes del panel.
 ### A1. Lista sin filtros
 
 1. En el paso 3 el administrador no aplica ningún filtro.
-2. El sistema muestra todas las solicitudes del evento y el flujo continúa en el paso 5.
+2. El sistema muestra todas las solicitudes de esta convocatoria y el flujo continúa en el paso 5.
 
 ## Flujos de excepción
 

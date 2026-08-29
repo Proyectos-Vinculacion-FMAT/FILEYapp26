@@ -47,6 +47,23 @@ def estaticos_sin_manifiesto(settings):
 
 
 @pytest.fixture(autouse=True)
+def medios_desechables(settings, tmp_path):
+    """Los archivos que suben las pruebas van a un temporal, no al repo.
+
+    `MEDIA_ROOT` apunta por omisión a `filey/medios/`, y un `FileField`
+    escribe el archivo de verdad aunque la fila se revierta: cada `pytest`
+    dejaba constancias fiscales y cartas de representación en el árbol de
+    trabajo, y nada las borraba nunca —borrar un `Documento` no borra su
+    archivo desde Django 1.3—. Estaba en `.gitignore`, así que no
+    ensuciaba los commits; solo crecía.
+
+    Cada prueba con el suyo: dos que suban un archivo con el mismo nombre
+    no se pisan, y el `tmp_path` de pytest se limpia solo.
+    """
+    settings.MEDIA_ROOT = str(tmp_path / "medios")
+
+
+@pytest.fixture(autouse=True)
 def empezar_en_public():
     """Deja la conexión en `public` antes de cada prueba.
 

@@ -16,7 +16,7 @@ dependencias:
 
 ## Descripción
 
-El administrador gestiona de forma individualizada la fecha límite para el pago del 100% de una reserva, extendiéndola en casos particulares. Esta fecha controla el último gran corte antes del evento.
+El administrador gestiona de forma individualizada la fecha límite para el pago del 100% de una reserva, extendiéndola en casos particulares. Esta fecha controla el último gran corte antes de la feria.
 
 ## Actores
 

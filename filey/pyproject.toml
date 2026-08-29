@@ -7,7 +7,9 @@
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
-testpaths = ["apps"]
+# `comun` también: no tiene modelos, pero sí las comprobaciones de
+# despliegue y el `upload_to` de todos los archivos del sistema.
+testpaths = ["apps", "comun"]
 addopts = "-q"
 markers = [
     "con_pisos_reales: no desactiva las esperas anti-enumeración del acceso admin",

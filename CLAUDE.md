@@ -57,6 +57,20 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 7. Nombres en español, consistentes, tanto en código como en rutas de archivo. Sin eñes en
    identificadores ni nombres de columna (`es_dueno`, `contrasena`): la eñe arrastra
    fricción de codificación en cada herramienta que toque la base.
+8. **Un vertical se engancha a su convocatoria por el registro de módulos** (ADR-0006).
+   `apps/convocatorias` **nunca nombra a un vertical**: cada app se inscribe a sí misma desde
+   su `AppConfig.ready()` con `apps.convocatorias.modulos.registrar(Modulo(...))`, diciendo su
+   tipo, a qué URL manda al aplicante y al administrador, y qué configuración crear en el alta.
+   La liga persona↔convocatoria es `RegistroConvocatoria`, y la única puerta para crearla es
+   `servicios/registros.py::obtener_o_crear_registro`, que exige `tipo_esperado` — es lo único
+   que sostiene el invariante de tipo, porque la base no puede.
+9. **Los archivos que sube la gente no tienen URL** (ADR-0007). `MEDIA_URL` no está montada en
+   ningún urlconf, a propósito: son constancias fiscales y comprobantes de personas
+   identificadas. Se alcanzan por una vista que primero decide y luego entrega
+   (`apps/stands/servicios/archivos.py` es el patrón). Dónde viven lo decide `ALMACENAMIENTO`
+   —`local` en disco, `s3` cuando haya bucket— y quien llama no cambia. Todo lo que se suba
+   pasa por la lista blanca de `comun/almacenamiento.py`: se sirven desde nuestro propio
+   origen, así que un `.html` admitido sería XSS con nuestras cookies detrás.
 
 ## Estado actual
 
@@ -68,12 +82,24 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   el alta desde `/django-admin/`, las dos pantallas de elegir feria y los accesos de una feria
   en `/f/<slug>/accesos/`) y `apps/convocatorias/` (capa por feria: `Convocatoria` y su
   catálogo, que es la portada de `/f/<slug>/`, y el alta de convocatorias desde
-  `/f/<slug>/django-admin/`). Falta la pantalla de convocatorias del panel del dueño
-  (CU-FER-005 a CU-FER-009 con su propia UI), `RegistroConvocatoria`, la transferencia de
-  propiedad y `BitacoraFER`.
-- **Solo documentado:** `EVT`, `TAL`, `STD`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
-  Ningún panel de módulo está conectado todavía.
-- **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`.
+  `/f/<slug>/django-admin/`), más `RegistroConvocatoria` y el registro de módulos que enganchan
+  el catálogo con cada vertical (ADR-0006). Falta la pantalla de convocatorias del panel del
+  dueño (CU-FER-005 a CU-FER-009 con su propia UI), la transferencia de propiedad y
+  `BitacoraFER`.
+- **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene **la solicitud de expositor
+  entera** (CU-STD-001 a 008): la ficha oficial en U1, la cola de revisión y el detalle en A1 y
+  A2, el dictamen con su aviso por correo, los adjuntos con permiso, y `ConfiguracionSistema`
+  (CU-STD-034) editable desde `/f/<slug>/django-admin/` mientras no exista A10. **Falta todo lo
+  que cuelga del mapa**: `MapaShowfloor`, `Stand`, `DecoracionMapa`, `Reserva`, `Movimiento`, y
+  con ellos CU-STD-009 a 033 y 035 a 039. El **mapa sí existe ya como dato**:
+  `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel por
+  `scripts/derivar-mapa/`; es la entrada que CU-STD-039 tiene que saber leer.
+- **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
+- **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
+  tiene prototipo**: su especificación visual es la Ficha de Registro en papel
+  (`docs/soporte/documentos proporcionados por FILEY/Material para Registro de Actividades
+  FILEY 2027/Registro-para-Expositores-FILEY-2026.pdf`), que manda sobre las tablas abreviadas
+  de `docs/requisitos/`.
 
 ## Comandos
 

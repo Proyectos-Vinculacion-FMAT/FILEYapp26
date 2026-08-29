@@ -109,7 +109,7 @@ def _cambio_de_feria(feria, zona_admin, usuario, autenticada):
         return None
 
     if zona_admin:
-        if seleccion.ferias_administradas(usuario).count() < 2:
+        if len(seleccion.ferias_administradas(usuario)) < 2:
             return None
         return {"texto": "Mis ferias", "url": url_publica("ferias:mis_ferias")}
 

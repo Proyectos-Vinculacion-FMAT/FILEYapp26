@@ -249,6 +249,11 @@ a.home:hover { opacity: 0.88; }
 /* ===================== Forms ===================== */
 .field { margin-bottom: 16px; }
 .field > label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--gris-700); }
+.field .hint { font-weight: 400; color: var(--gris-500); font-size: 12.5px; }
+/* Dentro de un `<label>` la ayuda va en línea, junto al nombre del campo;
+   suelta bajo el control tiene que ocupar su propio renglón. Sin esto se
+   pega al lado del input y se lee como si fuera parte de él. */
+.field > .hint { display: block; margin-top: 6px; line-height: 1.45; }
 .req { color: var(--color-rojo); font-weight: 700; }
 .opt { color: var(--gris-500); font-weight: 400; font-size: 12.5px; }
 
@@ -395,6 +400,10 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .badge-open   { background: var(--ok-050);   color: var(--ok-600); }
 .badge-closed { background: var(--gris-100); color: var(--gris-500); }
 .badge-soon   { background: var(--warn-050); color: var(--warn-600); }
+.badge-pending  { background: var(--azul-100); color: var(--azul-600); }
+.badge-accepted { background: var(--ok-050);   color: var(--ok-600); }
+.badge-rejected { background: var(--err-050);  color: var(--err-600); }
+.badge-changes  { background: var(--warn-050); color: var(--warn-600); }
 
 /* ===================== Notas / avisos ===================== */
 .note {
@@ -403,6 +412,9 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 }
 .note .ico { flex: 0 0 22px; font-size: 18px; line-height: 1.2; }
 .note-info { background: var(--azul-050); color: var(--color-azul-institucional); border: 1px solid var(--azul-100); }
+.note-ok   { background: var(--ok-050); color: var(--ok-600); border: 1px solid #cfe6d5; }
+.note-err  { background: var(--err-050); color: var(--err-600); border: 1px solid #eecac5; }
+.note-warn { background: var(--warn-050); color: #7a5a00; border: 1px solid var(--oro-200); }
 .note-gold { background: var(--oro-050); color: var(--color-dorado-700); border: 1px solid var(--oro-200); }
 
 .closed-overlay {
@@ -474,6 +486,11 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
   padding: 16px 24px; border-bottom: 1px solid var(--gris-200);
   background: var(--gris-050); border-radius: var(--radio) var(--radio) 0 0;
 }
+.section-card > .section-head .num {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+  background: var(--color-azul-institucional); color: var(--color-blanco);
+  display: grid; place-items: center; font-weight: 700; font-size: 14px;
+}
 .section-card > .section-head h3 { margin: 0; font-size: 16.5px; color: var(--color-azul-institucional-enfoque); }
 .section-card > .section-head p { margin: 2px 0 0; font-size: 13px; color: var(--gris-500); }
 .section-card > .section-body { padding: 22px 24px; }
@@ -498,3 +515,130 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 /* .btn-danger · prototipo/VIS/styles.css */
 .btn-danger { background: var(--err-050); color: var(--err-600); border: 1.5px solid #eecac5; }
 .btn-danger:hover { background: #f7dcd8; text-decoration: none; }
+
+/* ── Portadas de STD (U1, A1, A2) ──────────────────────────────
+   Copiado de prototipo/common/styles-base.css con los mismos nombres,
+   como manda el skill `filey-render` §6: al portar una pantalla se trae
+   solo lo que esa pantalla usa. */
+
+/* .grid-2 · líneas 263 · formularios de dos columnas */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+
+/* .radio-row · línea 266 · opciones en línea (giro, materiales) */
+.radio-row { display: flex; gap: 22px; padding-top: 4px; flex-wrap: wrap; }
+.radio-row label { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14.5px; color: var(--gris-700); }
+
+/* .multi-input · línea 281 · lista de nombres (los sellos editoriales) */
+.multi-input { display: flex; flex-direction: column; gap: 8px; }
+
+/* .multi-fila · NUEVO, sin contraparte en el prototipo.
+   Una fila de una lista editable: los campos crecen y la acción se queda
+   del tamaño que necesita. La usan los sellos de STD (nombre + carta).
+   STD no tiene pantallas en `prototipo/`, así que esto nace aquí; si el
+   prototipo llega a tenerlas, hay que reconciliarlo. */
+.multi-fila { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 6px; }
+.multi-fila > .field { flex: 1 1 0; margin-bottom: 14px; }
+
+/* Alinear por arriba y no por abajo (`flex-end`) es lo que pone las dos
+   etiquetas en el mismo renglón y los dos controles a la misma altura.
+   Con `flex-end` mandaba el campo más alto —el de archivo, que además
+   lleva su ayuda debajo— y el otro quedaba a media altura, como si
+   fueran de dos filas distintas.
+   La contrapartida: el botón, que no tiene etiqueta, sube demasiado. Se
+   baja el alto exacto de un bloque de etiqueta para que quede a la
+   altura de los controles. */
+.multi-fila { --alto-etiqueta: 27px; }  /* 14px · line-height 1.5 + 6px */
+.multi-fila > .btn { flex: 0 0 auto; margin-top: var(--alto-etiqueta); }
+
+@media (max-width: 920px) {
+  .multi-fila { flex-direction: column; align-items: stretch; }
+  .multi-fila > .btn { margin-top: 0; align-self: flex-start; }
+}
+
+/* .info-grid · línea 382 · contenido principal + columna lateral */
+.info-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+
+@media (max-width: 920px) {
+  .grid-2, .info-grid { grid-template-columns: 1fr; }
+}
+
+/* .grid-3 · prototipo/common/styles-base.css línea 264 */
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; }
+
+/* .opciones · NUEVO, sin contraparte en el prototipo.
+   Una lista larga de casillas —las 59 temáticas de la Ficha de Registro—
+   en columnas que fluyen. Con `columns` y no con grid porque el orden que
+   importa es el alfabético de arriba abajo: es como está impresa la ficha
+   y como la va a recorrer quien la tenga delante. Además reflota sola al
+   estrecharse, sin un breakpoint por cada anchura. */
+.opciones { columns: 3 190px; column-gap: 22px; }
+.opciones label {
+  display: flex; align-items: baseline; gap: 8px;
+  break-inside: avoid; margin-bottom: 7px;
+  font-weight: 500; font-size: 14px; color: var(--gris-700);
+}
+.opciones input { flex: 0 0 auto; }
+
+/* .opcion-larga · una opción cuya descripción no cabe en su etiqueta
+   (el tipo de stand y lo que incluye cada uno). */
+.opcion-larga { display: flex; flex-direction: column; gap: 10px; }
+.opcion-larga label {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
+  padding: 12px 14px; cursor: pointer; font-size: 14px; color: var(--gris-700);
+}
+.opcion-larga label:hover { border-color: var(--azul-600); background: var(--azul-050); }
+.opcion-larga input { margin-top: 3px; flex: 0 0 auto; }
+
+/* ── Subir un archivo ──────────────────────────────────────────
+   El prototipo resuelve esto con `.file-mock`, que es un `<div>`: le
+   vale porque nada se sube de verdad. Aquí hace falta un
+   `<input type="file">` real, así que se estiliza el nativo en vez de
+   taparlo con un control propio. Se gana lo que un control propio
+   pierde: teclado, lector de pantalla y el diálogo del sistema, gratis
+   y sin una línea de JavaScript. */
+.field input[type="file"] {
+  display: block; width: 100%;
+  border: 1.5px dashed var(--gris-300); border-radius: var(--radio-sm);
+  padding: 11px 13px; background: var(--gris-050);
+  font-size: 13.5px; color: var(--gris-500); cursor: pointer;
+}
+.field input[type="file"]:hover { border-color: var(--azul-600); background: var(--azul-050); }
+.field input[type="file"]:focus-visible { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+
+/* El botón del propio input. Se parece a `.btn-ghost` sin serlo: no se
+   le puede poner una clase, solo alcanzarlo por este pseudo-elemento. */
+.field input[type="file"]::file-selector-button {
+  margin-right: 12px; padding: 7px 14px;
+  border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
+  background: var(--color-blanco); color: var(--color-azul-institucional);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.field input[type="file"]::file-selector-button:hover {
+  border-color: var(--azul-600); background: var(--azul-050);
+}
+
+/* ── Un aviso que se puede marcar ──────────────────────────────
+   La aceptación de las bases. El aviso entero es la etiqueta de la
+   casilla: se marca pulsando en cualquier parte, no solo en el cuadrito
+   de 13 píxeles, que en un móvil es un objetivo ridículo.
+
+   Y tiene que **parecerlo**: un `.note` normal es informativo, así que
+   sin cursor, sin hover y sin foco visible nadie sabría que se puede
+   pulsar. */
+.nota-elegible { display: block; padding: 0; }
+.nota-elegible > label {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; cursor: pointer;
+}
+.nota-elegible > label input { margin-top: 2px; }
+.nota-elegible > .hint { display: block; padding: 0 16px 14px 50px; }
+
+/* El aviso completo reacciona, no solo la casilla. */
+.nota-elegible:hover { filter: brightness(0.98); }
+/* El foco del teclado se ve en el aviso entero: el recuadro nativo de la
+   casilla se pierde dentro de un bloque de color. */
+.nota-elegible:focus-within { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+/* Y al marcarla se nota que quedó marcada, que es lo que confirma que el
+   paso obligatorio está resuelto. */
+.nota-elegible:has(input:checked) { border-color: var(--ok-600); }

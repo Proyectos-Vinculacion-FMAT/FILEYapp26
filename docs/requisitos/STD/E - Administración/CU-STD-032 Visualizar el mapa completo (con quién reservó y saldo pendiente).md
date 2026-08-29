@@ -25,7 +25,7 @@ El administrador visualiza el mapa interactivo del showfloor sin restricciones. 
 ## Precondiciones
 
 - El administrador tiene sesión iniciada.
-- Existe un mapa configurado para el evento.
+- Existe un mapa configurado para esta convocatoria (RN-19). Los datos los sirve CU-STD-038.
 
 ## Disparador
 
@@ -59,7 +59,7 @@ El administrador ingresa a la sección "Mapa" del menú principal (vista A8).
 
 ## Postcondiciones
 
-- **Éxito:** El administrador obtiene una perspectiva geográfica e informada de la ocupación del evento.
+- **Éxito:** El administrador obtiene una perspectiva geográfica e informada de la ocupación de esta convocatoria.
 - **Fallo:** No aplica.
 
 ## Reglas de negocio relacionadas

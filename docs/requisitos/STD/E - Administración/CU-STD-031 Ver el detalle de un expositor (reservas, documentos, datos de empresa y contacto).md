@@ -37,7 +37,7 @@ Selección de un expositor en el listado para ver su detalle (vista A7).
 2. El sistema despliega la información fiscal: Razón social, RFC, y enlace para descargar el `Documento` de Constancia de Situación Fiscal.
 3. El sistema muestra los datos comerciales y sellos (`SelloEditorial`).
 4. El sistema despliega la información de contacto operativo y legal.
-5. El sistema muestra una sección con la `Reserva` vinculada a este expositor para el evento actual (estado, total y stands).
+5. El sistema muestra una sección con las `Reserva` de este expositor en esta feria —**una por convocatoria** a la que haya aplicado— con su estado, total y stands.
 6. Si la editorial tiene una reserva, el administrador puede seleccionarla para ser redirigido a la gestión de esa reserva en particular (CU-STD-029).
 7. El administrador finaliza su consulta y regresa a la lista.
 

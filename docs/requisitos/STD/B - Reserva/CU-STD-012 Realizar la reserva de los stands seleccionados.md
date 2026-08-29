@@ -24,7 +24,7 @@ La editorial formaliza la reserva de los stands de su carrito, obteniendo una re
 
 ## Alcance
 
-Componente de Stands — módulo de Reserva. Es el punto en que los stands se protegen contra doble reserva: se marcan como Reservado únicamente al confirmar (no antes). Genera una sola reserva por editorial.
+Componente de Stands — módulo de Reserva. Es el punto en que los stands se protegen contra doble reserva: se marcan como Reservado únicamente al confirmar (no antes). Genera una sola reserva por editorial **y convocatoria**.
 
 ## Actores
 
@@ -40,7 +40,7 @@ El aplicante decide formalizar la reserva desde su carrito (CU-STD-011).
 
 - El aplicante tiene sesión iniciada y está habilitado para reservar (RN-16).
 - El carrito tiene al menos un stand.
-- La editorial no tiene una reserva activa (una reserva por editorial).
+- La editorial no tiene una reserva activa en esta convocatoria (una reserva por editorial y convocatoria).
 
 ## Postcondiciones
 

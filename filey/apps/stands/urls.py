@@ -1,0 +1,54 @@
+"""
+Rutas de `STD` — **dentro** de una feria.
+
+Cuelgan de `config/urls_feria.py`, así que no llevan escrito el prefijo
+`/f/<slug>/`: lo antepone `django-tenants`. Namespace propio (`stands:`),
+como manda que cada vertical sea su propia app.
+
+Las dos que el registro de módulos nombra —``solicitud`` y ``panel``—
+reciben el id de la convocatoria, porque una feria puede tener varias
+convocatorias de stands y cada una tiene su propio expediente, su propio
+mapa y su propio precio.
+"""
+
+from django.urls import path
+
+from . import views
+
+app_name = "stands"
+
+urlpatterns = [
+    # U1 · lo que ve el aplicante. Es a donde apunta el "Registrarme" del
+    # catálogo de convocatorias (`ADR-0006`).
+    path(
+        "stands/<int:convocatoria_id>/solicitud/",
+        views.solicitud,
+        name="solicitud",
+    ),
+    # A1 y el panel del módulo.
+    path(
+        "stands/<int:convocatoria_id>/",
+        views.panel,
+        name="panel",
+    ),
+    path(
+        "stands/<int:convocatoria_id>/solicitudes/",
+        views.solicitudes_de_la_convocatoria,
+        name="solicitudes",
+    ),
+    # A2 · no lleva la convocatoria en la ruta: la solicitud ya sabe de
+    # cuál cuelga, y repetirla daría dos fuentes para lo mismo y una URL
+    # que puede mentir.
+    path(
+        "stands/solicitud/<int:solicitud_id>/",
+        views.detalle_solicitud,
+        name="detalle_solicitud",
+    ),
+    # La entrega de adjuntos. Es la única forma de alcanzar un archivo:
+    # `MEDIA_URL` no está montada en ningún urlconf (`ADR-0007`).
+    path(
+        "stands/documento/<int:documento_id>/",
+        views.documento,
+        name="documento",
+    ),
+]

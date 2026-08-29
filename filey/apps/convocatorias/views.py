@@ -35,14 +35,20 @@ def catalogo_de_la_feria(peticion):
     ``AdminFeria`` y aun así opera cualquier feria (`ADR-0005`).
     """
     es_administrador = administra(peticion)
+    feria = peticion.tenant
 
     return render(
         peticion,
         "convocatorias/catalogo.html",
         {
-            "feria": peticion.tenant,
-            "convocatorias": catalogo.convocatorias_visibles(
-                es_administrador=es_administrador
+            "feria": feria,
+            # Entradas y no convocatorias: la tarjeta necesita saber si
+            # alguien sirve este tipo y si quien mira ya se inscribió, y
+            # ninguna de las dos cosas está en `Convocatoria` (`ADR-0006`).
+            "entradas": catalogo.entradas_visibles(
+                es_administrador=es_administrador,
+                persona=peticion.user,
+                feria=feria,
             ),
             "es_dueno": tiene_alcance_de_dueno(peticion),
             # El chasis lo deduce solo dentro de una feria, pero la

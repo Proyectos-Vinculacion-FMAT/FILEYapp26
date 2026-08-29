@@ -35,6 +35,9 @@ urlpatterns = [
     # Ver `comun/admin_feria.py`.
     path("django-admin/", admin_feria.urls),
     path("accesos/", include("apps.ferias.urls_accesos")),
+    path("", include("apps.stands.urls")),
+    # El catálogo va **al final**: sirve la raíz de la feria, así que
+    # cualquier prefijo de un módulo tiene que resolverse antes.
     path("", include("apps.convocatorias.urls")),
 ]
 

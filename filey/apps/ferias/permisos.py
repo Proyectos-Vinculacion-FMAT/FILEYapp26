@@ -83,12 +83,23 @@ def es_operador(peticion) -> bool:
     las convocatorias—; ``is_superuser`` es lo único que además sustituye
     a ser dueño de la feria.
     """
-    usuario = getattr(peticion, "user", None)
+    return es_operador_la_cuenta(getattr(peticion, "user", None))
+
+
+def es_operador_la_cuenta(persona) -> bool:
+    """Lo mismo, preguntado sobre la cuenta y no sobre la petición.
+
+    Existe porque hay dos sitios que necesitan la respuesta sin tener
+    petición delante: la lista de "mis ferias" —que recibe una persona— y
+    cualquier comando de `manage.py`. Delega ``es_operador`` en ésta para
+    que la definición de operador siga siendo **una**: dos comprobaciones
+    parecidas divergen en cuanto alguien endurece una.
+    """
     return bool(
-        usuario is not None
-        and usuario.is_authenticated
-        and usuario.is_active
-        and usuario.is_superuser
+        persona is not None
+        and getattr(persona, "is_authenticated", False)
+        and persona.is_active
+        and persona.is_superuser
     )
 
 
