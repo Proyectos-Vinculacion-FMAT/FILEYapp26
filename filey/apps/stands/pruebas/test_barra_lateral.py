@@ -327,30 +327,44 @@ def test_el_boton_dice_lo_que_controla(client, escenario):
 def test_una_seccion_planeada_se_pinta_apagada_y_sin_enlace(client, escenario):
     """El menú enseña la forma completa del módulo.
 
-    «Expositores» es una de las seis secciones del prototipo de STD y no
-    existe todavía. Omitirla deja la pregunta "¿y dónde veo a los
-    expositores?" respondiéndose buscando por todo el panel; enlazarla
-    sería peor, porque el enlace no lleva a ninguna parte.
+    Una sección sin pantalla se pinta igual, apagada: omitirla deja la
+    pregunta "¿y dónde veo eso?" respondiéndose buscando por todo el
+    panel, y enlazarla sería peor, porque el enlace no lleva a ninguna
+    parte.
 
-    Dos salieron de esta lista al construirse: «Configuración» (A10,
-    `CU-STD-034`) y «Pagos por validar» (A5, `CU-STD-018`), el
-    2026-08-29. Cada una la comprueba ahora su propio módulo, en el
-    sentido contrario.
+    **Se prueba con un módulo de mentira y no con una sección real de
+    STD.** Las cuatro que estuvieron aquí —Configuración, Pagos por
+    validar y Expositores, la última el 2026-08-30— se fueron
+    construyendo, y cada vez esta prueba se caía sin que nada estuviera
+    roto. Lo que se defiende es la capacidad del chasis, que no depende
+    de qué le falte hoy a un módulo.
     """
     feria, conv, _ = escenario
     client.force_login(_admin(feria))
+    con_una_planeada = Modulo(
+        tipo=TipoConvocatoria.STD,
+        etiqueta="Venta de stands",
+        url_aplicar="stands:solicitud",
+        url_panel="stands:panel",
+        secciones_panel=(
+            SeccionPanel("Resumen", "📊", "stands:panel"),
+            SeccionPanel("Bodega", "📦"),
+        ),
+    )
 
-    plano = _plano(client.get(
-        _url(feria, "stands:panel", convocatoria_id=conv.pk)
-    ).content.decode())
+    with modulo_temporal(con_una_planeada):
+        plano = _plano(client.get(
+            _url(feria, "stands:panel", convocatoria_id=conv.pk)
+        ).content.decode())
 
-    for etiqueta in ("Expositores",):
-        assert (
-            '<span class="side-link is-disabled" aria-disabled="true" '
-            f'title="Todavía no construido"> <span class="ico" '
-            f'aria-hidden="true">' in plano
-        ), etiqueta
-        assert f"</span> {etiqueta} </span>" in plano, etiqueta
+    assert (
+        '<span class="side-link is-disabled" aria-disabled="true" '
+        'title="Todavía no construido"> <span class="ico" '
+        'aria-hidden="true">' in plano
+    )
+    assert "</span> Bodega </span>" in plano
+    # Y la que sí existe sigue siendo un enlace.
+    assert f'href="/f/{feria.slug}/stands/{conv.pk}/"' in plano
 
 
 def test_una_seccion_planeada_nunca_sale_marcada_como_actual(client, escenario):

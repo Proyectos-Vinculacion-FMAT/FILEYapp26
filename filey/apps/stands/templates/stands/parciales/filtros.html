@@ -11,6 +11,12 @@
      url_limpia   a dónde vuelve «Quitar filtros»
      nombre       cómo se llama una fila: «solicitud», «reserva»
      plural       y cómo se llaman varias
+     etiqueta_busqueda, placeholder   opcionales, si se busca por más que
+                  el nombre (A6 busca también por correo)
+
+   `chips` puede venir vacío: A6 no filtra por estado porque solo tiene
+   uno —expositor es quien tiene la solicitud aceptada— y entonces la
+   barra es solo el buscador.
 
    **Los estados son chips y no un `<select>`.** Son pocos, excluyentes y
    conocidos: desplegados se ve el vocabulario entero sin abrir nada (ley
@@ -26,6 +32,7 @@
    el estado no debe borrar en silencio lo que alguien tecleó.
    =========================================================== {% endcomment %}
 <div class="filtros">
+  {% if chips %}
   <nav class="chips" aria-label="Filtrar por estado">
     {% for chip in chips %}
       {% comment %} El activo no es enlace: llevaría a donde ya se está, y
@@ -44,6 +51,7 @@
       {% endif %}
     {% endfor %}
   </nav>
+  {% endif %}
 
   <form class="searchbox" method="get" role="search">
     {% comment %} El estado viaja escondido para no perderlo al buscar: es
@@ -58,8 +66,8 @@
        es el nombre accesible. {% endcomment %}
     <span class="ico" aria-hidden="true">🔍</span>
     <input id="filtro-q" type="search" name="q" value="{{ busqueda }}"
-           aria-label="Buscar por nombre de la editorial"
-           placeholder="Buscar editorial">
+           aria-label="{{ etiqueta_busqueda|default:'Buscar por nombre de la editorial' }}"
+           placeholder="{{ placeholder|default:'Buscar editorial' }}">
     <button class="btn btn-primary btn-row" type="submit">Buscar</button>
   </form>
 </div>

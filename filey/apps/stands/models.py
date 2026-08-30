@@ -680,6 +680,24 @@ class ConfiguracionSistema(models.Model):
     fecha_limite_pronto_pago = models.DateField(
         "fecha límite del pronto pago", null=True, blank=True
     )
+    # La **base** de la que hereda cada reserva al confirmarse
+    # (`CU-STD-026` paso 4). `RN-13` dice que una reserva confirmada
+    # queda bloqueada hasta *su* `fecha_corte_pago_total`, y `CU-STD-036`
+    # que el administrador la mueve caso por caso: lo que vive aquí es de
+    # dónde parte, no lo que acaba valiendo cada una.
+    #
+    # Hasta el 2026-08-30 no existía, y por eso el campo de `Reserva` no
+    # lo escribía nadie: la pantalla del expositor lo pintaba «si lo
+    # tiene» y nunca lo tenía.
+    fecha_corte_pago_total = models.DateField(
+        "fecha de corte del pago total",
+        null=True,
+        blank=True,
+        help_text=(
+            "Hasta cuándo hay para liquidar. La hereda cada reserva al "
+            "confirmarse; después se puede ajustar una por una."
+        ),
+    )
     # ── Los datos bancarios (`CU-STD-015`) ───────────────────
     #
     # Seis campos y no un bloque de texto, aunque el modelo de datos los
@@ -781,6 +799,12 @@ class Notificacion(models.Model):
         RESERVA_PAGADA = "reserva_pagada", "Reserva pagada"
         POSIBLE_CANCELACION = "posible_cancelacion", "Posible cancelación"
         RESERVA_CANCELADA = "reserva_cancelada", "Reserva cancelada"
+        # `CU-STD-024`. Es el único aviso que **no** va al aplicante: el
+        # vencimiento se escala a una persona (`RN-12`) y esa persona es
+        # quien administra la feria. Sin un tipo propio no se podría
+        # distinguir del que recibe la editorial (`posible_cancelacion`)
+        # ni preguntar "¿ya se avisó de esta reserva?".
+        RESERVA_VENCIDA = "reserva_vencida", "Reserva vencida (a quien administra)"
 
     class Estado(models.TextChoices):
         ENVIADA = "enviada", "Enviada"
@@ -795,10 +819,18 @@ class Notificacion(models.Model):
     estado = models.CharField(max_length=8, choices=Estado.choices)
     fecha_envio = models.DateTimeField(auto_now_add=True)
     # A qué se refiere. Clave foránea real por lo mismo que en
-    # `Documento`. `reserva` se añade en la fase de reserva, y con ella
-    # la restricción de que haya exactamente una.
+    # `Documento`, y **exactamente una** de las dos: un aviso que no
+    # cuelga de nada no se puede reintentar ni explicar, y uno que
+    # colgara de las dos no sabría de qué habla.
     solicitud = models.ForeignKey(
         Solicitud,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notificaciones",
+    )
+    reserva = models.ForeignKey(
+        "Reserva",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -812,9 +844,106 @@ class Notificacion(models.Model):
         verbose_name = "notificación"
         verbose_name_plural = "notificaciones"
         ordering = ["-fecha_envio"]
+        constraints = [
+            # En la base y no en el servicio: los avisos son el rastro de
+            # que se le dijo algo a alguien, y uno huérfano no se puede
+            # ni reintentar ni auditar.
+            models.CheckConstraint(
+                condition=(
+                    Q(solicitud__isnull=False, reserva__isnull=True)
+                    | Q(solicitud__isnull=True, reserva__isnull=False)
+                ),
+                name="un_aviso_cuelga_de_exactamente_una_cosa",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.get_tipo_display()} → {self.destinatario}"
+
+
+class BitacoraSTD(models.Model):
+    """Qué se hizo en esta feria, en una sola línea de tiempo.
+
+    **Una por módulo, y a propósito** (modelo de datos §3.12): lo que se
+    registra son las acciones sensibles *de un dominio*, y validar un
+    abono no se parece a mover la fecha de cierre de una convocatoria.
+    Una tabla común obligaría a un ``accion`` que fuera la unión de todos
+    los conjuntos cerrados, es decir, ninguno. Ésta es la primera de las
+    tres que el proyecto va a tener.
+
+    .. note:: No sustituye al rastro que ya vive en cada fila
+
+       `Movimiento` dice quién validó, `Solicitud` quién dictaminó y
+       `Reserva` quién la canceló. Lo que ninguna de las tres contesta es
+       **"¿qué pasó con esta convocatoria el martes?"**, porque para eso
+       hay que unir cinco tablas y ordenarlas por cinco fechas distintas.
+       Eso es lo que hay aquí.
+
+       Y hay tres acciones que **no dejan rastro en ninguna otra parte**,
+       porque borran una fila o sobreescriben una fecha: retirar un
+       descuento especial, caducar un pronto pago y prorrogar o mover el
+       corte de una reserva. Sin esta tabla, esas cuatro son invisibles.
+
+    .. warning:: Se escribe **dentro** de la transacción de la acción
+
+       Al revés que los avisos por correo, que van con
+       ``transaction.on_commit``. Un correo no se puede deshacer y por eso
+       espera al commit; una anotación sí, y una que sobreviviera a un
+       rollback diría que pasó algo que no pasó.
+    """
+
+    class Accion(models.TextChoices):
+        # Dinero
+        ABONO_MANUAL = "abono_manual", "Asentó un abono manual"
+        ABONO_VALIDADO = "abono_validado", "Validó un abono"
+        ABONO_RECHAZADO = "abono_rechazado", "Rechazó un abono"
+        DESCUENTO_APLICADO = "descuento_aplicado", "Aplicó un descuento especial"
+        DESCUENTO_RETIRADO = "descuento_retirado", "Retiró el descuento especial"
+        PRONTO_PAGO_CADUCADO = "pronto_pago_caducado", "Caducó el pronto pago"
+        # Plazos y cierre
+        RESERVA_PRORROGADA = "reserva_prorrogada", "Prorrogó el plazo"
+        CORTE_MOVIDO = "corte_movido", "Movió el corte del pago total"
+        RESERVA_CANCELADA = "reserva_cancelada", "Canceló la reserva"
+        # El recinto
+        MAPA_IMPORTADO = "mapa_importado", "Importó el mapa"
+
+    #: Nulo cuando lo hace el sistema —la barrida diaria caducando un
+    #: pronto pago—, igual que `DescuentoAplicado.aplicado_por`. Que no
+    #: haya persona **es** el dato: nadie lo decidió, se cumplió una regla.
+    persona = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="bitacora_stands",
+    )
+    accion = models.CharField(max_length=24, choices=Accion.choices)
+    # Sobre qué. Par suelto y no `contenttypes`: `ContentType` es una
+    # tabla de `public` y esto vive en el schema de la feria, así que la
+    # relación cruzaría la frontera para nada — las tres entidades que
+    # se anotan aquí son de este dominio y se nombran solas.
+    entidad_tipo = models.CharField(max_length=20)
+    entidad_id = models.PositiveIntegerField()
+    #: Qué cambió, con las cifras dentro. Es lo que hace legible la línea
+    #: sin abrir el objeto — y lo que sigue diciendo algo cuando el objeto
+    #: ya cambió otra vez.
+    detalle = models.JSONField(default=dict, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "entrada de bitácora"
+        verbose_name_plural = "bitácora de stands"
+        ordering = ["-fecha"]
+        indexes = [
+            # Las dos preguntas que se le hacen: "¿qué pasó con esta
+            # reserva?" y "¿qué pasó esta semana?".
+            models.Index(fields=["entidad_tipo", "entidad_id"]),
+            models.Index(fields=["-fecha"]),
+        ]
+
+    def __str__(self):
+        quien = self.persona.nombre_completo if self.persona else "El sistema"
+        return f"{quien}: {self.get_accion_display()} ({self.entidad_tipo} {self.entidad_id})"
 
 
 # ══ El mapa del showfloor ═════════════════════════════════════
@@ -1135,7 +1264,14 @@ class Reserva(models.Model):
     # en la convocatoria movería la fecha de vencimiento de las reservas
     # que ya estaban corriendo.
     fecha_vencimiento_anticipo = models.DateTimeField("vencimiento del anticipo")
-    fecha_corte_pago_total = models.DateTimeField(
+    # Un **día** y no un instante, como `fecha_limite_pronto_pago`: es
+    # una fecha de calendario que se compara con `timezone.localdate()` y
+    # que alguien dice en voz alta. Era `DateTimeField` mientras nadie la
+    # escribía; al heredarla de la convocatoria (`CU-STD-026` paso 4) las
+    # dos tienen que ser lo mismo, o cada comparación arrastra una
+    # conversión de zona horaria donde un día de más o de menos cambia lo
+    # que se cobra.
+    fecha_corte_pago_total = models.DateField(
         "corte del pago total", null=True, blank=True
     )
     #: El total **con los descuentos ya aplicados**, congelado al
@@ -1146,6 +1282,25 @@ class Reserva(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
+    # ── Quién la cerró, cuándo y por qué (`CU-STD-035` A1) ───
+    #
+    # Cancelar es **la única acción irreversible del dominio** y la única
+    # que libera espacios (`RN-11`), así que deja su rastro en la fila,
+    # como `Movimiento` con `validado_por`/`motivo_rechazo`. La `Bitacora`
+    # del modelo de datos (§3.12) todavía no existe; cuando exista, esto
+    # sigue siendo lo que se lee sin salir de la reserva.
+    cancelada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="reservas_canceladas",
+    )
+    fecha_cancelacion = models.DateTimeField(null=True, blank=True)
+    #: Opcional, como el del rechazo de un abono. Y por lo mismo conviene:
+    #: es lo único que explica, meses después, por qué esos espacios
+    #: volvieron al mapa.
+    motivo_cancelacion = models.CharField(max_length=200, blank=True)
 
     class Meta:
         verbose_name = "reserva"
@@ -1186,7 +1341,16 @@ class Reserva(models.Model):
         declaración con un papel adjunto, y hasta que alguien comprueba
         que el dinero llegó al banco no es dinero (`CU-STD-018` paso 7).
         Contar los pendientes confirmaría reservas que nadie pagó.
+
+        Consulta la base cada vez, **salvo** que la reserva venga de
+        `servicios/reservas.py::con_saldo`, que trae la suma anotada. Es
+        para las listas: una pantalla de ochenta reservas hacía ochenta
+        consultas para pintar una columna. La anotación filtra por el
+        mismo estado que esta consulta, así que las dos dan lo mismo.
         """
+        anotado = getattr(self, "_abonado", None)
+        if anotado is not None:
+            return anotado
         total = self.movimientos.filter(
             estado=Movimiento.Estado.VALIDADO
         ).aggregate(models.Sum("monto"))["monto__sum"]

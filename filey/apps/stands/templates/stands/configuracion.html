@@ -76,6 +76,14 @@
           {% include "stands/parciales/campo.html" with campo=form.descuento_pronto_pago %}
           {% include "stands/parciales/campo.html" with campo=form.fecha_limite_pronto_pago %}
         </div>
+        {% comment %} La base de la que hereda cada reserva al confirmarse
+           (CU-STD-026 paso 4). Va sola en su renglón y no emparejada con
+           la del pronto pago: las dos son fechas de cobro pero no son la
+           misma pregunta —una cierra una campaña, la otra dice hasta
+           cuándo hay para liquidar— y juntas se confunden. {% endcomment %}
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form.fecha_corte_pago_total %}
+        </div>
 
         {% comment %} RN-01, dicho donde se duda. Solo cuando hay reservas:
            sin ninguna, es ruido. {% endcomment %}

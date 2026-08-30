@@ -10,7 +10,13 @@
      movimiento   el Movimiento
      reserva      su Reserva, para poder decidir con el saldo delante
      proyeccion   qué le haría este abono a la reserva, o None
+     desde        por qué puerta se entró: «cola» (A5) o «reserva» (A4)
+     url_volver   a dónde vuelve al cerrar y tras decidir
      en_modal     si va dentro del velo o suelto en una pantalla
+
+   `desde` viaja en cada formulario para que la decisión devuelva a quien
+   la tomó a donde estaba. Es una de dos palabras y no una URL: en un
+   parámetro, una URL sería un redirector abierto.
 
    **Los dos botones no son simétricos.** Validar mueve dinero y es la
    acción esperada: va a la derecha, primaria y de un clic. Rechazar
@@ -114,10 +120,10 @@
         <div class="progreso-barra">
           <span class="progreso-hecho" style="width: {{ proyeccion.pct_abonado }}%"></span>
           <span class="progreso-suma" style="width: {{ proyeccion.pct_este }}%"></span>
-          <span class="progreso-marca"></span>
+          <span class="progreso-marca" style="left: {{ proyeccion.umbral }}%"></span>
         </div>
         <div class="progreso-marcas">
-          <span>50% · se confirma</span>
+          <span>{{ proyeccion.umbral }}% · se confirma</span>
           <span>100% · queda pagada</span>
         </div>
         <p class="proyeccion-efecto">
@@ -155,14 +161,18 @@
        es más largo pero funciona igual. {% endcomment %}
     <div x-data="{ rechazando: false }">
       <div class="modal-foot" x-show="!rechazando">
-        <a class="btn btn-ghost" href="{% url 'stands:pagos' convocatoria_id=convocatoria.pk %}"
-           data-cerrar-modal>{% if en_modal %}Cerrar{% else %}Volver a la cola{% endif %}</a>
+        <a class="btn btn-ghost" href="{{ url_volver }}" data-cerrar-modal>
+          {% if en_modal %}Cerrar
+          {% elif desde == 'reserva' %}Volver a la reserva
+          {% else %}Volver a la cola{% endif %}
+        </a>
         <button class="btn btn-danger" type="button" @click="rechazando = true">
           Rechazar
         </button>
         <form method="post" action="{% url 'stands:movimiento' movimiento_id=movimiento.pk %}">
           {% csrf_token %}
           <input type="hidden" name="accion" value="validar">
+          <input type="hidden" name="desde" value="{{ desde }}">
           <button class="btn btn-primary" type="submit">Validar el abono</button>
         </form>
       </div>
@@ -171,6 +181,7 @@
             action="{% url 'stands:movimiento' movimiento_id=movimiento.pk %}">
         {% csrf_token %}
         <input type="hidden" name="accion" value="rechazar">
+        <input type="hidden" name="desde" value="{{ desde }}">
         <div class="field">
           <label for="motivo-rechazo">Motivo del rechazo</label>
           <textarea id="motivo-rechazo" name="motivo" rows="2"
@@ -190,11 +201,18 @@
     </div>
   {% else %}
     <div class="modal-foot">
-      <a class="btn btn-ghost" href="{% url 'stands:pagos' convocatoria_id=convocatoria.pk %}"
-         data-cerrar-modal>{% if en_modal %}Cerrar{% else %}Volver a la cola{% endif %}</a>
-      <a class="btn btn-primary" href="{% url 'stands:detalle_reserva' reserva_id=reserva.pk %}">
-        Ver la reserva
+      <a class="btn btn-ghost" href="{{ url_volver }}" data-cerrar-modal>
+        {% if en_modal %}Cerrar
+        {% elif desde == 'reserva' %}Volver a la reserva
+        {% else %}Volver a la cola{% endif %}
       </a>
+      {% comment %} Desde A4 ya se está en la reserva: el segundo botón
+         sería un enlace a la pantalla que se está mirando. {% endcomment %}
+      {% if desde != 'reserva' %}
+        <a class="btn btn-primary" href="{% url 'stands:detalle_reserva' reserva_id=reserva.pk %}">
+          Ver la reserva
+        </a>
+      {% endif %}
     </div>
   {% endif %}
 </div>

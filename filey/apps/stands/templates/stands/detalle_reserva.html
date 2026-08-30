@@ -3,11 +3,26 @@
 {% block migaja %}Stands · Reservas · Detalle{% endblock %}
 
 {% comment %} ===========================================================
-   A · CU-STD-029 · El detalle de una reserva.
+   A4 · CU-STD-029 · El expediente de una reserva.
 
-   Los abonos y las acciones —cancelar, prorrogar, aplicar un descuento
-   especial— llegan con la fase de pago (CU-STD-015 a 020, 035). Aquí no
-   se pintan botones inertes: un botón que no hace nada se pulsa igual.
+   No es una ficha de consulta: el caso de uso la define como **vista
+   contenedor**, y de aquí cuelgan las acciones sobre la reserva. Hoy
+   están las tres que existen —validar un abono (CU-STD-018, en el mismo
+   modal que la cola de A5), asentar uno manual (CU-STD-019) y aplicar o
+   retirar el descuento especial (CU-STD-020)—.
+
+   Contexto que espera:
+
+     reserva, desglose, vencida
+     movimientos        el historial, con comprobante y quién lo registró
+     en_revision        lo reportado y todavía sin resolver
+     especial           el DescuentoAplicado especial, o None
+     form_abono         CU-STD-019
+     form_descuento     CU-STD-020
+     form_prorroga, form_cancelar   CU-STD-035
+     form_corte         CU-STD-036
+     se_puede_prorrogar, esta_viva  qué acciones significan algo hoy
+     porcentaje_pagado, umbral   la barra y dónde confirma (RN-02)
    =========================================================== {% endcomment %}
 
 {% block titulo %}Reserva de {{ reserva.editorial.nombre }}{% endblock %}
@@ -22,8 +37,36 @@
     <div class="ico">⏰</div>
     <div>
       <strong>Venció el plazo del anticipo y sigue sin cubrirse.</strong>
-      Los espacios siguen apartados: el vencimiento no los libera. Hay que
-      resolverla: cancélala o dale una prórroga.
+      Los espacios siguen apartados: el vencimiento no los libera (RN-12).
+      Hay que resolverla — <a href="#resolver">dale una prórroga o
+      cancélala</a>.
+    </div>
+  </div>
+{% endif %}
+
+{% if reserva.estado == 'cancelada' %}
+  {% comment %} Lo primero, y con nombre y fecha: es el único estado de
+     cierre del dominio (RN-11) y explica por qué esta pantalla ya no
+     ofrece nada. {% endcomment %}
+  <div class="note note-err">
+    <div class="ico">🚫</div>
+    <div>
+      <strong>Reserva cancelada</strong>
+      {% if reserva.fecha_cancelacion %}
+        el {{ reserva.fecha_cancelacion|date:"j \d\e F \d\e Y, H:i" }}
+      {% endif %}
+      {% if reserva.cancelada_por %}
+        por {{ reserva.cancelada_por.nombre_completo }}
+      {% endif %}.
+      Sus espacios volvieron al mapa.
+      {% if reserva.motivo_cancelacion %}
+        <br>Motivo: {{ reserva.motivo_cancelacion }}
+      {% endif %}
+      {% if reserva.monto_abonado > 0 %}
+        <br><strong>Quedaron ${{ reserva.monto_abonado|floatformat:2 }}
+        abonados</strong> a esta reserva. Los movimientos no se borran: qué
+        se hace con ese saldo se acuerda fuera del sistema.
+      {% endif %}
     </div>
   </div>
 {% endif %}
@@ -61,8 +104,38 @@
         <strong>${{ reserva.anticipo|floatformat:2 }}</strong>
       </div>
       <div>
-        <span class="hint">Vence</span>
+        <span class="hint">Vence el anticipo</span>
         <strong>{{ reserva.fecha_vencimiento_anticipo|date:"j M Y" }}</strong>
+      </div>
+      {% if reserva.fecha_corte_pago_total %}
+        {% comment %} La heredó al confirmarse (CU-STD-026 paso 4). Solo
+           si la tiene: una reserva por confirmar todavía no. {% endcomment %}
+        <div>
+          <span class="hint">Corte del pago total</span>
+          <strong>{{ reserva.fecha_corte_pago_total|date:"j M Y" }}</strong>
+        </div>
+      {% endif %}
+    </div>
+
+    {% comment %} La misma barra que ve el expositor, con la marca donde
+       de verdad confirma: el umbral es de la convocatoria (RN-02) y
+       llega del contexto, no escrito aquí. {% endcomment %}
+    <div class="progreso">
+      <div class="progreso-cabecera">
+        <span class="hint">Avance del pago</span>
+        <strong>{{ porcentaje_pagado }}%</strong>
+      </div>
+      <div class="progreso-barra">
+        <span class="progreso-hecho" style="width: {{ porcentaje_pagado }}%"></span>
+        <span class="progreso-marca" style="left: {{ umbral }}%"></span>
+      </div>
+      <div class="progreso-marcas">
+        <span class="{% if porcentaje_pagado >= umbral %}es-alcanzada{% endif %}">
+          {{ umbral }}% · se confirma
+        </span>
+        <span class="{% if porcentaje_pagado >= 100 %}es-alcanzada{% endif %}">
+          100% · queda pagada
+        </span>
       </div>
     </div>
   </div>
@@ -144,10 +217,319 @@
   </div>
 </div>
 
+{% comment %} ── CU-STD-020 · el descuento especial ──
+
+   Va pegado al desglose porque es lo que lo cambia, y no en un menú de
+   acciones al pie: quien lo aplica acaba de leer el total.
+
+   Aplicar y retirar nunca se ofrecen a la vez. RN-05 deja **uno** por
+   reserva, así que con uno puesto el formulario de aplicar solo podría
+   contestar que ya existe; lo que procede es retirarlo y volver a
+   aplicar, y eso es lo que se ofrece. {% endcomment %}
+{% if esta_viva %}
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Descuento especial</h3>
+      <p>
+        Para acuerdos que se tomaron fuera del sistema. Se acumula con el
+        pronto pago, aplicándose sobre el subtotal que éste dejó.
+      </p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if especial %}
+      <div class="note note-gold">
+        <div class="ico">🏷️</div>
+        <div>
+          <strong>{{ especial.porcentaje }}% aplicado</strong>
+          {% if especial.aplicado_por %}
+            por {{ especial.aplicado_por.nombre_completo }}
+          {% endif %}
+          el {{ especial.fecha|date:"j \d\e F \d\e Y" }}.
+          <br>Motivo: {{ especial.motivo|default:"—" }}
+        </div>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="retirar_descuento">
+        <div class="form-actions">
+          <button class="btn btn-ghost" type="submit">
+            Retirar el descuento
+          </button>
+        </div>
+        <p class="hint">
+          El total vuelve a subir. Si la reserva ya estaba pagada, sigue
+          pagada y le aparece saldo otra vez.
+        </p>
+      </form>
+    {% else %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="descuento_especial">
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form_descuento.porcentaje %}
+        </div>
+        {% include "stands/parciales/campo.html" with campo=form_descuento.motivo %}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">
+            Aplicar el descuento
+          </button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% comment %} ── CU-STD-029 paso 5 y CU-STD-019 · los abonos ──
+
+   El historial primero y el formulario después: asentar un abono se
+   decide **después** de mirar lo que ya hay, y lo que más veces evita un
+   duplicado es ver que ya estaba. {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Abonos</h3>
+      <p>El saldo cuenta solo los validados.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if en_revision %}
+      <div class="note note-info">
+        <div class="ico">⏳</div>
+        <div>
+          Hay <strong>${{ en_revision|floatformat:2 }}</strong> reportados y
+          sin resolver. Todavía no bajan el saldo: valídalos o recházalos
+          desde el historial.
+        </div>
+      </div>
+    {% endif %}
+
+    {% if movimientos %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th class="num">Monto</th>
+            <th>Método</th>
+            <th>Origen</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for abono in movimientos %}
+            <tr>
+              <td>{{ abono.fecha_registro|date:"j M Y, H:i" }}</td>
+              <td class="num">${{ abono.monto|floatformat:2 }}</td>
+              <td>{{ abono.get_metodo_display }}</td>
+              <td>
+                {% if abono.origen == 'admin_manual' %}
+                  La feria
+                  <span class="hint">{{ abono.registrado_por.nombre_completo }}</span>
+                {% else %}
+                  La editorial
+                {% endif %}
+              </td>
+              <td>{% include "stands/parciales/badge_movimiento.html" with movimiento=abono %}</td>
+              <td>
+                {% comment %} El mismo modal que la cola de A5 —una sola
+                   vista, así que las dos no pueden decir cifras
+                   distintas—, con `desde=reserva` para que la decisión
+                   devuelva aquí y no a la cola. {% endcomment %}
+                <a class="btn {% if abono.estado == 'pendiente_validacion' %}btn-primary{% else %}btn-ghost{% endif %} btn-row"
+                   href="{% url 'stands:movimiento' movimiento_id=abono.pk %}?desde=reserva"
+                   hx-get="{% url 'stands:movimiento' movimiento_id=abono.pk %}?desde=reserva"
+                   hx-target="#modal"
+                   hx-swap="innerHTML">
+                  {% if abono.estado == 'pendiente_validacion' %}Revisar{% else %}Ver{% endif %}
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="hint">Esta reserva no tiene ningún abono todavía.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if esta_viva and reserva.monto_pendiente > 0 %}
+  <div class="section-card card">
+    <div class="section-head">
+      <div>
+        <h3>Registrar un abono</h3>
+        <p>
+          Para lo que entró por fuera de la plataforma. Se asienta
+          <strong>validado</strong> y baja el saldo en el acto: lo estás
+          dando por bueno al guardarlo.
+        </p>
+      </div>
+    </div>
+    <div class="section-body">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="abono_manual">
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form_abono.monto %}
+          {% include "stands/parciales/campo.html" with campo=form_abono.metodo %}
+        </div>
+        {% include "stands/parciales/campo.html" with campo=form_abono.comprobante %}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Registrar el abono</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+{% if esta_viva %}
+  {% comment %} ── CU-STD-035 y 036 · los plazos y el cierre ──
+
+     Las tres decisiones que solo toma una persona. Van juntas y al final
+     porque se toman **después** de mirar el dinero, y separadas del
+     resto por su propio encabezado: aquí abajo no se ajusta nada, se
+     resuelve.
+
+     Cancelar queda detrás de un interruptor, como el rechazo de un
+     abono: es la única acción irreversible del dominio y la única que
+     libera espacios (RN-11). Un botón rojo suelto entre otros tres se
+     pulsa por inercia. {% endcomment %}
+  <div class="section-card card" id="resolver">
+    <div class="section-head">
+      <div>
+        <h3>Plazos y estado</h3>
+        <p>
+          Vencer no libera nada: mientras nadie decida, los espacios siguen
+          apartados.
+        </p>
+      </div>
+    </div>
+    <div class="section-body">
+      {% if se_puede_prorrogar %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="prorrogar">
+          <div class="grid-2">
+            {% include "stands/parciales/campo.html" with campo=form_prorroga.fecha %}
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Ampliar el plazo</button>
+          </div>
+          <p class="hint">
+            Vence hoy el
+            {{ reserva.fecha_vencimiento_anticipo|date:"j \d\e F \d\e Y" }}.
+          </p>
+        </form>
+      {% else %}
+        <p class="hint">
+          Esta reserva ya cubrió su anticipo: no hay plazo que prorrogar.
+        </p>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="mover_corte">
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form_corte.fecha %}
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" type="submit">Guardar el corte</button>
+        </div>
+      </form>
+
+      <div x-data="{ cancelando: false }">
+        <div class="form-actions" x-show="!cancelando">
+          <button class="btn btn-danger" type="button" @click="cancelando = true">
+            Cancelar la reserva
+          </button>
+        </div>
+
+        {% comment %} Sin Alpine el formulario se ve desde el principio, con
+           su casilla: más largo, pero igual de seguro. {% endcomment %}
+        <form method="post" x-show="cancelando" x-cloak>
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="cancelar">
+          <div class="note note-err">
+            <div class="ico">⚠️</div>
+            <div>
+              <strong>Esto libera {{ reserva.lineas.count }}
+              espacio{{ reserva.lineas.count|pluralize }} y no se deshace.</strong>
+              Vuelven al mapa y cualquier otra editorial puede tomarlos.
+              {% if reserva.monto_abonado > 0 %}
+                Hay <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
+                abonados: los movimientos no se borran, pero qué se hace con
+                ese saldo se acuerda fuera del sistema.
+              {% endif %}
+            </div>
+          </div>
+          {% include "stands/parciales/campo.html" with campo=form_cancelar.motivo %}
+          {% comment %} La casilla no pasa por `campo.html`: ahí la etiqueta
+             va encima de la caja, y una frase que hay que **leer antes de
+             marcar** se lee al lado. {% endcomment %}
+          <label class="confirmacion" for="{{ form_cancelar.entiendo.id_for_label }}">
+            {{ form_cancelar.entiendo }}
+            <span>{{ form_cancelar.entiendo.label }}</span>
+          </label>
+          {% if form_cancelar.entiendo.errors %}
+            <span class="hint req" role="alert">
+              {{ form_cancelar.entiendo.errors.0 }}
+            </span>
+          {% endif %}
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="button" @click="cancelando = false">
+              Mejor no
+            </button>
+            <button class="btn btn-danger" type="submit">
+              Cancelar la reserva
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% comment %} Los avisos que salieron por esta reserva (CU-STD-026 y 027).
+   Se enseñan por lo mismo que en A2: `avisos.py` se traga el fallo del
+   transporte para no deshacer un cobro que sí ocurrió, y sin esta lista
+   nadie se entera de que la editorial no recibió nada. {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Avisos enviados</h3>
+      <p>Lo que se le escribió a la editorial por esta reserva.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if reserva.notificaciones.all %}
+      <ul class="multi-input">
+        {% for aviso in reserva.notificaciones.all %}
+          <li>
+            {{ aviso.get_tipo_display }} ·
+            {{ aviso.fecha_envio|date:"j M Y, H:i" }}
+            {% if aviso.estado == 'fallida' %}
+              <span class="badge badge-rejected">No se envió</span>
+              <span class="hint">{{ aviso.detalle_error }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="hint">Todavía no ha salido ningún correo por esta reserva.</p>
+    {% endif %}
+  </div>
+</div>
+
 <div class="form-actions">
   <a class="btn btn-ghost" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">
     Volver a las reservas
   </a>
 </div>
+
+{% comment %} El hueco donde htmx deja el modal del abono. {% endcomment %}
+<div id="modal"></div>
 
 {% endblock %}

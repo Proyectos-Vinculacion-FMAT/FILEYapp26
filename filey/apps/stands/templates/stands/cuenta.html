@@ -142,10 +142,13 @@
             </div>
           </div>
 
-          {% comment %} Los dos umbrales dibujados sobre la barra: al 50%
-             la reserva se confirma (RN-13) y al 100% queda pagada
-             (RN-14). Sin las marcas, la barra solo dice "vas por la
-             mitad" y no **qué pasa** al llegar. {% endcomment %}
+          {% comment %} Los dos umbrales dibujados sobre la barra: al
+             anticipo la reserva se confirma (RN-13) y al 100% queda
+             pagada (RN-14). Sin las marcas, la barra solo dice "vas por
+             la mitad" y no **qué pasa** al llegar.
+
+             El umbral llega del contexto y no escrito aquí: es de la
+             convocatoria (RN-02) y se cambia desde A10. {% endcomment %}
           <div class="progreso">
             <div class="progreso-cabecera">
               <span class="hint">Avance del pago</span>
@@ -153,11 +156,11 @@
             </div>
             <div class="progreso-barra">
               <span class="progreso-hecho" style="width: {{ porcentaje_pagado }}%"></span>
-              <span class="progreso-marca" data-en="50"></span>
+              <span class="progreso-marca" style="left: {{ umbral }}%"></span>
             </div>
             <div class="progreso-marcas">
-              <span class="{% if porcentaje_pagado >= 50 %}es-alcanzada{% endif %}">
-                50% · se confirma
+              <span class="{% if porcentaje_pagado >= umbral %}es-alcanzada{% endif %}">
+                {{ umbral }}% · se confirma
               </span>
               <span class="{% if porcentaje_pagado >= 100 %}es-alcanzada{% endif %}">
                 100% · queda pagada

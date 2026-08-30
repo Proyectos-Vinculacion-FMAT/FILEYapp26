@@ -31,9 +31,14 @@ from apps.registros.permisos import requiere_participante
 from .formularios import (
     MAXIMO_SELLOS,
     AbonoForm,
+    AbonoManualForm,
     BasesForm,
+    CancelacionForm,
     ConfiguracionForm,
+    DescuentoEspecialForm,
     DictamenForm,
+    FechaDeCorteForm,
+    ProrrogaForm,
     DocumentoForm,
     EditorialForm,
     SellosForm,
@@ -93,8 +98,15 @@ def puede_reservarse(convocatoria) -> bool:
     El mapa **sí se sigue enseñando** con la convocatoria cerrada: quien
     tiene una reserva en curso necesita poder consultarlo (`CU-STD-037`
     A1 paso 2). Lo que se retira son las acciones, no la información.
+
+    La tercera condición es el precio. Sin `costo_m2` toda la reserva
+    valdría cero, y una de esas no admite abonos ni puede confirmarse
+    nunca: `crear` la rechaza, y aquí se retira el botón para que nadie
+    llegue hasta ese aviso.
     """
     if convocatoria.estado != Convocatoria.Estado.ABIERTA:
+        return False
+    if not configuracion.de_la_convocatoria(convocatoria).costo_m2:
         return False
     try:
         registros.exigir_edicion_operable()
@@ -632,6 +644,12 @@ def movimiento(peticion, movimiento_id):
     el estado de una reserva, así que la respuesta es una recarga con su
     aviso y la cola ya al día. Un intercambio parcial dejaría la fila
     vieja en pantalla al lado del aviso de que se validó.
+
+    A dónde vuelve lo dice `desde`, porque `CU-STD-018` tiene **dos
+    puertas**: la cola de A5 y el detalle de la reserva (A4). No es una
+    URL de vuelta sino una de dos palabras conocidas: una URL en un
+    parámetro es un redirector abierto, y ésta se alcanza con sesión de
+    administración.
     """
     abono = get_object_or_404(
         Movimiento.objects.select_related(
@@ -645,7 +663,16 @@ def movimiento(peticion, movimiento_id):
         pk=movimiento_id,
     )
     convocatoria = abono.reserva.registro.convocatoria
-    destino = redirect("stands:pagos", convocatoria_id=convocatoria.pk)
+    desde = (
+        "reserva"
+        if (peticion.POST.get("desde") or peticion.GET.get("desde")) == "reserva"
+        else "cola"
+    )
+    destino = (
+        redirect("stands:detalle_reserva", reserva_id=abono.reserva_id)
+        if desde == "reserva"
+        else redirect("stands:pagos", convocatoria_id=convocatoria.pk)
+    )
 
     if peticion.method == "POST":
         accion = peticion.POST.get("accion")
@@ -689,6 +716,8 @@ def movimiento(peticion, movimiento_id):
             "movimiento": abono,
             "reserva": abono.reserva,
             "proyeccion": _proyeccion_del_abono(abono),
+            "desde": desde,
+            "url_volver": destino.url,
             "en_modal": en_modal,
             "zona_admin": True,
         },
@@ -731,9 +760,87 @@ def _proyeccion_del_abono(abono) -> dict | None:
         "total": total,
         "pct_abonado": ya,
         "pct_este": min(100 - ya, porcentaje(despues) - ya),
+        # El umbral que confirma, de la convocatoria y no de la plantilla
+        # (`RN-02`): es la misma cifra con la que `_estado_para` decide,
+        # así que la marca de la barra no puede caer donde no confirma.
+        "umbral": reserva.configuracion.porcentaje_anticipo,
         "estado_resultante": Reserva.Estado(resultante).label,
         "cambia": resultante != reserva.estado,
     }
+
+
+@requiere_admin_feria
+def expositores_de_la_convocatoria(peticion, convocatoria_id):
+    """A6 · Quién está habilitado para reservar (`CU-STD-030`).
+
+    No es un listado de editoriales: son las que tienen la solicitud
+    **aceptada** (`RN-16`), que es lo que las convierte en expositores.
+    Por eso la lista vacía no dice "no hay editoriales" sino que manda a
+    la bandeja de solicitudes (`E1`): si no hay ninguna, es que falta
+    dictaminar, no que nadie haya aplicado.
+
+    Sin chips de estado, al revés que las otras tres listas del panel:
+    aquí solo hay un estado por definición. Lo que sí lleva es el
+    buscador, porque el paso 4 del caso de uso es localizar a uno
+    concreto para atenderlo por teléfono.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    busqueda = (peticion.GET.get("q") or "").strip()
+
+    cola = solicitudes.expositores_de(convocatoria)
+    total = cola.count()
+    if busqueda:
+        # Por nombre o por correo. **No por RFC**: no existe como
+        # columna — la información fiscal llega como constancia adjunta,
+        # y buscar dentro de un PDF no es buscar.
+        cola = cola.filter(
+            Q(editorial__nombre__icontains=busqueda)
+            | Q(editorial__correo_electronico__icontains=busqueda)
+            | Q(registro__persona__correo__icontains=busqueda)
+        )
+
+    return render(
+        peticion,
+        "stands/expositores.html",
+        {
+            "convocatoria": convocatoria,
+            "expositores": cola,
+            "busqueda": busqueda,
+            "url_limpia": reverse("stands:expositores", args=[convocatoria.pk]),
+            "cuantas": cola.count(),
+            "total": total,
+            "hay_filtros": bool(busqueda),
+            "zona_admin": True,
+        },
+    )
+
+
+@requiere_admin_feria
+def detalle_expositor(peticion, editorial_id):
+    """A7 · El expediente de un expositor (`CU-STD-031`).
+
+    **El alcance es la feria, no la convocatoria**, y es lo que hace útil
+    la pantalla: la misma editorial puede haber aplicado a la general y a
+    la de un pabellón, y quien atiende una llamada necesita ver las dos
+    (`RN-19`). Por eso la URL no lleva convocatoria, como el detalle de
+    una solicitud o de una reserva.
+    """
+    editorial = get_object_or_404(
+        Editorial.objects.select_related("persona"), pk=editorial_id
+    )
+    expediente = solicitudes.expediente_de(editorial)
+    # Para volver: la convocatoria de su solicitud más reciente. Sin
+    # ninguna —una ficha llenada y nunca enviada— se vuelve al panel.
+    ultima = expediente["solicitudes"].first()
+    return render(
+        peticion,
+        "stands/detalle_expositor.html",
+        {
+            **expediente,
+            "convocatoria": ultima.registro.convocatoria if ultima else None,
+            "zona_admin": True,
+        },
+    )
 
 
 @requiere_admin_feria
@@ -1459,21 +1566,21 @@ def cuenta(peticion, convocatoria_id):
                 if reserva
                 else []
             ),
+            # La misma función que usa el tope de `pagos.registrar`: lo
+            # que la pantalla enseña como «en revisión» y lo que el
+            # servicio descuenta del hueco tienen que ser la misma cifra.
             "en_revision": (
-                sum(
-                    (
-                        m.monto
-                        for m in reserva.movimientos.all()
-                        if m.estado == Movimiento.Estado.PENDIENTE
-                    ),
-                    start=Decimal("0.00"),
-                )
-                if reserva
-                else Decimal("0.00")
+                pagos.suma_en_revision(reserva) if reserva else Decimal("0.00")
             ),
             "form_abono": AbonoForm(),
             "ajustes": ajustes,
             "porcentaje_pagado": _porcentaje_pagado(reserva),
+            # Dónde cae el umbral que confirma la reserva (`RN-02`). Va
+            # al contexto y no escrito en la plantilla porque el
+            # porcentaje es **de la convocatoria** y `A10` lo deja
+            # cambiar: con un 50 fijo, una convocatoria al 40% enseñaba
+            # la marca en un sitio y confirmaba en otro.
+            "umbral": ajustes.porcentaje_anticipo,
             # `CU-STD-013` paso 5. Solo mientras el descuento siga vivo:
             # una vez retirado no hay nada que conservar.
             "pronto_pago": _aviso_de_pronto_pago(reserva, ajustes),
@@ -1668,7 +1775,10 @@ def reservas_de_la_convocatoria(peticion, convocatoria_id):
         "stands/reservas.html",
         {
             "convocatoria": convocatoria,
-            "reservas": cola,
+            # `con_saldo` al final y no en `de_la_convocatoria`: la
+            # consulta de los chips agrupa por estado, y con la unión de
+            # los movimientos encima contaría filas de más.
+            "reservas": reservas.con_saldo(cola),
             "estado_activo": estado,
             "busqueda": busqueda,
             "chips": chips,
@@ -1683,21 +1793,223 @@ def reservas_de_la_convocatoria(peticion, convocatoria_id):
 
 @requiere_admin_feria
 def detalle_reserva(peticion, reserva_id):
-    """El detalle de una reserva (`CU-STD-029`)."""
+    """A4 · El expediente de una reserva y lo que se hace con él.
+
+    `CU-STD-029` la describe como **vista contenedor**: no es una ficha de
+    consulta sino el sitio desde el que se opera una reserva. De aquí
+    cuelgan el historial de abonos (paso 5) y, del paso 6, las dos
+    acciones que hoy existen —asentar un abono manual (`CU-STD-019`) y
+    aplicar o retirar un descuento especial (`CU-STD-020`)—. Validar un
+    abono suelto (`CU-STD-018`) se abre desde el historial, en el mismo
+    modal que la cola de A5.
+
+    Todas las escrituras son un POST con `accion` y vuelven aquí (patrón
+    *post/redirect/get*): mueven dinero o cierran la reserva, y recargar
+    una pantalla con el POST puesto asentaría el abono dos veces.
+    """
     reserva = get_object_or_404(
         Reserva.objects.select_related(
             "editorial", "registro__persona", "registro__convocatoria"
         ).prefetch_related("lineas__stand__mapa", "descuentos"),
         pk=reserva_id,
     )
+    convocatoria = reserva.registro.convocatoria
+    aqui = redirect("stands:detalle_reserva", reserva_id=reserva.pk)
+
+    form_abono = AbonoManualForm()
+    form_descuento = DescuentoEspecialForm()
+    form_prorroga = ProrrogaForm()
+    form_corte = FechaDeCorteForm(
+        initial={"fecha": reserva.fecha_corte_pago_total}
+    )
+    form_cancelar = CancelacionForm()
+
+    if peticion.method == "POST":
+        accion = peticion.POST.get("accion")
+        if accion == "abono_manual":
+            form_abono = AbonoManualForm(peticion.POST, peticion.FILES)
+            if form_abono.is_valid():
+                try:
+                    movimiento_nuevo = pagos.registrar(
+                        reserva=reserva,
+                        persona=peticion.user,
+                        monto=form_abono.cleaned_data["monto"],
+                        metodo=form_abono.cleaned_data["metodo"],
+                        archivo=form_abono.cleaned_data["comprobante"],
+                        manual=True,
+                    )
+                except pagos.PagoRechazado as exc:
+                    messages.error(peticion, str(exc))
+                else:
+                    # Se relee: el abono manual nace validado y pasa por
+                    # los umbrales en el acto (`CU-STD-019` paso 9), así
+                    # que la instancia de arriba ya no dice el estado.
+                    al_dia = Reserva.objects.get(pk=reserva.pk)
+                    messages.success(
+                        peticion,
+                        f"Asentaste ${movimiento_nuevo.monto} en la reserva "
+                        f"de {reserva.editorial.nombre}. Quedó "
+                        f"{al_dia.get_estado_display().lower()}, con "
+                        f"${al_dia.monto_pendiente} pendientes.",
+                    )
+                    return aqui
+            else:
+                # Genérico arriba y el detalle bajo cada campo, como en
+                # A10: la pantalla lleva tres formularios y repetir aquí
+                # el texto de cada error lo diría dos veces.
+                messages.error(
+                    peticion,
+                    "No registramos el abono: revisa los campos señalados.",
+                )
+
+        elif accion == "descuento_especial":
+            form_descuento = DescuentoEspecialForm(peticion.POST)
+            if form_descuento.is_valid():
+                try:
+                    al_dia = pagos.aplicar_descuento_especial(
+                        reserva=reserva,
+                        administrador=peticion.user,
+                        porcentaje=form_descuento.cleaned_data["porcentaje"],
+                        motivo=form_descuento.cleaned_data["motivo"],
+                    )
+                except pagos.PagoRechazado as exc:
+                    messages.error(peticion, str(exc))
+                else:
+                    messages.success(
+                        peticion,
+                        f"Aplicaste un {form_descuento.cleaned_data['porcentaje']}% "
+                        f"de descuento. La reserva pasa a "
+                        f"${al_dia.monto_total} y queda "
+                        f"{al_dia.get_estado_display().lower()}.",
+                    )
+                    return aqui
+            else:
+                messages.error(
+                    peticion,
+                    "No aplicamos el descuento: revisa los campos señalados.",
+                )
+
+        elif accion == "prorrogar":
+            form_prorroga = ProrrogaForm(peticion.POST)
+            if form_prorroga.is_valid():
+                try:
+                    al_dia = reservas.prorrogar(
+                        reserva=reserva,
+                        administrador=peticion.user,
+                        fecha=form_prorroga.cleaned_data["fecha"],
+                    )
+                except reservas.ReservaRechazada as exc:
+                    messages.error(peticion, str(exc))
+                else:
+                    messages.success(
+                        peticion,
+                        "Ampliaste el plazo hasta el "
+                        f"{date_format(timezone.localtime(al_dia.fecha_vencimiento_anticipo), 'j \\d\\e F \\d\\e Y')}. "
+                        "La reserva deja de estar vencida.",
+                    )
+                    return aqui
+            else:
+                messages.error(
+                    peticion, "No ampliamos el plazo: revisa la fecha."
+                )
+
+        elif accion == "mover_corte":
+            form_corte = FechaDeCorteForm(peticion.POST)
+            if form_corte.is_valid():
+                try:
+                    al_dia = reservas.mover_fecha_de_corte(
+                        reserva=reserva,
+                        administrador=peticion.user,
+                        fecha=form_corte.cleaned_data["fecha"],
+                    )
+                except reservas.ReservaRechazada as exc:
+                    messages.error(peticion, str(exc))
+                else:
+                    messages.success(
+                        peticion,
+                        "Guardamos el corte del pago total."
+                        if al_dia.fecha_corte_pago_total
+                        else "Quitaste la fecha de corte del pago total.",
+                    )
+                    return aqui
+            else:
+                messages.error(peticion, "No guardamos la fecha: revísala.")
+
+        elif accion == "cancelar":
+            form_cancelar = CancelacionForm(peticion.POST)
+            if form_cancelar.is_valid():
+                try:
+                    reservas.cancelar(
+                        reserva=reserva,
+                        administrador=peticion.user,
+                        motivo=form_cancelar.cleaned_data["motivo"],
+                    )
+                except reservas.ReservaRechazada as exc:
+                    messages.error(peticion, str(exc))
+                else:
+                    messages.success(
+                        peticion,
+                        f"Cancelaste la reserva de {reserva.editorial.nombre}. "
+                        "Sus espacios volvieron al mapa y se le avisó por "
+                        "correo.",
+                    )
+                    return aqui
+            else:
+                for errores in form_cancelar.errors.values():
+                    messages.error(peticion, errores[0])
+
+        elif accion == "retirar_descuento":
+            try:
+                al_dia = pagos.retirar_descuento_especial(
+                    reserva=reserva, administrador=peticion.user
+                )
+            except pagos.PagoRechazado as exc:
+                messages.error(peticion, str(exc))
+            else:
+                messages.success(
+                    peticion,
+                    f"Retiraste el descuento especial. La reserva vuelve a "
+                    f"${al_dia.monto_total}.",
+                )
+                return aqui
+        else:
+            messages.error(peticion, "Elige qué hacer con la reserva.")
+
+    ajustes = configuracion.de_la_convocatoria(convocatoria)
     return render(
         peticion,
         "stands/detalle_reserva.html",
         {
-            "convocatoria": reserva.registro.convocatoria,
+            "convocatoria": convocatoria,
             "reserva": reserva,
             "desglose": reservas.desglose_de(reserva),
             "vencida": reserva.esta_vencida,
+            # `CU-STD-029` paso 5. Con el comprobante y con quién lo
+            # registró: es lo que se pregunta al cuadrar meses después.
+            "movimientos": reserva.movimientos.select_related(
+                "comprobante", "registrado_por", "validado_por"
+            ),
+            "en_revision": pagos.suma_en_revision(reserva),
+            # El especial, si lo hay: decide si la tarjeta ofrece
+            # aplicarlo o retirarlo. Nunca las dos cosas — `RN-05` deja
+            # uno solo, y ofrecer «aplicar» con uno puesto es ofrecer un
+            # botón que solo puede contestar que ya existe.
+            "especial": reserva.descuentos.filter(
+                tipo=DescuentoAplicado.Tipo.ESPECIAL
+            ).first(),
+            "form_abono": form_abono,
+            "form_descuento": form_descuento,
+            "form_prorroga": form_prorroga,
+            "form_corte": form_corte,
+            "form_cancelar": form_cancelar,
+            # `CU-STD-035`: prorrogar solo tiene sentido mientras se
+            # espera el anticipo. En una confirmada el plazo ya no corre,
+            # y el formulario solo podría contestar que no hay nada que
+            # prorrogar.
+            "se_puede_prorrogar": reserva.estado == Reserva.Estado.POR_CONFIRMAR,
+            "esta_viva": reserva.estado in Reserva.VIVAS,
+            "porcentaje_pagado": _porcentaje_pagado(reserva),
+            "umbral": ajustes.porcentaje_anticipo,
             "zona_admin": True,
         },
     )

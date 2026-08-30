@@ -18,9 +18,10 @@ import re
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connection, models
 from django.db.models import Q
 from django_tenants.models import DomainMixin, TenantMixin
+from django_tenants.utils import get_public_schema_name
 
 # El slug es el prefijo de la URL (`/f/2027/`) y la raíz del nombre del
 # schema. Se restringe a minúsculas, dígitos y guiones interiores para
@@ -143,6 +144,22 @@ class Feria(TenantMixin):
     @property
     def url(self) -> str:
         return f"/f/{self.slug}/"
+
+    @classmethod
+    def de_la_conexion(cls) -> "Feria | None":
+        """La edición en cuyo schema estamos, o ``None`` si es `public`.
+
+        Se pregunta por ``connection.schema_name`` y **no** por
+        ``connection.tenant``: en una petición ahí está esta fila —la
+        pone el middleware—, pero dentro de un ``schema_context`` hay un
+        ``FakeTenant`` que solo sabe su nombre de schema y revienta al
+        pedirle el ``slug`` o el ``estado``. Y por ahí pasa todo lo que
+        no es una petición: los comandos de `manage.py`, la barrida
+        diaria y las pruebas.
+        """
+        if connection.schema_name == get_public_schema_name():
+            return None
+        return cls.objects.filter(schema_name=connection.schema_name).first()
 
 
 class Domain(DomainMixin):

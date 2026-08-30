@@ -12,8 +12,10 @@ Vive como comando y no como una comprobación al pintar la pantalla a
 propósito: **cambia lo que se debe**, y una escritura escondida en un GET
 se dispara con cualquier recarga y no deja a nadie decir cuándo pasó.
 
-Lo llamará la barrida diaria de la fase 6; mientras tanto es lo que hay
-que poner en el cron:
+**Lo llama la barrida diaria** (`manage.py barrida_diaria`, del
+2026-08-30), que es lo que corre en el cron. Este comando se queda como
+herramienta de diagnóstico: es el único con `--seco` reserva por reserva,
+que es lo que se mira antes de creerse una cifra.
 
     python manage.py caducar_pronto_pago --feria 2027
     python manage.py caducar_pronto_pago --todas --seco

@@ -308,6 +308,26 @@ def test_una_edicion_archivada_tampoco(listo):
             reservas.crear(convocatoria=conv, persona=ana, claves=["A1"])
 
 
+def test_sin_precio_no_se_reserva(listo):
+    """Una reserva de $0 no es gratis: es una reserva rota.
+
+    Sin `costo_m2` el total sale cero, y con el saldo pendiente ya en
+    cero no admite ningún abono: nunca puede confirmarse, y a los treinta
+    días vence con los espacios apartados. Vale más no dejarla nacer —
+    el panel ya se lo avisa a quien administra (`falta_precio`).
+    """
+    feria, conv, ana, _ = listo
+    with schema_context(feria.schema_name):
+        cfg = configuracion.de_la_convocatoria(conv)
+        cfg.costo_m2 = Decimal("0")
+        cfg.save(update_fields=["costo_m2"])
+
+        with pytest.raises(reservas.ReservaRechazada, match="precio por m²"):
+            reservas.crear(convocatoria=conv, persona=ana, claves=["A1"])
+
+        assert not Reserva.objects.exists()
+
+
 def test_un_espacio_que_ya_no_existe_se_dice(listo):
     """Pasa tras reimportar el mapa con el carrito a medio llenar."""
     feria, conv, ana, _ = listo

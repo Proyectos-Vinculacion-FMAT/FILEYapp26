@@ -18,12 +18,22 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import transaction
+from django.db.models import DecimalField, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.convocatorias.servicios import registros
 
-from ..models import DescuentoAplicado, Reserva, ReservaStand, Solicitud, Stand
+from ..models import (
+    DescuentoAplicado,
+    Movimiento,
+    Reserva,
+    ReservaStand,
+    Solicitud,
+    Stand,
+)
+from . import avisos
 from . import configuracion as servicio_configuracion
 
 logger = logging.getLogger(__name__)
@@ -225,6 +235,20 @@ def crear(*, convocatoria: Convocatoria, persona, claves: list[str]) -> Reserva:
     except registros.RegistroRechazado as exc:
         raise ReservaRechazada(str(exc)) from exc
 
+    # `RN-01`: el precio se deriva de la superficie, y sin tarifa toda la
+    # reserva vale cero. Una de esas no es gratis, es rota: no admite
+    # abonos —el saldo pendiente ya es cero—, así que no puede confirmarse
+    # nunca y vence a los treinta días con los espacios apartados. Vale
+    # más no dejarla nacer. El panel ya se lo avisa a quien administra
+    # (`falta_precio`); esto es lo que impide que se le adelante alguien.
+    configuracion = servicio_configuracion.de_la_convocatoria(convocatoria)
+    if not configuracion.costo_m2:
+        raise ReservaRechazada(
+            "Esta convocatoria todavía no tiene precio por m², así que no "
+            "podemos calcular lo que costarían tus espacios. Escríbenos y lo "
+            "resolvemos."
+        )
+
     if not claves:
         # `E2`. No es un fallo del sistema: es que no eligió nada.
         raise ReservaRechazada(
@@ -277,7 +301,6 @@ def crear(*, convocatoria: Convocatoria, persona, claves: list[str]) -> Reserva:
         raise HayEspaciosTomados(tomados)
 
     total, _ = cotizar(convocatoria, stands)
-    configuracion = servicio_configuracion.de_la_convocatoria(convocatoria)
 
     reserva = Reserva.objects.create(
         registro=aceptada.registro,
@@ -375,3 +398,179 @@ def de_la_convocatoria(convocatoria: Convocatoria):
         .select_related("editorial", "registro__persona")
         .prefetch_related("lineas__stand", "descuentos")
     )
+
+
+def con_saldo(consulta):
+    """La misma consulta, con lo abonado ya sumado en la base.
+
+    `Reserva.monto_abonado` agrega por reserva, así que una lista lo
+    pregunta una vez por fila. Esto lo trae en la misma consulta y la
+    propiedad lo prefiere cuando está.
+
+    Se aplica **al final**, sobre la consulta ya filtrada, y nunca antes
+    de un `.values(...).annotate(Count(...))`: la unión con los
+    movimientos multiplicaría las filas y los conteos de los chips
+    saldrían inflados.
+    """
+    return consulta.annotate(
+        _abonado=Coalesce(
+            Sum(
+                "movimientos__monto",
+                filter=Q(movimientos__estado=Movimiento.Estado.VALIDADO),
+            ),
+            Value(Decimal("0.00")),
+            # Explícito porque la reserva sin abonos mezcla un `Sum` nulo
+            # con un literal, y ahí Django no adivina el tipo.
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+    )
+
+
+# ── CU-STD-035 y 036 · resolver una reserva ───────────────────
+#
+# Las tres decisiones que solo toma una persona. `RN-12` es explícita: el
+# sistema no libera reservas por su cuenta, ni siquiera cuando el plazo
+# se agotó — notifica y espera. Esto es lo que hay al otro lado de esa
+# espera.
+
+
+class ResolucionRechazada(ReservaRechazada):
+    """No se puede resolver así. El mensaje dice por qué."""
+
+
+@transaction.atomic
+def prorrogar(*, reserva: Reserva, administrador, fecha) -> Reserva:
+    """Le da más plazo para cubrir el anticipo (`CU-STD-035`, pasos 4 a 7).
+
+    Solo tiene sentido en una `por_confirmar`: es la única que está
+    esperando el anticipo. Una confirmada ya lo cubrió y su plazo dejó de
+    correr; una pagada no espera nada.
+
+    La fecha nueva **tiene que estar en el futuro**. Una en el pasado
+    dejaría la reserva vencida en el mismo instante, y la barrida diaria
+    volvería a avisar de ella al día siguiente —que es justo lo que quien
+    prorroga está intentando evitar—.
+
+    Prorrogar no manda correo: el aplicante lo nota porque el aviso de su
+    cuenta se apaga solo (`CU-STD-014`). Lo que sí cambia es que la
+    barrida deja de contarla, porque compara sus avisos contra **esta**
+    fecha (`servicios/vencimientos.py`).
+    """
+    reserva = Reserva.objects.select_for_update().get(pk=reserva.pk)
+
+    if reserva.estado != Reserva.Estado.POR_CONFIRMAR:
+        raise ResolucionRechazada(
+            f"Esta reserva está {reserva.get_estado_display().lower()}: no "
+            "hay ningún plazo de anticipo que prorrogar."
+        )
+    if fecha is None:
+        raise ResolucionRechazada("Elige hasta cuándo se amplía el plazo.")
+    if fecha <= timezone.now():
+        raise ResolucionRechazada(
+            "La fecha nueva tiene que estar en el futuro: con una pasada, la "
+            "reserva volvería a estar vencida hoy mismo."
+        )
+
+    anterior = reserva.fecha_vencimiento_anticipo
+    Reserva.objects.filter(pk=reserva.pk).update(fecha_vencimiento_anticipo=fecha)
+    reserva.refresh_from_db()
+    logger.info(
+        "Reserva %s prorrogada de %s a %s por %s",
+        reserva.pk,
+        anterior,
+        fecha,
+        administrador.pk,
+    )
+    return reserva
+
+
+@transaction.atomic
+def mover_fecha_de_corte(*, reserva: Reserva, administrador, fecha) -> Reserva:
+    """Cambia hasta cuándo hay para liquidar (`CU-STD-036`, `RN-13`).
+
+    La base es de la convocatoria y cada reserva hereda la suya al
+    confirmarse (`CU-STD-026` paso 4); esto es el "caso por caso" que
+    `RN-13` contempla.
+
+    Se admite también antes de confirmar, aunque el caso de uso hable de
+    una reserva confirmada: adelantarla no rompe nada y confirmar
+    **respeta** la que ya esté puesta, en vez de pisarla con la de la
+    convocatoria.
+
+    Se puede dejar en blanco: es volver a "sin fecha de corte", que es un
+    estado legítimo —una convocatoria puede no tenerla— y no un dato
+    perdido.
+    """
+    reserva = Reserva.objects.select_for_update().get(pk=reserva.pk)
+
+    if reserva.estado == Reserva.Estado.CANCELADA:
+        raise ResolucionRechazada(
+            "Esta reserva está cancelada: ya no hay nada que liquidar."
+        )
+
+    anterior = reserva.fecha_corte_pago_total
+    Reserva.objects.filter(pk=reserva.pk).update(fecha_corte_pago_total=fecha)
+    reserva.refresh_from_db()
+    logger.info(
+        "Reserva %s: corte del pago total de %s a %s por %s",
+        reserva.pk,
+        anterior,
+        fecha,
+        administrador.pk,
+    )
+    return reserva
+
+
+@transaction.atomic
+def cancelar(*, reserva: Reserva, administrador, motivo: str = "") -> Reserva:
+    """Cierra la reserva y devuelve sus espacios al mapa (`CU-STD-035` A1).
+
+    Es **la única acción irreversible del dominio** y la única que
+    libera espacios. `RN-11`: `cancelada` es el único estado de cierre y
+    solo lo pone una persona — ni la barrida diaria ni ningún umbral
+    llegan hasta aquí.
+
+    Lo que hace, en este orden:
+
+    1. cierra la reserva y deja escrito quién, cuándo y por qué;
+    2. devuelve sus stands a `disponible` (`RN-10`), estuvieran
+       `reservado` u `ocupado` — el paso 5 del caso de uso contempla los
+       dos, porque también se cancela una reserva ya pagada;
+    3. avisa al aplicante, **después del commit**.
+
+    Los abonos validados **no se tocan**: el dinero entró de verdad y
+    borrarlo sería falsear la contabilidad. Qué se hace con él se acuerda
+    fuera del sistema, y el correo lo dice cuando hay saldo.
+
+    Al liberar la única reserva viva del registro, `RN-23` deja de
+    estorbar: esa editorial puede volver a reservar desde cero.
+    """
+    reserva = Reserva.objects.select_for_update().get(pk=reserva.pk)
+
+    if reserva.estado == Reserva.Estado.CANCELADA:
+        raise ResolucionRechazada("Esta reserva ya estaba cancelada.")
+
+    claves = [linea.stand.clave for linea in reserva.lineas.select_related("stand")]
+
+    Reserva.objects.filter(pk=reserva.pk).update(
+        estado=Reserva.Estado.CANCELADA,
+        cancelada_por=administrador,
+        fecha_cancelacion=timezone.now(),
+        motivo_cancelacion=(motivo or "").strip()[:200],
+    )
+    Stand.objects.filter(lineas_de_reserva__reserva=reserva).update(
+        estado=Stand.Estado.DISPONIBLE
+    )
+    reserva.refresh_from_db()
+
+    logger.info(
+        "Reserva %s cancelada por %s; vuelven al mapa %s",
+        reserva.pk,
+        administrador.pk,
+        ", ".join(claves) or "—",
+    )
+    # Como los avisos de los umbrales: después del commit. Un correo no
+    # se puede deshacer, y si la transacción se revierte la editorial se
+    # habría enterado de una cancelación que no ocurrió.
+    transaction.on_commit(lambda: avisos.avisar_cancelacion(reserva))
+    return reserva

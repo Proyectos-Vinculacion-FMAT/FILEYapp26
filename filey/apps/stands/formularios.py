@@ -8,10 +8,12 @@ se puede dictaminar — vive en `servicios/`, que es a quien llaman estos
 formularios y también un comando de `manage.py`.
 """
 
+from datetime import datetime, time
 from decimal import Decimal
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.registros.paises import opciones as opciones_de_pais
 from comun.almacenamiento import DocumentoAdmisible
@@ -524,6 +526,149 @@ class AbonoForm(MarcaLosInvalidos, forms.Form):
     )
 
 
+class AbonoManualForm(AbonoForm):
+    """El abono que asienta la administración (`CU-STD-019`).
+
+    Los mismos tres campos que el del expositor, con otro texto: quien lo
+    llena ya vio el dinero en el estado de cuenta, así que aquí el
+    comprobante no es «tu recibo» sino el respaldo de una decisión — y es
+    obligatorio por `RN-15`, no por costumbre.
+
+    Nace validado y mueve el saldo en el acto, y eso se dice en la
+    pantalla: es la diferencia con el otro formulario y no se puede
+    deducir de los campos.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["monto"].label = "Monto del abono"
+        self.fields["metodo"].label = "Cómo entró el dinero"
+        self.fields["comprobante"].label = "Documento de respaldo"
+        self.fields["comprobante"].help_text = (
+            "Ficha de depósito, estado de cuenta o el oficio que autoriza "
+            "el movimiento. Obligatorio (RN-15)."
+        )
+        self.fields["comprobante"].error_messages["required"] = (
+            "Todo abono manual necesita un documento de respaldo. "
+            "Adjúntalo para poder registrarlo."
+        )
+
+
+class DescuentoEspecialForm(MarcaLosInvalidos, forms.Form):
+    """El descuento que otorga la administración (`CU-STD-020`, `RN-07`).
+
+    **El motivo es obligatorio y el formulario no lo negocia**: es lo
+    único que explica, meses después, por qué esa reserva costó menos.
+
+    El porcentaje no tiene valor por omisión a propósito: `RN-07` dice
+    que se fija caso por caso, y un número precargado es un número que
+    alguien envía sin mirar.
+    """
+
+    porcentaje = forms.IntegerField(
+        label="Porcentaje de descuento",
+        min_value=1,
+        max_value=100,
+        widget=forms.NumberInput(attrs={"step": "1", "placeholder": "15"}),
+        error_messages={
+            "min_value": "El porcentaje tiene que estar entre 1 y 100.",
+            "max_value": "El porcentaje tiene que estar entre 1 y 100.",
+        },
+    )
+    motivo = forms.CharField(
+        label="Motivo",
+        max_length=200,
+        widget=forms.Textarea(attrs={"rows": 2, "placeholder": (
+            "Convenio con la Secretaría de Cultura, oficio 214/2027."
+        )}),
+        help_text="Queda guardado con el descuento. Sé concreto: quien lo "
+                  "lea dentro de un año no estuvo en la conversación.",
+        error_messages={
+            "required": (
+                "Escribe el motivo del descuento: es dinero que la feria "
+                "decide no cobrar."
+            )
+        },
+    )
+
+
+class ProrrogaForm(MarcaLosInvalidos, forms.Form):
+    """Más plazo para cubrir el anticipo (`CU-STD-035`, paso 5).
+
+    Un **día** en pantalla y un instante en la base: quien prorroga dice
+    "hasta el 15", no "hasta el 15 a las 14:32". Se convierte al final de
+    ese día porque «hasta el 15» incluye el 15 — con la medianoche de
+    entrada, la reserva vencería la víspera de lo que se prometió.
+    """
+
+    fecha = forms.DateField(
+        label="Nueva fecha límite",
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        help_text="Hasta qué día tiene para cubrir el anticipo, incluido.",
+        error_messages={"required": "Elige hasta cuándo se amplía el plazo."},
+    )
+
+    def clean_fecha(self):
+        dia = self.cleaned_data["fecha"]
+        if dia < timezone.localdate():
+            raise ValidationError(
+                "Esa fecha ya pasó: la reserva volvería a estar vencida hoy "
+                "mismo."
+            )
+        return timezone.make_aware(
+            datetime.combine(dia, time.max), timezone.get_current_timezone()
+        )
+
+
+class FechaDeCorteForm(MarcaLosInvalidos, forms.Form):
+    """Hasta cuándo hay para liquidar (`CU-STD-036`, `RN-13`).
+
+    Se puede vaciar: «sin fecha de corte» es un estado legítimo —una
+    convocatoria puede no tenerla— y no un dato que se perdió.
+    """
+
+    fecha = forms.DateField(
+        label="Corte del pago total",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        help_text="Déjala en blanco para quitar la fecha de corte.",
+    )
+
+
+class CancelacionForm(MarcaLosInvalidos, forms.Form):
+    """Cerrar una reserva y devolver sus espacios (`CU-STD-035` A1).
+
+    **La casilla no es burocracia.** Es la única acción irreversible del
+    dominio y la única que libera espacios: el paso 2 del flujo pide
+    confirmación explícita, y un botón suelto entre otros tres se pulsa
+    por inercia.
+
+    El motivo es opcional, como el del rechazo de un abono, y por lo
+    mismo conviene: la editorial lo lee en su correo, y sin él solo sabe
+    que perdió su lugar.
+    """
+
+    motivo = forms.CharField(
+        label="Motivo",
+        required=False,
+        max_length=200,
+        widget=forms.Textarea(attrs={"rows": 2, "placeholder": (
+            "No cubrió el anticipo tras dos prórrogas."
+        )}),
+        help_text="Se le manda a la editorial y queda guardado en la reserva.",
+    )
+    entiendo = forms.BooleanField(
+        label="Entiendo que los espacios vuelven al mapa y esto no se deshace",
+        required=True,
+        error_messages={
+            "required": (
+                "Marca la casilla para confirmar: cancelar libera los "
+                "espacios y no se puede deshacer."
+            )
+        },
+    )
+
+
 class ConfiguracionForm(MarcaLosInvalidos, forms.ModelForm):
     """Los ajustes de una convocatoria de stands (`CU-STD-034`).
 
@@ -549,6 +694,7 @@ class ConfiguracionForm(MarcaLosInvalidos, forms.ModelForm):
             "plazo_reserva_dias",
             "descuento_pronto_pago",
             "fecha_limite_pronto_pago",
+            "fecha_corte_pago_total",
             "banco_titular",
             "banco_nombre",
             "banco_cuenta",
@@ -562,6 +708,9 @@ class ConfiguracionForm(MarcaLosInvalidos, forms.ModelForm):
             # sabe de meses y de bisiestos, y en el móvil abre el selector
             # nativo.
             "fecha_limite_pronto_pago": forms.DateInput(
+                attrs={"type": "date"}, format="%Y-%m-%d"
+            ),
+            "fecha_corte_pago_total": forms.DateInput(
                 attrs={"type": "date"}, format="%Y-%m-%d"
             ),
             "costo_m2": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
@@ -592,6 +741,10 @@ class ConfiguracionForm(MarcaLosInvalidos, forms.ModelForm):
         "descuento_pronto_pago": "Se aplica al reservar y se retira si vence el plazo.",
         "fecha_limite_pronto_pago": (
             "Es la misma para todos: quien reserva tarde tiene menos días."
+        ),
+        "fecha_corte_pago_total": (
+            "La hereda cada reserva al confirmarse. Después se ajusta una "
+            "por una; cambiarla aquí no mueve las que ya se confirmaron."
         ),
     }
 

@@ -1,0 +1,281 @@
+{% extends "layouts/admin.html" %}
+
+{% comment %} ===========================================================
+   A7 · El expediente de un expositor (CU-STD-031).
+
+   > [!important] Aquí se ve la ficha **viva**, no la fotografía
+   > A2 enseña `Solicitud.datos_editorial`, que es lo que se envió y lo
+   > que se dictaminó (RN-22). Esta pantalla enseña la `Editorial` de
+   > hoy, porque su trabajo es otro: atender a un cliente, facturarle,
+   > llamarle por teléfono. Si la editorial corrigió su correo después
+   > del dictamen, el correcto es éste — y el de A2 sigue siendo el que
+   > se juzgó. Las dos tienen razón; no son la misma pregunta.
+
+   **El alcance es la feria, no la convocatoria** (RN-19, RN-21): la
+   misma editorial puede haber aplicado a la general y a la de un
+   pabellón, y quien atiende una llamada necesita ver las dos.
+
+   Contexto que espera:
+
+     editorial     la ficha viva
+     sellos        SelloEditorial, cada uno con su carta (RN-17)
+     documentos    los de la ficha; las cartas van con su sello
+     solicitudes   todas las de esta editorial en la feria
+     reservas      idem, con enlace a A4
+     convocatoria  la de su solicitud más reciente, para volver
+   =========================================================== {% endcomment %}
+
+{% block migaja %}Stands · Expositores · Expediente{% endblock %}
+
+{% block titulo %}{{ editorial.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}{{ editorial.nombre }}{% endblock %}
+{% block encabezado_texto %}{{ editorial.get_giro_display }}{% endblock %}
+
+{% block contenido %}
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>La editorial</h3>
+      <p>Los datos de hoy, no los que se dictaminaron.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="info-grid">
+      <div>
+        <span class="hint">Cuenta</span>
+        <strong>{{ editorial.persona.nombre_completo }}</strong>
+        <span class="hint">{{ editorial.persona.correo }}</span>
+      </div>
+      <div>
+        <span class="hint">Correo de contacto</span>
+        <strong>{{ editorial.correo_electronico }}</strong>
+      </div>
+      <div>
+        <span class="hint">Teléfonos</span>
+        <strong>{{ editorial.telefono_celular|default:"—" }}</strong>
+        {% if editorial.telefono_oficina %}
+          <span class="hint">{{ editorial.telefono_oficina }} (oficina)</span>
+        {% endif %}
+      </div>
+      <div>
+        <span class="hint">Responsable del stand</span>
+        <strong>{{ editorial.responsable_stand|default:"—" }}</strong>
+      </div>
+      <div>
+        <span class="hint">Nombre en el antepecho</span>
+        <strong>{{ editorial.nombre_antepecho|default:"—" }}</strong>
+      </div>
+      <div>
+        <span class="hint">Personas que atienden</span>
+        <strong>{{ editorial.num_personas_atienden|default:"—" }}</strong>
+      </div>
+    </div>
+    <div class="field">
+      <label>Domicilio</label>
+      {{ editorial.domicilio }}
+    </div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Contactos</h3>
+      <p>A quién escribirle según de qué se trate.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="grid-2">
+      <div class="field"><label>Director general</label>
+        {{ editorial.director_general_nombre|default:"—" }}<br>
+        <span class="hint">{{ editorial.director_general_email }}</span></div>
+      <div class="field"><label>Director comercial</label>
+        {{ editorial.director_comercial_nombre|default:"—" }}<br>
+        <span class="hint">{{ editorial.director_comercial_email }}</span></div>
+      <div class="field"><label>Director editorial</label>
+        {{ editorial.director_editorial_nombre|default:"—" }}<br>
+        <span class="hint">{{ editorial.director_editorial_email }}</span></div>
+      <div class="field"><label>Director de promoción</label>
+        {{ editorial.director_promocion_nombre|default:"—" }}<br>
+        <span class="hint">{{ editorial.director_promocion_email }}</span></div>
+    </div>
+  </div>
+</div>
+
+{% comment %} CU-STD-031 paso 2. **El RFC no es una columna**: la ficha en
+   papel no lo pide como dato, lo pide como documento, y la constancia lo
+   trae dentro. Así que se enlaza el archivo en vez de inventar un campo
+   que nadie llenó nunca — quien factura la abre. {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Información fiscal</h3>
+      <p>Para facturar. El RFC y la razón social vienen en la constancia.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if documentos %}
+      <ul class="lista-sellos">
+        {% for documento in documentos %}
+          <li>
+            <span class="sello-nombre">{{ documento.get_tipo_display }}</span>
+            <a href="{% url 'stands:documento' documento_id=documento.pk %}"
+               target="_blank" rel="noopener">
+              {{ documento.nombre_original|default:"Abrir" }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="note note-warn">
+        <div class="ico">📄</div>
+        <div>
+          <strong>No hay documentos en el expediente.</strong>
+          Sin la constancia de situación fiscal no se le puede facturar.
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Sellos editoriales</h3>
+      <p>
+        {{ sellos|length }} declarado{{ sellos|length|pluralize }}.
+        {% if sellos %}Cada uno con la carta que autoriza a representarlo.{% endif %}
+      </p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if sellos %}
+      {% comment %} La carta va pegada a su sello, como en A2: en la lista
+         de documentos todas se llaman igual y no hay forma de saber cuál
+         autoriza cuál (RN-17). {% endcomment %}
+      <ul class="lista-sellos">
+        {% for sello in sellos %}
+          <li>
+            <span class="sello-nombre">{{ sello.nombre }}</span>
+            {% if sello.carta %}
+              <a href="{% url 'stands:documento' documento_id=sello.carta.pk %}"
+                 target="_blank" rel="noopener">
+                {{ sello.carta.nombre_original|default:"Ver la carta" }}
+              </a>
+            {% else %}
+              <span class="badge badge-changes">Sin carta</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="hint">No representa a ninguna otra editorial.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% comment %} CU-STD-031 pasos 5 y 6. Es lo que distingue esta pantalla de
+   una ficha de contacto: qué compró y en qué va. {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Reservas</h3>
+      <p>Una por convocatoria a la que haya aplicado, en toda la feria.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if reservas %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Convocatoria</th>
+            <th>Espacios</th>
+            <th class="num">Total</th>
+            <th class="num">Pendiente</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reserva in reservas %}
+            <tr>
+              <td>{{ reserva.registro.convocatoria.nombre }}</td>
+              <td>
+                {% for linea in reserva.lineas.all %}
+                  <span class="badge badge-open">{{ linea.stand.clave }}</span>
+                {% endfor %}
+              </td>
+              <td class="num">${{ reserva.monto_total|floatformat:2 }}</td>
+              <td class="num">${{ reserva.monto_pendiente|floatformat:2 }}</td>
+              <td>{% include "stands/parciales/badge_reserva.html" with reserva=reserva vencida=reserva.esta_vencida %}</td>
+              <td>
+                <a class="btn btn-ghost btn-row"
+                   href="{% url 'stands:detalle_reserva' reserva_id=reserva.pk %}">
+                  Gestionar
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="hint">
+        Todavía no ha reservado espacios. Puede hacerlo: su solicitud está
+        aceptada.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Solicitudes</h3>
+      <p>
+        Incluidas las cerradas: explican por qué llegó hasta aquí, y una
+        rechazada no se borra al volver a aplicar (RN-22).
+      </p>
+    </div>
+  </div>
+  <div class="section-body">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Convocatoria</th>
+          <th>Enviada</th>
+          <th>Estado</th>
+          <th>La revisó</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for solicitud in solicitudes %}
+          <tr>
+            <td>{{ solicitud.registro.convocatoria.nombre }}</td>
+            <td>{{ solicitud.fecha_envio|date:"j M Y" }}</td>
+            <td>{% include "stands/parciales/badge_estado.html" with solicitud=solicitud %}</td>
+            <td>{{ solicitud.revisado_por.nombre_completo|default:"—" }}</td>
+            <td>
+              <a class="btn btn-ghost btn-row"
+                 href="{% url 'stands:detalle_solicitud' solicitud_id=solicitud.pk %}">
+                Ver lo que envió
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="form-actions">
+  {% if convocatoria %}
+    <a class="btn btn-ghost" href="{% url 'stands:expositores' convocatoria_id=convocatoria.pk %}">
+      Volver a los expositores
+    </a>
+  {% endif %}
+</div>
+
+{% endblock %}

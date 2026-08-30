@@ -468,3 +468,174 @@ def test_el_saldo_cuenta_solo_los_validados(reserva, admin):
         r.refresh_from_db()
         assert r.monto_abonado == Decimal("5000.00")
         assert Movimiento.objects.count() == 3
+
+
+# ── CU-STD-019 · el abono manual nace validado ────────────────
+
+
+def test_el_abono_manual_nace_validado_y_mueve_el_saldo(reserva, admin):
+    """`CU-STD-019` pasos 6, 8 y 9.
+
+    Lo asienta quien coteja contra el banco, así que no tiene a quién
+    esperar: dejarlo pendiente creaba una cola en la que la
+    administración se validaba a sí misma. $7 500 sobre $15 000 es el
+    anticipo, así que además cruza `RN-13` en la misma llamada.
+    """
+    feria, _, _, r = reserva
+    with schema_context(feria.schema_name):
+        movimiento = pagos.registrar(
+            reserva=r, persona=admin, monto=Decimal("7500"),
+            metodo=Movimiento.Metodo.DEPOSITO, archivo=_comprobante(),
+            manual=True,
+        )
+
+        assert movimiento.estado == Movimiento.Estado.VALIDADO
+        assert movimiento.validado_por == admin
+        assert movimiento.fecha_validacion is not None
+        r.refresh_from_db()
+        assert r.monto_abonado == Decimal("7500.00")
+        assert r.estado == Reserva.Estado.CONFIRMADA
+
+
+def test_lo_reportado_ocupa_sitio_solo_para_el_aplicante(reserva, admin):
+    """El tope de lo que está en revisión protege del doble reporte.
+
+    A quien reporta le frena: no puede volver a mandar la misma
+    transferencia porque no la ve sumada. A quien administra no, porque
+    tiene el estado de cuenta delante y es quien resuelve esa cola — si
+    lo que hay en revisión duplica lo que asienta, lo que procede es
+    rechazarlo, no que el sistema le impida asentar lo que sí entró.
+    """
+    feria, _, ana, r = reserva
+    with schema_context(feria.schema_name):
+        pagos.registrar(
+            reserva=r, persona=ana, monto=Decimal("15000"),
+            metodo=Movimiento.Metodo.TRANSFERENCIA, archivo=_comprobante(),
+        )
+
+        with pytest.raises(pagos.PagoRechazado, match="Espera a que los validemos"):
+            pagos.registrar(
+                reserva=r, persona=ana, monto=Decimal("100"),
+                metodo=Movimiento.Metodo.TRANSFERENCIA, archivo=_comprobante(),
+            )
+
+        manual = pagos.registrar(
+            reserva=r, persona=admin, monto=Decimal("100"),
+            metodo=Movimiento.Metodo.DEPOSITO, archivo=_comprobante(),
+            manual=True,
+        )
+        assert manual.estado == Movimiento.Estado.VALIDADO
+
+
+def test_ningun_tope_ofrece_una_cifra_negativa(reserva, admin):
+    """El mensaje decía «puedes registrar hasta $-6 500».
+
+    Pasa cuando lo que está en revisión supera al saldo, que es lo que
+    abre el abono manual: baja el pendiente sin resolver lo reportado.
+    """
+    feria, _, ana, r = reserva
+    with schema_context(feria.schema_name):
+        pagos.registrar(
+            reserva=r, persona=ana, monto=Decimal("14000"),
+            metodo=Movimiento.Metodo.TRANSFERENCIA, archivo=_comprobante(),
+        )
+        pagos.registrar(
+            reserva=r, persona=admin, monto=Decimal("8000"),
+            metodo=Movimiento.Metodo.DEPOSITO, archivo=_comprobante(),
+            manual=True,
+        )
+
+        with pytest.raises(pagos.PagoRechazado) as fallo:
+            pagos.registrar(
+                reserva=r, persona=ana, monto=Decimal("100"),
+                metodo=Movimiento.Metodo.TRANSFERENCIA, archivo=_comprobante(),
+            )
+
+        assert "$-" not in str(fallo.value)
+
+
+def test_validar_no_cobra_de_mas_si_el_saldo_ya_se_cubrio(reserva, admin):
+    """Entre reportar y validar, el saldo pudo cubrirse por otro lado.
+
+    Validar igualmente dejaría `monto_pendiente` en negativo — cobrado
+    más de lo que la reserva cuesta. Lo que procede es rechazar el
+    duplicado, y el mensaje lo dice.
+    """
+    feria, _, ana, r = reserva
+    with schema_context(feria.schema_name):
+        reportado = pagos.registrar(
+            reserva=r, persona=ana, monto=Decimal("15000"),
+            metodo=Movimiento.Metodo.TRANSFERENCIA, archivo=_comprobante(),
+        )
+        pagos.registrar(
+            reserva=r, persona=admin, monto=Decimal("15000"),
+            metodo=Movimiento.Metodo.DEPOSITO, archivo=_comprobante(),
+            manual=True,
+        )
+
+        with pytest.raises(pagos.PagoRechazado, match="ya está cubierto"):
+            pagos.validar(movimiento=reportado, administrador=admin)
+
+        r.refresh_from_db()
+        assert r.monto_abonado == Decimal("15000.00")
+        assert r.monto_pendiente == Decimal("0.00")
+
+
+# ── CU-STD-020 · retirar el especial ──────────────────────────
+
+
+def test_retirar_el_especial_devuelve_el_total(reserva, admin):
+    """La otra mitad de `RN-05`.
+
+    Como solo cabe uno por reserva, cambiar el porcentaje es retirar el
+    que hay y aplicar otro. Sin esta función, el error de
+    `aplicar_descuento_especial` pedía algo que no se podía hacer.
+    """
+    feria, _, _, r = reserva
+    with schema_context(feria.schema_name):
+        pagos.aplicar_descuento_especial(
+            reserva=r, administrador=admin, porcentaje=20, motivo="Convenio"
+        )
+        r.refresh_from_db()
+        assert r.monto_total == Decimal("12000.00")
+
+        devuelta = pagos.retirar_descuento_especial(reserva=r, administrador=admin)
+
+        assert devuelta.monto_total == Decimal("15000.00")
+        assert not devuelta.descuentos.filter(
+            tipo=DescuentoAplicado.Tipo.ESPECIAL
+        ).exists()
+
+
+def test_retirar_lo_que_no_hay_lo_dice(reserva, admin):
+    feria, _, _, r = reserva
+    with schema_context(feria.schema_name):
+        with pytest.raises(pagos.PagoRechazado, match="no tiene ningún descuento"):
+            pagos.retirar_descuento_especial(reserva=r, administrador=admin)
+
+
+def test_retirarlo_no_baja_de_estado_una_reserva_pagada(reserva, admin):
+    """Subir el total no deshace un cobro (`CU-STD-035` es quien lo hace).
+
+    Queda pagada con saldo pendiente otra vez, que es exactamente lo que
+    describe la situación: se cobró de menos y hay que cobrar la
+    diferencia.
+    """
+    feria, _, ana, r = reserva
+    with schema_context(feria.schema_name):
+        pagos.aplicar_descuento_especial(
+            reserva=r, administrador=admin, porcentaje=20, motivo="Convenio"
+        )
+        abono = pagos.registrar(
+            reserva=Reserva.objects.get(pk=r.pk), persona=ana,
+            monto=Decimal("12000"), metodo=Movimiento.Metodo.TRANSFERENCIA,
+            archivo=_comprobante(),
+        )
+        pagos.validar(movimiento=abono, administrador=admin)
+        r.refresh_from_db()
+        assert r.estado == Reserva.Estado.PAGADA
+
+        devuelta = pagos.retirar_descuento_especial(reserva=r, administrador=admin)
+
+        assert devuelta.estado == Reserva.Estado.PAGADA
+        assert devuelta.monto_pendiente == Decimal("3000.00")
