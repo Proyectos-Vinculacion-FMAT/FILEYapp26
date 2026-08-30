@@ -252,40 +252,39 @@ def main(ruta_celdas, salida):
         if isinstance(que, tuple):
             decoraciones.append(
                 {
-                    "tipo": "rectangulo",
+                    "type": "rect",
                     "col": primero["col"],
-                    "fila": primero["fila"],
-                    "ancho_celdas": max(
-                        r["col"] + r["ancho_celdas"] for r in forma["rects"]
-                    )
+                    "row": primero["fila"],
+                    "w": max(r["col"] + r["ancho_celdas"] for r in forma["rects"])
                     - min(r["col"] for r in forma["rects"]),
-                    "alto_celdas": max(
-                        r["fila"] + r["alto_celdas"] for r in forma["rects"]
-                    )
+                    "h": max(r["fila"] + r["alto_celdas"] for r in forma["rects"])
                     - min(r["fila"] for r in forma["rects"]),
-                    "etiqueta": que[1],
+                    "label": que[1],
                 }
             )
             continue
 
-        stand = {"clave": que, "etiqueta": que, "estado": "Disponible"}
+        # Las claves son las de `bridge_protocol.md`: es el formato que
+        # el componente de mapa lee y que su editor produce en `saveMap`.
+        stand = {"id": que, "label": que, "status": "disponible"}
         if len(forma["rects"]) == 1:
             stand.update(
                 col=primero["col"],
-                fila=primero["fila"],
-                ancho_celdas=primero["ancho_celdas"],
-                alto_celdas=primero["alto_celdas"],
+                row=primero["fila"],
+                w=primero["ancho_celdas"],
+                h=primero["alto_celdas"],
             )
         else:
-            # Irregular: la forma son sus rectángulos, y los cuatro
-            # campos de arriba van nulos (§3.5 del modelo de datos).
-            stand.update(
-                col=min(r["col"] for r in forma["rects"]),
-                fila=min(r["fila"] for r in forma["rects"]),
-                ancho_celdas=None,
-                alto_celdas=None,
-                rectangulos=forma["rects"],
-            )
+            # Irregular (L o T): la forma es la unión de sus rectángulos.
+            stand["rects"] = [
+                {
+                    "col": r["col"],
+                    "row": r["fila"],
+                    "w": r["ancho_celdas"],
+                    "h": r["alto_celdas"],
+                }
+                for r in forma["rects"]
+            ]
         if que in OCUPANTES_2026:
             stand["ocupante_2026"] = OCUPANTES_2026[que]
         stands.append(stand)
@@ -300,41 +299,37 @@ def main(ruta_celdas, salida):
 
     _comprobar(stands)
 
-    cols = max(
-        (r["col"] + r["ancho_celdas"] for s in stands for r in _rects(s)),
-        default=0,
-    )
-    fils = max(
-        (r["fila"] + r["alto_celdas"] for s in stands for r in _rects(s)), default=0
-    )
+    cols = max((r["col"] + r["w"] for s in stands for r in _rects(s)), default=0)
+    fils = max((r["row"] + r["h"] for s in stands for r in _rects(s)), default=0)
     for d in decoraciones:
-        cols = max(cols, d["col"] + d["ancho_celdas"])
-        fils = max(fils, d["fila"] + d["alto_celdas"])
+        cols = max(cols, d["col"] + d["w"])
+        fils = max(fils, d["row"] + d["h"])
 
     mapa = {
-        "formato": "filey-mapa/1",
         "origen": (
             "Derivado de «Plano FILEY 2026 Salón Chichén Itzá.pdf» "
             "(docs/soporte/documentos proporcionados por FILEY/…). "
             "Ver scripts/derivar-mapa/README.md."
         ),
-        "mapa": {
+        # `grid`, `stands` y `decorations`: el formato de
+        # `event-stand-map/docs/bridge_protocol.md`. `salon` va dentro de
+        # `grid` aunque el contrato no lo declare — al canvas le da igual
+        # el recinto y a FILEY no.
+        "grid": {
             "salon": "Salón Chichén Itzá",
-            "columnas": cols,
-            "filas": fils,
-            "metros_por_celda": 1.0,
-            "tamano_celda": 12,
+            "cols": cols,
+            "rows": fils,
+            "meters_per_cell": 1.0,
+            "cell_size": 32,
         },
         "stands": sorted(stands, key=_orden),
-        "decoraciones": decoraciones,
+        "decorations": decoraciones,
     }
     Path(salida).write_text(
         json.dumps(mapa, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
     )
 
-    m2 = sum(
-        sum(r["ancho_celdas"] * r["alto_celdas"] for r in _rects(s)) for s in stands
-    )
+    m2 = sum(sum(r["w"] * r["h"] for r in _rects(s)) for s in stands)
     print(
         f"{len(stands)} stands ({m2} m² vendibles), "
         f"{len(decoraciones)} decoraciones, retícula {cols}x{fils} m",
@@ -343,14 +338,13 @@ def main(ruta_celdas, salida):
 
 
 def _rects(stand):
-    if stand.get("rectangulos"):
-        return stand["rectangulos"]
-    return [stand]
+    """Los rectángulos de un espacio, sea de la forma que sea."""
+    return stand.get("rects") or [stand]
 
 
 def _orden(stand):
     """Numérico donde se pueda: `2` antes que `10`, y `2` antes que `2A`."""
-    clave = stand["clave"]
+    clave = stand["id"]
     numero = int("".join(c for c in clave if c.isdigit()))
     letra = "".join(c for c in clave if c.isalpha())
     return (numero, letra)
@@ -358,7 +352,7 @@ def _orden(stand):
 
 def _comprobar(stands):
     """Los tres errores que un mapa mal derivado comete en silencio."""
-    claves = [s["clave"] for s in stands]
+    claves = [s["id"] for s in stands]
     repetidas = {c for c in claves if claves.count(c) > 1}
     if repetidas:
         raise SystemExit(f"claves repetidas: {sorted(repetidas)}")
@@ -370,8 +364,8 @@ def _comprobar(stands):
 
     for s in stands:
         for r in _rects(s):
-            if r["ancho_celdas"] < 1 or r["alto_celdas"] < 1:
-                raise SystemExit(f"{s['clave']} tiene un lado de cero")
+            if r["w"] < 1 or r["h"] < 1:
+                raise SystemExit(f"{s['id']} tiene un lado de cero")
 
 
 if __name__ == "__main__":

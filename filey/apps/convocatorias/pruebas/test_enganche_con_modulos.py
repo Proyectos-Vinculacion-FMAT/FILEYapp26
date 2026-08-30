@@ -228,9 +228,16 @@ def test_un_modulo_inscrito_sin_sus_rutas_montadas_degrada(client, feria_2027):
     assert "Próximamente" in respuesta.content.decode()
 
 
-def test_quien_ya_se_registro_ve_su_solicitud_y_no_el_alta(
+def test_quien_ya_se_registro_entra_a_su_tramite_y_no_al_alta(
     client, feria_2027, participante
 ):
+    """La tarjeta dice «Continuar», no «Ver mi solicitud».
+
+    `url_aplicar` es la **puerta** del módulo y cada uno decide a dónde
+    lleva según por dónde vaya el trámite (`ADR-0006`): en `STD` puede
+    ser la solicitud, el mapa o la cuenta por pagar. Nombrar una de las
+    tres aquí es prometer la que no toca.
+    """
     with schema_context(feria_2027.schema_name):
         convocatoria = _convocatoria()
         RegistroConvocatoria.objects.create(
@@ -241,7 +248,7 @@ def test_quien_ya_se_registro_ve_su_solicitud_y_no_el_alta(
     with modulos.modulo_temporal(modulo_falso()):
         cuerpo = client.get(feria_2027.url).content.decode()
 
-    assert "Ver mi solicitud" in cuerpo
+    assert "Continuar" in cuerpo
     assert "Registrarme" not in cuerpo
 
 
@@ -324,7 +331,7 @@ def test_quien_ya_se_registro_en_un_modulo_sin_rutas_no_ve_un_enlace_roto(
 ):
     """Salió de la revisión de la fase 2: el botón decía `href="None"`.
 
-    `_url_del_modulo` devuelve `None` a propósito cuando el módulo está
+    `_urls_del_modulo` devuelve `None` a propósito cuando el módulo está
     inscrito pero sus rutas no se resuelven en este urlconf — es lo que
     degrada la tarjeta a "Próximamente" en vez de romper el catálogo.
     La plantilla comprobaba `ya_registrada` **antes** que la URL, así que
@@ -357,3 +364,97 @@ def test_quien_ya_se_registro_en_un_modulo_sin_rutas_no_ve_un_enlace_roto(
 
     assert 'href="None"' not in cuerpo
     assert "Próximamente" in cuerpo
+
+
+# ── El panel del módulo, desde el catálogo ────────────────────
+#
+# El registro de módulos declara `url_panel` desde la fase 0, pero el
+# catálogo no lo resolvía y la tarjeta del administrador pintaba un botón
+# desactivado. Las pantallas existían y funcionaban; simplemente no había
+# forma de llegar a ellas sin escribir la URL a mano.
+
+
+def test_quien_administra_llega_al_panel_del_modulo(client, feria_2027):
+    from apps.registros.models import Persona
+
+    from apps.ferias.models import AdminFeria
+
+    with schema_context(feria_2027.schema_name):
+        Convocatoria.objects.create(
+            tipo=TipoConvocatoria.STD,
+            nombre="Stands 2027",
+            estado=Convocatoria.Estado.ABIERTA,
+        )
+    admin = Persona.objects.create_user(
+        correo="rita@filey.org", nombre="Rita", primer_apellido="Uc"
+    )
+    AdminFeria.objects.create(feria=feria_2027, persona=admin, es_dueno=False)
+    client.force_login(admin)
+
+    cuerpo = client.get(feria_2027.url).content.decode()
+
+    assert "Administrar venta de stands" in cuerpo
+    assert "Sin acciones todavía" not in cuerpo
+    # Al **panel** del módulo, que es la puerta que el registro declara, y
+    # no a una de sus pantallas: lo que hay detrás puede cambiar sin que
+    # el catálogo se entere.
+    with schema_context(feria_2027.schema_name):
+        convocatoria_pk = Convocatoria.objects.get().pk
+    assert f'href="{feria_2027.url}stands/{convocatoria_pk}/"' in cuerpo
+
+
+def test_un_modulo_sin_panel_sigue_diciendo_que_no_lo_hay(client, feria_2027):
+    """`url_panel` es opcional a propósito: un módulo puede existir para
+    el participante antes de tener panel. Es el caso de cinco de los seis.
+    """
+    from apps.convocatorias.modulos import Modulo, modulo_temporal
+    from apps.ferias.models import AdminFeria
+    from apps.registros.models import Persona
+
+    with schema_context(feria_2027.schema_name):
+        Convocatoria.objects.create(
+            tipo=TipoConvocatoria.STD,
+            nombre="Stands 2027",
+            estado=Convocatoria.Estado.ABIERTA,
+        )
+    admin = Persona.objects.create_user(
+        correo="rita@filey.org", nombre="Rita", primer_apellido="Uc"
+    )
+    AdminFeria.objects.create(feria=feria_2027, persona=admin, es_dueno=False)
+    client.force_login(admin)
+
+    sin_panel = Modulo(
+        tipo=TipoConvocatoria.STD,
+        etiqueta="Venta de stands",
+        url_aplicar="stands:solicitud",
+        url_panel=None,
+    )
+    with modulo_temporal(sin_panel):
+        cuerpo = client.get(feria_2027.url).content.decode()
+
+    assert "Sin acciones todavía" in cuerpo
+    assert 'href="None"' not in cuerpo
+
+
+def test_al_participante_no_se_le_ofrece_el_panel(client, feria_2027):
+    """El catálogo del participante y el del administrador son la misma
+    plantilla; separar mal las ramas le enseñaría la cola de revisión."""
+    from apps.registros.models import Persona
+
+    with schema_context(feria_2027.schema_name):
+        Convocatoria.objects.create(
+            tipo=TipoConvocatoria.STD,
+            nombre="Stands 2027",
+            estado=Convocatoria.Estado.ABIERTA,
+        )
+    persona = Persona.objects.create_user(
+        correo="quien@ejemplo.com", nombre="Quien", primer_apellido="Sea"
+    )
+    client.force_login(persona)
+
+    cuerpo = client.get(feria_2027.url).content.decode()
+
+    assert "Administrar" not in cuerpo
+    assert "/solicitudes/" not in cuerpo
+    assert "/reservas/" not in cuerpo
+    assert "Registrarme" in cuerpo

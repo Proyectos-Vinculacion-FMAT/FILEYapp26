@@ -299,3 +299,103 @@ def test_los_campos_propuestos_se_enumeran_para_decirlos():
     assert form.prellenado_texto == (
         "responsable del stand, correo de contacto y teléfono celular"
     )
+
+
+# ── Que el error se vea y diga qué pasa ───────────────────────
+
+
+def test_el_campo_que_falla_queda_marcado():
+    """Django deja la caja igual que las demás y pone el error debajo.
+
+    En un formulario de treinta campos eso obliga a recorrerlo entero
+    buscando de dónde salió el mensaje.
+    """
+    form = _ficha(telefono_celular="no tengo")
+
+    assert not form.is_valid()
+    pintado = str(form["telefono_celular"])
+    assert "is-invalid" in pintado
+    # Y no solo con color: el rojo no es información para quien no lo ve.
+    assert 'aria-invalid="true"' in pintado
+
+
+def test_los_campos_que_no_fallan_no_se_marcan():
+    """Marcarlo todo es no marcar nada."""
+    form = _ficha(telefono_celular="no tengo")
+    form.is_valid()
+
+    assert "is-invalid" not in str(form["nombre"])
+
+
+def test_el_error_dice_como_va_el_dato_y_no_solo_que_esta_mal():
+    """«Formato inválido» obliga a adivinar. El mensaje trae el ejemplo."""
+    form = _ficha(telefono_celular="123")
+    form.is_valid()
+
+    (mensaje,) = form.errors["telefono_celular"]
+    assert "10 dígitos" in mensaje
+    assert "999 123 4567" in mensaje
+
+
+def test_los_campos_con_formato_llevan_su_ayuda_antes_de_fallar():
+    """Decirlo después de equivocarse llega tarde."""
+    form = _ficha()
+
+    assert "999 123 4567" in form.fields["telefono_celular"].help_text
+    assert "5 dígitos" in form.fields["cp"].help_text
+    assert form.fields["correo_electronico"].help_text
+
+
+def test_no_todos_los_campos_llevan_ayuda():
+    """Una debajo de cada caja es ruido, y el ruido deja de leerse."""
+    con_ayuda = [k for k, c in EditorialForm().fields.items() if c.help_text]
+
+    assert 8 <= len(con_ayuda) <= 20, con_ayuda
+
+
+# ── La regla del navegador es la misma que la del servidor ────
+
+
+@pytest.mark.parametrize(
+    "valor", ["9991112233", "999 123 4567", "+52 999 123 4567", "(999) 123-4567"]
+)
+def test_el_patron_del_navegador_admite_lo_que_admite_python(valor):
+    """Dos reglas parecidas en dos idiomas divergen. Ésta es una sola.
+
+    El `pattern` sale de `comun/validadores.py`, el mismo módulo que
+    valida en el servidor; esta prueba es la que se entera si alguien
+    toca uno de los dos y no el otro.
+    """
+    import re
+
+    from comun.validadores import PATRON_TELEFONO, telefono
+
+    telefono(valor)  # no levanta
+    assert re.match(f"^{PATRON_TELEFONO}$", valor)
+
+
+@pytest.mark.parametrize("valor", ["hola", "1234", "999-ABC-4567", "+", "12345"])
+def test_y_rechaza_lo_mismo(valor):
+    import re
+
+    from django.core.exceptions import ValidationError as VE
+
+    from comun.validadores import PATRON_TELEFONO, telefono
+
+    with pytest.raises(VE):
+        telefono(valor)
+    assert not re.match(f"^{PATRON_TELEFONO}$", valor)
+
+
+def test_el_control_lleva_el_patron_y_su_explicacion():
+    """El navegador dice «coincide con el formato solicitado» si no.
+
+    El `title` es lo que convierte ese aviso en algo accionable, y es el
+    mismo texto que la ayuda del campo.
+    """
+    from comun.validadores import AYUDA_TELEFONO
+
+    pintado = str(EditorialForm()["telefono_celular"])
+
+    assert "pattern=" in pintado
+    assert AYUDA_TELEFONO in pintado

@@ -39,6 +39,15 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    consultan `administra()` y `tiene_alcance_de_dueno()`, que son las dos funciones que
    responden "¿administra ésta?" para los decoradores **y** para las pantallas. El middleware de feria **no comprueba permisos** —corre antes de
    `AuthenticationMiddleware`, así que no hay `request.user`—: solo fija el schema.
+   > **Autoridad y cara son dos preguntas.** `administra()` dice qué puede hacer y no la mueve
+   > nada que decida quien mira: de ella cuelgan los decoradores, la entrega de archivos y el
+   > recorte de `RN-18`. `ve_como_admin()` dice desde qué lado está mirando **ahora**, y es la
+   > que usan la barra superior, el catálogo y el detalle de un espacio. La diferencia es la
+   > puerta por la que entró (`sesion.contexto_de_la_sesion`): una misma cuenta coordina una
+   > feria y tiene su editorial dentro de ella, y por el acceso de participante viene a lo
+   > segundo. `ve_como_admin()` **solo quita**; entrar por la puerta de administración no
+   > convierte a nadie en administrador. La barra ofrece el conmutador y abrir una pantalla de
+   > administración devuelve esa cara sola.
 3. **Capas por app:** `models.py` (datos e invariantes, modelos gordos) → `services/` (reglas de
    negocio) → `views.py` (traduce HTTP ↔ servicio, vistas delgadas) → plantillas.
    Si una regla no se puede llamar desde un comando de `manage.py` sin pasar por HTTP, está en
@@ -53,7 +62,11 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    (schema `public`) o `TENANT_APPS` (uno por feria)—. Una app en las dos duplica sus tablas en
    todos los schemas. **PostgreSQL es obligatorio, también en desarrollo**: SQLite no tiene
    schemas y el arranque aborta si `DATABASE_URL` no apunta a Postgres.
-6. **Toda pantalla funciona sin JavaScript**, y **nada se carga de un CDN**.
+6. **Nada se carga de un CDN.** Todo lo que el navegador descarga vive en el repositorio —htmx,
+   Alpine, y los 39 MB del build de Godot del showfloor—.
+   > La otra mitad de esta regla —"toda pantalla funciona sin JavaScript"— **se retiró** en
+   > ADR-0008: el mapa es un canvas de WASM y no puede cumplirla. Las pantallas que hoy
+   > funcionan sin JavaScript siguen haciéndolo y conviene que sigan, pero ya no bloquea.
 7. Nombres en español, consistentes, tanto en código como en rutas de archivo. Sin eñes en
    identificadores ni nombres de columna (`es_dueno`, `contrasena`): la eñe arrastra
    fricción de codificación en cada herramienta que toque la base.
@@ -86,14 +99,64 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   el catálogo con cada vertical (ADR-0006). Falta la pantalla de convocatorias del panel del
   dueño (CU-FER-005 a CU-FER-009 con su propia UI), la transferencia de propiedad y
   `BitacoraFER`.
-- **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene **la solicitud de expositor
-  entera** (CU-STD-001 a 008): la ficha oficial en U1, la cola de revisión y el detalle en A1 y
-  A2, el dictamen con su aviso por correo, los adjuntos con permiso, y `ConfiguracionSistema`
-  (CU-STD-034) editable desde `/f/<slug>/django-admin/` mientras no exista A10. **Falta todo lo
-  que cuelga del mapa**: `MapaShowfloor`, `Stand`, `DecoracionMapa`, `Reserva`, `Movimiento`, y
-  con ellos CU-STD-009 a 033 y 035 a 039. El **mapa sí existe ya como dato**:
-  `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel por
-  `scripts/derivar-mapa/`; es la entrada que CU-STD-039 tiene que saber leer.
+- **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene dos verticales completas:
+  - **La solicitud de expositor** (CU-STD-001 a 008): la ficha oficial en U1, la cola de
+    revisión y el detalle en A1 y A2, el dictamen con su aviso por correo, los adjuntos con
+    permiso.
+  - **El mapa del showfloor** (CU-STD-009, 010, 032, 039): `MapaShowfloor`, `Stand` y
+    `DecoracionMapa`; la importación desde JSON —`servicios/mapas.py`, la pantalla del admin de
+    la edición y `manage.py importar_mapa`—; y el mapa dibujado en **SVG servido**, que es la
+    misma plantilla para el aplicante y para quien administra (lo que cambia es si `reservado`
+    y `ocupado` llegan colapsados, RN-09). El mapa de 2026 vive en
+    `apps/stands/mapas/filey-2026.json` (151 espacios, 2 628 m²), derivado del plano en papel
+    por `scripts/derivar-mapa/`.
+
+  - **La reserva** (CU-STD-011, 012, 013, 021, 028, 029): `Reserva`, `ReservaStand` y
+    `DescuentoAplicado`; el carrito en la sesión, la reserva con los stands bloqueados
+    (`select_for_update` — es lo que sostiene «primero en confirmar gana»), y el panel de
+    reservas del administrador. **Todo el cálculo del dinero vive en
+    `servicios/reservas.py::total_con_descuentos`**, que es la única función que calcula un
+    total: los descuentos se aplican en secuencia, no sumando (RN-06).
+
+  - **La cuenta y sus pagos** (CU-STD-013, 014, 015, 016, 017): `Movimiento`, y la pantalla
+    del expositor —`/f/<slug>/stands/<id>/mi-reserva/`— con tres pestañas por `?ver=`:
+    resumen, pagos y el plano en modo consulta. Los **datos bancarios son seis campos** de
+    `ConfiguracionSistema` (titular, banco, cuenta, CLABE, sucursal, referencia) y no un
+    bloque de texto: `CU-STD-015` pide enseñarlos estructurados, y así se copian de uno en uno
+    frente a la app del banco. Los declara quien administra desde
+    la pantalla de configuración del panel. Un abono que reporta el expositor nace
+    `pendiente_validacion` y **no baja el saldo**: `Reserva.monto_abonado` solo cuenta lo
+    validado, y lo que está en revisión ocupa sitio para que nadie reporte dos veces la misma
+    transferencia. El pronto pago se aplica al reservar y **caduca**: si llega la fecha de
+    corte sin liquidar se retira y el total sube (`RN-04`, `CU-STD-023` A1). Lo hace
+    `servicios/pagos.py::caducar_pronto_pago`; mientras no exista la barrida diaria hay que
+    llamarlo desde el cron con `manage.py caducar_pronto_pago --todas`.
+
+  - **La configuración de la convocatoria** (CU-STD-034, vista A10): precios, plazos, el
+    descuento de pronto pago y los datos bancarios, en
+    `/f/<slug>/stands/<id>/configuracion/`. Es de quien **administra la feria**, no del
+    equipo técnico — el `/f/<slug>/django-admin/` sigue sirviendo la misma fila, pero solo
+    porque ahí vive también la importación del mapa, que es del operador (`ADR-0005`).
+
+  **El flujo del expositor es una secuencia, no un menú** (`RN-23`): solicitud → revisión →
+  espacios → confirmación → cuenta. La puerta del módulo es `stands:inicio` —a donde apunta
+  el catálogo (`ADR-0006`)— y no una pantalla: `views.paso_actual()` mira en qué paso va cada
+  quien y lo manda ahí, de modo que una solicitud aceptada entra al mapa y una reserva viva
+  entra a su cuenta. La misma función alimenta la barra de pasos (`templatetags/flujo.py`),
+  para que la barra no pueda marcar un paso distinto del que se está viendo. **Una editorial
+  lleva una sola reserva viva por convocatoria**, y lo sostiene un índice único parcial sobre
+  `registro`, no solo el servicio.
+
+  - **La validación de los pagos** (CU-STD-018, vista A5): la cola de
+    `/f/<slug>/stands/<id>/pagos/`, transversal a todas las reservas de la convocatoria, y el
+    detalle de un abono en un modal que trae htmx —la misma vista sirve la pantalla suelta sin
+    JavaScript, como el detalle de un espacio—. Es lo que cierra el ciclo del dinero: hasta que
+    existió, un abono nacía `pendiente_validacion` y **no había ningún camino** para darlo por
+    bueno, así que `RN-13` y `RN-14` eran código muerto.
+
+  **Falta el registro manual de abonos y el reloj**: CU-STD-019, 020 y 033 tienen servicio
+  (`servicios/pagos.py`) pero no pantalla —van en A4, el detalle de una reserva—, y
+  CU-STD-022, 024, 025 y 035 a 038 siguen sin construirse.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel
@@ -108,6 +171,7 @@ cd filey && python manage.py check && python manage.py runserver
 cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, no en tests.py
 cd filey && python manage.py migrate_schemas        # migra `public` Y cada feria
 cd filey && python manage.py alta_feria --help      # crear una feria por consola (CU-FER-001)
+cd filey && python manage.py caducar_pronto_pago --todas --seco   # RN-04: qué reservas lo pierden hoy
 ./scripts/gen-inventario.sh         # reindexa el inventario CSS tras tocar un styles.css
 ./scripts/check-ui.sh               # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)
 ./scripts/preview-vis.sh            # sirve prototipo/ por HTTP (los JSON de VIS usan fetch)

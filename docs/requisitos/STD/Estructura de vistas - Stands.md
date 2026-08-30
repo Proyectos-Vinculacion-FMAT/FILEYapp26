@@ -54,6 +54,9 @@ flowchart LR
     U4 --> U5[U5 · Mi reserva]
     U5 --> U6[U6 · Pagos]
 
+    U1 -.->|reserva viva, RN-23| U5
+    E0 -.->|aceptada, RN-23| U2
+
     ROL -->|Administrador| A1[A1 · Solicitudes]
     A1 --> A2[A2 · Detalle de solicitud]
     A1 -.-> A3[A3 · Reservas]
@@ -132,6 +135,21 @@ flowchart LR
 - **Entidades:** Reserva, ReservaStand, Movimiento, DescuentoAplicado, Notificacion.
 
 ### U6 · Pagos
+> [!note] En la implementación, U5 y U6 son **una pantalla con tres pestañas**
+> Django las sirve juntas en `/f/<slug>/stands/<id>/mi-reserva/` («Resumen», «Pagos» y
+> «Ver en el mapa»), siguiendo al prototipo de Angular (`u5-mi-reserva`): el estado de la
+> reserva y su pago son la misma pregunta —«¿cómo voy?»— y partirlos en dos URLs obliga a ir
+> y volver para comparar el saldo con lo que se acaba de abonar. Los CU y las entidades de
+> cada bloque no cambian.
+>
+> La tercera pestaña es el «en mapa» de U5 paso 2: el plano en **modo consulta**, sin carrito
+> y sin «agregar», con los espacios propios distinguibles. Es también la respuesta a A1 de
+> `CU-STD-037` —el mapa sigue teniendo sentido para quien ya reservó— ahora que entrar al
+> módulo con una reserva viva lleva directo aquí (`RN-23`).
+>
+> Las pestañas van por `?ver=` y no por JavaScript: el canvas pesa 39 MB, y con pestañas de
+> cliente se descargaría en cada visita a la cuenta aunque nadie abriera el mapa.
+
 - **Objetivo:** pagar la reserva por abonos y dar seguimiento.
 - **Contenido (tres bloques):**
   1. **Instrucciones de pago** (transferencia / depósito / cheque; sin efectivo, RN-08).
@@ -181,6 +199,19 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Reserva, ReservaStand, Movimiento, Documento, DescuentoAplicado, Bitacora.
 
 ### A5 · Pagos por validar (cola transversal)
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/<id>/pagos/`
+> **Entrar ya es filtrar**: la cola son los `pendiente_validacion` y los chips sirven para
+> mirar lo ya resuelto, al revés que en las otras dos listas. El detalle de cada abono se abre
+> en un modal que trae htmx y que es **la misma vista** que la pantalla suelta —la que sale sin
+> JavaScript—, para que las dos no puedan decir cifras distintas del mismo abono.
+>
+> El modal enseña el saldo de la reserva junto al monto: validar es lo que puede cruzar el 50%
+> (RN-13) o el 100% (RN-14), y esa decisión no se toma sin ver contra qué.
+>
+> **El motivo del rechazo se pide pero no se exige**, siguiendo A1 paso 3 de CU-STD-018. El
+> prototipo de Angular sí lo bloquea; se eligió el caso de uso, porque el motivo es una cortesía
+> con la editorial (CU-STD-017) y no una condición de la operación.
+
 - **Objetivo:** validar abonos de forma centralizada, sin entrar reserva por reserva.
 - **Contenido:** cola de **todos** los movimientos en `pendiente_validacion`; validar uno
   ejecuta la **misma acción** que en A4.
@@ -214,11 +245,23 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Stand, Bitacora.
 
 ### A10 · Configuración
-- **Objetivo:** administrar los parámetros globales del sistema.
-- **Contenido:** costo por m², porcentaje de anticipo, descuento por pronto pago,
-  fechas límite (pronto pago, corte) e instrucciones/datos bancarios de pago.
+- **Objetivo:** administrar los parámetros de **esta convocatoria** (no del sistema: desde el
+  2026-08-25 una feria puede tener varias convocatorias de stands, cada una con su precio).
+- **Contenido:** costo por m², porcentaje de anticipo, plazo de la reserva, descuento por pronto
+  pago y su fecha límite, los **seis campos de la cuenta bancaria** (titular, banco, cuenta,
+  CLABE, sucursal, referencia) y las instrucciones adicionales.
 - **CU involucrados:** CU-STD-034.
 - **Entidades:** ConfiguracionSistema.
+
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/<id>/configuracion/`
+> Dos tarjetas —lo que cuesta y dónde se paga— y un solo botón, como el A10 del prototipo de
+> Angular: son las dos mitades de «abrir la venta» y guardar por separado invita a dejarse una.
+> Lo que añade al prototipo es decir lo que un cambio **no** hace: con reservas en curso avisa
+> de cuántas conservan su precio (RN-01), que es la duda con la que se entra a subir una tarifa.
+>
+> **Importar el mapa no está aquí.** Reemplaza el showfloor entero y es del operador de la
+> plataforma (ADR-0005): sigue en `/f/<slug>/django-admin/`. Esta pantalla lo enseña sin
+> dejar tocarlo.
 
 ---
 

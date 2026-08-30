@@ -324,10 +324,14 @@ STORAGES = {
         # puede cachear para siempre y aun así ver el CSS nuevo tras cada
         # despliegue. Eso exige haber corrido `collectstatic`, que en
         # desarrollo no se corre — de ahí las dos ramas.
+        # `comun.estaticos.EstaticosFiley` y no el de whitenoise a secas:
+        # deja el build de Godot del mapa fuera del manifiesto. Su
+        # `index.js` pide el `.wasm` por su nombre literal, así que
+        # hashearlo rompe el mapa **solo en producción**.
         "BACKEND": (
             "django.contrib.staticfiles.storage.StaticFilesStorage"
             if DEBUG
-            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            else "comun.estaticos.EstaticosFiley"
         ),
     },
 }

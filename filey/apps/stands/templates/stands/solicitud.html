@@ -1,4 +1,5 @@
 {% extends "layouts/panel.html" %}
+{% load flujo %}
 
 {% comment %} ===========================================================
    U1 · Mi solicitud de expositor (CU-STD-001, 002, 003).
@@ -26,9 +27,14 @@
 {% block titulo %}Mi solicitud — {{ convocatoria.nombre }}{% endblock %}
 
 {% block encabezado_titulo %}Solicitud para exponer{% endblock %}
-{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+{% comment %} El folio en el subtítulo, en cuanto existe: es lo que la
+   persona dice por teléfono cuando llama a preguntar, y la ley peak-end
+   de `filey-identidad` pide que toda confirmación lo lleve. {% endcomment %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% if solicitud %} · Solicitud #{{ solicitud.pk }}{% endif %}{% endblock %}
 
 {% block contenido %}
+
+{% barra_de_pasos paso %}
 
 {% comment %} El desenlace, arriba del todo: es lo primero que alguien viene a
    mirar cuando vuelve (CU-STD-003). Cada estado con su color — en revisión
@@ -49,8 +55,11 @@
       <div class="ico">✅</div>
       <div>
         <strong>Te aceptamos como expositor.</strong>
-        Ya puedes elegir tus espacios en el mapa del showfloor.
+        El siguiente paso es elegir tus espacios.
       </div>
+      <a class="btn btn-primary" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
+        Elegir mis espacios
+      </a>
     </div>
   {% elif solicitud.estado == 'cambios_solicitados' %}
     <div class="note note-warn">
@@ -58,7 +67,7 @@
       <div>
         <strong>Hacen falta algunos cambios.</strong>
         {{ solicitud.motivo_peticion }}
-        Corrígelo abajo y vuelve a enviarla; lo demás se conserva.
+        Corrige lo que haga falta y vuelve a enviarla. Lo demás se conserva.
       </div>
     </div>
   {% else %}
@@ -86,7 +95,15 @@
 {% endif %}
 
 {% if editable %}
-  <form method="post" enctype="multipart/form-data" novalidate>
+  {% comment %} `data-avisa-formato`: `filey.js` revisa cada campo al
+     salir de él y escribe el aviso en su hueco. Sin JavaScript el
+     formulario se envía igual y el servidor dice lo mismo — la regla es
+     una sola y vive en `comun/validadores.py`.
+
+     El `novalidate` lo pone el propio script: si estuviera aquí, sin
+     JavaScript se perderían también los avisos de fábrica del
+     navegador, que sin nada mejor son mejor que nada. {% endcomment %}
+  <form method="post" enctype="multipart/form-data" data-avisa-formato>
     {% csrf_token %}
 
     {% include "stands/parciales/campos_editorial.html" %}
@@ -141,7 +158,7 @@
         <div class="num">6</div>
         <div>
           <h3>Sellos que representas</h3>
-          <p>Solo si vas a exhibir el fondo de otras casas editoras.
+          <p>Solo si vas a exhibir el catálogo de otras casas editoras.
              Hasta {{ maximo_sellos }}.</p>
         </div>
       </div>
@@ -177,7 +194,7 @@
         <button type="button" class="btn btn-ghost"
                 @click="visibles = Math.min(visibles + 1, maximo)"
                 x-show="visibles < maximo">
-          + Añadir otro sello
+          + Agregar otro sello
         </button>
       </div>
     </div>
@@ -212,7 +229,7 @@
 {% elif solicitud %}
   {% comment %} Solo lectura: se enseña la fotografía, no la ficha viva. Es lo
      que se envió y lo que se está dictaminando (RN-22). {% endcomment %}
-  {% include "stands/parciales/resumen_solicitud.html" with datos=solicitud.datos_editorial sellos=solicitud.sellos %}
+  {% include "stands/parciales/resumen_solicitud.html" with datos=solicitud.datos_editorial sellos=sellos_enviados %}
 {% endif %}
 
 {% endblock %}

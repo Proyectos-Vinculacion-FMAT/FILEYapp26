@@ -1,0 +1,53 @@
+{% comment %} ===========================================================
+   La barra lateral del panel de administración.
+
+   Contexto que le da `{% barra_lateral %}` (apps/convocatorias):
+
+     grupos            lista de {titulo, entradas[{etiqueta, icono, url, activa}]}
+     convocatoria      la del contexto, si la pantalla está dentro de una
+     url_mis_ferias    para salir de la edición
+
+   Presentación pura: no decide qué entradas hay ni cuál está activa —eso
+   lo resolvió el tag—. La plantilla solo traduce a clases, que es el
+   contrato vista ↔ plantilla del proyecto.
+
+   **Funciona sin JavaScript**, que es lo que la separa de la barra de
+   `VIS` en el prototipo: es un `<aside>` con enlaces, siempre presente.
+   En pantalla chica no se convierte en un cajón —haría falta JS—: se
+   tumba en una tira horizontal encima del contenido.
+   =========================================================== {% endcomment %}
+<aside class="sidebar" id="barra-lateral" :class="{ 'is-cerrada': !abierta }">
+  <nav aria-label="Secciones de administración">
+    {% for grupo in grupos %}
+      <div class="side-section">{{ grupo.titulo }}</div>
+      <div class="side-nav">
+        {% for entrada in grupo.entradas %}
+          {% if entrada.planeada %}
+            {% comment %} Sin `<a>`: no hay a dónde ir, y un enlace que no
+               lleva a ninguna parte se pulsa igual. Un `<span>` con
+               `aria-disabled` lo dice también a quien no ve el gris. {% endcomment %}
+            <span class="side-link is-disabled" aria-disabled="true"
+                  title="Todavía no construido">
+              <span class="ico" aria-hidden="true">{{ entrada.icono }}</span>
+              {{ entrada.etiqueta }}
+            </span>
+          {% else %}
+            <a class="side-link{% if entrada.activa %} active{% endif %}"
+               href="{{ entrada.url }}"
+               {% if entrada.activa %}aria-current="page"{% endif %}>
+              <span class="ico" aria-hidden="true">{{ entrada.icono }}</span>
+              {{ entrada.etiqueta }}
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </nav>
+
+  {% comment %} Al pie y separado: no es una sección más, es la salida. {% endcomment %}
+  <div class="side-foot">
+    <a class="side-link" href="{{ url_mis_ferias }}">
+      <span class="ico" aria-hidden="true">↩</span> Cambiar de feria
+    </a>
+  </div>
+</aside>

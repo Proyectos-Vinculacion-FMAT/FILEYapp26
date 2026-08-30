@@ -103,6 +103,7 @@ convención de equipo normal, no aquí.
 | [0005](<0005-el-operador-alcanza-cualquier-feria.md>) | El operador de la plataforma alcanza cualquier feria, sin fila en `AdminFeria` | Aceptado | 2026-08-27 |
 | [0006](<0006-la-liga-entre-convocatoria-y-modulo.md>) | Una convocatoria se liga a su módulo por `RegistroConvocatoria` y un registro de módulos | Aceptado | 2026-08-27 |
 | [0007](<0007-los-archivos-empiezan-en-disco.md>) | Los archivos que sube la gente empiezan en disco, con la puerta de salida puesta | Aceptado | 2026-08-27 |
+| [0008](<0008-el-mapa-corre-en-el-navegador.md>) | El showfloor lo dibuja Godot en el navegador, y con eso se retira la regla del «sin JavaScript» | Aceptado | 2026-08-29 |
 
 
 ## Estructura de la carpeta
@@ -118,6 +119,7 @@ adr/
 ├── 0005-el-operador-alcanza-cualquier-feria.md
 ├── 0006-la-liga-entre-convocatoria-y-modulo.md
 ├── 0007-los-archivos-empiezan-en-disco.md
+├── 0008-el-mapa-corre-en-el-navegador.md
 └── 000N-....md
 ```
 

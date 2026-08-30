@@ -214,3 +214,346 @@ document.addEventListener('alpine:init', () => {
     },
   }));
 });
+
+/* ══ El puente con el mapa del showfloor ═══════════════════════
+   `event-stand-map` es un canvas de Godot embebido en un `<iframe>` que
+   habla por `postMessage` (ADR-0008). El contrato entero está en
+   `event-stand-map/docs/bridge_protocol.md`; esto es su lado del host.
+
+   El reparto que importa: **el canvas solo dibuja y avisa de dónde se
+   pulsó**. El detalle del espacio, el precio y el «añadir a mi
+   selección» son de esta página — así el diseño y las palabras cambian
+   sin reexportar 39 MB de WASM.
+
+   No es un componente de Alpine: se registra a mano sobre el `<iframe>`
+   que exista en la página. Un `Alpine.data` habría hecho que el mapa
+   dependiera de que Alpine cargue, y el mapa ya depende de bastante. */
+(function () {
+  "use strict";
+
+  var CANAL = "event-stand-map";
+
+  function iniciarMapa(marco) {
+    /* El origen del canvas se **deduce de su propio `src`**, no de un
+       atributo aparte: un `data-origen` que la plantilla se olvide de
+       poner deja esto en `"*"`, y con `"*"` no se comprueba de quién
+       llega un mensaje ni a quién se le manda. Para un administrador,
+       "a quién se le manda" incluye qué editorial reservó qué.
+
+       El contrato lo pide de las dos partes: el canvas fija su lado con
+       `?hostOrigin=`, y éste es el nuestro. */
+    var origen = new URL(marco.src, window.location.href).origin;
+    var urlDatos = marco.dataset.datos;
+    var velo = document.getElementById("mapa-velo");
+    var tarjeta = document.getElementById("mapa-tarjeta");
+    var fondo = document.getElementById("mapa-tarjeta-fondo");
+    var loQueTeniaElFoco = null;
+    var datos = null;
+
+    function ocultarVelo() {
+      if (velo) velo.hidden = true;
+    }
+
+    function enviar(mensaje) {
+      if (!marco.contentWindow) return;
+      mensaje.channel = CANAL;
+      marco.contentWindow.postMessage(mensaje, origen);
+    }
+
+    /* El canvas pide los datos al arrancar; se cachean para poder
+       responder a un segundo `getMapData` sin volver a la red. */
+    function servirDatos(reqId) {
+      var responder = function (payload) {
+        var mensaje = { type: "mapData", payload: payload };
+        if (reqId !== undefined) mensaje.reqId = reqId;
+        enviar(mensaje);
+      };
+      if (datos) return responder(datos);
+      fetch(urlDatos, { credentials: "same-origin" })
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (j) {
+          datos = j;
+          responder(j);
+          /* También aquí, y no solo en `ready`: `ready` dice que Godot
+             arrancó, pero lo que hace usable el mapa es tener qué
+             dibujar. Si por lo que sea no llegara el `ready` —o llegara
+             antes de que este archivo se enganche— el velo se quitaría
+             igual en cuanto hay mapa. */
+          ocultarVelo();
+        })
+        .catch(function (e) {
+          /* Se deja el velo puesto con su mensaje: un canvas vacío sin
+             explicación se lee como "no hay espacios libres". */
+          if (velo) velo.dataset.estado = "error";
+          console.error("[mapa] no se pudieron cargar los datos", e);
+        });
+    }
+
+    window.addEventListener("message", function (evento) {
+      /* Las dos comprobaciones que el contrato pide: de dónde viene y
+         por qué canal. Sin la primera, cualquier pestaña que tenga una
+         referencia a esta ventana puede empujarle un mapa. */
+      if (evento.origin !== origen) return;
+      var m = evento.data;
+      if (!m || m.channel !== CANAL) return;
+
+      switch (m.type) {
+        case "ready":
+          ocultarVelo();
+          break;
+        case "getMapData":
+          servirDatos(m.reqId);
+          break;
+        case "openStand":
+          abrirTarjeta(m.payload);
+          break;
+        case "standRect":
+          /* Se ignora a propósito. Servía para que la tarjeta siguiera
+             al espacio al desplazar el mapa; ahora está centrada, así
+             que no hay nada que mover. Se deja el caso escrito para que
+             no parezca un mensaje olvidado. */
+          break;
+        case "standClosed":
+          cerrarTarjeta(false);
+          break;
+        case "error":
+          console.error("[mapa]", m.payload);
+          break;
+      }
+    });
+
+    /* ── El detalle del espacio, que es cosa de esta página ── */
+    /*
+       El contrato deja aquí el diálogo entero. Lo que este archivo **no**
+       hace es componerlo: el cuerpo lo trae htmx de la misma vista que
+       sirve la pantalla propia del espacio. Antes se armaba aquí con lo
+       que el canvas manda en `openStand`, y eso dejaba fuera la zona y el
+       «qué incluye» —que el canvas no conoce— y ponía el precio en dos
+       sitios. */
+
+    function abrirTarjeta(p) {
+      if (!tarjeta) return;
+      tarjeta.querySelector("[data-campo=clave]").textContent = p.label;
+
+      var cuerpo = document.getElementById("mapa-tarjeta-cuerpo");
+      var url = tarjeta.dataset.urlDetalle.replace("__CLAVE__", p.standId);
+      if (cuerpo && window.htmx) {
+        cuerpo.innerHTML = '<p class="hint">Cargando el detalle…</p>';
+        window.htmx.ajax("GET", url, { target: cuerpo, swap: "innerHTML" });
+      } else if (cuerpo) {
+        /* Sin htmx no hay modal que llenar: se manda a la pantalla
+           propia del espacio, que es la misma información. */
+        window.location.href = url;
+        return;
+      }
+
+      /* Quién tenía el foco antes, para devolvérselo al cerrar. Al pulsar
+         en el canvas el foco está en el `<iframe>`; sin esto, cerrar deja
+         el tabulador al principio de la página. */
+      loQueTeniaElFoco = document.activeElement;
+      if (fondo) fondo.hidden = false;
+      tarjeta.hidden = false;
+      /* El foco entra en el diálogo: quien navega con teclado tiene que
+         poder cerrarlo sin recorrer la página entera. */
+      var cerrar = tarjeta.querySelector("[data-campo=cerrar]");
+      if (cerrar) cerrar.focus();
+    }
+
+    function cerrarTarjeta(avisar) {
+      if (!tarjeta) return;
+      tarjeta.hidden = true;
+      if (fondo) fondo.hidden = true;
+      if (loQueTeniaElFoco && loQueTeniaElFoco.focus) loQueTeniaElFoco.focus();
+      loQueTeniaElFoco = null;
+      /* Que el canvas quite su contorno de selección. Sin esto se queda
+         un espacio marcado que ya no tiene tarjeta detrás. */
+      if (avisar !== false) enviar({ type: "clearSelection" });
+    }
+
+    if (tarjeta) {
+      tarjeta
+        .querySelector("[data-campo=cerrar]")
+        .addEventListener("click", function () {
+          cerrarTarjeta(true);
+        });
+      /* Las dos formas que espera quien usa un diálogo: pulsar fuera y
+         la tecla de escape. Sin ellas, la única salida es la ✕. */
+      if (fondo) {
+        fondo.addEventListener("click", function () {
+          cerrarTarjeta(true);
+        });
+      }
+      document.addEventListener("keydown", function (evento) {
+        if (evento.key === "Escape" && !tarjeta.hidden) cerrarTarjeta(true);
+      });
+      /* Agregado el espacio, el diálogo se cierra solo. Quedarse abierto
+         obliga a cerrarlo a mano para seguir eligiendo, que es lo que uno
+         va a hacer justo después. Se escucha en la tarjeta y no en el
+         formulario porque el formulario lo trae htmx: todavía no existe
+         cuando esto corre. */
+      tarjeta.addEventListener("htmx:afterRequest", function (evento) {
+        var origen = evento.detail && evento.detail.elt;
+        if (!origen || !origen.matches("[data-campo=agregar]")) return;
+        if (evento.detail.successful) cerrarTarjeta(true);
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var marco = document.getElementById("mapa-canvas");
+    if (marco) iniciarMapa(marco);
+  });
+})();
+
+/* ══ Cerrar el modal del panel ═════════════════════════════════
+   htmx deja el diálogo dentro de `#modal`; cerrarlo es vaciar ese hueco.
+   Tres formas, las tres esperadas de un diálogo: el botón, el velo y la
+   tecla de escape.
+
+   Va delegado en `document` y no atado al modal porque el modal **no
+   existe** cuando esto corre: lo trae htmx más tarde.
+
+   Sin JavaScript no hay modal —el mismo enlace abre la pantalla suelta—,
+   así que aquí no hay nada que degradar. */
+(function () {
+  "use strict";
+
+  function hueco() {
+    return document.getElementById("modal");
+  }
+
+  function cerrar() {
+    var caja = hueco();
+    if (caja) caja.innerHTML = "";
+  }
+
+  document.addEventListener("click", function (evento) {
+    var caja = hueco();
+    var velo = caja && caja.firstElementChild;
+    if (!velo) return;
+    var destino = evento.target;
+
+    /* El velo cierra **solo si el clic fue en el velo**, comparando el
+       elemento y no preguntando por el atributo hacia arriba: el velo
+       envuelve al diálogo, así que un `closest("[data-cerrar-modal]")`
+       lo encuentra desde cualquier clic de dentro y cerraría el
+       formulario a medio llenar. */
+    if (destino === velo) return cerrar();
+
+    var boton = destino.closest && destino.closest("[data-cerrar-modal]");
+    if (!boton || boton === velo) return;
+    evento.preventDefault();
+    cerrar();
+  });
+
+  document.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape") cerrar();
+  });
+})();
+
+/* ══ Avisar del formato antes de enviar ════════════════════════
+   La ficha de expositor tiene treinta campos. Descubrir al enviar que
+   tres están mal —y volver a subir los archivos, que el navegador no
+   conserva— es lo que hace que se abandonen los formularios largos.
+
+   **Ninguna regla vive aquí.** Lo que se lee son los atributos que el
+   servidor ya puso en el control (`required`, `type`, `pattern`,
+   `minlength`), y el `pattern` sale de `comun/validadores.py`, que es el
+   mismo módulo que valida de verdad. Este archivo solo decide *cuándo*
+   preguntar y *dónde* escribir la respuesta.
+
+   El servidor vuelve a comprobarlo todo igual: esto es un aviso
+   temprano, no una puerta. */
+(function () {
+  "use strict";
+
+  /* Al salir del campo, no al teclear: avisar mientras alguien escribe
+     su correo lo marca en rojo desde la primera letra. */
+  var EVENTO_QUE_AVISA = "blur";
+  /* Una vez marcado, sí conviene reaccionar al teclear — para que el
+     rojo se quite en cuanto se arregla, y no al salir otra vez. */
+  var EVENTO_QUE_LIMPIA = "input";
+
+  function mensajeDe(control) {
+    if (control.validity.valid) return "";
+    if (control.validity.valueMissing) return "Este campo es obligatorio.";
+    /* `title` lleva la ayuda de formato que puso el servidor; el mensaje
+       de fábrica del navegador dice "coincide con el formato solicitado",
+       que no le sirve a nadie. */
+    if (control.validity.patternMismatch || control.validity.typeMismatch) {
+      return control.title || control.validationMessage;
+    }
+    if (control.validity.tooShort) {
+      return "Escribe al menos " + control.minLength + " caracteres.";
+    }
+    if (control.validity.rangeUnderflow) {
+      return "El mínimo es " + control.min + ".";
+    }
+    return control.validationMessage;
+  }
+
+  function revisar(control) {
+    /* El mismo `id` al que apunta el `aria-describedby` que
+       genera Django: así lo que se escribe aquí lo anuncia el lector
+       de pantalla sin nada más. */
+    var hueco = document.getElementById(control.id + "_error");
+    var malo = !control.checkValidity();
+    control.classList.toggle("is-invalid", malo);
+    if (malo) {
+      control.setAttribute("aria-invalid", "true");
+    } else {
+      control.removeAttribute("aria-invalid");
+    }
+    if (hueco) hueco.textContent = malo ? mensajeDe(control) : "";
+  }
+
+  function vigilar(campo) {
+    /* Los que el servidor ya marcó se vigilan desde el principio; los
+       demás, solo después de que alguien los haya tocado una vez. Sin
+       eso, saltar por encima de un campo opcional lo pinta de rojo. */
+    var tocado = campo.classList.contains("is-invalid");
+
+    campo.addEventListener(EVENTO_QUE_AVISA, function () {
+      tocado = true;
+      revisar(campo);
+    });
+    campo.addEventListener(EVENTO_QUE_LIMPIA, function () {
+      if (tocado) revisar(campo);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var formularios = document.querySelectorAll("form[data-avisa-formato]");
+    Array.prototype.forEach.call(formularios, function (formulario) {
+      /* `novalidate` para quedarnos con el aviso: sin él, el navegador
+         planta su propio globo y bloquea el envío con un texto que no
+         controlamos y que no queda escrito en la página. */
+      formulario.setAttribute("novalidate", "novalidate");
+      Array.prototype.forEach.call(
+        formulario.querySelectorAll("input, select, textarea"),
+        vigilar
+      );
+      /* Al enviar se revisa todo y se lleva el foco al primero que
+         falle: en un formulario de treinta campos, el que falla puede
+         estar a dos pantallas de distancia del botón. */
+      formulario.addEventListener("submit", function (evento) {
+        var malos = [];
+        Array.prototype.forEach.call(
+          formulario.querySelectorAll("input, select, textarea"),
+          function (campo) {
+            revisar(campo);
+            if (!campo.checkValidity()) malos.push(campo);
+          }
+        );
+        if (malos.length) {
+          evento.preventDefault();
+          malos[0].focus();
+          malos[0].scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      });
+    });
+  });
+})();

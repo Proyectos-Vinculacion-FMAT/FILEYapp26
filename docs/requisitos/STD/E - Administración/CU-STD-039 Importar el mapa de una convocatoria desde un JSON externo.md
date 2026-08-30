@@ -26,6 +26,20 @@ reglas_de_negocio:
 > `filey-map.json` es la fuente y nadie sabe qué versión está viva. Después de importarlo, la
 > fuente es la base y el JSON es un formato de intercambio.
 
+> [!important] Construido el 2026-08-28
+> `apps/stands/servicios/mapas.py::importar`, con tres puertas: la pantalla del admin de la
+> edición (`/f/<slug>/django-admin/stands/mapashowfloor/importar/`, solo superusuario),
+> `manage.py importar_mapa`, y el servicio directo desde cualquier prueba o comando.
+>
+> **Lee `filey-mapa/1`, no `grid`/`stands`/`decorations`.** Este caso de uso menciona las
+> claves del componente de mapa; ese archivo no existe en el repositorio, así que se
+> implementó el formato que sí hay — el que produce `scripts/derivar-mapa/` y en el que está
+> el mapa de 2026. La clave `formato` está justo para poder añadir el otro lector el día que
+> aparezca sin tocar nada de lo construido.
+>
+> `A1`, `E1`, `E2` y `E3` están los cuatro, y `E2` se comprueba con dieciséis formas
+> distintas de romper el archivo: en todas, **no se escribe ni una fila**.
+
 > [!note] El JSON de 2026 ya existe (2026-08-28)
 > Se derivó del plano en papel —`Plano FILEY 2026 Salón Chichén Itzá.pdf`, que es una imagen de
 > Photoshop sin capa de texto— midiendo la geometría sobre los píxeles y leyendo los números a

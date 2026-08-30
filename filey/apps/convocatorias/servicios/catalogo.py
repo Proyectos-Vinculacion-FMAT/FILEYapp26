@@ -63,6 +63,11 @@ class EntradaCatalogo:
     #: La URL del formulario del módulo, ya resuelta. ``None`` cuando no
     #: hay módulo **o** cuando lo hay pero sus rutas no están montadas.
     url_aplicar: str | None
+    #: La URL del panel del módulo, ya resuelta. ``None`` cuando el
+    #: módulo no tiene panel todavía —`url_panel` es opcional a
+    #: propósito: un módulo puede existir para el participante antes de
+    #: tenerlo— o cuando sus rutas no están montadas.
+    url_panel: str | None
     #: Si quien mira ya tiene registro en esta convocatoria.
     ya_registrada: bool
     #: Cuántos registros activos lleva. Solo se calcula para quien
@@ -75,25 +80,39 @@ class EntradaCatalogo:
     admite_registro: bool
 
 
-def _url_del_modulo(convocatoria: Convocatoria) -> tuple[str | None, str | None]:
-    """La etiqueta y la URL del módulo que sirve esta convocatoria.
+def _urls_del_modulo(
+    convocatoria: Convocatoria,
+) -> tuple[str | None, str | None, str | None]:
+    """La etiqueta y las dos URLs del módulo que sirve esta convocatoria.
 
-    El nombre de ruta se resuelve **aquí y no al inscribirse el módulo**
-    porque durante ``AppConfig.ready()`` el urlconf todavía no está
-    cargado.
+    Los nombres de ruta se resuelven **aquí y no al inscribirse el
+    módulo** porque durante ``AppConfig.ready()`` el urlconf todavía no
+    está cargado.
 
     Un ``NoReverseMatch`` se traga a propósito: significa que el módulo
     se inscribió pero sus rutas no están montadas en este urlconf. El
     catálogo es una pantalla pública y no puede caerse por eso; degrada a
     "próximamente", que es exactamente lo que la situación es.
+
+    :returns: ``(etiqueta, url_aplicar, url_panel)``.
     """
     modulo = modulos.modulo_de(convocatoria.tipo)
     if modulo is None:
-        return None, None
+        return None, None, None
+    return (
+        modulo.etiqueta,
+        _resolver(modulo.url_aplicar, convocatoria),
+        _resolver(modulo.url_panel, convocatoria),
+    )
+
+
+def _resolver(nombre: str | None, convocatoria: Convocatoria) -> str | None:
+    if nombre is None:
+        return None
     try:
-        return modulo.etiqueta, reverse(modulo.url_aplicar, args=[convocatoria.pk])
+        return reverse(nombre, args=[convocatoria.pk])
     except NoReverseMatch:
-        return modulo.etiqueta, None
+        return None
 
 
 def entradas_visibles(
@@ -141,12 +160,13 @@ def entradas_visibles(
 
     entradas = []
     for convocatoria in convocatorias:
-        etiqueta, url = _url_del_modulo(convocatoria)
+        etiqueta, url, panel = _urls_del_modulo(convocatoria)
         entradas.append(
             EntradaCatalogo(
                 convocatoria=convocatoria,
                 etiqueta_modulo=etiqueta,
                 url_aplicar=url,
+                url_panel=panel,
                 ya_registrada=convocatoria.pk in ya_registradas,
                 registros_activos=(
                     getattr(convocatoria, "_registros_activos", 0)

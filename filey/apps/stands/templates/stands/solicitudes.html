@@ -1,4 +1,6 @@
-{% extends "layouts/panel.html" %}
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Solicitudes{% endblock %}
 
 {% comment %} ===========================================================
    A1 · La cola de revisión (CU-STD-004).
@@ -15,27 +17,11 @@
 
 {% block contenido %}
 
-<form class="toolbar-row" method="get">
-  <div class="field">
-    <label for="filtro-estado">Estado</label>
-    <select id="filtro-estado" name="estado">
-      <option value="">Todos</option>
-      {% for valor, etiqueta in estados %}
-        <option value="{{ valor }}" {% if valor == estado_activo %}selected{% endif %}>{{ etiqueta }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="field">
-    <label for="filtro-q">Editorial</label>
-    <input id="filtro-q" type="search" name="q" value="{{ busqueda }}" placeholder="Nombre de la editorial">
-  </div>
-  <div class="form-actions">
-    <button class="btn btn-primary" type="submit">Filtrar</button>
-    {% if hay_filtros %}
-      <a class="btn btn-ghost" href="{% url 'stands:solicitudes' convocatoria_id=convocatoria.pk %}">Quitar filtros</a>
-    {% endif %}
-  </div>
-</form>
+{% comment %} Los dos botones que llevaban al mapa y a las reservas se
+   quitaron: la barra lateral del panel ya lleva a las dos, y repetirlos
+   aquí ponía navegación dentro de un formulario de filtros — dos trabajos
+   distintos en la misma fila. {% endcomment %}
+{% include "stands/parciales/filtros.html" with nombre="solicitud" plural="solicitudes" url_limpia=url_limpia %}
 
 {% if solicitudes %}
   <table class="table">

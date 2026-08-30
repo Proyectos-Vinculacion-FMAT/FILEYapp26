@@ -51,7 +51,9 @@ def test_stands_se_inscribe_en_el_registro_de_modulos():
     modulo = modulo_de(TipoConvocatoria.STD)
 
     assert modulo is not None
-    assert modulo.url_aplicar == "stands:solicitud"
+    # A la **puerta** del módulo, no a la solicitud: quien ya está
+    # aceptado o ya reservó no vuelve al principio (`CU-STD-003`).
+    assert modulo.url_aplicar == "stands:inicio"
     assert modulo.crear_configuracion is not None
 
 

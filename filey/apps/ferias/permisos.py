@@ -36,6 +36,8 @@ import functools
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 
+from apps.registros.services import sesion
+
 from comun.urls import url_publica
 
 from .models import AdminFeria
@@ -116,6 +118,36 @@ def administra(peticion) -> bool:
     return acceso_a(peticion) is not None or es_operador(peticion)
 
 
+def ve_como_admin(peticion) -> bool:
+    """¿Se le enseña la **cara** administrativa? (autoridad + puerta)
+
+    Es la pregunta de las pantallas, y no la misma que ``administra``:
+
+    ===================== ==================================================
+    ``administra``        ¿tiene autoridad? La usan los decoradores, la
+                          entrega de archivos y el recorte de `RN-18`. No
+                          la mueve nada que decida quien mira.
+    ``ve_como_admin``     ¿está mirando como administrador **ahora**? La
+                          usan la barra superior, el catálogo y el detalle
+                          de un espacio, que son las tres pantallas que
+                          cambian de cara según quién entre.
+    ===================== ==================================================
+
+    La diferencia existe porque una misma cuenta administra una feria y
+    a la vez participa en ella —el dueño de una editorial que además
+    coordina el showfloor—, y entrar por el acceso de participante
+    significa querer usar el sistema como participante. Antes de esto no
+    había forma: el catálogo detectaba la autoridad y devolvía el panel,
+    y la única salida era cerrar sesión.
+
+    **Solo quita, nunca añade.** Quien no administra no ve la cara
+    administrativa por mucho que entre por la puerta de administración.
+    """
+    return administra(peticion) and sesion.contexto_de_la_sesion(
+        peticion
+    ) == sesion.CONTEXTO_ADMIN
+
+
 def tiene_alcance_de_dueno(peticion) -> bool:
     """¿Alcanza además lo reservado al dueño?
 
@@ -139,9 +171,23 @@ def requiere_admin_feria(vista):
             # rodeos: quien llega aquí ya demostró su identidad, así que
             # el mensaje no revela nada que no sepa.
             raise PermissionDenied("Tu cuenta no administra esta feria.")
+        _volver_a_administracion(peticion)
         return vista(peticion, *args, **kwargs)
 
     return envoltura
+
+
+def _volver_a_administracion(peticion) -> None:
+    """Abrir una pantalla de administración **es** volver a ella.
+
+    Sin esto, quien está mirando como participante y abre una dirección
+    administrativa —un marcador, un enlace de un correo— vería la
+    pantalla del panel con la barra superior de participante, y el botón
+    de la barra le ofrecería "volver a administración" estando ya
+    dentro. El modo se corrige solo, que es preferible a un 403 sobre
+    algo que sí puede hacer.
+    """
+    sesion.asegurar_contexto_admin(peticion)
 
 
 def requiere_dueno_feria(vista):
@@ -156,6 +202,7 @@ def requiere_dueno_feria(vista):
         if not peticion.user.is_authenticated:
             return redirect(url_publica("registros:admin_acceso"))
         if tiene_alcance_de_dueno(peticion):
+            _volver_a_administracion(peticion)
             return vista(peticion, *args, **kwargs)
         # Los dos mensajes se conservan separados: no es lo mismo no
         # tener nada que ver con esta feria que administrarla y toparse

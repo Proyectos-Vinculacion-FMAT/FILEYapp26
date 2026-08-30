@@ -56,6 +56,38 @@ class TipoNoValido(Exception):
 
 
 @dataclass(frozen=True)
+class SeccionPanel:
+    """Una entrada del menú lateral del panel de un módulo.
+
+    El módulo declara sus secciones y la barra lateral las pinta; ni
+    `FER` ni la plantilla saben qué pantallas tiene `STD`, igual que no
+    saben qué cuelga de un registro (`ADR-0006`).
+
+    :param etiqueta: cómo se llama en pantalla.
+    :param icono: un emoji. Es lo que usa el prototipo, y no un SVG,
+        porque una barra lateral con seis iconos distintos sería seis
+        assets que mantener para decir "solicitudes" y "reservas".
+    :param ruta: **nombre** de la ruta, que recibe el id de la
+        convocatoria. Se resuelve al pintar, no al inscribirse.
+        ``None`` cuando la sección está en el plan del módulo pero su
+        pantalla no existe todavía: se pinta apagada y sin enlace. Es
+        deliberado — que el menú enseñe la forma completa del módulo
+        evita la pregunta "¿y dónde se validan los pagos?", que hoy se
+        responde buscando por todo el panel.
+    """
+
+    etiqueta: str
+    icono: str
+    ruta: str | None = None
+    #: Otras rutas que **pertenecen** a esta sección: el detalle de una
+    #: solicitud sigue siendo "Solicitudes". Se declaran por nombre y no
+    #: se deducen del camino, porque un detalle no tiene por qué colgar
+    #: de la URL de su listado —el de una solicitud no lleva la
+    #: convocatoria a propósito, ver `apps/stands/urls.py`.
+    tambien: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class Modulo:
     """Lo que un dominio vertical declara sobre sí mismo.
 
@@ -72,6 +104,10 @@ class Modulo:
     :param url_panel: nombre de la ruta del panel administrativo del
         módulo, si tiene. Opcional: un módulo puede existir para el
         participante antes de tener panel.
+    :param secciones_panel: las entradas de su barra lateral, en el orden
+        en que se usan. Vacío mientras el módulo no tenga panel. Es lo
+        que hace que la barra sirva a los seis módulos sin que ninguno
+        toque la plantilla.
     :param crear_configuracion: qué llamar al dar de alta una
         convocatoria de este tipo, para que nazca con su configuración
         (`CU-FER-005` paso 6). Recibe la `Convocatoria` recién creada y
@@ -83,6 +119,7 @@ class Modulo:
     etiqueta: str
     url_aplicar: str
     url_panel: str | None = None
+    secciones_panel: tuple[SeccionPanel, ...] = ()
     # Fuera de la comparación a propósito: lo que `registrar` vigila es
     # que dos apps distintas no se peleen un tipo, y eso se ve en la
     # etiqueta y en las rutas. Incluir el callback haría que inscribir un

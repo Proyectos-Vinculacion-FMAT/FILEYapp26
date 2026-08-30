@@ -168,7 +168,7 @@ def enviar_solicitud(
         raise EnvioRechazado(
             "Ya tienes una solicitud en esta convocatoria "
             f"({viva.get_estado_display().lower()}). "
-            "No se puede enviar otra mientras siga en juego."
+            "No puedes enviar otra mientras esa siga abierta."
         )
 
     # El registro se pide a `FER` declarando el tipo que esperamos. Es la
@@ -221,8 +221,8 @@ def reenviar_solicitud(solicitud: Solicitud) -> Solicitud:
     """
     if solicitud.estado != Solicitud.Estado.CAMBIOS_SOLICITADOS:
         raise EnvioRechazado(
-            "Solo se reenvía una solicitud a la que se le pidieron cambios. "
-            f"Ésta está {solicitud.get_estado_display().lower()}."
+            "Solo puedes reenviar una solicitud cuando te pedimos cambios. "
+            f"Esta está {solicitud.get_estado_display().lower()}."
         )
 
     _convocatoria_que_admite(solicitud.registro.convocatoria)
@@ -310,12 +310,67 @@ def guardar_editorial(editorial: Editorial, *, sellos) -> Editorial:
     return editorial
 
 
+def sellos_con_carta(solicitud: Solicitud) -> list[dict]:
+    """Los sellos que se enviaron, cada uno con su carta (`RN-17`).
+
+    Quien dictamina tiene que poder comprobar **qué carta autoriza qué
+    sello**, y hasta ahora no podía: la pantalla enseñaba los nombres por
+    un lado y las cartas por otro, en una lista donde todas se llaman
+    «Carta de representación».
+
+    Los nombres salen de la **fotografía** (`RN-22`) —es lo que se
+    dictamina— y la carta del sello vivo, que es donde vive el archivo.
+    Se casan por nombre porque el nombre ya es la identidad de un sello
+    dentro de su editorial: es lo mismo que hace `guardar_editorial` al
+    reconciliar la lista.
+
+    ``carta`` es ``None`` cuando no la subió —lo que `RN-17` exige y hay
+    que reclamar— y también cuando el sello se renombró o se quitó
+    después de enviar. Las dos cosas se ven igual desde aquí, y las dos
+    se resuelven igual: pedírsela.
+    """
+    vivos = {
+        sello.nombre: sello
+        for sello in solicitud.editorial.sellos.prefetch_related("cartas")
+    }
+    return [
+        {"nombre": nombre, "carta": getattr(vivos.get(nombre), "carta", None)}
+        for nombre in solicitud.sellos
+    ]
+
+
+def habilitada_para_reservar(convocatoria: Convocatoria, persona) -> Editorial | None:
+    """La editorial de esta persona, si puede reservar (`RN-16`).
+
+    ``None`` cuando no puede, y **no se dice por qué**: el llamador solo
+    tiene que decidir si enseña el mapa. Los tres motivos —nunca aplicó,
+    su solicitud sigue en revisión, se la rechazaron— los cuenta la
+    pantalla de su solicitud, que es donde puede hacer algo al respecto.
+
+    Vive aquí y no en `permisos.py` porque no es una regla de acceso: es
+    una regla de negocio sobre el expediente, y tiene que poder
+    responderse desde un comando de `manage.py`.
+    """
+    aceptada = (
+        Solicitud.objects.filter(
+            registro__convocatoria=convocatoria,
+            registro__persona=persona,
+            estado=Solicitud.Estado.ACEPTADA,
+        )
+        .select_related("editorial")
+        .first()
+    )
+    return aceptada.editorial if aceptada else None
+
+
 __all__ = [
     "EnvioRechazado",
     "ValidationError",
     "enviar_solicitud",
+    "habilitada_para_reservar",
     "guardar_editorial",
     "reenviar_solicitud",
+    "sellos_con_carta",
     "solicitud_viva",
     "ultima_solicitud",
 ]

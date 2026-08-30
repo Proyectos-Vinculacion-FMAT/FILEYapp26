@@ -8,14 +8,24 @@ se puede dictaminar — vive en `servicios/`, que es a quien llaman estos
 formularios y también un comando de `manage.py`.
 """
 
+from decimal import Decimal
+
 from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.registros.paises import opciones as opciones_de_pais
 from comun.almacenamiento import DocumentoAdmisible
+from comun import validadores
 from comun.validadores import validar_cp
 
-from .models import MATERIALES, TEMATICAS, Documento, Editorial
+from .models import (
+    MATERIALES,
+    TEMATICAS,
+    ConfiguracionSistema,
+    Documento,
+    Editorial,
+    Movimiento,
+)
 
 
 #: Cuántos sellos caben. El tope es del formulario, no del dominio: una
@@ -40,7 +50,71 @@ DE_LA_CUENTA = {
 }
 
 
-class EditorialForm(forms.ModelForm):
+#: Cómo va cada dato, dicho antes de que alguien se equivoque.
+#:
+#: Se llenan en `__init__` y no en el modelo porque son ayuda **de
+#: pantalla**: el modelo describe el dato, no cómo se teclea. Y solo las
+#: que aportan algo — «Escribe el nombre» debajo de «Nombre» no aporta.
+AYUDAS = {
+    "nombre": "Como aparece en tu constancia de situación fiscal.",
+    "cp": validadores.AYUDA_CP,
+    "telefono_celular": validadores.AYUDA_TELEFONO,
+    "telefono_oficina": validadores.AYUDA_TELEFONO,
+    "correo_electronico": (
+        "Por aquí te avisamos del dictamen. Puede ser distinto al de tu cuenta."
+    ),
+    "director_general_email": "Ejemplo: direccion@editorial.mx",
+    "director_comercial_email": "Ejemplo: ventas@editorial.mx",
+    "director_editorial_email": "Ejemplo: edicion@editorial.mx",
+    "director_promocion_email": "Ejemplo: prensa@editorial.mx",
+    "responsable_stand": "Quién estará al frente durante la feria.",
+    "num_personas_atienden": "Al menos una.",
+    "cantidad_libros_aprox": "Un aproximado basta; puedes poner 0 si aún no lo sabes.",
+    "cantidad_titulos_aprox": "Títulos distintos, no ejemplares.",
+    "domicilio_numero": "Exterior y, si aplica, interior.",
+    "materiales_otro": "Solo si marcaste «Otro» arriba.",
+    "tematicas_otra": "Solo si marcaste «Otros» arriba.",
+}
+
+
+class MarcaLosInvalidos:
+    """Pinta de rojo el campo que falló, y se lo dice a quien no ve.
+
+    Django no marca el control: pone el error debajo y deja la caja igual
+    que las demás. En un formulario de treinta campos eso obliga a
+    recorrerlo entero buscando de dónde salió el mensaje.
+
+    Se hace en `add_error` —y no en `__init__`— porque hasta que la
+    validación no corre no se sabe qué falló. `aria-invalid` va con la
+    clase: el color no es información para quien usa un lector de
+    pantalla, ni para quien no distingue el rojo.
+    """
+
+    def add_error(self, field, error):
+        """Marca **todo lo que haya fallado**, no solo lo que llega aquí.
+
+        Mirar el `field` del argumento parecía suficiente y no lo es: los
+        errores que vienen de los validadores del **modelo** llegan en un
+        solo `add_error(None, {...})` con un diccionario dentro, que
+        Django reparte por su cuenta sin volver a pasar por aquí. Con la
+        versión ingenua, `telefono_celular` —cuya regla vive en el
+        modelo— nunca se marcaba, y el fallo era mudo: el mensaje salía
+        debajo y la caja se quedaba igual que las demás.
+
+        Recorrer los errores ya acumulados cubre los dos caminos y
+        cualquier tercero que Django añada.
+        """
+        super().add_error(field, error)
+        for nombre in self._errors or {}:
+            if nombre not in self.fields:
+                continue
+            widget = self.fields[nombre].widget
+            clases = widget.attrs.get("class", "")
+            if "is-invalid" not in clases:
+                widget.attrs["class"] = f"{clases} is-invalid".strip()
+
+
+class EditorialForm(MarcaLosInvalidos, forms.ModelForm):
     """La Ficha de Registro para Expositores (`CU-STD-001` paso 2).
 
     Es larga porque la ficha lo es. Lo que sí se decide aquí es **qué es
@@ -72,10 +146,36 @@ class EditorialForm(forms.ModelForm):
             "nombre_antepecho": forms.TextInput(
                 attrs={"placeholder": "Ediciones del Mayab"}
             ),
-            "telefono_oficina": forms.TextInput(attrs={"placeholder": "999 123 4567"}),
-            "telefono_celular": forms.TextInput(attrs={"placeholder": "999 123 4567"}),
+            # `pattern` y `title` salen de `comun/validadores.py`: el
+            # navegador avisa antes de enviar con **la misma regla** que
+            # el servidor comprueba después. Sin eso serían dos reglas
+            # parecidas en dos idiomas, y divergirían.
+            "telefono_oficina": forms.TextInput(
+                attrs={
+                    "placeholder": "999 123 4567",
+                    "pattern": validadores.PATRON_TELEFONO,
+                    "title": validadores.AYUDA_TELEFONO,
+                    "inputmode": "tel",
+                }
+            ),
+            "telefono_celular": forms.TextInput(
+                attrs={
+                    "placeholder": "999 123 4567",
+                    "pattern": validadores.PATRON_TELEFONO,
+                    "title": validadores.AYUDA_TELEFONO,
+                    "inputmode": "tel",
+                }
+            ),
             "correo_electronico": forms.EmailInput(
                 attrs={"placeholder": "contacto@editorial.mx"}
+            ),
+            "cp": forms.TextInput(
+                attrs={
+                    "placeholder": "97000",
+                    "pattern": validadores.PATRON_CP,
+                    "title": validadores.AYUDA_CP,
+                    "inputmode": "numeric",
+                }
             ),
             "materiales_otro": forms.TextInput(
                 attrs={"placeholder": "Solo si marcaste «Otro» arriba"}
@@ -107,6 +207,13 @@ class EditorialForm(forms.ModelForm):
         self.fields["pais"].choices = opciones_de_pais(suyo)
         if not self.initial.get("pais") and not self.instance.pk:
             self.initial["pais"] = suyo or "MX"
+
+        # Cómo se escribe cada dato, en los campos donde hay algo que
+        # decir. **No en todos**: una ayuda debajo de cada una de las
+        # treinta cajas es ruido, y el ruido deja de leerse justo en las
+        # que sí importan.
+        for campo, ayuda in AYUDAS.items():
+            self.fields[campo].help_text = ayuda
 
         # Las etiquetas de los campos que llegaron de la cuenta, para que
         # la pantalla pueda decirlo. Vacía si no se propuso nada.
@@ -186,7 +293,7 @@ class EditorialForm(forms.ModelForm):
         return datos
 
 
-class SellosForm(forms.Form):
+class SellosForm(MarcaLosInvalidos, forms.Form):
     """Los sellos que la editorial representa, con su carta (`RN-17`).
 
     Cada fila es un nombre y el archivo que autoriza a representarlo. Van
@@ -274,7 +381,7 @@ class SellosForm(forms.Form):
         return list(vistos.items())
 
 
-class DocumentoForm(forms.Form):
+class DocumentoForm(MarcaLosInvalidos, forms.Form):
     """Los adjuntos de la solicitud (`CU-STD-001` paso 3).
 
     La constancia fiscal y la lista de títulos son obligatorias la
@@ -319,7 +426,7 @@ class DocumentoForm(forms.Form):
     }
 
 
-class BasesForm(forms.Form):
+class BasesForm(MarcaLosInvalidos, forms.Form):
     """La firma de la ficha, en versión web (Ficha de Registro, p. 2).
 
     En papel es una línea bajo «RECONOZCO Y ACEPTO LAS BASES DE
@@ -337,7 +444,7 @@ class BasesForm(forms.Form):
     )
 
 
-class DictamenForm(forms.Form):
+class DictamenForm(MarcaLosInvalidos, forms.Form):
     """Aceptar, rechazar o pedir cambios (`CU-STD-006`, `CU-STD-007`).
 
     Un solo formulario para las tres acciones porque las tres salen del
@@ -365,3 +472,143 @@ class DictamenForm(forms.Form):
         label="Qué hace falta",
         help_text="Se le manda tal cual por correo. Sé concreto.",
     )
+
+
+class AbonoForm(MarcaLosInvalidos, forms.Form):
+    """El abono que reporta quien reserva (`CU-STD-016`).
+
+    Es una **declaración con un papel adjunto**, no un cobro: aquí no se
+    mueve dinero ni se toca el saldo. Lo que llega queda pendiente hasta
+    que alguien lo compruebe contra el banco (`CU-STD-018`), y eso lo
+    dice la pantalla al lado del botón.
+
+    Lo que este formulario **no** comprueba es que el monto quepa en lo
+    pendiente: esa es `CU-STD-016` E2 y vive en `servicios/pagos.py`,
+    porque depende de los abonos ya validados y tiene que valer también
+    desde un comando de `manage.py`.
+    """
+
+    monto = forms.DecimalField(
+        label="Monto del pago",
+        min_value=Decimal("0.01"),
+        max_digits=12,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={"step": "0.01", "placeholder": "0.00"}),
+        error_messages={
+            "min_value": "El monto tiene que ser mayor que cero.",
+        },
+    )
+    metodo = forms.ChoiceField(
+        label="Método de pago",
+        # `RN-08`: los tres dejan rastro bancario, que es lo que hace
+        # comprobable la validación. El efectivo no está y no es un
+        # olvido — no se puede validar contra nada.
+        choices=Movimiento.Metodo.choices,
+        widget=forms.RadioSelect,
+    )
+    # Obligatorio, como en el prototipo: sin el papel del banco no hay
+    # nada que comprobar, y el abono se quedaría pendiente para siempre.
+    # El servicio solo lo exige en los abonos que registra la
+    # administración (`RN-15`) — ahí es la base la que lo sostiene; aquí
+    # es la pantalla, porque es el único camino por el que llega.
+    comprobante = forms.FileField(
+        label="Comprobante de pago",
+        required=True,
+        help_text="El recibo del banco: transferencia, depósito o cheque.",
+        validators=[DocumentoAdmisible()],
+        error_messages={
+            "required": (
+                "Adjunta el comprobante. Sin él no podemos validar tu pago."
+            )
+        },
+    )
+
+
+class ConfiguracionForm(MarcaLosInvalidos, forms.ModelForm):
+    """Los ajustes de una convocatoria de stands (`CU-STD-034`).
+
+    Un solo formulario para las dos mitades —lo que cuesta y dónde se
+    paga— porque es una sola pantalla y una sola decisión: abrir la
+    venta. Partirlo obligaría a guardar dos veces para dejar la
+    convocatoria operable.
+
+    **No lleva `convocatoria`.** La fila la elige la URL, y ofrecerla
+    como campo dejaría mover una configuración de una convocatoria a
+    otra desde el navegador.
+
+    Tampoco lleva `mapa_json`: importar un mapa reemplaza el showfloor
+    entero y es del operador de la plataforma (`ADR-0005`), no de quien
+    ajusta un precio. Vive en `/f/<slug>/django-admin/`.
+    """
+
+    class Meta:
+        model = ConfiguracionSistema
+        fields = [
+            "costo_m2",
+            "porcentaje_anticipo",
+            "plazo_reserva_dias",
+            "descuento_pronto_pago",
+            "fecha_limite_pronto_pago",
+            "banco_titular",
+            "banco_nombre",
+            "banco_cuenta",
+            "banco_clabe",
+            "banco_sucursal",
+            "banco_referencia",
+            "instrucciones_pago",
+        ]
+        widgets = {
+            # `type="date"` y no un calendario propio: el del navegador ya
+            # sabe de meses y de bisiestos, y en el móvil abre el selector
+            # nativo.
+            "fecha_limite_pronto_pago": forms.DateInput(
+                attrs={"type": "date"}, format="%Y-%m-%d"
+            ),
+            "costo_m2": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "porcentaje_anticipo": forms.NumberInput(
+                attrs={"min": "0", "max": "100"}
+            ),
+            "plazo_reserva_dias": forms.NumberInput(attrs={"min": "1"}),
+            "descuento_pronto_pago": forms.NumberInput(
+                attrs={"min": "0", "max": "100"}
+            ),
+            "instrucciones_pago": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": (
+                        "Manda el comprobante el mismo día. Si pagas con "
+                        "cheque, avísanos antes."
+                    ),
+                }
+            ),
+        }
+
+    #: Ayudas de pantalla. Van aquí y no en el modelo por lo mismo que las
+    #: de la ficha: el modelo describe el dato, no cómo se teclea.
+    AYUDAS = {
+        "costo_m2": "El precio base. Cada espacio cuesta esto por su superficie.",
+        "porcentaje_anticipo": "Cuánto hay que cubrir para confirmar la reserva.",
+        "plazo_reserva_dias": "Días que aguanta una reserva esperando el anticipo.",
+        "descuento_pronto_pago": "Se aplica al reservar y se retira si vence el plazo.",
+        "fecha_limite_pronto_pago": (
+            "Es la misma para todos: quien reserva tarde tiene menos días."
+        ),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nombre, ayuda in self.AYUDAS.items():
+            self.fields[nombre].help_text = ayuda
+        # El precio nace en cero y con cero no se puede vender: se pide
+        # aquí, que es la pantalla donde se pone, y no en el modelo — una
+        # convocatoria recién creada tiene derecho a no tenerlo todavía.
+        self.fields["costo_m2"].required = True
+
+    def clean_costo_m2(self):
+        costo = self.cleaned_data["costo_m2"]
+        if costo <= 0:
+            raise ValidationError(
+                "Pon el costo por metro cuadrado: con cero, cada espacio "
+                "saldría gratis."
+            )
+        return costo
