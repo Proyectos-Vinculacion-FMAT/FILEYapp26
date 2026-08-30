@@ -60,7 +60,8 @@ from django.db import transaction
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.convocatorias.servicios import registros
 
-from ..models import DecoracionMapa, MapaShowfloor, Stand
+from ..models import BitacoraSTD, DecoracionMapa, MapaShowfloor, Stand
+from . import bitacora
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,11 @@ class Resumen:
 
 
 def importar(
-    *, convocatoria: Convocatoria, datos: dict, confirmado: bool = False
+    *,
+    convocatoria: Convocatoria,
+    datos: dict,
+    confirmado: bool = False,
+    persona=None,
 ) -> Resumen:
     """Deja el mapa del archivo como el de esta convocatoria.
 
@@ -116,6 +121,9 @@ def importar(
     — se ve igual que uno bueno y le faltan espacios que nadie echa de
     menos hasta que alguien pregunta por el suyo.
 
+    :param persona: quién lo importa, para la bitácora. ``None`` desde
+        `manage.py importar_mapa`, y ahí es la verdad: no lo hizo ninguna
+        sesión. Desde el admin llega `peticion.user`.
     :param confirmado: hace falta en `True` para reemplazar un mapa que ya
         existía (`A1`). Sin él se rechaza diciendo cuántos stands se iban
         a llevar por delante; es un borrado de decenas de filas y no debe
@@ -167,6 +175,19 @@ def importar(
     )
     logger.info(
         "Mapa importado en la convocatoria «%s»: %s", convocatoria.nombre, resumen
+    )
+    # Reemplazar un mapa borra decenas de filas y cambia el recinto que
+    # todo el mundo está mirando. Es la operación más destructiva del
+    # dominio y la única que no deja rastro en ninguna fila: las viejas
+    # ya no existen.
+    bitacora.anotar(
+        persona=persona,
+        accion=BitacoraSTD.Accion.MAPA_IMPORTADO,
+        objeto=mapa,
+        stands=resumen.stands,
+        decoraciones=resumen.decoraciones,
+        metros_cuadrados=str(resumen.metros_cuadrados),
+        reemplazo=resumen.reemplazo,
     )
     return resumen
 

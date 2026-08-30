@@ -300,6 +300,19 @@ select, textarea {
 /* Crece hacia abajo y nunca a lo ancho: redimensionar en horizontal
    rompe la rejilla de la pantalla. */
 textarea { resize: vertical; min-height: 80px; }
+
+/* La casilla que confirma algo irreversible (CU-STD-035 A1). No es un
+   campo de una ficha: es un pestillo. Por eso la etiqueta va **al lado**
+   y no encima —la frase se lee antes de marcarla— y toda ella es el
+   blanco del clic. */
+.confirmacion {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 4px 0 14px; cursor: pointer; font-size: 14px; color: var(--tinta);
+}
+.confirmacion input[type="checkbox"] {
+  flex: 0 0 auto; width: 17px; height: 17px; margin-top: 1px;
+  accent-color: var(--color-azul-institucional); cursor: pointer;
+}
 select {
   -webkit-appearance: none;
   appearance: none;
@@ -899,9 +912,9 @@ tr.es-no-disponible { opacity: .55; }
 }
 
 /* El botón que alterna la barra, como el `sidenav.toggle()` del prototipo
-   de STD. Sin Alpine no se pinta (`x-cloak`) y la barra se queda abierta,
-   que es su estado por omisión —`mode="side" opened`— y el útil. */
-[x-cloak] { display: none !important; }
+   de STD. Sin Alpine no se pinta —`[x-cloak]` está declarado una sola vez,
+   arriba— y la barra se queda abierta, que es su estado por omisión
+   —`mode="side" opened`— y el útil. */
 .admin-toolbar .menu-btn {
   background: none; border: none; cursor: pointer; font-size: 20px;
   color: var(--gris-700); padding: 4px 8px; border-radius: var(--radio-sm);
@@ -1147,8 +1160,12 @@ a.stat-card:focus-visible { outline: 2px solid var(--color-dorado-encabezado); o
   background: var(--gris-100); border-radius: 999px; overflow: hidden;
 }
 .progreso-hecho { display: block; height: 100%; background: var(--ok-600); }
+/* La posición la pone la plantilla (`style="left: N%"`), porque el
+   umbral que confirma es de la convocatoria y no del sistema (RN-02).
+   Aquí no hay `left` de reserva a propósito: un valor por omisión
+   dibujaría la marca en un sitio distinto del que confirma. */
 .progreso-marca {
-  position: absolute; top: 0; bottom: 0; left: 50%;
+  position: absolute; top: 0; bottom: 0;
   width: 2px; background: var(--color-blanco);
 }
 .progreso-marcas {

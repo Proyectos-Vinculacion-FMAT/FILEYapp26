@@ -64,6 +64,19 @@ urlpatterns = [
         views.ajustes_de_la_convocatoria,
         name="configuracion",
     ),
+    # A6 y A7 · quién está habilitado y su expediente (`CU-STD-030`,
+    # `031`). La lista es de una convocatoria; el expediente, de la
+    # feria — la misma editorial puede haber aplicado a dos.
+    path(
+        "stands/<int:convocatoria_id>/expositores/",
+        views.expositores_de_la_convocatoria,
+        name="expositores",
+    ),
+    path(
+        "stands/expositor/<int:editorial_id>/",
+        views.detalle_expositor,
+        name="detalle_expositor",
+    ),
     # A2 · no lleva la convocatoria en la ruta: la solicitud ya sabe de
     # cuál cuelga, y repetirla daría dos fuentes para lo mismo y una URL
     # que puede mentir.

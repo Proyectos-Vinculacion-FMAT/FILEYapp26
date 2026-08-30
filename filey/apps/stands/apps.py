@@ -59,7 +59,10 @@ class StandsConfig(AppConfig):
                         "Pagos por validar", "🧾", "stands:pagos",
                         tambien=("stands:movimiento",),
                     ),
-                    SeccionPanel("Expositores", "👥"),
+                    SeccionPanel(
+                        "Expositores", "👥", "stands:expositores",
+                        tambien=("stands:detalle_expositor",),
+                    ),
                     SeccionPanel("Mapa del salón", "🗺️", "stands:mapa_completo"),
                     SeccionPanel("Configuración", "⚙️", "stands:configuracion"),
                 ),

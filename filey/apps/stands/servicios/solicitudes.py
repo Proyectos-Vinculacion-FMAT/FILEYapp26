@@ -363,10 +363,67 @@ def habilitada_para_reservar(convocatoria: Convocatoria, persona) -> Editorial |
     return aceptada.editorial if aceptada else None
 
 
+def expositores_de(convocatoria: Convocatoria):
+    """Las solicitudes **aceptadas** de esta convocatoria (`CU-STD-030`).
+
+    Se devuelven las `Solicitud` y no las `Editorial`, aunque la pantalla
+    se llame "expositores": la aceptación es lo que convierte a una
+    editorial en expositor (`RN-16`), y es de la solicitud de donde
+    cuelgan la fecha del dictamen y quién lo firmó — que es lo que
+    distingue esta lista de un listado de editoriales cualquiera.
+
+    Una editorial puede aparecer en varias convocatorias de la misma
+    feria, pero **una sola vez en cada una**: `RN-22` deja como mucho una
+    solicitud viva por registro, y de las cerradas solo una puede estar
+    `aceptada` —aceptar es el final del camino—.
+    """
+    return (
+        Solicitud.objects.filter(
+            registro__convocatoria=convocatoria,
+            estado=Solicitud.Estado.ACEPTADA,
+        )
+        .select_related("editorial", "registro__persona", "revisado_por")
+        .order_by("editorial__nombre")
+    )
+
+
+def expediente_de(editorial: Editorial):
+    """Todo lo que se sabe de un expositor en esta feria (`CU-STD-031`).
+
+    **El alcance es la feria, no la convocatoria**, y es lo que hace útil
+    esta pantalla: la misma editorial puede haber aplicado a la
+    convocatoria general y a la de un pabellón, y quien atiende a un
+    cliente por teléfono necesita ver las dos (`RN-19`, `RN-21`).
+
+    Los documentos son los **de la ficha**: las cartas de representación
+    van con su sello —allí se sabe cuál autoriza cuál (`RN-17`)— y los
+    comprobantes de pago son de una reserva, no del expediente.
+    """
+    return {
+        "editorial": editorial,
+        "sellos": editorial.sellos.all(),
+        "documentos": editorial.documentos.filter(
+            tipo__in=Documento.DE_LA_FICHA, sello__isnull=True
+        ),
+        "solicitudes": (
+            editorial.solicitudes.select_related(
+                "registro__convocatoria", "revisado_por"
+            ).order_by("-fecha_envio")
+        ),
+        "reservas": (
+            editorial.reservas.select_related("registro__convocatoria")
+            .prefetch_related("lineas__stand")
+            .order_by("-fecha_creacion")
+        ),
+    }
+
+
 __all__ = [
     "EnvioRechazado",
     "ValidationError",
     "enviar_solicitud",
+    "expediente_de",
+    "expositores_de",
     "habilitada_para_reservar",
     "guardar_editorial",
     "reenviar_solicitud",

@@ -8,11 +8,18 @@ corría en vacío porque nadie servía el tipo `STD`.
 
 import logging
 
+from django.db import transaction
+
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 
-from ..models import ConfiguracionSistema
+from ..models import BitacoraSTD, ConfiguracionSistema
+from . import bitacora
 
 logger = logging.getLogger(__name__)
+
+#: Cuánto de un valor cabe en la anotación. `instrucciones_pago` es un
+#: campo libre y sin tope la bitácora acabaría guardando párrafos.
+LARGO_MAXIMO = 120
 
 
 def crear_por_defecto(convocatoria: Convocatoria) -> ConfiguracionSistema:
@@ -57,6 +64,62 @@ def crear_por_defecto(convocatoria: Convocatoria) -> ConfiguracionSistema:
             convocatoria.nombre,
         )
     return configuracion
+
+
+@transaction.atomic
+def guardar(*, form, administrador) -> ConfiguracionSistema:
+    """Guarda los ajustes de A10 y anota qué cambió (`CU-STD-034`).
+
+    **Es lo más sensible que se toca desde una pantalla**, y hasta hoy no
+    dejaba rastro en ninguna parte: quién subió el `costo_m2` a mitad de
+    campaña, quién movió la fecha del pronto pago o quién cambió la CLABE
+    no se podía saber. Las reservas ya hechas no se mueven (`RN-01`), lo
+    que cambia es lo que costará la siguiente — y eso es exactamente el
+    tipo de cosa por la que meses después alguien pregunta.
+
+    Recibe el **formulario ya validado** y no un diccionario de campos
+    porque lo que se anota es *qué cambió*, y eso lo sabe el formulario:
+    `changed_data` compara contra lo que se le pintó a quien lo llenó,
+    que es justo la pregunta. Reconstruirlo fuera obligaría a leer la
+    fila antes de guardar y a comparar campo por campo.
+
+    Si no cambió nada, no anota: una bitácora con líneas que dicen "no
+    tocó nada" es una que hay que leer entera para encontrar algo.
+    """
+    cambios = {
+        campo: [
+            _legible(form.initial.get(campo)),
+            _legible(form.cleaned_data.get(campo)),
+        ]
+        for campo in form.changed_data
+    }
+    ajustes = form.save()
+    if cambios:
+        bitacora.anotar(
+            persona=administrador,
+            accion=BitacoraSTD.Accion.CONFIGURACION_CAMBIADA,
+            objeto=ajustes,
+            cambios=cambios,
+        )
+        logger.info(
+            "Configuración de «%s» cambiada por %s: %s",
+            ajustes.convocatoria.nombre,
+            administrador.pk,
+            ", ".join(cambios),
+        )
+    return ajustes
+
+
+def _legible(valor) -> str:
+    """Un valor de formulario como texto corto, para meterlo en el JSON.
+
+    Todo a texto: `Decimal` y `date` no son serializables, y en una
+    bitácora lo que se lee es "2500.00 → 3000.00", no el tipo.
+    """
+    if valor in (None, ""):
+        return "—"
+    texto = str(valor)
+    return texto if len(texto) <= LARGO_MAXIMO else texto[:LARGO_MAXIMO] + "…"
 
 
 def de_la_convocatoria(convocatoria: Convocatoria) -> ConfiguracionSistema:

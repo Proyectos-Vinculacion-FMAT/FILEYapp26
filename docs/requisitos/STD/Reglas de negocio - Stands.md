@@ -43,9 +43,21 @@ siempre.
 **desglose por stand**, que se recalcula y puede dejar de cuadrar con el total almacenado; ver
 [`Modelo de datos - Stands`](<Modelo de datos - Stands.md>) §3.7.
 
-> [!warning] Ningún servicio puede reescribir `monto_total` de una reserva que no esté `Por confirmar`
-> Es la condición que sostiene el corolario. Si se rompe, el importe cobrado cambia
-> retroactivamente y la editorial recibe una cifra distinta de la que aceptó.
+> [!warning] Nada reescribe `monto_total` **por un cambio de precio**
+> Es la condición que sostiene el corolario, y es lo único que prohíbe: si se rompe, el importe
+> cobrado cambia retroactivamente y la editorial recibe una cifra distinta de la que aceptó. Un
+> `costo_m2` nuevo (CU-STD-034) o un espacio corregido (CU-STD-033) **no** tocan ninguna reserva
+> ya creada, esté en el estado que esté.
+>
+> **Los descuentos sí lo mueven, y en reservas vivas.** Aplicar o retirar un especial
+> (CU-STD-020) y retirar el pronto pago vencido (CU-STD-023 A1) son modificaciones deliberadas
+> de lo que esa reserva cuesta, y los dos casos de uso las piden con abonos ya hechos: el paso 8
+> de CU-STD-020 dice explícitamente que después hay que volver a pasar por los umbrales. Quien
+> recalcula es `servicios/pagos.py::_recalcular_total`, y **solo lo llaman los cambios de
+> descuento**.
+>
+> Hasta el 2026-08-29 esta advertencia decía «ningún servicio puede reescribir `monto_total` de
+> una reserva que no esté `Por confirmar`», que contradecía a los dos casos de uso de arriba.
 
 *Dónde se aplica:* CU-STD-010, CU-STD-011, CU-STD-012, CU-STD-033, CU-STD-034.
 
@@ -98,8 +110,10 @@ cada caso de uso decide qué hacer con ese fallo:
 - **`pronto_pago`** (automático): es **idempotente**. Que ya exista no es un error, es que ya
   estaba aplicado. No debe alarmar a nadie.
 - **`especial`** (manual): **sí es un error y se muestra**. Para cambiar el porcentaje hay que
-  modificar el que existe —dejando rastro en la `Bitacora`— o retirarlo y volver a aplicarlo,
-  no acumular uno encima.
+  retirar el que existe y volver a aplicarlo, no acumular uno encima. Retirarlo es
+  `servicios/pagos.py::retirar_descuento_especial`, y su botón vive en A4: mientras no existió,
+  el error de arriba pedía algo que no se podía hacer desde ninguna parte. Las dos operaciones
+  quedan en `BitacoraSTD` —y retirar **solo** ahí, porque borra la fila que lo explicaba—.
 
 *Dónde se aplica:* CU-STD-020, CU-STD-023.
 
@@ -286,6 +300,12 @@ nueva**, con su propia fotografía; la rechazada se conserva.
 final de cierre**, y solo lo pone una decisión del administrador (RN-12): el sistema nunca
 cancela por su cuenta.
 
+Vive en `servicios/reservas.py::cancelar`, y es **la única función del dominio que devuelve
+stands a `Disponible`**. Ni la barrida diaria ni ningún umbral llegan hasta ahí. Se admite desde
+cualquier estado vivo, también `Pagada` —el paso 5 de CU-STD-035 A1 lo dice: «de `Reservado` (u
+`Ocupado`) a `Disponible`»—, y **no toca los abonos**: el dinero entró de verdad, y qué se hace
+con él se acuerda fuera del sistema.
+
 *Dónde se aplica:* CU-STD-012, CU-STD-013, CU-STD-026, CU-STD-027, CU-STD-035.
 
 ### RN-12 · Vencer el plazo no libera la reserva: la escala a una persona
@@ -294,6 +314,11 @@ Al agotarse los 30 días de RN-03 sin haberse cubierto el anticipo —con abono 
 ninguno— el sistema **no libera los stands ni cancela nada**. Notifica al administrador **y al
 aplicante**, y espera la decisión: cancelar o prorrogar con una fecha nueva.
 
+Lo hace la barrida diaria (`manage.py barrida_diaria`, CU-STD-022), que **no escribe en
+`Reserva`**: lo único que deja son `Notificacion`. Es la regla que más se presta a
+implementarse de más — un proceso que "limpia" reservas vencidas liberaría espacios que nadie
+decidió liberar, de madrugada y sin testigos.
+
 *Dónde se aplica:* CU-STD-014, CU-STD-022, CU-STD-024, CU-STD-025, CU-STD-035.
 
 ### RN-13 · Al 50%, la reserva queda Confirmada y bloqueada
@@ -301,6 +326,11 @@ aplicante**, y espera la decisión: cancelar o prorrogar con una fecha nueva.
 Cuando los abonos **validados** alcanzan el anticipo de RN-02, la reserva pasa a `Confirmada` y
 queda bloqueada hasta su `fecha_corte_pago_total`. Esa fecha parte de una base general y el
 administrador la ajusta caso por caso (CU-STD-036).
+
+La base es `ConfiguracionSistema.fecha_corte_pago_total`, y la reserva la **hereda al
+confirmarse** (CU-STD-026, paso 4). Solo si no tiene ya una propia: cambiarla en la
+convocatoria no mueve las reservas que se confirmaron antes, ni confirmar pisa la que alguien
+ajustó a mano.
 
 *Dónde se aplica:* CU-STD-018, CU-STD-019, CU-STD-026, CU-STD-036.
 

@@ -154,9 +154,112 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
     existió, un abono nacía `pendiente_validacion` y **no había ningún camino** para darlo por
     bueno, así que `RN-13` y `RN-14` eran código muerto.
 
-  **Falta el registro manual de abonos y el reloj**: CU-STD-019, 020 y 033 tienen servicio
-  (`servicios/pagos.py`) pero no pantalla —van en A4, el detalle de una reserva—, y
-  CU-STD-022, 024, 025 y 035 a 038 siguen sin construirse.
+  - **El expediente de una reserva** (CU-STD-029, vista A4): `/f/<slug>/stands/reserva/<id>/`
+    no es una ficha de consulta sino la **vista contenedor** que el caso de uso describe. De
+    ahí cuelgan el historial de abonos —con el mismo modal de A5, que devuelve aquí porque
+    `CU-STD-018` tiene dos puertas—, el **abono manual** (CU-STD-019) y el **descuento
+    especial** (CU-STD-020), que se aplica o se retira pero nunca las dos cosas (`RN-05`).
+
+    Dos cosas que no se deducen del código: un abono manual **nace `validado`** y mueve el
+    saldo en el acto (`CU-STD-019` paso 6) — lo asienta quien coteja contra el banco, así que
+    no tiene a quién esperar—; y el tope de «lo que ya reportaste ocupa sitio» **no le aplica**,
+    porque quien administra es quien resuelve esa cola.
+
+    > [!warning] Cualquier cambio de descuento recalcula sobre una instancia recién traída
+    > `_recalcular_total` lee los descuentos con `reserva.descuentos.all()`. Quien llega desde
+    > una pantalla trae `prefetch_related("descuentos")`, y esa caché se llenó **antes** de
+    > insertar o borrar la fila: el total salía idéntico, el descuento quedaba guardado y no
+    > descontaba nada. Las tres funciones que tocan descuentos lo hacen por eso.
+
+  - **Los dos umbrales avisan** (CU-STD-026, 027): al cubrirse el anticipo y al liquidar sale
+    un correo y queda su `Notificacion`, que A4 enseña. Dos cosas que no se ven en el código:
+
+    > [!warning] El correo se programa con `transaction.on_commit`, no se manda
+    > `reevaluar` corre **siempre** dentro de una transacción —validar un abono, asentar uno
+    > manual, mover un descuento— y un correo no se puede deshacer. Mandarlo ahí significa que
+    > un rollback posterior deja a la editorial con el aviso de una confirmación que no
+    > ocurrió, y sin la `Notificacion` que lo explique, porque se va con el rollback. Es la
+    > misma razón por la que el dictamen avisa fuera de su transacción; aquí no se puede sacar
+    > al llamador porque `reevaluar` tiene cuatro puertas. **En pruebas hay que envolver con
+    > `django_capture_on_commit_callbacks(execute=True)`, dentro del `schema_context`.**
+
+    > [!warning] La edición no se saca de `connection.tenant`
+    > En una petición ahí está la `Feria` de verdad. Dentro de un `schema_context` —un comando
+    > de `manage.py`, la barrida diaria, las pruebas— hay un `FakeTenant` que solo sabe su
+    > `schema_name` y revienta al pedirle el `slug`, y estos correos salen justo de ahí.
+    > `avisos.py` la busca por `schema_name`. Y todo enlace de correo lleva `URL_BASE` delante:
+    > un `/f/2027/...` suelto no es una dirección dentro de un cliente de correo.
+
+    La **fecha de corte** ya se hereda: vive como base en `ConfiguracionSistema` y cada reserva
+    se queda con la suya al confirmarse (`CU-STD-026` paso 4, `RN-13`). Confirmar no pisa una
+    que se haya ajustado a mano.
+
+  - **El reloj** (CU-STD-022, 023 A1, 024, 025): `manage.py barrida_diaria`, que corre una vez
+    al día desde `.github/workflows/barrida-diaria.yml`. Hace **dos cosas y en este orden**:
+    retira los pronto pago vencidos —lo que **sube** el total y con él el anticipo— y después
+    avisa de las reservas cuyo plazo se agotó, a la editorial (`025`) y a cada persona que
+    administra la feria (`024`). Al revés, el aviso saldría con cifras de antes.
+
+    > [!warning] La barrida **no escribe en `Reserva`**
+    > `RN-12`: vencer no libera nada. Lo único que escribe son `Notificacion`; cancelar o
+    > prorrogar es una decisión de una persona (`CU-STD-035`). Una barrida que «limpia»
+    > vencidas liberaría espacios que nadie decidió liberar, de madrugada y sin testigos.
+
+    > [!note] Se avisa una vez por **vencimiento**, no por reserva
+    > La pregunta que hace `servicios/vencimientos.py` es si ya salió un aviso *posterior a la
+    > fecha de vencimiento vigente*. Así una prórroga (`CU-STD-035`) que también se agota
+    > vuelve a avisar sin tener que borrar nada, y un aviso `fallida` se reintenta al día
+    > siguiente (`CU-STD-024` E1).
+
+  - **Resolver una reserva** (CU-STD-035, 036): prorrogar el plazo del anticipo, mover el
+    corte del pago total y **cancelar**, en el bloque «Plazos y estado» de A4.
+    `servicios/reservas.py::cancelar` es la **única función del dominio que devuelve stands a
+    `disponible`** (`RN-11`): ni la barrida ni ningún umbral llegan ahí. Deja escrito quién,
+    cuándo y por qué en la propia fila, avisa a la editorial y **no toca los abonos** — el
+    dinero entró de verdad y qué se hace con él se acuerda fuera del sistema. Prorrogar solo
+    admite fechas futuras: una pasada dejaría la reserva vencida el mismo día y la barrida
+    volvería a avisar mañana.
+
+  - **Los expositores** (CU-STD-030, 031, vistas A6 y A7): la lista de quién está habilitado
+    para reservar y su expediente. **A7 enseña la ficha viva, no la fotografía** — A2 juzga lo
+    que se envió (`RN-22`), A7 atiende a un cliente hoy—, y su alcance es **la feria y no la
+    convocatoria** (`RN-19`, `RN-21`): la misma editorial puede haber aplicado a la general y
+    a la de un pabellón. Por eso su URL no lleva convocatoria, como el detalle de una
+    solicitud o de una reserva.
+
+    > [!warning] El RFC no existe como columna
+    > `CU-STD-031` paso 2 lo pide junto a la razón social. La ficha en papel **no lo pide como
+    > dato, lo pide como archivo**: viene dentro de la constancia de situación fiscal. A6 y A7
+    > enlazan la constancia y lo dicen; buscar por RFC o facturar sin abrir el PDF exige
+    > añadirlo a la ficha de U1, y eso lo manda el documento oficial.
+
+  - **La bitácora** (`BitacoraSTD`, modelo de datos §3.12): una línea de tiempo de las
+    acciones de administración, **partida por convocatoria** — una feria puede tener la
+    general y la de un pabellón (`RN-19`), y son dos ventas distintas—. **Su pantalla es
+    `/f/<slug>/django-admin/`** y no una del panel —se consulta tres veces al año y cuando
+    algo no cuadra—, en solo lectura y con la convocatoria como primer filtro.
+
+    No sustituye al rastro de cada fila (`Movimiento.validado_por`, `Reserva.cancelada_por`):
+    contesta «¿qué pasó con esta convocatoria el martes?». Doce acciones, de las que **cinco
+    no dejan rastro en ninguna otra parte** porque borran una fila o sobreescriben una fecha:
+    retirar un descuento, caducar un pronto pago, prorrogar, mover el corte e importar un
+    mapa. **No entra lo del aplicante** —solicitar, reportar un abono, reservar—: ya se ve en
+    su cola, y anotarlo llenaría la línea de ruido.
+
+    > [!note] `convocatoria` se guarda al anotar, no se deduce al leer
+    > Sale del objeto por una tabla explícita de cinco entradas en `servicios/bitacora.py`.
+    > Adivinar recorriendo relaciones sería un `getattr` en cadena que falla en silencio, y
+    > una entrada sin convocatoria queda fuera de todos los filtros sin que nada lo señale.
+
+    > [!note] Se anota dentro de la transacción, y anotar nunca tumba la acción
+    > Al revés que el correo, que va con `on_commit` porque no se puede deshacer: una anotación
+    > sí, y una que sobreviviera a un rollback diría que pasó algo que no pasó. Si la escritura
+    > falla, se registra en el log y se traga — perder una línea de historial es mejor que
+    > revertir un cobro que el banco ya respaldó.
+
+  **Falta solo la pantalla A9 de CU-STD-033** (corregir un espacio del mapa), que hoy se hace
+  desde `/f/<slug>/django-admin/`. Con ella entraría también la décima acción de la bitácora:
+  `importar` no recibe hoy quién lo hace, y firmar la entrada como «el sistema» sería mentira.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel
@@ -171,6 +274,7 @@ cd filey && python manage.py check && python manage.py runserver
 cd filey && pytest                  # las pruebas viven en apps/<dom>/pruebas/, no en tests.py
 cd filey && python manage.py migrate_schemas        # migra `public` Y cada feria
 cd filey && python manage.py alta_feria --help      # crear una feria por consola (CU-FER-001)
+cd filey && python manage.py barrida_diaria --todas               # el reloj del dominio (fase 6)
 cd filey && python manage.py caducar_pronto_pago --todas --seco   # RN-04: qué reservas lo pierden hoy
 ./scripts/gen-inventario.sh         # reindexa el inventario CSS tras tocar un styles.css
 ./scripts/check-ui.sh               # verifica el prototipo (E1/E2/E3 rompen; W1/W2/W4 con trinquete)

@@ -388,6 +388,7 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | monto_total | Suma de líneas, con los descuentos aplicados en secuencia (RN-06). Ver la nota: se congela frente al mapa y al precio, **no** frente a los descuentos. |
 | monto_abonado | Derivado de movimientos validados. |
 | monto_pendiente | Derivado (`monto_total − monto_abonado`). |
+| cancelada_por, fecha_cancelacion, motivo_cancelacion | Quién la cerró, cuándo y por qué (CU-STD-035 A1, añadidos el 2026-08-30). Cancelar es la **única acción irreversible del dominio** y la única que libera espacios, así que deja su rastro en la fila —como `Movimiento` con `validado_por`/`motivo_rechazo`— sin esperar a que exista la `Bitacora` (§3.12). El motivo es opcional y aun así conviene: la editorial lo lee en su correo. |
 
 > [!important] `monto_total` se congela frente al precio, no frente a los descuentos
 > Es una distinción que ningún documento hacía y que separa dos comportamientos opuestos:
@@ -447,8 +448,9 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | comprobante_id | FK → Documento (obligatorio en abono manual del admin). |
 | registrado_por | FK → `Persona` (`REG`). |
 | fecha_registro | Fecha de registro. |
-| validado_por | FK → `Persona` (`REG`) — el administrador que validó. |
+| validado_por | FK → `Persona` (`REG`) — el administrador que validó. En un abono manual es quien lo asentó: nace `validado` (CU-STD-019, paso 6). |
 | fecha_validacion | Fecha de validación. |
+| motivo_rechazo | Por qué se rechazó, opcional (CU-STD-018 A1, paso 3). El aplicante lo ve en su historial (CU-STD-017); sin él solo ve que se rechazó. |
 
 ### 3.9 DescuentoAplicado
 | Atributo | Descripción |
@@ -525,10 +527,11 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 |----------|-------------|
 | id | Identificador único. |
 | destinatario_id | FK → `Persona` (`REG`). |
-| tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `aplicacion_cambios`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_cancelada`. |
+| tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `aplicacion_cambios`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_vencida`, `reserva_cancelada`. `reserva_vencida` se añadió el 2026-08-30: es el aviso de CU-STD-024, el **único que no va al aplicante** —`RN-12` escala el vencimiento a quien administra—, y sin un tipo propio no se distinguía del que recibe la editorial (`posible_cancelacion`) ni se podía preguntar si ya se avisó. |
 | fecha_envio | Fecha de envío. |
 | estado | `enviada` / `fallida`. |
-| referencia_tipo, referencia_id | Entidad relacionada (solicitud / reserva). |
+| detalle_error | Qué contestó el transporte cuando `estado` es `fallida`. Es lo que permite reintentar a mano (CU-STD-008 E1). |
+| solicitud_id, reserva_id | De qué habla el aviso. **Dos claves foráneas reales y exactamente una llena**, no la pareja `referencia_tipo`/`referencia_id` que describía la v3.0: una referencia genérica no la puede comprobar la base, y un aviso huérfano no se puede ni reintentar ni auditar. Lo sostiene la restricción `un_aviso_cuelga_de_exactamente_una_cosa` (2026-08-30). |
 
 ### 3.11 ConfiguracionSistema
 > Configuración de **una** convocatoria de stands. Una fila por convocatoria, no una por feria.
@@ -541,6 +544,7 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | plazo_reserva_dias | Días de vigencia de la reserva (30). |
 | descuento_pronto_pago | Porcentaje del pronto pago. **10% por omisión, configurable** (RN-04). |
 | fecha_limite_pronto_pago | Fecha de corte del pronto pago. Es **una fecha de la convocatoria, igual para todos**, no un contador por reserva (RN-04): quien reserva tarde tiene menos días. |
+| fecha_corte_pago_total | **La base** de la que cada reserva hereda su propia fecha de corte al confirmarse (CU-STD-026, paso 4); después el administrador la mueve una por una (CU-STD-036). Añadida el 2026-08-30: el paso 4 la daba por existente y no estaba en ninguna tabla, así que `Reserva.fecha_corte_pago_total` no lo escribía nadie y la pantalla del expositor lo pintaba «si lo tiene» sin tenerlo nunca. Es un `date`, como la del pronto pago: las dos se comparan con el día de hoy y una conversión de zona horaria de por medio mueve un cobro un día. |
 | banco_titular, banco_nombre, banco_cuenta, banco_clabe, banco_sucursal, banco_referencia | Los datos de la cuenta, **un campo cada uno** (cambio del 2026-08-29). Este documento los describía como un solo texto, y desde un `TextField` la pantalla no puede cumplir CU-STD-015 paso 3 —«instrucciones estructuradas»—: o los pinta en crudo o adivina dónde parte cada renglón. Separados se copian de uno en uno, que es lo que alguien hace frente a la app de su banco. Todos opcionales: una convocatoria recién creada no los tiene todavía. `banco_clabe` valida 18 dígitos, admitiendo los espacios con los que una CLABE se dicta. |
 | instrucciones_pago | Lo que no cabe en los seis campos: horarios, a quién avisar, qué hacer con el comprobante. Se pinta **debajo** de la ficha, como nota. |
 | ~~salon_showfloor~~ | **Movido a `MapaShowfloor.salon`** (§3.13) el 2026-08-27: es un dato del mapa, no de las condiciones económicas de la convocatoria. |
@@ -601,14 +605,58 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 > Queda cerrado también el aviso que `FER` §6 dejaba escrito —*"lo urgente es que el cuarto
 > dominio no añada la cuarta"*—: sí la añade, y a propósito.
 
+> [!note] Construida el 2026-08-30 como `BitacoraSTD`. **Su pantalla es el admin de Django**
+> Se consulta de tarde en tarde y cuando algo no cuadra, no todos los días: una sección propia
+> en el panel sería una entrada más en la barra lateral para algo que se abre tres veces al
+> año, y `/f/<slug>/django-admin/` ya trae filtrar por acción, buscar y recorrer por fecha.
+> Va en `admin_feria` —es de `TENANT_APPS`— y en **solo lectura**: una bitácora que se puede
+> reescribir no prueba nada.
+>
+> **No sustituye al rastro que ya vive en cada fila.** `Movimiento` dice quién validó,
+> `Solicitud` quién dictaminó y `Reserva` quién la canceló. Lo que ninguna contesta es «¿qué
+> pasó con esta convocatoria el martes?», que exige unir cinco tablas y ordenarlas por cinco
+> fechas distintas. Y hay cuatro acciones que **no dejan rastro en ninguna otra parte**, porque
+> borran una fila o sobreescriben una fecha: retirar un descuento especial, caducar un pronto
+> pago, prorrogar y mover el corte.
+>
+> Se escribe **dentro** de la transacción de la acción —al revés que los avisos por correo, que
+> esperan al commit porque no se pueden deshacer— y **anotar nunca tumba la acción**: un fallo
+> se registra en el log y se traga, como el del correo.
+
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
-| persona_id | FK → `Persona` (`REG`) — quién ejecutó la acción. |
-| accion | Acción (validar abono, prorrogar, descuento especial, editar mapa, etc.). |
-| entidad_tipo, entidad_id | Objeto afectado. |
-| detalle | Datos del cambio. |
+| persona_id | FK → `Persona` (`REG`) — quién ejecutó la acción. **Nulo cuando la hace el sistema**: la barrida diaria caducando un pronto pago no la decidió nadie, se cumplió RN-04, y que no haya persona es el dato. |
+| convocatoria_id | FK → `Convocatoria`. **Se guarda al anotar, no se deduce al leer** (2026-08-30): una feria puede tener la convocatoria general y la de un pabellón (RN-19), y son dos ventas distintas con dos mapas y dos precios; mezclarlas obliga a leer la bitácora entera para encontrar una cosa. Sale del objeto anotado por una tabla explícita de cinco entradas —`reserva`, `solicitud`, `movimiento`, `configuracionsistema`, `mapashowfloor`—, no adivinando relaciones. |
+| accion | Conjunto cerrado, y **coincide con lo que se anota** — hay una prueba que falla si se declara una acción que nadie escribe: `abono_manual`, `abono_validado`, `abono_rechazado`, `descuento_aplicado`, `descuento_retirado`, `pronto_pago_caducado`, `reserva_prorrogada`, `corte_movido`, `reserva_cancelada`, `solicitud_dictaminada`, `configuracion_cambiada`, `mapa_importado`. |
+| entidad_tipo, entidad_id | Objeto afectado. Par suelto y no `contenttypes`: `ContentType` es una tabla de `public` y esto vive en el schema de la feria (ADR-0003), así que la relación cruzaría la frontera para nada. |
+| detalle | JSON con las cifras del cambio. Es lo que hace legible la línea sin abrir el objeto — y lo que sigue diciendo algo cuando el objeto ya cambió otra vez, o cuando la fila que lo explicaba se borró. |
 | fecha | Marca de tiempo. |
+
+> [!note] Lo que reporta el aplicante **no** entra
+> Un abono reportado ya se ve en la cola de A5. La bitácora es de acciones de administración;
+> anotar también las del aplicante —enviar la solicitud, reportar un abono, armar el carrito,
+> reservar— llenaría la línea de tiempo de ruido que nadie viene a leer. Tampoco entran los
+> avisos por correo, cuyo rastro es `Notificacion`, ni la barrida diaria, que no escribe en
+> `Reserva`: lo que hace queda en los avisos que manda.
+
+> [!important] Las doce acciones, y por qué cada una
+> | Acción | Quién | Por qué está |
+> | --- | --- | --- |
+> | `solicitud_dictaminada` | Administración | Aceptar es lo que habilita a reservar (RN-16): el primer eslabón de todo lo que viene después. |
+> | `abono_manual`, `abono_validado`, `abono_rechazado` | Administración | El dinero. Los nombra §3.12. |
+> | `descuento_aplicado` | Administración | RN-05 y CU-STD-020. |
+> | **`descuento_retirado`** | Administración | **Borra la fila que lo explicaba**: sin esto, el total sube y nada lo justifica. |
+> | **`pronto_pago_caducado`** | El sistema | Igual, y sin persona: no lo decidió nadie, se cumplió RN-04. |
+> | **`reserva_prorrogada`**, **`corte_movido`** | Administración | **Sobreescriben una fecha**: la vieja no se lee en ningún lado. |
+> | `reserva_cancelada` | Administración | La única acción irreversible (RN-11). |
+> | `configuracion_cambiada` | Administración | Lo más sensible que se toca desde una pantalla —el `costo_m2`, los plazos, la CLABE— y no dejaba rastro en ninguna parte. Guarda **qué campo, de qué a qué**. |
+> | `mapa_importado` | Operador, o el sistema desde un comando | La más destructiva: borra decenas de filas, y las viejas ya no existen. |
+>
+> Las cinco en negrita son las que **no dejan rastro en ninguna otra parte**. El resto lo
+> dejan en su propia fila (`Movimiento.validado_por`, `Reserva.cancelada_por`,
+> `Solicitud.revisado_por`) y están aquí para que la línea de tiempo esté completa: leerla
+> con huecos obliga a volver a unir cinco tablas, que es lo que esta tabla evita.
 
 ### 3.13 MapaShowfloor
 > La retícula sobre la que se dibuja el showfloor de **una** convocatoria (RN-19). Una fila por

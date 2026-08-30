@@ -189,14 +189,26 @@ No bloquea la fase 2.
 
 > `CU-STD-015` a `020` · vistas U6, A4, A5 · **necesita** las fases 1 y 4.
 
-> [!important] Construida salvo A4 (2026-08-29)
-> El lado del expositor entero (`015`, `016`, `017`) y **la cola de validación** (`018`, vista
-> A5), que es la que cierra el ciclo: sin ella un abono se quedaba `pendiente_validacion` para
-> siempre y los umbrales de `RN-13`/`RN-14` no podían dispararse nunca.
+> [!important] Construida (2026-08-29)
+> El lado del expositor entero (`015`, `016`, `017`), **la cola de validación** (`018`, vista
+> A5) —que es la que cierra el ciclo: sin ella un abono se quedaba `pendiente_validacion` para
+> siempre y los umbrales de `RN-13`/`RN-14` no podían dispararse nunca— y **A4** (`029`) como
+> vista-contenedor, con el abono manual (`019`) y el descuento especial (`020`) colgando de
+> ella.
 >
-> Queda **A4**, el detalle de una reserva como vista-contenedor: registrar un abono manual
-> (`019`) y aplicar un descuento especial (`020`). Los dos servicios existen y están probados;
-> lo que falta es la pantalla.
+> Dos decisiones que la construcción tuvo que tomar y conviene saber:
+>
+> - **El abono manual nace `validado`**, como pide el paso 6 de `CU-STD-019`, y no
+>   `pendiente_validacion` como el del expositor. Lo asienta quien coteja contra el banco; una
+>   cola en la que la administración se valida a sí misma no significa nada.
+> - **Retirar un descuento borra la fila** (ver §4). Es lo que ya hacía `caducar_pronto_pago`
+>   desde que se construyó, así que la alternativa habría dejado dos comportamientos distintos
+>   para la misma operación.
+>
+> Y un defecto que solo aparece con pantalla delante: cualquier cambio de descuento **recalcula
+> sobre una instancia recién traída**. `_recalcular_total` lee `reserva.descuentos.all()`, y una
+> vista llega con `prefetch_related` puesto —la caché se llenó antes de tocar la fila—, así que
+> el total salía idéntico y el descuento no descontaba nada.
 
 - `Movimiento` con comprobante, y su validación.
 - `DescuentoAplicado`, con el tope de uno por tipo garantizado en la base (`RN-05`).
@@ -212,6 +224,32 @@ No bloquea la fase 2.
 
 > `CU-STD-022` a `027` · sin vistas · **necesita** las fases 1 y 5.
 
+> [!important] Fase construida (2026-08-30)
+> `manage.py barrida_diaria` cierra `CU-STD-022`, `024` y `025`, y con ellos la mitad de
+> `CU-STD-023` que necesitaba reloj. La invoca `.github/workflows/barrida-diaria.yml` a las
+> 09:00 de Mérida — por la mañana y no de madrugada a propósito: de ahí salen correos a
+> editoriales, y llegar a las 3 a. m. hace que se lean como spam.
+>
+> El orden dentro de la barrida importa: **primero se retira el pronto pago vencido y después
+> se avisa**. Retirarlo sube el total y con él el anticipo, así que una reserva al filo puede
+> quedarse corta el mismo día, y el aviso tiene que salir con las cifras de después.
+>
+> Se avisa **una vez por vencimiento**, no una por reserva: la pregunta es si ya salió un aviso
+> posterior a la fecha de vencimiento vigente. Así una prórroga que también se agota vuelve a
+> avisar sin borrar nada, y un aviso `fallida` se reintenta al día siguiente.
+
+> [!important] Los dos umbrales ya avisan (2026-08-30)
+> `CU-STD-026` y `CU-STD-027` están construidos: al cubrirse el anticipo y al liquidar sale un
+> correo y queda su `Notificacion`, que A4 enseña. Con ellos entró lo que el paso 4 de
+> `CU-STD-026` daba por existente y no estaba en ninguna tabla: la **base** de la fecha de
+> corte, en `ConfiguracionSistema`, de la que cada reserva hereda la suya al confirmarse. Sin
+> ella `Reserva.fecha_corte_pago_total` no lo escribía nadie.
+>
+> El correo se programa con `transaction.on_commit` y no se manda dentro de `reevaluar`: esa
+> función corre siempre en una transacción, y un correo no se puede deshacer.
+>
+> **Queda la barrida**: `022`, `024` y `025`, que son las tres que sí necesitan reloj.
+
 > [!important] No son seis procesos temporizados — es uno
 > El plan decía "los seis procesos temporizados" y los casos de uso no lo sostienen. Corregido
 > el 2026-08-27, porque cambia el tamaño de la decisión de la fase 1.
@@ -226,10 +264,10 @@ disparan *durante la reevaluación del saldo*, o sea dentro de validar un abono,
 petición y de forma síncrona. No hay nada que esperar.
 
 `CU-STD-023` —el 10% por pronto pago— está a caballo: se aplica al reservar, se consolida al
-liquidar, y **caduca con el reloj**. Esa última mitad ya está escrita —
-`servicios/pagos.py::caducar_pronto_pago` y `manage.py caducar_pronto_pago`, del 2026-08-29 —
-porque sin ella el descuento no se retiraba nunca y el carrito prometía lo contrario. Lo que
-falta es que la barrida la llame: hoy hay que ponerla en el cron a mano.
+liquidar, y **caduca con el reloj**. Esa última mitad la escribió `caducar_pronto_pago` el
+2026-08-29 —sin ella el descuento no se retiraba nunca y el carrito prometía lo contrario— y
+desde el 2026-08-30 la llama `barrida_diaria`. El comando suelto se queda como herramienta de
+diagnóstico: tiene `--seco` con el detalle reserva por reserva.
 
 > [!warning] La barrida tiene que recorrer los schemas, no las filas
 > `Reserva` vive en el schema de cada feria y ninguna consulta lleva filtro de edición
@@ -248,6 +286,24 @@ falta es que la barrida la llame: hoy hay que ponerla en el cron a mano.
 ### Fase 7 · Administración restante
 
 > `CU-STD-028` a `036` · vistas A3, A6, A7, A9, A10 · **necesita** la fase 6.
+
+> [!important] Construida salvo Expositores y A9 (2026-08-30)
+> Hechas: `028` y `029` (A3 y A4), `032` (A8), `034` (A10), y `035` y `036` en el bloque
+> «Plazos y estado» de A4. Con `035` deja de haber un agujero que llevaba abierto desde el
+> principio: **`cancelada` era un estado inalcanzable**, así que ninguna reserva podía cerrarse
+> por ningún camino y `RN-11` describía algo que no existía.
+>
+> Y desde el 2026-08-30 también `030` y `031` (A6 y A7), con lo que **no queda ninguna sección
+> del panel apagada**. Ahí salió a la luz que `CU-STD-031` paso 2 pide un RFC que el modelo no
+> tiene: la ficha en papel lo entrega como constancia adjunta, no como campo. Ver A7 en
+> [`Estructura de vistas`](<../requisitos/STD/Estructura de vistas - Stands.md>).
+>
+> Y con `BitacoraSTD` (2026-08-30) queda cerrado §3.12: **su pantalla es el admin de Django**,
+> en solo lectura. Decisión del cliente, y la correcta — se consulta tres veces al año, y una
+> sección propia en la barra lateral costaría más de lo que resuelve.
+>
+> Queda la pantalla A9 de `033`, que hoy solo se hace desde el admin de Django, y que se
+> aplaza a propósito (2026-08-30).
 
 - Listados de reservas y de expositores, con el detalle de cada uno.
 - ~~Configuración de la convocatoria (`CU-STD-034`)~~ — **construida el 2026-08-29**, adelantada
@@ -277,7 +333,7 @@ falta es que la barrida la llame: hoy hay que ponerla en el cron a mano.
 | --- | --- | --- |
 | Quién invoca la barrida diaria: Actions o un cron de Render | Fase 6 | Equipo — es un ADR, y depende del plan de Render |
 | Subir Render a `starter` para tener disco persistente, o contratar almacén de objetos | Nada, pero hay archivos en juego | Equipo — ver ADR-0007 |
-| Retirar un descuento: ¿borra la fila o la marca? | Fase 5 | Equipo |
+| ~~Retirar un descuento: ¿borra la fila o la marca?~~ **Borra la fila** (2026-08-29). Es lo que `caducar_pronto_pago` ya hacía; marcarla habría dejado dos comportamientos para lo mismo. El rastro de quién lo retiró vive hoy solo en el log — lo recoge `BitacoraSTD` cuando exista | — | Decidido |
 | ¿Hace falta el desglose de una reserva vieja tal como se aceptó? | Fase 7 | Cliente |
 | ¿El correo de la editorial se prellena desde el de la persona? | Fase 2 | Cliente |
 | `es_recurrente` — exige una tabla histórica en la capa global | Fase 7 | Equipo, una vez para los cuatro dominios |

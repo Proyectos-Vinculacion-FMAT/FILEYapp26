@@ -186,6 +186,30 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Reserva, Editorial.
 
 ### A4 · Detalle de reserva *(vista-contenedor)*
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/reserva/<id>/`
+> Desde el 2026-08-30 enseña además los **avisos que salieron** por esta reserva, por lo mismo
+> que A2: `avisos.py` se traga el fallo del transporte para no deshacer un cobro que sí
+> ocurrió, y sin esa lista nadie se entera de que la editorial no recibió nada.
+>
+> Y **está completa**: el bloque «Plazos y estado» cierra CU-STD-035 y CU-STD-036 —prorrogar,
+> mover el corte y cancelar—. Tres decisiones de las que solo cancelar es irreversible, así que
+> es la única detrás de un interruptor y de una casilla: un botón rojo suelto entre otros tres
+> se pulsa por inercia. En una reserva cancelada la pantalla no ofrece nada — enseña quién la
+> cerró, cuándo y por qué, y se aparta.
+> Con tres de las cinco acciones: validar un abono (018), asentar uno manual (019) y aplicar o
+> retirar el especial (020). **Cancelar/prorrogar (035) y mover la fecha de corte (036) no se
+> pintan**, porque no existen: un botón que no hace nada se pulsa igual.
+>
+> Tres decisiones de la pantalla:
+>
+> - **El abono se valida en el mismo modal que en A5**, con `?desde=reserva` para que la
+>   decisión devuelva aquí. Es una de dos palabras conocidas y no una URL de vuelta: una URL en
+>   un parámetro sería un redirector abierto en una pantalla con sesión de administración.
+> - **El abono manual nace `validado`** (CU-STD-019 paso 6) y lo dice el encabezado del
+>   formulario, porque no se puede deducir de los campos.
+> - **Aplicar y retirar el especial nunca se ofrecen a la vez.** RN-05 deja uno por reserva, así
+>   que con uno puesto el formulario de aplicar solo podría contestar que ya existe.
+
 - **Objetivo:** gestionar una reserva concreta y todas sus acciones.
 - **Contenido:** datos de la reserva, contacto, stands, abonos y descuentos; concentra las
   siguientes acciones sin salir de la vista:
@@ -219,12 +243,41 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Movimiento, Documento, Reserva.
 
 ### A6 · Expositores (lista)
+> [!note] Construida el 2026-08-30, en `/f/<slug>/stands/<id>/expositores/`
+> **Sin chips de estado**, al revés que las otras tres listas del panel: aquí solo hay un
+> estado por definición —expositor es quien tiene la solicitud aceptada (RN-16)— y una barra
+> con un filtro que no filtra nada es un adorno. La barra compartida sabe salir solo con el
+> buscador.
+>
+> La lista vacía **manda a la bandeja de solicitudes** (E1) y no dice «no hay editoriales»:
+> si no hay ninguna, lo que falta es dictaminar.
+>
+> Se busca por nombre y por correo, **no por RFC**: no existe como columna. Ver la nota de A7.
+
 - **Objetivo:** ver quién está habilitado para reservar.
 - **Contenido:** lista de expositores con **solicitud aceptada**.
 - **CU involucrados:** CU-STD-030.
 - **Entidades:** Editorial, Solicitud.
 
 ### A7 · Detalle de expositor
+> [!note] Construida el 2026-08-30, en `/f/<slug>/stands/expositor/<id>/`
+> **Enseña la ficha viva, no la fotografía.** A2 juzga lo que se envió (RN-22); A7 atiende a
+> un cliente hoy. Si la editorial corrigió su correo después del dictamen, el bueno aquí es el
+> de ahora y el de A2 sigue siendo el que se juzgó: las dos tienen razón, no son la misma
+> pregunta.
+>
+> **El alcance es la feria, no la convocatoria** (RN-19, RN-21), y por eso la URL no lleva
+> convocatoria: la misma editorial puede haber aplicado a la general y a la de un pabellón, y
+> quien atiende una llamada necesita ver las dos.
+
+> [!warning] El RFC no es una columna, y el paso 2 lo da por hecho
+> `CU-STD-031` paso 2 pide «Razón social, RFC, y enlace para descargar la Constancia». Lo que
+> el modelo tiene es `Editorial.nombre` y la constancia como `Documento`: **la ficha en papel
+> no pide el RFC como dato, lo pide como archivo**. La pantalla enlaza la constancia y lo dice;
+> inventar un campo que nadie llenó nunca habría sido peor. Si se quiere buscar por RFC o
+> facturar sin abrir el PDF, hay que añadirlo a la ficha de U1 — y eso lo manda el documento
+> oficial, no este archivo.
+
 - **Objetivo:** consultar el perfil completo de un expositor.
 - **Contenido:** datos de empresa y contacto, documentos, sellos y sus reservas.
 - **CU involucrados:** CU-STD-031.

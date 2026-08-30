@@ -32,12 +32,14 @@ from django.db import models, transaction
 from django.utils import timezone
 
 from ..models import (
+    BitacoraSTD,
     DescuentoAplicado,
     Documento,
     Movimiento,
     Reserva,
     Stand,
 )
+from . import avisos, bitacora
 from . import reservas as servicio_reservas
 
 logger = logging.getLogger(__name__)
@@ -67,18 +69,32 @@ def registrar(
     que alguien dice que pagó y lo que la feria cobró.
 
     :param manual: lo registra la administración (`CU-STD-019`). Entonces
-        el comprobante **es obligatorio** (`RN-15`) y el origen queda
-        marcado, para que el historial diga quién lo metió.
+        el comprobante **es obligatorio** (`RN-15`), el abono **nace
+        validado** —quien lo registra es quien valida, no tiene a quién
+        esperar— y el saldo se mueve en el acto.
     :raises PagoRechazado: y no se crea nada.
     """
-    if reserva.estado == Reserva.Estado.CANCELADA:
-        raise PagoRechazado("Esta reserva está cancelada: no admite abonos.")
     if monto is None or monto <= 0:
         raise PagoRechazado("El monto tiene que ser mayor que cero.")
     if metodo not in Movimiento.Metodo.values:
         # `RN-08`: nunca efectivo. Los tres que quedan dejan rastro
         # bancario, que es lo que hace comprobable la validación.
         raise PagoRechazado(f"«{metodo}» no es un método de pago admitido.")
+    if manual and archivo is None:
+        raise PagoRechazado(
+            "Un pago que registra la administración necesita comprobante. "
+            "Adjúntalo para poder guardarlo."
+        )
+
+    # A partir de aquí se decide con cifras que cambian con cada abono,
+    # así que la reserva se bloquea antes de leerlas. Sin el bloqueo, dos
+    # envíos simultáneos —un doble clic en «Registrar el pago»— leen los
+    # dos el mismo hueco y crean los dos el abono, que es exactamente lo
+    # que el tope de abajo existe para impedir.
+    reserva = Reserva.objects.select_for_update().get(pk=reserva.pk)
+
+    if reserva.estado == Reserva.Estado.CANCELADA:
+        raise PagoRechazado("Esta reserva está cancelada: no admite abonos.")
 
     # `CU-STD-016` E2. Se compara contra lo pendiente y no contra el
     # total: con un abono ya validado, el tope es lo que falta.
@@ -89,30 +105,36 @@ def registrar(
             f"${pendiente}. Ajusta el monto."
         )
 
-    # Y lo ya reportado también ocupa sitio. Sin esto, quien pulsa dos
-    # veces —o vuelve a reportar la misma transferencia porque no la ve
-    # sumada— deja dos declaraciones idénticas en la cola, y quien las
+    # Y para el aplicante, lo ya reportado también ocupa sitio. Sin esto,
+    # quien vuelve a reportar la misma transferencia porque no la ve
+    # sumada deja dos declaraciones idénticas en la cola, y quien las
     # valide a las dos cobra el doble de lo que entró al banco.
     #
     # No es lo mismo que el tope de arriba: `monto_pendiente` solo
     # descuenta lo **validado** (`CU-STD-018`), a propósito. Esto de aquí
     # es el hueco que queda **después** de lo que está en revisión, y se
     # libera solo si alguien rechaza un abono.
-    en_revision = reserva.movimientos.filter(
-        estado=Movimiento.Estado.PENDIENTE
-    ).aggregate(models.Sum("monto"))["monto__sum"] or Decimal("0.00")
-    if monto > pendiente - en_revision:
-        raise PagoRechazado(
-            f"Tienes ${en_revision} en revisión. Sobre el saldo de "
-            f"${pendiente}, puedes registrar hasta "
-            f"${pendiente - en_revision}."
-        )
-
-    if manual and archivo is None:
-        raise PagoRechazado(
-            "Un pago que registra la administración necesita comprobante. "
-            "Adjúntalo para poder guardarlo."
-        )
+    #
+    # **No aplica al abono manual**: quien lo registra es quien resuelve
+    # la cola y tiene el estado de cuenta delante. Si lo que hay en
+    # revisión duplica lo que está asentando, lo que procede es
+    # rechazarlo, no que el sistema le impida asentar lo que sí entró.
+    # Lo que sigue protegido en los dos casos es el saldo, arriba, y la
+    # comprobación de `validar`, que impide cobrar de más por ese camino.
+    if not manual:
+        en_revision = suma_en_revision(reserva)
+        hueco = pendiente - en_revision
+        if hueco <= 0:
+            raise PagoRechazado(
+                f"Ya reportaste ${en_revision} y siguen en revisión: cubren "
+                f"todo el saldo de ${pendiente}. Espera a que los validemos "
+                "contra el banco."
+            )
+        if monto > hueco:
+            raise PagoRechazado(
+                f"Tienes ${en_revision} en revisión. Sobre el saldo de "
+                f"${pendiente}, puedes registrar hasta ${hueco}."
+            )
 
     comprobante = None
     if archivo is not None:
@@ -133,17 +155,53 @@ def registrar(
         origen=(
             Movimiento.Origen.ADMIN_MANUAL if manual else Movimiento.Origen.APLICANTE
         ),
-        estado=Movimiento.Estado.PENDIENTE,
+        # `CU-STD-019` paso 6: el abono manual nace `validado`. No es una
+        # excepción a `CU-STD-018`, es que ya pasó por él — lo asienta
+        # quien coteja contra el banco. Dejarlo pendiente crearía una cola
+        # en la que la administración se valida a sí misma.
+        estado=(
+            Movimiento.Estado.VALIDADO if manual else Movimiento.Estado.PENDIENTE
+        ),
+        # La restricción `un_movimiento_resuelto_dice_quien_y_cuando` los
+        # exige en cuanto el estado no es pendiente.
+        validado_por=persona if manual else None,
+        fecha_validacion=timezone.now() if manual else None,
         comprobante=comprobante,
         registrado_por=persona,
     )
     logger.info(
-        "Abono registrado: %s en la reserva %s (%s)",
+        "Abono registrado: %s en la reserva %s (%s, %s)",
         monto,
         reserva.pk,
         movimiento.origen,
+        movimiento.estado,
     )
+    if manual:
+        bitacora.anotar(
+            persona=persona,
+            accion=BitacoraSTD.Accion.ABONO_MANUAL,
+            objeto=reserva,
+            movimiento=movimiento.pk,
+            monto=str(monto),
+            metodo=metodo,
+        )
+        # `CU-STD-019` pasos 8 y 9: suma en el acto y pasa por los
+        # umbrales, igual que si alguien acabara de validarlo.
+        reevaluar(reserva)
     return movimiento
+
+
+def suma_en_revision(reserva: Reserva) -> Decimal:
+    """Lo reportado y todavía sin resolver, en pesos.
+
+    Ocupa sitio sobre el saldo aunque no lo baje: es lo que impide
+    reportar dos veces la misma transferencia (`CU-STD-016` E2), y lo que
+    la pantalla del expositor y la del administrador enseñan para que
+    nadie lo intente.
+    """
+    return reserva.movimientos.filter(
+        estado=Movimiento.Estado.PENDIENTE
+    ).aggregate(models.Sum("monto"))["monto__sum"] or Decimal("0.00")
 
 
 def de_la_convocatoria(convocatoria, *, estado: str | None = None):
@@ -178,17 +236,37 @@ def de_la_convocatoria(convocatoria, *, estado: str | None = None):
 def validar(*, movimiento: Movimiento, administrador) -> Reserva:
     """Da el abono por bueno y reevalúa la reserva (`CU-STD-018`).
 
-    El bloqueo de la reserva es lo que importa: dos administradores
-    validando dos abonos a la vez leerían los dos el mismo
-    `monto_abonado` de antes, y la reserva podría quedarse en
-    `por_confirmar` habiendo cobrado el total.
+    Los dos bloqueos importan, y en este orden —el mismo en `rechazar`,
+    porque dos órdenes distintos sobre las mismas filas se abrazan—:
+
+    - **la reserva**, porque dos abonos validados a la vez leerían los dos
+      el mismo `monto_abonado` de antes y la reserva podría quedarse en
+      `por_confirmar` habiendo cobrado el total;
+    - **el movimiento**, y su estado se vuelve a leer ya bloqueado. La
+      instancia que llega la trajo la vista antes de la transacción, así
+      que comprobar sobre ella es comprobar sobre una foto vieja: validar
+      y rechazar a la vez dejaban la reserva confirmada por un abono que
+      acababa de quedar rechazado.
     """
+    reserva = Reserva.objects.select_for_update().get(pk=movimiento.reserva_id)
+    movimiento = Movimiento.objects.select_for_update().get(pk=movimiento.pk)
+
     if movimiento.estado != Movimiento.Estado.PENDIENTE:
         raise PagoRechazado(
             f"Este movimiento ya está {movimiento.get_estado_display().lower()}."
         )
 
-    reserva = Reserva.objects.select_for_update().get(pk=movimiento.reserva_id)
+    # El tope se comprobó al registrarlo, pero entre aquel momento y éste
+    # el saldo pudo cubrirse por otro lado —un abono manual, o un
+    # descuento que bajó el total—. Validar igualmente cobraría de más y
+    # dejaría `monto_pendiente` en negativo. Lo que procede entonces es
+    # rechazarlo, y el mensaje lo dice.
+    if reserva.monto_abonado + movimiento.monto > reserva.monto_total:
+        raise PagoRechazado(
+            f"El saldo de esta reserva ya está cubierto: quedan "
+            f"${reserva.monto_pendiente} y este abono es de "
+            f"${movimiento.monto}. Si duplica uno ya validado, recházalo."
+        )
 
     movimiento.estado = Movimiento.Estado.VALIDADO
     movimiento.validado_por = administrador
@@ -196,6 +274,13 @@ def validar(*, movimiento: Movimiento, administrador) -> Reserva:
     movimiento.save(update_fields=["estado", "validado_por", "fecha_validacion"])
 
     logger.info("Abono %s validado por %s", movimiento.pk, administrador.pk)
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.ABONO_VALIDADO,
+        objeto=reserva,
+        movimiento=movimiento.pk,
+        monto=str(movimiento.monto),
+    )
     return reevaluar(reserva)
 
 
@@ -206,7 +291,14 @@ def rechazar(*, movimiento: Movimiento, administrador, motivo: str = "") -> Movi
     El motivo es opcional según el caso de uso, y aun así conviene: el
     aplicante ve el rechazo en su historial (`CU-STD-017`), y sin motivo
     solo ve que se rechazó.
+
+    Bloquea la reserva y el movimiento en el mismo orden que `validar`
+    aunque no toque el saldo: es lo que serializa las dos decisiones
+    sobre el mismo abono.
     """
+    Reserva.objects.select_for_update().get(pk=movimiento.reserva_id)
+    movimiento = Movimiento.objects.select_for_update().get(pk=movimiento.pk)
+
     if movimiento.estado != Movimiento.Estado.PENDIENTE:
         raise PagoRechazado(
             f"Este movimiento ya está {movimiento.get_estado_display().lower()}."
@@ -220,6 +312,14 @@ def rechazar(*, movimiento: Movimiento, administrador, motivo: str = "") -> Movi
         update_fields=["estado", "validado_por", "fecha_validacion", "motivo_rechazo"]
     )
     logger.info("Abono %s rechazado por %s", movimiento.pk, administrador.pk)
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.ABONO_RECHAZADO,
+        objeto=movimiento.reserva,
+        movimiento=movimiento.pk,
+        monto=str(movimiento.monto),
+        motivo=movimiento.motivo_rechazo,
+    )
     return movimiento
 
 
@@ -267,7 +367,67 @@ def aplicar_descuento_especial(
         reserva.pk,
         administrador.pk,
     )
-    return _recalcular_total(reserva)
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.DESCUENTO_APLICADO,
+        objeto=reserva,
+        porcentaje=porcentaje,
+        motivo=motivo.strip()[:200],
+        total_antes=str(reserva.monto_total),
+    )
+    # Instancia recién traída, por lo mismo que en `caducar_pronto_pago`:
+    # `_recalcular_total` lee los descuentos con `reserva.descuentos.all()`
+    # y quien llame desde una pantalla llega con `prefetch_related`
+    # puesto. Esa caché se llenó **antes** de insertar el descuento, así
+    # que el total salía idéntico: el descuento quedaba guardado y no
+    # descontaba nada.
+    return _recalcular_total(Reserva.objects.get(pk=reserva.pk))
+
+
+@transaction.atomic
+def retirar_descuento_especial(*, reserva: Reserva, administrador) -> Reserva:
+    """Quita el descuento especial y devuelve el total a lo que era.
+
+    Es la otra mitad de `RN-05`: como solo cabe uno por reserva, cambiar
+    el porcentaje es retirar el que hay y aplicar otro. Sin esta función,
+    el error de `aplicar_descuento_especial` —«retíralo antes de aplicar
+    otro»— pedía algo que no se podía hacer desde ninguna parte.
+
+    El total **sube**, y eso no baja el estado de la reserva: `reevaluar`
+    no retrocede a propósito (`CU-STD-035` es quien deshace un cobro, no
+    un efecto lateral). Una reserva que quedó pagada con el descuento
+    sigue pagada, con saldo pendiente otra vez.
+
+    El pronto pago no se toca: son independientes (`RN-06`).
+    """
+    descuento = reserva.descuentos.filter(
+        tipo=DescuentoAplicado.Tipo.ESPECIAL
+    ).first()
+    if descuento is None:
+        raise PagoRechazado("Esta reserva no tiene ningún descuento especial.")
+
+    logger.info(
+        "Se retira el especial del %s%% de la reserva %s por %s",
+        descuento.porcentaje,
+        reserva.pk,
+        administrador.pk,
+    )
+    # Se anota **antes** de borrar: es de las pocas acciones que no dejan
+    # rastro en ninguna otra parte, porque lo que hace es quitar la fila
+    # que lo explicaba.
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.DESCUENTO_RETIRADO,
+        objeto=reserva,
+        porcentaje=descuento.porcentaje,
+        motivo=descuento.motivo,
+        total_antes=str(reserva.monto_total),
+    )
+    descuento.delete()
+    # Instancia recién traída, por lo mismo que en `caducar_pronto_pago`:
+    # una caché de `descuentos` con la fila ya borrada dentro dejaría el
+    # total idéntico.
+    return _recalcular_total(Reserva.objects.get(pk=reserva.pk))
 
 
 # ── CU-STD-023 A1 · el pronto pago que caduca ─────────────────
@@ -324,6 +484,17 @@ def caducar_pronto_pago(reserva: Reserva) -> Reserva:
         limite,
         reserva.monto_abonado,
         reserva.monto_total,
+    )
+    # Sin persona: no lo decidió nadie, se cumplió `RN-04`. Y como el
+    # descuento se borra, sin esta línea la subida del total no tendría
+    # explicación en ninguna parte.
+    bitacora.anotar(
+        persona=None,
+        accion=BitacoraSTD.Accion.PRONTO_PAGO_CADUCADO,
+        objeto=reserva,
+        porcentaje=descuento.porcentaje,
+        vencio=limite.isoformat(),
+        total_antes=str(reserva.monto_total),
     )
     descuento.delete()
     # Se recalcula sobre una instancia **recién traída**, no sobre la que
@@ -396,7 +567,20 @@ def reevaluar(reserva: Reserva) -> Reserva:
     if _orden(nuevo) < _orden(estado):
         return reserva
 
-    Reserva.objects.filter(pk=reserva.pk).update(estado=nuevo)
+    campos = {"estado": nuevo}
+    if (
+        nuevo == Reserva.Estado.CONFIRMADA
+        and reserva.fecha_corte_pago_total is None
+    ):
+        # `CU-STD-026` paso 4: al confirmarse, la reserva **hereda** la
+        # fecha de corte de su convocatoria. Solo si no tiene ya una
+        # propia: si alguien se la movió a mano (`CU-STD-036`),
+        # confirmar no puede pisarla.
+        campos["fecha_corte_pago_total"] = (
+            reserva.configuracion.fecha_corte_pago_total
+        )
+
+    Reserva.objects.filter(pk=reserva.pk).update(**campos)
     reserva.refresh_from_db()
 
     if nuevo == Reserva.Estado.PAGADA:
@@ -412,7 +596,36 @@ def reevaluar(reserva: Reserva) -> Reserva:
         abonado,
         reserva.monto_total,
     )
+    _avisar_del_umbral(reserva, nuevo)
     return reserva
+
+
+def _avisar_del_umbral(reserva: Reserva, estado: str) -> None:
+    """Programa el correo de `CU-STD-026` o `CU-STD-027`.
+
+    **Después del commit, no aquí.** `reevaluar` corre siempre dentro de
+    una transacción —validar un abono, asentar uno manual, mover un
+    descuento— y un correo no se puede deshacer: si la transacción se
+    revierte después, la editorial ya recibió el aviso de una
+    confirmación que no ocurrió, y ni siquiera queda la `Notificacion`
+    que lo explique, porque se iría con el rollback.
+
+    Es la misma razón por la que el dictamen avisa **fuera** de su
+    transacción (`servicios/dictamen.py`). Aquí no se puede sacar el
+    aviso al llamador: `reevaluar` tiene cuatro puertas y la decisión de
+    a quién se avisa es una sola.
+
+    Un cambio de estado programa **un** correo. Quien liquida de una sola
+    vez pasa de `por_confirmar` a `pagada` y recibe el de liquidación, no
+    los dos: `CU-STD-027` lo contempla en sus precondiciones.
+    """
+    envio = {
+        Reserva.Estado.CONFIRMADA: avisos.avisar_confirmacion,
+        Reserva.Estado.PAGADA: avisos.avisar_liquidacion,
+    }.get(estado)
+    if envio is None:
+        return
+    transaction.on_commit(lambda: envio(reserva))
 
 
 def _estado_para(reserva: Reserva, abonado: Decimal) -> str:

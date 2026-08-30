@@ -30,6 +30,7 @@ from .servicios import mapas
 from .models import (
     ConfiguracionSistema,
     DecoracionMapa,
+    BitacoraSTD,
     DescuentoAplicado,
     Documento,
     Editorial,
@@ -278,6 +279,7 @@ class ConfiguracionSistemaAdmin(admin.ModelAdmin):
                 convocatoria=obj.convocatoria,
                 datos=datos,
                 confirmado=form.cleaned_data.get("reemplazar_mapa", False),
+                persona=peticion.user,
             )
         except mapas.ImportacionRechazada as exc:
             # Como aviso y no como excepción: la configuración **sí** se
@@ -417,6 +419,7 @@ class MapaShowfloorAdmin(admin.ModelAdmin):
                     convocatoria=formulario.cleaned_data["convocatoria"],
                     datos=formulario.cleaned_data["archivo"],
                     confirmado=formulario.cleaned_data["confirmar"],
+                    persona=peticion.user,
                 )
             except mapas.ImportacionRechazada as exc:
                 # Como error del formulario y no como `messages.error`: se
@@ -513,3 +516,65 @@ class DescuentoAplicadoAdmin(admin.ModelAdmin):
     list_display = ("reserva", "tipo", "porcentaje", "aplicado_por", "fecha")
     list_filter = ("tipo",)
     list_select_related = ("reserva__editorial", "aplicado_por")
+
+
+@admin.register(BitacoraSTD, site=admin_feria)
+class BitacoraSTDAdmin(admin.ModelAdmin):
+    """La línea de tiempo de la feria, en solo lectura.
+
+    **Su pantalla es ésta y no otra** (decisión del 2026-08-30): se
+    consulta de tarde en tarde y cuando algo no cuadra, no todos los
+    días. Una vista propia en el panel sería una sección más en la barra
+    lateral para algo que se abre tres veces al año, y el admin de Django
+    ya trae gratis lo único que hace falta aquí — filtrar por acción,
+    buscar y recorrer por fecha.
+
+    Es de `TENANT_APPS`, así que va en `admin_feria` y **no** en
+    `admin.site`: registrada en el otro, la pantalla revienta con
+    `relation "stands_bitacorastd" does not exist` la primera vez que
+    alguien la abre, porque esa tabla no existe en `public`.
+
+    Nada se puede añadir, cambiar ni borrar desde aquí. Una bitácora
+    editable no es una bitácora: lo que registra son las acciones
+    sensibles del dominio, y si se pueden reescribir dejan de probar
+    nada.
+    """
+
+    list_display = ("fecha", "convocatoria", "quien", "accion", "sobre", "resumen")
+    # La convocatoria primero: una feria puede tener la general y la de un
+    # pabellón (`RN-19`), y son dos ventas distintas. Sin ese filtro la
+    # bitácora hay que leerla entera para encontrar una cosa.
+    list_filter = ("convocatoria", "accion", "entidad_tipo")
+    search_fields = ("persona__correo", "persona__nombre", "entidad_id")
+    list_select_related = ("persona", "convocatoria")
+    date_hierarchy = "fecha"
+
+    @admin.display(description="quién", ordering="persona")
+    def quien(self, entrada):
+        # Que no haya persona **es** el dato: nadie lo decidió, se cumplió
+        # una regla (`RN-04`, el pronto pago que caduca).
+        return entrada.persona.nombre_completo if entrada.persona else "El sistema"
+
+    @admin.display(description="sobre")
+    def sobre(self, entrada):
+        return f"{entrada.entidad_tipo} #{entrada.entidad_id}"
+
+    @admin.display(description="detalle")
+    def resumen(self, entrada):
+        """El JSON en una línea legible, que es como se lee una bitácora.
+
+        Sin esto la columna enseña `{'porcentaje': 10, ...}` con sus
+        comillas y sus llaves, y hay que descifrarlo en vez de leerlo.
+        """
+        if not entrada.detalle:
+            return "—"
+        return " · ".join(f"{k}: {v}" for k, v in entrada.detalle.items())
+
+    def has_add_permission(self, peticion):
+        return False
+
+    def has_change_permission(self, peticion, obj=None):
+        return False
+
+    def has_delete_permission(self, peticion, obj=None):
+        return False
