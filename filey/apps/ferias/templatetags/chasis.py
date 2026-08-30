@@ -53,24 +53,40 @@ def topbar(context):
         # llamada «(sistema)».
         feria = None
 
-    # `administra` y no `acceso_a`: el operador de la plataforma no tiene
-    # fila en `AdminFeria` y aun así ve la feria como quien la administra
-    # (`ADR-0005`). Si la barra preguntara distinto que el decorador, un
-    # superusuario vería el chasis de participante sobre pantallas de
-    # administración.
+    # `ve_como_admin` y no `acceso_a`: el operador de la plataforma no
+    # tiene fila en `AdminFeria` y aun así ve la feria como quien la
+    # administra (`ADR-0005`). Si la barra preguntara distinto que el
+    # decorador, un superusuario vería el chasis de participante sobre
+    # pantallas de administración.
+    #
+    # Lo que **sí** la separa del decorador es la puerta: quien entró
+    # como participante ve la barra de participante aunque administre.
+    # Por eso el conmutador de abajo pregunta por `administra` —la
+    # autoridad, que no cambia— y no por esto.
     #
     # `zona_admin` del contexto es lo que usan las pantallas de fuera de
     # una feria —"mis ferias"—, donde no hay `tenant` contra el que
     # comprobar nada.
     zona_admin = (
-        autenticada and permisos.administra(peticion)
+        autenticada and permisos.ve_como_admin(peticion)
     ) or bool(context.get("zona_admin"))
+
+    # La autoridad, no la cara: el conmutador se ofrece a quien puede
+    # administrar esta feria **esté mirando como esté**. Es lo que hace
+    # posible el viaje de vuelta.
+    puede_administrar = autenticada and permisos.administra(peticion)
 
     return {
         "usuario": usuario,
         "autenticada": autenticada,
         "feria": feria,
         "zona_admin": zona_admin,
+        "puede_administrar": puede_administrar,
+        "url_modo": url_publica("ferias:modo"),
+        # El slug viaja al POST para poder devolver a la misma feria: el
+        # conmutador vive fuera de toda edición y sin esto no sabría de
+        # dónde salió quien lo pulsa.
+        "slug_feria": feria.slug if feria else "",
         "titulo": feria.nombre if feria else "FILEY",
         "subtitulo": _subtitulo(feria, zona_admin, autenticada),
         "url_inicio": _url_inicio(feria, zona_admin),

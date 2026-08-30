@@ -408,6 +408,52 @@ document.addEventListener('alpine:init', () => {
   });
 })();
 
+/* ══ Cerrar el modal del panel ═════════════════════════════════
+   htmx deja el diálogo dentro de `#modal`; cerrarlo es vaciar ese hueco.
+   Tres formas, las tres esperadas de un diálogo: el botón, el velo y la
+   tecla de escape.
+
+   Va delegado en `document` y no atado al modal porque el modal **no
+   existe** cuando esto corre: lo trae htmx más tarde.
+
+   Sin JavaScript no hay modal —el mismo enlace abre la pantalla suelta—,
+   así que aquí no hay nada que degradar. */
+(function () {
+  "use strict";
+
+  function hueco() {
+    return document.getElementById("modal");
+  }
+
+  function cerrar() {
+    var caja = hueco();
+    if (caja) caja.innerHTML = "";
+  }
+
+  document.addEventListener("click", function (evento) {
+    var caja = hueco();
+    var velo = caja && caja.firstElementChild;
+    if (!velo) return;
+    var destino = evento.target;
+
+    /* El velo cierra **solo si el clic fue en el velo**, comparando el
+       elemento y no preguntando por el atributo hacia arriba: el velo
+       envuelve al diálogo, así que un `closest("[data-cerrar-modal]")`
+       lo encuentra desde cualquier clic de dentro y cerraría el
+       formulario a medio llenar. */
+    if (destino === velo) return cerrar();
+
+    var boton = destino.closest && destino.closest("[data-cerrar-modal]");
+    if (!boton || boton === velo) return;
+    evento.preventDefault();
+    cerrar();
+  });
+
+  document.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape") cerrar();
+  });
+})();
+
 /* ══ Avisar del formato antes de enviar ════════════════════════
    La ficha de expositor tiene treinta campos. Descubrir al enviar que
    tres están mal —y volver a subir los archivos, que el navegador no

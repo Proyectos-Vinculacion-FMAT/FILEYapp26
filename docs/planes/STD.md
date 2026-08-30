@@ -189,6 +189,15 @@ No bloquea la fase 2.
 
 > `CU-STD-015` a `020` · vistas U6, A4, A5 · **necesita** las fases 1 y 4.
 
+> [!important] Construida salvo A4 (2026-08-29)
+> El lado del expositor entero (`015`, `016`, `017`) y **la cola de validación** (`018`, vista
+> A5), que es la que cierra el ciclo: sin ella un abono se quedaba `pendiente_validacion` para
+> siempre y los umbrales de `RN-13`/`RN-14` no podían dispararse nunca.
+>
+> Queda **A4**, el detalle de una reserva como vista-contenedor: registrar un abono manual
+> (`019`) y aplicar un descuento especial (`020`). Los dos servicios existen y están probados;
+> lo que falta es la pantalla.
+
 - `Movimiento` con comprobante, y su validación.
 - `DescuentoAplicado`, con el tope de uno por tipo garantizado en la base (`RN-05`).
 - Los dos descuentos aplicados **en secuencia** (`RN-06`): 10% y 15% dan un 23.5% efectivo, no un
@@ -241,7 +250,10 @@ falta es que la barrida la llame: hoy hay que ponerla en el cron a mano.
 > `CU-STD-028` a `036` · vistas A3, A6, A7, A9, A10 · **necesita** la fase 6.
 
 - Listados de reservas y de expositores, con el detalle de cada uno.
-- Configuración de la convocatoria (`CU-STD-034`) y resolución de reservas vencidas.
+- ~~Configuración de la convocatoria (`CU-STD-034`)~~ — **construida el 2026-08-29**, adelantada
+  a esta fase porque sin ella los datos bancarios de `CU-STD-015` no se podían declarar más que
+  desde el admin de Django. Es la vista A10.
+- Resolución de reservas vencidas.
 - `Bitacora` de `STD` — una por módulo, decidido el 2026-08-27.
 
 ---

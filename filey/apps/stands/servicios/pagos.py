@@ -85,7 +85,7 @@ def registrar(
     pendiente = reserva.monto_pendiente
     if monto > pendiente:
         raise PagoRechazado(
-            f"El abono de ${monto} es mayor que el saldo pendiente de "
+            f"El pago de ${monto} es mayor que el saldo pendiente de "
             f"${pendiente}. Ajusta el monto."
         )
 
@@ -103,14 +103,14 @@ def registrar(
     ).aggregate(models.Sum("monto"))["monto__sum"] or Decimal("0.00")
     if monto > pendiente - en_revision:
         raise PagoRechazado(
-            f"Ya tienes ${en_revision} en revisión. Sobre el saldo de "
-            f"${pendiente}, lo que falta por reportar es "
+            f"Tienes ${en_revision} en revisión. Sobre el saldo de "
+            f"${pendiente}, puedes registrar hasta "
             f"${pendiente - en_revision}."
         )
 
     if manual and archivo is None:
         raise PagoRechazado(
-            "Un abono que registra la administración necesita comprobante. "
+            "Un pago que registra la administración necesita comprobante. "
             "Adjúntalo para poder guardarlo."
         )
 
@@ -144,6 +144,31 @@ def registrar(
         movimiento.origen,
     )
     return movimiento
+
+
+def de_la_convocatoria(convocatoria, *, estado: str | None = None):
+    """Los movimientos de esta convocatoria (`CU-STD-018`, vista A5).
+
+    La cola de validación es **transversal**: cruza todas las reservas de
+    la convocatoria, porque quien coteja el banco lo hace por lotes y no
+    reserva por reserva. La otra puerta a la misma acción es el detalle
+    de una reserva (A4).
+
+    Sin `estado` vienen todos; la pantalla llega pidiendo los
+    `pendiente_validacion`, que es su trabajo del día.
+    """
+    movimientos = Movimiento.objects.filter(
+        reserva__registro__convocatoria=convocatoria
+    ).select_related(
+        "reserva__editorial",
+        "reserva__registro__persona",
+        "comprobante",
+        "registrado_por",
+        "validado_por",
+    )
+    if estado:
+        movimientos = movimientos.filter(estado=estado)
+    return movimientos
 
 
 # ── CU-STD-018 · validar o rechazar ───────────────────────────
@@ -363,16 +388,7 @@ def reevaluar(reserva: Reserva) -> Reserva:
     """
     abonado = reserva.monto_abonado
     estado = reserva.estado
-
-    if abonado >= reserva.monto_total and reserva.monto_total > 0:
-        # `RN-14`: cubierto el total, la reserva queda pagada y sus
-        # espacios pasan a `ocupado` (`RN-10`).
-        nuevo = Reserva.Estado.PAGADA
-    elif abonado >= reserva.anticipo:
-        # `RN-13`: cubierto el anticipo, queda confirmada y bloqueada.
-        nuevo = Reserva.Estado.CONFIRMADA
-    else:
-        nuevo = estado
+    nuevo = _estado_para(reserva, abonado)
 
     if nuevo == estado or estado == Reserva.Estado.CANCELADA:
         return reserva
@@ -397,6 +413,38 @@ def reevaluar(reserva: Reserva) -> Reserva:
         reserva.monto_total,
     )
     return reserva
+
+
+def _estado_para(reserva: Reserva, abonado: Decimal) -> str:
+    """En qué estado deja a la reserva ese saldo (`RN-13`, `RN-14`).
+
+    Pura: no escribe nada. La usan `reevaluar` —para mover la reserva— y
+    `estado_si_se_valida` —para **anunciar** el efecto antes de que
+    alguien pulse—. Que sea una sola función es lo que impide que la
+    pantalla prometa "quedaría confirmada" y el cobro haga otra cosa.
+    """
+    if abonado >= reserva.monto_total and reserva.monto_total > 0:
+        # `RN-14`: cubierto el total, la reserva queda pagada y sus
+        # espacios pasan a `ocupado` (`RN-10`).
+        return Reserva.Estado.PAGADA
+    if abonado >= reserva.anticipo:
+        # `RN-13`: cubierto el anticipo, queda confirmada y bloqueada.
+        return Reserva.Estado.CONFIRMADA
+    return reserva.estado
+
+
+def estado_si_se_valida(reserva: Reserva, monto: Decimal) -> str:
+    """En qué estado quedaría la reserva si se validara ese abono.
+
+    Es lo que la pantalla de validación enseña **antes** de decidir:
+    `CU-STD-018` paso 8 dice que el sistema evalúa los umbrales al
+    validar, y quien valida tiene que poder ver esa consecuencia sin
+    hacer la resta de cabeza.
+
+    No aplica el "no se retrocede" de `reevaluar` porque no hace falta:
+    sumar un abono nunca baja de estado.
+    """
+    return _estado_para(reserva, reserva.monto_abonado + monto)
 
 
 #: Cuánto ha avanzado una reserva. Solo para no retroceder.

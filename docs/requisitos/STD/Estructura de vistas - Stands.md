@@ -199,6 +199,19 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Reserva, ReservaStand, Movimiento, Documento, DescuentoAplicado, Bitacora.
 
 ### A5 · Pagos por validar (cola transversal)
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/<id>/pagos/`
+> **Entrar ya es filtrar**: la cola son los `pendiente_validacion` y los chips sirven para
+> mirar lo ya resuelto, al revés que en las otras dos listas. El detalle de cada abono se abre
+> en un modal que trae htmx y que es **la misma vista** que la pantalla suelta —la que sale sin
+> JavaScript—, para que las dos no puedan decir cifras distintas del mismo abono.
+>
+> El modal enseña el saldo de la reserva junto al monto: validar es lo que puede cruzar el 50%
+> (RN-13) o el 100% (RN-14), y esa decisión no se toma sin ver contra qué.
+>
+> **El motivo del rechazo se pide pero no se exige**, siguiendo A1 paso 3 de CU-STD-018. El
+> prototipo de Angular sí lo bloquea; se eligió el caso de uso, porque el motivo es una cortesía
+> con la editorial (CU-STD-017) y no una condición de la operación.
+
 - **Objetivo:** validar abonos de forma centralizada, sin entrar reserva por reserva.
 - **Contenido:** cola de **todos** los movimientos en `pendiente_validacion`; validar uno
   ejecuta la **misma acción** que en A4.
@@ -232,11 +245,23 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Stand, Bitacora.
 
 ### A10 · Configuración
-- **Objetivo:** administrar los parámetros globales del sistema.
-- **Contenido:** costo por m², porcentaje de anticipo, descuento por pronto pago,
-  fechas límite (pronto pago, corte) e instrucciones/datos bancarios de pago.
+- **Objetivo:** administrar los parámetros de **esta convocatoria** (no del sistema: desde el
+  2026-08-25 una feria puede tener varias convocatorias de stands, cada una con su precio).
+- **Contenido:** costo por m², porcentaje de anticipo, plazo de la reserva, descuento por pronto
+  pago y su fecha límite, los **seis campos de la cuenta bancaria** (titular, banco, cuenta,
+  CLABE, sucursal, referencia) y las instrucciones adicionales.
 - **CU involucrados:** CU-STD-034.
 - **Entidades:** ConfiguracionSistema.
+
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/<id>/configuracion/`
+> Dos tarjetas —lo que cuesta y dónde se paga— y un solo botón, como el A10 del prototipo de
+> Angular: son las dos mitades de «abrir la venta» y guardar por separado invita a dejarse una.
+> Lo que añade al prototipo es decir lo que un cambio **no** hace: con reservas en curso avisa
+> de cuántas conservan su precio (RN-01), que es la duda con la que se entra a subir una tarifa.
+>
+> **Importar el mapa no está aquí.** Reemplaza el showfloor entero y es del operador de la
+> plataforma (ADR-0005): sigue en `/f/<slug>/django-admin/`. Esta pantalla lo enseña sin
+> dejar tocarlo.
 
 ---
 

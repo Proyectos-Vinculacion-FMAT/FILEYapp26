@@ -229,7 +229,7 @@
 {% elif solicitud %}
   {% comment %} Solo lectura: se enseña la fotografía, no la ficha viva. Es lo
      que se envió y lo que se está dictaminando (RN-22). {% endcomment %}
-  {% include "stands/parciales/resumen_solicitud.html" with datos=solicitud.datos_editorial sellos=solicitud.sellos %}
+  {% include "stands/parciales/resumen_solicitud.html" with datos=solicitud.datos_editorial sellos=sellos_enviados %}
 {% endif %}
 
 {% endblock %}

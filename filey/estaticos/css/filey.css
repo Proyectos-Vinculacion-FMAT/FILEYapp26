@@ -150,6 +150,19 @@ a.home:hover { opacity: 0.88; }
 }
 .btn-salir:hover { background: rgba(255,255,255,.12); }
 
+/* El conmutador de cara (participante ↔ administración). Más discreto
+   que cerrar sesión —sin borde— porque no es una acción de salida: se
+   sigue en el mismo sitio, mirando lo mismo desde el otro lado. */
+.btn-modo {
+  background: none; border: none; color: rgba(255,255,255,.85);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  padding: 6px 4px; text-decoration: underline; text-underline-offset: 3px;
+}
+.btn-modo:hover { color: var(--color-blanco); }
+.btn-modo:focus-visible {
+  outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px;
+}
+
 /* ===================== Layout ===================== */
 .page { max-width: var(--maxw); margin: 0 auto; padding: 28px 24px 64px; }
 
@@ -257,11 +270,36 @@ a.home:hover { opacity: 0.88; }
 .req { color: var(--color-rojo); font-weight: 700; }
 .opt { color: var(--gris-500); font-weight: 400; font-size: 12.5px; }
 
-input[type="text"], input[type="email"], input[type="tel"], select {
+/* Todos los controles de texto, con la misma caja.
+   (Deriva corregida el 2026-08-29 — esta hoja iba **detrás** del prototipo.)
+   `prototipo/common/styles-base.css` los tenía así desde el principio;
+   esta copia perdió `number` y `textarea` al escribirse a mano, y con
+   ellos toda la caja: un `<input type="number">` sin regla cae en el
+   estilo de fábrica del navegador y sale angosto y con borde de pelo al
+   lado de uno de texto. Se veía en la configuración de la convocatoria
+   —costo por m² y porcentajes diminutos junto a la CLABE— y en la ficha
+   de expositor, que también pide números.
+
+   `date` y `search` son los añadidos de esta hoja: el prototipo no
+   tiene ninguno —Angular traía su propio calendario y sus filtros— y
+   aquí son los campos nativos de la configuración de la convocatoria
+   (`fecha_limite_pronto_pago`) y de los buscadores del panel, que se
+   veían como una caja de sistema al lado de su `<select>`.
+
+   Se enumeran los tipos en vez de negar los otros porque los que quedan
+   fuera **necesitan** su propio estilo: `checkbox` y `radio` no son
+   cajas, y `file` tiene su regla más abajo. La lista es la de los tipos
+   en uso; el día que entre uno nuevo, se añade aquí. */
+input[type="text"], input[type="email"], input[type="tel"],
+input[type="number"], input[type="date"], input[type="search"],
+select, textarea {
   width: 100%; padding: 11px 13px; font-size: 14.5px; color: var(--tinta);
   border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
   background: var(--color-blanco); font-family: inherit;
 }
+/* Crece hacia abajo y nunca a lo ancho: redimensionar en horizontal
+   rompe la rejilla de la pantalla. */
+textarea { resize: vertical; min-height: 80px; }
 select {
   -webkit-appearance: none;
   appearance: none;
@@ -302,10 +340,10 @@ select {
   background-color: var(--color-dorado-encabezado);
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--azul-600); box-shadow: 0 0 0 3px var(--azul-100);
 }
-input::placeholder { color: #aab3c0; }
+input::placeholder, textarea::placeholder { color: #aab3c0; }
 input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: not-allowed; }
 
 /* El campo que falló se ve de un vistazo: borde rojo y un halo tenue,
@@ -1128,3 +1166,241 @@ a.stat-card:focus-visible { outline: 2px solid var(--color-dorado-encabezado); o
    `margin-left: auto` lo manda al final del renglón de lectura, que es
    donde la ley de Fitts lo quiere. */
 .note .btn { flex: 0 0 auto; align-self: center; margin-left: auto; }
+
+/* Los datos bancarios (STD · CU-STD-015). Campo por campo y no un párrafo:
+   se copian de uno en uno frente a la app del banco, y una CLABE dentro de
+   una frase es imposible de seleccionar sin arrastrar de más.
+
+   `tabular-nums` en los números por lo mismo que en el desglose: una cuenta
+   con cifras de ancho variable no se puede cotejar con el dedo. */
+.datos-bancarios {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 4px 18px; margin: 14px 0 0;
+  background: var(--gris-050); border: 1px solid var(--gris-200);
+  border-radius: var(--radio-sm); padding: 14px 16px;
+}
+.datos-bancarios .dato { padding: 6px 0; min-width: 0; }
+.datos-bancarios dt {
+  font-size: 12px; color: var(--gris-500);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.datos-bancarios dd {
+  margin: 2px 0 0; font-weight: 600; color: var(--color-azul-institucional);
+  /* Una CLABE no cabe en pantalla chica y no se puede partir por donde
+     sea: se parte por cualquier carácter antes que salirse del marco. */
+  overflow-wrap: anywhere;
+}
+.datos-bancarios dd.es-numero { font-variant-numeric: tabular-nums; }
+
+/* A10 · las dos mitades de la configuración (STD · CU-STD-034).
+   Lo que cuesta a la izquierda, dónde se paga a la derecha. Se apila en
+   una columna con el mismo breakpoint que el resto del sistema. */
+.ajustes-columnas {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px;
+  align-items: start;
+}
+@media (max-width: 920px) {
+  .ajustes-columnas { grid-template-columns: 1fr; }
+}
+
+/* Un sello y la carta que autoriza a representarlo, en el mismo renglón
+   (STD · RN-17). Es la relación que la pantalla tiene que dejar ver: en
+   una lista de documentos todas las cartas se llaman igual.
+
+   El nombre a la izquierda y su carta a la derecha, separados por la
+   línea de la fila: con nombres de largo desigual, pegarlos uno a otro
+   hace perder de vista a cuál pertenece cada enlace. */
+.lista-sellos { list-style: none; margin: 0; padding: 0; }
+.lista-sellos li {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--gris-100);
+}
+.lista-sellos li:last-child { border-bottom: none; }
+.lista-sellos .sello-nombre { font-weight: 600; }
+/* Lo de la derecha es el enlace o el distintivo de «sin carta»: los dos
+   se alinean al mismo sitio para poder recorrer la columna de un vistazo. */
+.lista-sellos li > :last-child { margin-left: auto; text-align: right; }
+
+/* ═══ La barra de filtros de una cola (STD · A1, A3) ═══════════
+   `.chips`, `.chip` y `.searchbox` son del prototipo de EVT
+   (`prototipo/EVT/styles.css`), donde ya filtran la cola de propuestas.
+   Se portan tal cual —mismos valores, mismos tokens— en vez de escribir
+   otra barra: dos paneles del mismo sistema no pueden filtrar de dos
+   formas distintas. */
+
+/* El buscador **nunca** baja de línea: `nowrap` en el contenedor y un
+   ancho fijo para la caja. Lo que cede son los chips, que envuelven
+   dentro de su propia columna.
+
+   Antes cedía la caja —`flex-wrap: wrap` y `flex: 1`— y eso hacía que la
+   barra se comportara distinto en cada pantalla: con cinco chips
+   (solicitudes) entraba todo en un renglón y con seis (reservas) el
+   buscador se iba solo al siguiente. La misma barra no puede tener dos
+   formas según cuántos estados tenga la cola. */
+.filtros {
+  display: flex; gap: 16px 20px; align-items: center;
+  justify-content: space-between; flex-wrap: nowrap; margin-bottom: 10px;
+}
+/* `min-width: 0` para que la columna de chips pueda encogerse por
+   debajo de su contenido: sin esto un elemento flexible se niega a bajar
+   de su ancho mínimo y empuja al buscador fuera del marco. */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 9px; align-items: center;
+  flex: 1 1 auto; min-width: 0;
+}
+.chip {
+  background: var(--color-blanco); border: 1.5px solid var(--gris-300);
+  color: var(--gris-700); padding: 8px 15px; border-radius: 999px;
+  font-size: 13.5px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  /* Una etiqueta partida en dos renglones dentro de la píldora la
+     deforma. Al estrecharse, la fila rompe **entre** chips y no dentro
+     de uno. */
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--azul-600); color: var(--color-azul-institucional); text-decoration: none; }
+.chip:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
+.chip.is-active {
+  background: var(--color-azul-institucional);
+  border-color: var(--color-azul-institucional);
+  color: var(--color-blanco);
+  cursor: default;
+}
+/* El conteo en un óvalo dentro del chip. Translúcido y no un token de
+   color: tiene que funcionar sobre el chip blanco y sobre el azul. */
+.chip .count {
+  background: rgba(0,0,0,.08); border-radius: 999px; padding: 0 7px;
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.chip.is-active .count { background: rgba(255,255,255,.22); }
+
+.searchbox {
+  display: flex; align-items: center; gap: 8px; background: var(--color-blanco);
+  border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm);
+  padding: 5px 6px 5px 14px;
+  /* Ni crece ni se encoge: es el ancla derecha de la barra, y su tamaño
+     no puede depender de cuántos estados tenga la cola. */
+  flex: 0 0 320px;
+}
+/* La caja es el marco; el control de dentro no lleva el suyo. Se escribe
+   con el tipo en el selector para ganarle a la regla base de los campos
+   de texto sin depender del orden del archivo. */
+.searchbox input[type="search"] {
+  border: none; padding: 0; font-size: 14px; background: transparent;
+  flex: 1; min-width: 0;
+}
+.searchbox input[type="search"]:focus { outline: none; box-shadow: none; }
+.searchbox:focus-within { border-color: var(--azul-600); box-shadow: 0 0 0 3px var(--azul-100); }
+.searchbox .ico { color: var(--gris-500); font-size: 14px; }
+
+/* Cuántas se están viendo. Va pegado a la barra y separado de la tabla:
+   es la respuesta del filtro, no un encabezado de la lista. */
+.filtros-cuenta {
+  margin: 0 0 18px; font-size: 13px; color: var(--gris-500);
+}
+.filtros-cuenta strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 920px) {
+  /* En pantalla chica sí se apila, y entonces la caja ocupa el ancho:
+     320px fijos al lado de dos renglones de chips dejaría los tres
+     controles apretados. */
+  .filtros { flex-wrap: wrap; }
+  .searchbox { flex: 1 1 100%; }
+}
+
+/* ═══ Modal (STD · A5, CU-STD-018) ═════════════════════════════
+   Portado de `prototipo/EVT/styles.css`, donde es el diálogo del
+   dictamen. Mismos valores y mismos tokens: dos módulos del mismo panel
+   no pueden abrir dos modales distintos.
+
+   Lo que htmx deja dentro de `#modal` es el velo entero, así que el
+   hueco vacío no ocupa nada mientras no hay nada abierto. */
+.modal-back {
+  position: fixed; inset: 0; background: rgba(16,26,48,.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; z-index: 60;
+}
+.modal-back[hidden] { display: none; }
+.modal {
+  background: var(--color-blanco); border-radius: var(--radio);
+  box-shadow: var(--sombra-lg); width: 100%; max-width: 560px;
+  max-height: calc(100vh - 48px); overflow-y: auto;
+}
+.modal-head { padding: 20px 24px; border-bottom: 1px solid var(--gris-200); }
+.modal-head h3 { margin: 0; font-size: 19px; color: var(--color-azul-institucional-enfoque); }
+.modal-head p { margin: 4px 0 0; font-size: 13.5px; color: var(--gris-500); }
+.modal-body { padding: 22px 24px; }
+.modal-body .info-grid { margin-bottom: 16px; }
+.modal-foot {
+  padding: 16px 24px; border-top: 1px solid var(--gris-200);
+  display: flex; gap: 10px; justify-content: flex-end; align-items: center;
+  background: var(--gris-050);
+}
+/* El pie del rechazo lleva un campo, así que se apila en vez de alinear
+   a la derecha; sus dos botones sí vuelven a la fila. */
+.modal-foot.es-rechazo { display: block; }
+.modal-foot .field { margin-bottom: 12px; }
+.modal-acciones { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* El mismo cuerpo, sin velo: es la pantalla suelta que sale sin
+   JavaScript. Se le da el marco que el velo no está poniendo. */
+.modal-suelto .modal {
+  max-width: 620px; border: 1px solid var(--gris-200);
+  box-shadow: var(--sombra-sm); max-height: none;
+}
+
+/* ═══ El modal de validar un abono (STD · CU-STD-018) ══════════
+   Tres piezas sobre el modal común, y cada una responde a un paso del
+   caso de uso: el monto que se coteja, el comprobante que hay que abrir
+   y lo que la validación le hará a la reserva. */
+
+/* El monto como héroe. Es el mismo tratamiento de número grande que las
+   tarjetas del resumen —30px/800, azul de enfoque, cifras de ancho
+   fijo—: no se inventa uno nuevo para la misma figura. */
+.abono-cabecera { display: flex; align-items: flex-start; gap: 16px; }
+.abono-cabecera > div { flex: 1; min-width: 0; }
+.abono-cabecera .hint {
+  display: block; text-transform: uppercase; letter-spacing: .6px;
+  font-weight: 700; font-size: 12.5px;
+}
+.abono-monto {
+  display: block; font-size: 30px; font-weight: 800; line-height: 1.1;
+  color: var(--color-azul-institucional-enfoque);
+  font-variant-numeric: tabular-nums;
+}
+
+/* El comprobante es el trabajo (CU-STD-018 pasos 3 y 4), así que es un
+   blanco grande y no un enlace entre etiquetas. Altura holgada por la
+   ley de Fitts: se pulsa una vez por cada abono de la cola. */
+.comprobante {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; margin-bottom: 18px;
+  border: 1.5px solid var(--azul-100); border-radius: var(--radio-sm);
+  background: var(--azul-050); color: var(--color-azul-institucional);
+}
+.comprobante:hover {
+  border-color: var(--azul-600); background: var(--color-blanco);
+  text-decoration: none;
+}
+.comprobante:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
+.comprobante-ico { font-size: 22px; line-height: 1; }
+.comprobante-texto { display: flex; flex-direction: column; min-width: 0; }
+.comprobante-texto .hint { overflow-wrap: anywhere; }
+.comprobante-flecha { margin-left: auto; font-size: 16px; }
+
+/* La proyección: qué le hace este abono a la reserva. Reusa la barra de
+   progreso de la cuenta del expositor y le añade un segundo tramo.
+
+   El ámbar del tramo nuevo **no es decoración**: es el color de
+   «pendiente de validación» en todo el sistema, y al validar ese trozo
+   pasa a verde. Con un solo color no se distinguiría lo cobrado de lo
+   que está por cobrar, que es justo la decisión. */
+.proyeccion {
+  border: 1px solid var(--gris-200); border-radius: var(--radio-sm);
+  background: var(--gris-050); padding: 14px 16px;
+}
+/* Los dos tramos en fila; la marca del 50% sigue absoluta y no entra en
+   el reparto. */
+.proyeccion .progreso-barra { display: flex; }
+.progreso-suma { display: block; height: 100%; background: var(--warn-600); }
+.proyeccion-efecto { margin: 10px 0 0; font-size: 13.5px; color: var(--gris-700); }

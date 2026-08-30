@@ -4,7 +4,8 @@
    Contexto que espera:
 
      datos    el dict `Solicitud.datos_editorial`
-     sellos   la lista `Solicitud.sellos`
+     sellos   `servicios/solicitudes.py::sellos_con_carta` — cada nombre
+              de la fotografía con su carta de representación al lado
 
    Lo pintan U1 (cuando el aplicante ya no puede editar) y A2 (cuando el
    administrador dictamina), y las dos tienen que enseñar **lo mismo**:
@@ -18,7 +19,7 @@
 
 <div class="section-card card">
   <div class="section-head"><h3>Datos de la editorial</h3>
-    <p>Tal como se enviaron.</p></div>
+    <p>La información tal como se envió.</p></div>
   <div class="section-body">
     <div class="grid-2">
       <div class="field"><label>Nombre</label>{{ datos.nombre|default:"—" }}</div>
@@ -35,8 +36,8 @@
         {{ datos.municipio }}, {{ datos.estado }}
       </div>
       <div class="field"><label>Personas que atienden</label>{{ datos.num_personas_atienden|default:"—" }}</div>
-      <div class="field"><label>Libros (aprox.)</label>{{ datos.cantidad_libros_aprox|default:"—" }}</div>
-      <div class="field"><label>Títulos (aprox.)</label>{{ datos.cantidad_titulos_aprox|default:"—" }}</div>
+      <div class="field"><label>Libros (aproximado)</label>{{ datos.cantidad_libros_aprox|default:"—" }}</div>
+      <div class="field"><label>Títulos (aproximado)</label>{{ datos.cantidad_titulos_aprox|default:"—" }}</div>
     </div>
     <div class="field"><label>Materiales</label>{{ datos.materiales|join:" · "|default:"—" }}</div>
     <div class="field"><label>Temáticas</label>{{ datos.tematicas|join:" · "|default:"—" }}</div>
@@ -61,11 +62,33 @@
 
 <div class="section-card card">
   <div class="section-head"><h3>Sellos editoriales</h3>
-    <p>{{ sellos|length }} declarado{{ sellos|length|pluralize }}.</p></div>
+    <p>
+      {{ sellos|length }} declarado{{ sellos|length|pluralize }}.
+      {% if sellos %}Cada uno con la carta que autoriza a representarlo.{% endif %}
+    </p></div>
   <div class="section-body">
+    {% comment %} La carta va **pegada a su sello**, y no en la lista de
+       documentos de al lado: allí todas se llaman «Carta de
+       representación» y no hay forma de saber cuál autoriza cuál, que es
+       justo lo que hay que comprobar al dictaminar (RN-17).
+
+       Sin carta se dice, en vez de dejar el renglón a medias: es lo que
+       hay que reclamar, y quien revisa tiene que verlo de un vistazo. {% endcomment %}
     {% if sellos %}
-      <ul class="multi-input">
-        {% for sello in sellos %}<li>{{ sello }}</li>{% endfor %}
+      <ul class="lista-sellos">
+        {% for sello in sellos %}
+          <li>
+            <span class="sello-nombre">{{ sello.nombre }}</span>
+            {% if sello.carta %}
+              <a href="{% url 'stands:documento' documento_id=sello.carta.pk %}"
+                 target="_blank" rel="noopener">
+                {{ sello.carta.nombre_original|default:"Ver la carta" }}
+              </a>
+            {% else %}
+              <span class="badge badge-changes">Sin carta</span>
+            {% endif %}
+          </li>
+        {% endfor %}
       </ul>
     {% else %}
       <p>No declaró sellos editoriales.</p>

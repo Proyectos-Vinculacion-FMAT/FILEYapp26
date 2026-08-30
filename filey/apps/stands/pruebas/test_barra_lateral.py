@@ -327,11 +327,15 @@ def test_el_boton_dice_lo_que_controla(client, escenario):
 def test_una_seccion_planeada_se_pinta_apagada_y_sin_enlace(client, escenario):
     """El menú enseña la forma completa del módulo.
 
-    «Pagos por validar» y «Expositores» son dos de las seis secciones del
-    prototipo de STD y no existen todavía. Omitirlas deja la pregunta
-    "¿y dónde se validan los pagos?" respondiéndose buscando por todo el
-    panel; enlazarlas sería peor, porque el enlace no lleva a ninguna
-    parte.
+    «Expositores» es una de las seis secciones del prototipo de STD y no
+    existe todavía. Omitirla deja la pregunta "¿y dónde veo a los
+    expositores?" respondiéndose buscando por todo el panel; enlazarla
+    sería peor, porque el enlace no lleva a ninguna parte.
+
+    Dos salieron de esta lista al construirse: «Configuración» (A10,
+    `CU-STD-034`) y «Pagos por validar» (A5, `CU-STD-018`), el
+    2026-08-29. Cada una la comprueba ahora su propio módulo, en el
+    sentido contrario.
     """
     feria, conv, _ = escenario
     client.force_login(_admin(feria))
@@ -340,7 +344,7 @@ def test_una_seccion_planeada_se_pinta_apagada_y_sin_enlace(client, escenario):
         _url(feria, "stands:panel", convocatoria_id=conv.pk)
     ).content.decode())
 
-    for etiqueta in ("Pagos por validar", "Expositores", "Configuración"):
+    for etiqueta in ("Expositores",):
         assert (
             '<span class="side-link is-disabled" aria-disabled="true" '
             f'title="Todavía no construido"> <span class="ico" '

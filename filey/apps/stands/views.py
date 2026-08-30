@@ -14,12 +14,13 @@ el que cuenta también al operador de la plataforma (`ADR-0005`).
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.formats import date_format
+from django.utils.http import urlencode
 
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.convocatorias.servicios import registros
@@ -31,6 +32,7 @@ from .formularios import (
     MAXIMO_SELLOS,
     AbonoForm,
     BasesForm,
+    ConfiguracionForm,
     DictamenForm,
     DocumentoForm,
     EditorialForm,
@@ -220,9 +222,18 @@ def solicitud(peticion, convocatoria_id):
             "convocatoria": convocatoria,
             "solicitud": ultima,
             "editorial": editorial,
-            # Solo los generales: las cartas se enseñan junto a su sello.
+            # Solo los de la ficha: las cartas se enseñan junto a su
+            # sello, y un comprobante de pago no es parte de la solicitud.
             "documentos": (
-                editorial.documentos.filter(sello__isnull=True) if editorial else []
+                editorial.documentos.filter(tipo__in=Documento.DE_LA_FICHA)
+                if editorial
+                else []
+            ),
+            # Los que **se enviaron**, con su carta, para el resumen de
+            # solo lectura. Distinto de `sellos_actuales`, que es la ficha
+            # viva y alimenta el formulario.
+            "sellos_enviados": (
+                solicitudes.sellos_con_carta(ultima) if ultima else []
             ),
             "sellos_actuales": sellos_actuales,
             "maximo_sellos": MAXIMO_SELLOS,
@@ -361,6 +372,127 @@ def _guardar_documentos(editorial, form):
 
 
 @requiere_admin_feria
+def ajustes_de_la_convocatoria(peticion, convocatoria_id):
+    """A10 · Los ajustes de la convocatoria (`CU-STD-034`).
+
+    Lo que cuesta un espacio y dónde se paga, en una pantalla. Hasta hoy
+    esto vivía en `/f/<slug>/django-admin/`, que era provisional por dos
+    motivos: el actor era el equipo técnico (`is_staff`) y no quien
+    administra la feria, y la pantalla no podía explicar lo que un
+    cambio de precio **no** hace.
+
+    .. important:: Cambiar el precio no mueve lo ya reservado
+
+       `RN-01`: `Reserva.monto_total` se congela al reservar. Subir el
+       `costo_m2` a mitad de campaña cambia lo que costará la siguiente
+       reserva, no lo que aceptó quien reservó ayer. La pantalla lo dice
+       porque es la duda que trae quien entra aquí.
+
+    El mapa **no** se toca desde aquí: importarlo reemplaza el showfloor
+    entero y es del operador de la plataforma (`ADR-0005`).
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+    ajustes = configuracion.de_la_convocatoria(convocatoria)
+
+    if peticion.method == "POST":
+        form = ConfiguracionForm(peticion.POST, instance=ajustes)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                peticion,
+                "Guardamos la configuración. Las reservas que ya existen "
+                "conservan el precio que aceptaron.",
+            )
+            return redirect(
+                "stands:configuracion", convocatoria_id=convocatoria.pk
+            )
+        messages.error(
+            peticion, "No guardamos nada: revisa los campos señalados."
+        )
+    else:
+        form = ConfiguracionForm(instance=ajustes)
+
+    return render(
+        peticion,
+        "stands/configuracion.html",
+        {
+            "convocatoria": convocatoria,
+            "configuracion": ajustes,
+            "form": form,
+            # El mapa se enseña aquí aunque no se edite: quien administra
+            # tiene que poder ver si hay showfloor cargado sin ir a
+            # buscarlo a otra pantalla.
+            "mapa": mapas.mapa_de(convocatoria),
+            # Lo que impide operar, dicho donde se arregla.
+            "falta_precio": not ajustes.costo_m2,
+            "falta_cuenta": not ajustes.tiene_datos_bancarios,
+            "reservas_vivas": reservas.de_la_convocatoria(convocatoria)
+            .filter(estado__in=Reserva.VIVAS)
+            .count(),
+            "zona_admin": True,
+        },
+    )
+
+
+def _chips_de_estado(
+    conteos: dict,
+    opciones,
+    activo: str,
+    busqueda: str,
+    *,
+    total: int | None = None,
+    etiqueta_vacio: str = "Todas",
+) -> list:
+    """La barra de estados de una cola, con cuántas hay en cada uno.
+
+    Sustituye al `<select>` que había: son cinco opciones excluyentes y
+    conocidas, y con la lista desplegada **se ve el vocabulario entero
+    sin abrir nada** (ley de Hick, tope de siete). Además cada una dice
+    su número, que es lo que quien revisa viene a saber —"¿qué necesita
+    de mí hoy?"— sin tener que filtrar para averiguarlo.
+
+    Elegir un estado **es** filtrar: cada chip es un enlace, no un
+    control que después haya que enviar. Un clic en vez de dos, y el
+    filtro sigue siendo compartible por GET.
+
+    :param conteos: ``{valor_del_estado: cuántas}``. Las que no aparecen
+        salen en cero, y eso es información: "Rechazadas 0" dice algo
+        distinto de que la fila no exista.
+    :param opciones: pares ``(valor, etiqueta)``, incluida cualquier
+        pseudo-columna como las reservas vencidas.
+    :param busqueda: se arrastra en el enlace. Cambiar de estado no debe
+        borrar en silencio lo que alguien tecleó.
+    :param total: cuántas hay en «Todas», si no es la suma de los
+        conteos. Hace falta cuando alguna opción no es un estado sino un
+        recorte de otro —las reservas vencidas son `por_confirmar` con el
+        plazo pasado (`RN-12`)—: sumarla contaría dos veces las mismas.
+    :param etiqueta_vacio: cómo se llama el primer chip, el que no lleva
+        parámetro. Es «Todas» en las colas que no filtran de entrada, y
+        la cola de pagos lo cambia porque **entrar ahí ya es filtrar**:
+        su estado natural es «por validar», que es el trabajo del día.
+    """
+    filtro = {"q": busqueda} if busqueda else {}
+    chips = [
+        {
+            "etiqueta": etiqueta_vacio,
+            "cuantas": sum(conteos.values()) if total is None else total,
+            "activo": not activo,
+            "parametros": urlencode(filtro),
+        }
+    ]
+    for valor, etiqueta in opciones:
+        chips.append(
+            {
+                "etiqueta": etiqueta,
+                "cuantas": conteos.get(valor, 0),
+                "activo": valor == activo,
+                "parametros": urlencode({**filtro, "estado": valor}),
+            }
+        )
+    return chips
+
+
+@requiere_admin_feria
 def solicitudes_de_la_convocatoria(peticion, convocatoria_id):
     """La cola de revisión (`CU-STD-004`).
 
@@ -387,6 +519,15 @@ def solicitudes_de_la_convocatoria(peticion, convocatoria_id):
             | Q(datos_editorial__nombre__icontains=busqueda)
         )
 
+    # Los conteos salen de **todas** las solicitudes, no de la lista
+    # filtrada: un chip que dijera "0" solo porque hay otro filtro puesto
+    # no sirve para navegar entre estados.
+    conteos = {
+        fila["estado"]: fila["n"]
+        for fila in Solicitud.objects.filter(registro__convocatoria=convocatoria)
+        .values("estado")
+        .annotate(n=Count("id"))
+    }
     return render(
         peticion,
         "stands/solicitudes.html",
@@ -395,11 +536,204 @@ def solicitudes_de_la_convocatoria(peticion, convocatoria_id):
             "solicitudes": cola,
             "estado_activo": estado,
             "busqueda": busqueda,
-            "estados": Solicitud.Estado.choices,
+            "chips": _chips_de_estado(
+                conteos, Solicitud.Estado.choices, estado, busqueda
+            ),
+            "url_limpia": reverse("stands:solicitudes", args=[convocatoria.pk]),
+            "cuantas": cola.count(),
+            "total": sum(conteos.values()),
             "hay_filtros": bool(estado or busqueda),
             "zona_admin": True,
         },
     )
+
+
+@requiere_admin_feria
+def pagos_por_validar(peticion, convocatoria_id):
+    """A5 · La cola de pagos por validar (`CU-STD-018`).
+
+    Es **transversal**: cruza todas las reservas de la convocatoria,
+    porque quien coteja el banco lo hace por lotes y no reserva por
+    reserva. La otra puerta a la misma acción es el detalle de una
+    reserva (A4), y las dos llaman al mismo servicio.
+
+    **Entrar aquí ya es filtrar.** La pantalla se llama "pagos por
+    validar" y su estado natural es `pendiente_validacion`; los chips
+    sirven para mirar lo ya resuelto, no al revés.
+    """
+    convocatoria = _convocatoria_de_stands(convocatoria_id)
+
+    pedido = peticion.GET.get("estado", "")
+    busqueda = (peticion.GET.get("q") or "").strip()
+
+    # Sin estado en la URL, la cola son los pendientes. `todos` es la
+    # salida explícita a la vista completa.
+    if pedido == TODOS:
+        filtro = None
+    elif pedido in Movimiento.Estado.values:
+        filtro = pedido
+    else:
+        filtro = Movimiento.Estado.PENDIENTE
+
+    cola = pagos.de_la_convocatoria(convocatoria, estado=filtro)
+    if busqueda:
+        cola = cola.filter(reserva__editorial__nombre__icontains=busqueda)
+
+    conteos = {
+        fila["estado"]: fila["n"]
+        for fila in pagos.de_la_convocatoria(convocatoria)
+        .values("estado")
+        .annotate(n=Count("id"))
+    }
+    chips = _chips_de_estado(
+        conteos,
+        [
+            (Movimiento.Estado.VALIDADO, "Validados"),
+            (Movimiento.Estado.RECHAZADO, "Rechazados"),
+            (TODOS, "Todos"),
+        ],
+        pedido,
+        busqueda,
+        etiqueta_vacio="Por validar",
+    )
+    # El primer chip cuenta los pendientes, no la suma: es el filtro que
+    # aplica cuando no se pide nada.
+    chips[0]["cuantas"] = conteos.get(Movimiento.Estado.PENDIENTE, 0)
+    chips[-1]["cuantas"] = sum(conteos.values())
+
+    return render(
+        peticion,
+        "stands/pagos.html",
+        {
+            "convocatoria": convocatoria,
+            "movimientos": cola,
+            "estado_activo": pedido,
+            "busqueda": busqueda,
+            "chips": chips,
+            "url_limpia": reverse("stands:pagos", args=[convocatoria.pk]),
+            "cuantas": cola.count(),
+            "total": sum(conteos.values()),
+            "hay_filtros": bool(pedido or busqueda),
+            "zona_admin": True,
+        },
+    )
+
+
+@requiere_admin_feria
+def movimiento(peticion, movimiento_id):
+    """El detalle de un abono, y las dos decisiones sobre él (`CU-STD-018`).
+
+    Una sola vista para el modal y para la pantalla suelta, como el
+    detalle de un espacio: htmx pide **solo el cuerpo** y sin JavaScript
+    el mismo enlace abre la página entera. Así las dos no pueden decir
+    cifras distintas del mismo abono.
+
+    El POST no pasa por htmx a propósito: validar mueve dinero y cambia
+    el estado de una reserva, así que la respuesta es una recarga con su
+    aviso y la cola ya al día. Un intercambio parcial dejaría la fila
+    vieja en pantalla al lado del aviso de que se validó.
+    """
+    abono = get_object_or_404(
+        Movimiento.objects.select_related(
+            "reserva__editorial",
+            "reserva__registro__persona",
+            "reserva__registro__convocatoria",
+            "comprobante",
+            "registrado_por",
+            "validado_por",
+        ),
+        pk=movimiento_id,
+    )
+    convocatoria = abono.reserva.registro.convocatoria
+    destino = redirect("stands:pagos", convocatoria_id=convocatoria.pk)
+
+    if peticion.method == "POST":
+        accion = peticion.POST.get("accion")
+        motivo = (peticion.POST.get("motivo") or "").strip()
+        try:
+            if accion == "validar":
+                reserva = pagos.validar(movimiento=abono, administrador=peticion.user)
+                messages.success(
+                    peticion,
+                    f"Validaste ${abono.monto} de "
+                    f"{abono.reserva.editorial.nombre}. La reserva quedó "
+                    f"{reserva.get_estado_display().lower()}.",
+                )
+            elif accion == "rechazar":
+                pagos.rechazar(
+                    movimiento=abono, administrador=peticion.user, motivo=motivo
+                )
+                messages.success(
+                    peticion,
+                    "Rechazaste el abono. El saldo de la reserva no cambió y "
+                    "la editorial lo verá en su historial.",
+                )
+            else:
+                messages.error(
+                    peticion, "Elige qué hacer con el abono: validarlo o rechazarlo."
+                )
+        except pagos.PagoRechazado as exc:
+            messages.error(peticion, str(exc))
+        return destino
+
+    en_modal = peticion.headers.get("HX-Request") == "true"
+    return render(
+        peticion,
+        (
+            "stands/parciales/movimiento.html"
+            if en_modal
+            else "stands/movimiento.html"
+        ),
+        {
+            "convocatoria": convocatoria,
+            "movimiento": abono,
+            "reserva": abono.reserva,
+            "proyeccion": _proyeccion_del_abono(abono),
+            "en_modal": en_modal,
+            "zona_admin": True,
+        },
+    )
+
+
+def _proyeccion_del_abono(abono) -> dict | None:
+    """Qué le haría este abono a la reserva, si se validara.
+
+    `CU-STD-018` paso 8: al validar, el sistema evalúa si el nuevo saldo
+    cruza el 50% (`RN-13`) o el 100% (`RN-14`). Quien valida tiene que
+    poder **ver esa consecuencia antes de pulsar**, y no calcularla de
+    cabeza con tres cifras sueltas en pantalla.
+
+    Devuelve ``None`` para un abono ya resuelto: ahí no hay nada que
+    proyectar, lo que hubo se cuenta en el historial.
+
+    Los porcentajes son para dibujar la barra, así que se acotan a 100 y
+    el tramo de este abono empieza donde acaba lo ya validado — un abono
+    que se pasa del total no puede pintar más allá del extremo.
+    """
+    if abono.estado != Movimiento.Estado.PENDIENTE:
+        return None
+
+    reserva = abono.reserva
+    total = reserva.monto_total
+    abonado = reserva.monto_abonado
+    despues = abonado + abono.monto
+    resultante = pagos.estado_si_se_valida(reserva, abono.monto)
+
+    def porcentaje(cantidad):
+        if total <= 0:
+            return 100
+        return min(100, int(cantidad * 100 / total))
+
+    ya = porcentaje(abonado)
+    return {
+        "abonado": abonado,
+        "despues": despues,
+        "total": total,
+        "pct_abonado": ya,
+        "pct_este": min(100 - ya, porcentaje(despues) - ya),
+        "estado_resultante": Reserva.Estado(resultante).label,
+        "cambia": resultante != reserva.estado,
+    }
 
 
 @requiere_admin_feria
@@ -466,9 +800,17 @@ def detalle_solicitud(peticion, solicitud_id):
             "solicitud": solicitud_obj,
             "convocatoria": solicitud_obj.registro.convocatoria,
             "datos": solicitud_obj.datos_editorial,
-            "sellos": solicitud_obj.sellos,
+            # Cada sello con su carta al lado: quien dictamina tiene que
+            # poder comprobar **cuál autoriza cuál** (`RN-17`), y en una
+            # lista donde todas se llaman «Carta de representación» eso no
+            # se puede.
+            "sellos": solicitudes.sellos_con_carta(solicitud_obj),
             # Los documentos cuelgan de la editorial: son los vigentes.
-            "documentos": solicitud_obj.editorial.documentos.all(),
+            # Solo los de la ficha — las cartas van con su sello y los
+            # comprobantes de pago son de una reserva, no del expediente.
+            "documentos": solicitud_obj.editorial.documentos.filter(
+                tipo__in=Documento.DE_LA_FICHA
+            ),
             "notificaciones": solicitud_obj.notificaciones.all(),
             "form": form,
             "zona_admin": True,
@@ -735,7 +1077,7 @@ def detalle_stand(peticion, convocatoria_id, clave):
     # Dos públicos, como el mapa. Quien administra llega aquí desde
     # `CU-STD-032` y no tiene solicitud aceptada: exigirla dejaba su modal
     # cargando para siempre.
-    es_admin = permisos.administra(peticion)
+    es_admin = permisos.ve_como_admin(peticion)
     if (
         not es_admin
         and solicitudes.habilitada_para_reservar(convocatoria, peticion.user) is None
@@ -1158,6 +1500,12 @@ def cuenta(peticion, convocatoria_id):
     )
 
 
+#: El chip que sale del filtro por estado y enseña la cola entera. No es
+#: un estado de `Movimiento`: es la ausencia de filtro, dicha con nombre
+#: para que quepa en una URL compartible.
+TODOS = "todos"
+
+
 #: Las pestañas de la cuenta, y la que se enseña si no dicen cuál.
 PESTANAS = ("resumen", "pagos", "mapa")
 
@@ -1238,7 +1586,7 @@ def registrar_abono(peticion, convocatoria_id):
 
     reserva = reservas.reserva_viva_de(convocatoria, peticion.user)
     if reserva is None:
-        raise Http404("No tienes ninguna reserva que abonar.")
+        raise Http404("No tienes ninguna reserva a la que registrarle un pago.")
 
     form = AbonoForm(peticion.POST, peticion.FILES)
     if not form.is_valid():
@@ -1264,8 +1612,8 @@ def registrar_abono(peticion, convocatoria_id):
 
     messages.success(
         peticion,
-        f"Registramos tu abono de ${movimiento.monto}. "
-        "Lo revisamos y te avisamos en cuanto quede validado.",
+        f"Registramos tu pago de ${movimiento.monto}. "
+        "Te avisamos en cuanto lo validemos contra el banco.",
     )
     return destino
 
@@ -1292,6 +1640,29 @@ def reservas_de_la_convocatoria(peticion, convocatoria_id):
     if busqueda:
         cola = cola.filter(editorial__nombre__icontains=busqueda)
 
+    todas = reservas.de_la_convocatoria(convocatoria)
+    conteos = {
+        fila["estado"]: fila["n"]
+        for fila in todas.values("estado").annotate(n=Count("id"))
+    }
+    # `vencidas` no es un estado del modelo sino `por_confirmar` con el
+    # plazo pasado (`RN-12`), así que se cuenta aparte y **no** suma al
+    # total: sus reservas ya están contadas en «Por confirmar».
+    vencidas = todas.filter(
+        estado=Reserva.Estado.POR_CONFIRMAR,
+        fecha_vencimiento_anticipo__lt=timezone.now(),
+    ).count()
+    chips = _chips_de_estado(
+        {**conteos, "vencidas": vencidas},
+        # «Vencidas» a secas: es la etiqueta más larga de las seis y la
+        # columna «Vence» de la tabla ya dice de qué van. Con la barra en
+        # un solo renglón, cada palabra de más empuja a las demás.
+        [*Reserva.Estado.choices, ("vencidas", "Vencidas")],
+        estado,
+        busqueda,
+        total=sum(conteos.values()),
+    )
+
     return render(
         peticion,
         "stands/reservas.html",
@@ -1300,7 +1671,10 @@ def reservas_de_la_convocatoria(peticion, convocatoria_id):
             "reservas": cola,
             "estado_activo": estado,
             "busqueda": busqueda,
-            "estados": Reserva.Estado.choices,
+            "chips": chips,
+            "url_limpia": reverse("stands:reservas", args=[convocatoria.pk]),
+            "cuantas": cola.count(),
+            "total": sum(conteos.values()),
             "hay_filtros": bool(estado or busqueda),
             "zona_admin": True,
         },

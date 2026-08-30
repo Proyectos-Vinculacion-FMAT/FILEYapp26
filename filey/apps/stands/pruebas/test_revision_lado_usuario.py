@@ -59,7 +59,13 @@ def listo(feria_2027):
         cfg = configuracion.de_la_convocatoria(conv)
         cfg.costo_m2 = Decimal("2500")
         cfg.fecha_limite_pronto_pago = timezone.localdate() + timedelta(days=10)
-        cfg.instrucciones_pago = "BBVA · CLABE 012 345 678 901 234 567"
+        cfg.banco_titular = "Patronato de la UADY"
+        cfg.banco_nombre = "BBVA"
+        cfg.banco_cuenta = "0123 4567 8901 2345 67"
+        cfg.banco_clabe = "012 345 678 901 234 567"
+        cfg.banco_sucursal = "Mérida Centro"
+        cfg.banco_referencia = "El nombre de tu editorial"
+        cfg.instrucciones_pago = "Envíanos el comprobante el mismo día."
         cfg.save()
         solicitud = solicitudes.enviar_solicitud(
             convocatoria=conv, persona=ana, editorial=fabricas.editorial(ana)
@@ -174,7 +180,7 @@ def test_la_cuenta_tiene_una_pestana_con_el_plano(client, listo):
     # El canvas **solo** cuando lo piden: son 39 MB por visita.
     assert 'id="mapa-canvas"' not in resumen
     assert 'id="mapa-canvas"' in mapa
-    assert "Tus espacios" in mapa
+    assert "Tus espacios aparecen marcados" in mapa
     # Y de consulta: aquí no se aparta nada más (`RN-23`).
     assert "Agregar a mi selección" not in mapa
 
@@ -351,8 +357,8 @@ def test_con_la_reserva_cubierta_no_se_ofrece_reportar_un_abono(client, listo):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk) + "?ver=pagos"
     ).content.decode()
 
-    assert "Tu reserva está cubierta" in cuerpo
-    assert "Reportar el abono" not in cuerpo
+    assert "Tu reserva está pagada" in cuerpo
+    assert "Registrar el pago" not in cuerpo
 
 
 def test_lo_que_esta_en_revision_ocupa_sitio(listo):
@@ -409,7 +415,7 @@ def test_el_aviso_de_vencida_dice_cuanto_falta_para_el_anticipo(client, listo):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "Se venció el plazo" in cuerpo
+    assert "Venció el plazo" in cuerpo
     assert "6750.00" in cuerpo, "el 50% de 13 500, que es lo que falta"
 
 
@@ -435,3 +441,76 @@ def test_borrar_un_documento_borra_su_archivo(listo):
         Documento.objects.filter(pk=documento.pk).delete()
 
         assert not almacen.exists(ruta)
+
+
+# ── CU-STD-015 · los datos bancarios ──────────────────────────
+
+
+def test_los_datos_bancarios_salen_campo_por_campo(client, listo):
+    """Paso 3: estructurados, no un párrafo.
+
+    Se copian de uno en uno frente a la app del banco; una CLABE dentro
+    de una frase no se puede seleccionar sin arrastrar de más.
+    """
+    feria, conv, ana = listo
+    with schema_context(feria.schema_name):
+        reservas.crear(convocatoria=conv, persona=ana, claves=["A1"])
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk) + "?ver=pagos"
+    ).content.decode()
+
+    for etiqueta in ("Titular", "Banco", "Número de cuenta", "CLABE",
+                     "Sucursal", "Concepto o referencia"):
+        assert f"<dt>{etiqueta}</dt>" in cuerpo, etiqueta
+    assert "Patronato de la UADY" in cuerpo
+    assert "012 345 678 901 234 567" in cuerpo
+    # Y la nota libre, debajo de la ficha y no en su lugar.
+    assert "Envíanos el comprobante el mismo día." in cuerpo
+    # `RN-08`, dicho antes de que alguien pague de la forma que no es.
+    assert "No recibimos efectivo" in cuerpo
+
+
+def test_sin_cuenta_publicada_se_dice_en_vez_de_pintar_una_ficha_vacia(
+    client, listo
+):
+    feria, conv, ana = listo
+    with schema_context(feria.schema_name):
+        reservas.crear(convocatoria=conv, persona=ana, claves=["A1"])
+        cfg = configuracion.de_la_convocatoria(conv)
+        cfg.banco_clabe = ""
+        cfg.banco_cuenta = ""
+        cfg.save(update_fields=["banco_clabe", "banco_cuenta"])
+    client.force_login(ana)
+
+    cuerpo = client.get(
+        _url(feria, "stands:cuenta", convocatoria_id=conv.pk) + "?ver=pagos"
+    ).content.decode()
+
+    assert "Aún no publicamos los datos bancarios" in cuerpo
+    assert "<dt>CLABE</dt>" not in cuerpo
+
+
+def test_la_clabe_tiene_dieciocho_digitos(listo):
+    """Un dígito de menos manda el dinero a ningún sitio."""
+    from django.core.exceptions import ValidationError
+
+    feria, conv, _ = listo
+    with schema_context(feria.schema_name):
+        cfg = configuracion.de_la_convocatoria(conv)
+        cfg.banco_clabe = "012 345 678 901 234 56"
+
+        with pytest.raises(ValidationError) as exc:
+            cfg.full_clean()
+
+    assert "18 dígitos" in str(exc.value)
+
+
+def test_la_clabe_admite_los_espacios_con_los_que_se_dicta(listo):
+    feria, conv, _ = listo
+    with schema_context(feria.schema_name):
+        cfg = configuracion.de_la_convocatoria(conv)
+        cfg.banco_clabe = "012 345 678 901 234 567"
+
+        cfg.full_clean()  # no levanta

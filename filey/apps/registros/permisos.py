@@ -42,6 +42,8 @@ from django.shortcuts import redirect
 
 from comun.urls import url_publica
 
+from .services import sesion
+
 
 def requiere_participante(vista):
     """Zona del participante: basta con tener sesión iniciada.
@@ -80,6 +82,10 @@ def requiere_admin(vista):
             # Tiene sesión de participante e intenta entrar al panel:
             # no es un problema de identidad, es falta de permiso.
             raise PermissionDenied("Tu cuenta no administra ninguna feria.")
+        # Entrar aquí **es** elegir administración: si venía mirando como
+        # participante, la sesión vuelve a esa cara para que el chasis no
+        # diga una cosa y la pantalla otra.
+        sesion.asegurar_contexto_admin(peticion)
         return vista(peticion, *args, **kwargs)
 
     return envoltura

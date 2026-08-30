@@ -43,6 +43,27 @@ urlpatterns = [
         views.solicitudes_de_la_convocatoria,
         name="solicitudes",
     ),
+    # A5 · la cola de pagos por validar (`CU-STD-018`). Es transversal:
+    # cruza todas las reservas de la convocatoria.
+    path(
+        "stands/<int:convocatoria_id>/pagos/",
+        views.pagos_por_validar,
+        name="pagos",
+    ),
+    # El detalle de un abono. Sin la convocatoria en la ruta: el
+    # movimiento ya sabe de qué reserva cuelga, y repetirla daría dos
+    # fuentes para lo mismo.
+    path(
+        "stands/movimiento/<int:movimiento_id>/",
+        views.movimiento,
+        name="movimiento",
+    ),
+    # A10 · lo que cuesta un espacio y dónde se paga (`CU-STD-034`).
+    path(
+        "stands/<int:convocatoria_id>/configuracion/",
+        views.ajustes_de_la_convocatoria,
+        name="configuracion",
+    ),
     # A2 · no lleva la convocatoria en la ruta: la solicitud ya sabe de
     # cuál cuelga, y repetirla daría dos fuentes para lo mismo y una URL
     # que puede mentir.

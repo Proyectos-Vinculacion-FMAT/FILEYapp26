@@ -53,11 +53,11 @@
     <div class="note note-warn">
       <div class="ico">⏰</div>
       <div>
-        <strong>Se venció el plazo para el anticipo.</strong>
+        <strong>Venció el plazo para cubrir el anticipo.</strong>
         Tus espacios siguen apartados, pero la reserva puede cancelarse.
-        Para que deje de peligrar faltan
+        Para regularizarla faltan
         <strong>${{ falta_para_el_anticipo|floatformat:2 }}</strong>.
-        <a href="?ver=pagos">Reportar un abono</a> o escríbenos para pedir una
+        <a href="?ver=pagos">Registra tu pago</a> o escríbenos para pedir una
         prórroga.
       </div>
     </div>
@@ -98,8 +98,8 @@
       <div class="section-card card">
         <div class="section-head">
           <div>
-            <h3>Lo que cuesta</h3>
-            <p>Con los descuentos ya aplicados, en el orden en que se aplican.</p>
+            <h3>Desglose del costo</h3>
+            <p>Los descuentos se aplican uno sobre otro, en este orden.</p>
           </div>
         </div>
         <div class="section-body">
@@ -113,11 +113,11 @@
             <div class="note note-info">
               <div class="ico">ℹ️</div>
               <div>
-                <strong>El desglose de arriba no es lo que te cobramos.</strong>
+                <strong>El desglose no coincide con el total de tu reserva.</strong>
                 Cambió la tarifa o la forma de un espacio después de que
                 reservaste. Tu reserva sigue en
                 <strong>${{ reserva.monto_total|floatformat:2 }}</strong>: el
-                precio que aceptaste no se mueve.
+                precio que aceptaste no cambia.
               </div>
             </div>
           {% endif %}
@@ -137,7 +137,7 @@
               <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
             </div>
             <div>
-              <span class="hint">Te falta</span>
+              <span class="hint">Saldo pendiente</span>
               <strong>${{ reserva.monto_pendiente|floatformat:2 }}</strong>
             </div>
           </div>
@@ -148,7 +148,7 @@
              mitad" y no **qué pasa** al llegar. {% endcomment %}
           <div class="progreso">
             <div class="progreso-cabecera">
-              <span class="hint">Lo que llevas cubierto</span>
+              <span class="hint">Avance del pago</span>
               <strong>{{ porcentaje_pagado }}%</strong>
             </div>
             <div class="progreso-barra">
@@ -174,18 +174,18 @@
               <div class="ico">🏷️</div>
               <div>
                 {% if pronto_pago.vencido %}
-                  <strong>Se pasó la fecha del pronto pago.</strong>
+                  <strong>Venció el plazo del pronto pago.</strong>
                   El descuento del {{ pronto_pago.porcentaje }}% se retira y tu
                   reserva vuelve a
                   <strong>${{ pronto_pago.total_sin_el|floatformat:2 }}</strong>.
                 {% else %}
                   <strong>Conservas el {{ pronto_pago.porcentaje }}% de descuento
-                  si cubres el total antes del
-                  {{ pronto_pago.fecha|date:"j \d\e F" }}</strong>
+                  si pagas el total antes del
+                  {{ pronto_pago.fecha|date:"j \d\e F" }}.</strong>
                   {% if pronto_pago.dias == 0 %}
-                    — es hoy.
+                    El plazo vence hoy.
                   {% else %}
-                    — {{ pronto_pago.dias }} día{{ pronto_pago.dias|pluralize }}.
+                    Te quedan {{ pronto_pago.dias }} día{{ pronto_pago.dias|pluralize }}.
                   {% endif %}
                   Después de esa fecha tu reserva sube a
                   <strong>${{ pronto_pago.total_sin_el|floatformat:2 }}</strong>.
@@ -199,8 +199,8 @@
       <div class="section-card card">
         <div class="section-head">
           <div>
-            <h3>Fechas</h3>
-            <p>Lo que hay que cubrir y para cuándo.</p>
+            <h3>Fechas clave</h3>
+            <p>Hasta cuándo tienes para cada pago.</p>
           </div>
         </div>
         <div class="section-body">
@@ -230,8 +230,8 @@
       <div class="section-card card">
         <div class="section-head">
           <div>
-            <h3>Tus espacios</h3>
-            <p>Quedaron apartados al confirmar la reserva.</p>
+            <h3>Espacios reservados</h3>
+            <p>Quedaron apartados cuando confirmaste la reserva.</p>
           </div>
         </div>
         <div class="section-body">
@@ -265,21 +265,80 @@
       <div class="section-card card">
         <div class="section-head">
           <div>
-            <h3>Cómo pagar</h3>
-            <p>Transferencia, depósito o cheque. No recibimos efectivo.</p>
+            <h3>Datos para el pago</h3>
+            <p>El pago se hace en el banco. Aquí solo registras el comprobante.</p>
           </div>
         </div>
         <div class="section-body">
-          {% if ajustes.instrucciones_pago %}
-            <p class="instrucciones-pago">{{ ajustes.instrucciones_pago|linebreaksbr }}</p>
+          {% comment %} RN-08, y primero: es la restricción que invalida un
+             pago entero si se descubre después. {% endcomment %}
+          <div class="note note-info">
+            <div class="ico">ℹ️</div>
+            <div>
+              <strong>No recibimos efectivo.</strong>
+              Los métodos aceptados son transferencia, depósito y cheque.
+            </div>
+          </div>
+
+          {% if ajustes.tiene_datos_bancarios %}
+            {% comment %} Campo por campo y no un bloque de texto: así se
+               copian de uno en uno, que es lo que hace quien tiene la app
+               del banco abierta al lado (CU-STD-015 paso 3). {% endcomment %}
+            <dl class="datos-bancarios">
+              {% if ajustes.banco_titular %}
+                <div class="dato">
+                  <dt>Titular</dt>
+                  <dd>{{ ajustes.banco_titular }}</dd>
+                </div>
+              {% endif %}
+              {% if ajustes.banco_nombre %}
+                <div class="dato">
+                  <dt>Banco</dt>
+                  <dd>{{ ajustes.banco_nombre }}</dd>
+                </div>
+              {% endif %}
+              {% if ajustes.banco_cuenta %}
+                <div class="dato">
+                  <dt>Número de cuenta</dt>
+                  <dd class="es-numero">{{ ajustes.banco_cuenta }}</dd>
+                </div>
+              {% endif %}
+              {% if ajustes.banco_clabe %}
+                <div class="dato">
+                  <dt>CLABE</dt>
+                  <dd class="es-numero">{{ ajustes.banco_clabe }}</dd>
+                </div>
+              {% endif %}
+              {% if ajustes.banco_sucursal %}
+                <div class="dato">
+                  <dt>Sucursal</dt>
+                  <dd>{{ ajustes.banco_sucursal }}</dd>
+                </div>
+              {% endif %}
+              {% if ajustes.banco_referencia %}
+                <div class="dato">
+                  <dt>Concepto o referencia</dt>
+                  <dd>{{ ajustes.banco_referencia }}</dd>
+                </div>
+              {% endif %}
+            </dl>
           {% else %}
-            <div class="note note-info">
+            {% comment %} Sin cuenta publicada no hay nada que copiar. Se
+               dice, en vez de enseñar una ficha vacía. {% endcomment %}
+            <div class="note note-warn">
               <div class="ico">🏦</div>
               <div>
-                <strong>Todavía no publicamos los datos bancarios.</strong>
-                Escríbenos y te los mandamos para que puedas abonar.
+                <strong>Aún no publicamos los datos bancarios.</strong>
+                Escríbenos y te los enviamos para que puedas pagar.
               </div>
             </div>
+          {% endif %}
+
+          {% comment %} La nota va **fuera** del `if`: son dos cosas
+             distintas y colgarla de la ficha escondía lo que alguien ya
+             había escrito solo porque faltaba la CLABE. {% endcomment %}
+          {% if ajustes.instrucciones_pago %}
+            <p class="instrucciones-pago">{{ ajustes.instrucciones_pago|linebreaksbr }}</p>
           {% endif %}
         </div>
       </div>
@@ -287,15 +346,15 @@
       {% comment %} El formulario solo mientras quede algo que reportar
          (CU-STD-016: saldo pendiente mayor que cero). Ofrecerlo con la
          reserva cubierta es ofrecer un botón que solo puede contestar
-         "el abono es mayor que el saldo pendiente de $0.00". {% endcomment %}
+         "el pago es mayor que el saldo pendiente de $0.00". {% endcomment %}
       {% if reserva.monto_pendiente > 0 %}
         <div class="section-card card">
           <div class="section-head">
             <div>
-              <h3>Reportar un abono</h3>
+              <h3>Registrar un pago</h3>
               <p>
-                Lo revisamos contra el banco antes de sumarlo a tu saldo, así que
-                no aparece de inmediato.
+                Validamos cada pago contra el banco antes de sumarlo a tu saldo,
+                así que no aparece de inmediato.
               </p>
             </div>
           </div>
@@ -305,8 +364,8 @@
                 <div class="ico">⏳</div>
                 <div>
                   Tienes <strong>${{ en_revision|floatformat:2 }}</strong> en
-                  revisión. Ya los estamos comprobando contra el banco: no hace
-                  falta que los vuelvas a reportar.
+                  revisión. Los estamos validando contra el banco; no los
+                  registres otra vez.
                 </div>
               </div>
             {% endif %}
@@ -319,7 +378,7 @@
               </div>
               {% include "stands/parciales/campo.html" with campo=form_abono.comprobante %}
               <div class="form-actions">
-                <button class="btn btn-primary" type="submit">Reportar el abono</button>
+                <button class="btn btn-primary" type="submit">Registrar el pago</button>
               </div>
             </form>
           </div>
@@ -328,8 +387,8 @@
         <div class="note note-ok">
           <div class="ico">✅</div>
           <div>
-            <strong>Tu reserva está cubierta.</strong>
-            No queda saldo por pagar. Si abonaste de más, escríbenos.
+            <strong>Tu reserva está pagada.</strong>
+            No queda saldo pendiente. Si pagaste de más, escríbenos.
           </div>
         </div>
       {% endif %}
@@ -337,8 +396,8 @@
       <div class="section-card card">
         <div class="section-head">
           <div>
-            <h3>Lo que has abonado</h3>
-            <p>Cada abono con su estado. Solo los validados bajan el saldo.</p>
+            <h3>Historial de pagos</h3>
+            <p>El saldo baja cuando validamos el comprobante, no al registrarlo.</p>
           </div>
         </div>
         <div class="section-body">
@@ -371,7 +430,7 @@
                         <span class="badge badge-pending">En revisión</span>
                       {% endif %}
                       {% if movimiento.origen == 'admin_manual' %}
-                        <span class="hint">Lo registró la feria</span>
+                        <span class="hint">Registrado por la feria</span>
                       {% endif %}
                     </td>
                     <td>
@@ -387,7 +446,7 @@
             </table>
           {% else %}
             {% comment %} CU-STD-017 E1. {% endcomment %}
-            <p class="hint">Todavía no has reportado ningún abono.</p>
+            <p class="hint">Aún no registras ningún pago.</p>
           {% endif %}
         </div>
       </div>
@@ -409,7 +468,7 @@
         <div>
           <h3>{{ mapa.salon }}</h3>
           <p class="hint">
-            Tus espacios van marcados. Pulsa cualquiera para ver su detalle.
+            Tus espacios aparecen marcados. Selecciona uno para ver su detalle.
           </p>
         </div>
         <ul class="mapa-leyenda">
@@ -435,7 +494,7 @@
   <div class="note note-info">
     <div class="ico">🗺️</div>
     <div>
-      <strong>Todavía no tienes ninguna reserva.</strong>
+      <strong>Aún no tienes una reserva.</strong>
       Elige tus espacios en el mapa del salón para apartarlos.
     </div>
   </div>
@@ -450,8 +509,8 @@
   <div class="section-card card">
     <div class="section-head">
       <div>
-        <h3>Reservas anteriores</h3>
-        <p>Canceladas. Sus espacios volvieron al mapa.</p>
+        <h3>Reservas canceladas</h3>
+        <p>Sus espacios volvieron al mapa.</p>
       </div>
     </div>
     <div class="section-body">

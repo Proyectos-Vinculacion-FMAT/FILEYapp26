@@ -310,6 +310,35 @@ def guardar_editorial(editorial: Editorial, *, sellos) -> Editorial:
     return editorial
 
 
+def sellos_con_carta(solicitud: Solicitud) -> list[dict]:
+    """Los sellos que se enviaron, cada uno con su carta (`RN-17`).
+
+    Quien dictamina tiene que poder comprobar **qué carta autoriza qué
+    sello**, y hasta ahora no podía: la pantalla enseñaba los nombres por
+    un lado y las cartas por otro, en una lista donde todas se llaman
+    «Carta de representación».
+
+    Los nombres salen de la **fotografía** (`RN-22`) —es lo que se
+    dictamina— y la carta del sello vivo, que es donde vive el archivo.
+    Se casan por nombre porque el nombre ya es la identidad de un sello
+    dentro de su editorial: es lo mismo que hace `guardar_editorial` al
+    reconciliar la lista.
+
+    ``carta`` es ``None`` cuando no la subió —lo que `RN-17` exige y hay
+    que reclamar— y también cuando el sello se renombró o se quitó
+    después de enviar. Las dos cosas se ven igual desde aquí, y las dos
+    se resuelven igual: pedírsela.
+    """
+    vivos = {
+        sello.nombre: sello
+        for sello in solicitud.editorial.sellos.prefetch_related("cartas")
+    }
+    return [
+        {"nombre": nombre, "carta": getattr(vivos.get(nombre), "carta", None)}
+        for nombre in solicitud.sellos
+    ]
+
+
 def habilitada_para_reservar(convocatoria: Convocatoria, persona) -> Editorial | None:
     """La editorial de esta persona, si puede reservar (`RN-16`).
 
@@ -341,6 +370,7 @@ __all__ = [
     "habilitada_para_reservar",
     "guardar_editorial",
     "reenviar_solicitud",
+    "sellos_con_carta",
     "solicitud_viva",
     "ultima_solicitud",
 ]

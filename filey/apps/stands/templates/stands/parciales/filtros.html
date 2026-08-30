@@ -1,0 +1,78 @@
+{% comment %} ===========================================================
+   La barra de filtros de una cola del panel (A1, A3).
+
+   Contexto que espera:
+
+     chips        `views.py::_chips_de_estado` — cada estado con su conteo
+     busqueda     lo que hay escrito en el buscador
+     cuantas      cuántas filas se están viendo
+     total        cuántas hay en la convocatoria
+     hay_filtros  si alguno está puesto
+     url_limpia   a dónde vuelve «Quitar filtros»
+     nombre       cómo se llama una fila: «solicitud», «reserva»
+     plural       y cómo se llaman varias
+
+   **Los estados son chips y no un `<select>`.** Son pocos, excluyentes y
+   conocidos: desplegados se ve el vocabulario entero sin abrir nada (ley
+   de Hick) y cada uno dice **cuántas hay**, que es lo que quien revisa
+   viene a saber. Con un desplegable eso costaba abrir, elegir y enviar.
+
+   Cada chip es un enlace: elegir un estado **es** filtrar. El buscador
+   sí necesita su botón —hay que terminar de escribir—, y por eso son dos
+   controles y no uno.
+
+   Todo por GET, para que un filtro se pueda compartir y volver atrás sin
+   reenviar nada. La búsqueda viaja dentro del enlace de cada chip: mover
+   el estado no debe borrar en silencio lo que alguien tecleó.
+   =========================================================== {% endcomment %}
+<div class="filtros">
+  <nav class="chips" aria-label="Filtrar por estado">
+    {% for chip in chips %}
+      {% comment %} El activo no es enlace: llevaría a donde ya se está, y
+         `aria-current` lo dice para quien no ve el relleno azul. {% endcomment %}
+      {% if chip.activo %}
+        <span class="chip is-active" aria-current="true">
+          {{ chip.etiqueta }} <span class="count">{{ chip.cuantas }}</span>
+        </span>
+      {% else %}
+        {% comment %} Sin parámetros se enlaza la URL limpia y no un `?`
+           pelado: es la misma página, pero deja la dirección presentable
+           para copiar y compartir. {% endcomment %}
+        <a class="chip" href="{% if chip.parametros %}?{{ chip.parametros }}{% else %}{{ url_limpia }}{% endif %}">
+          {{ chip.etiqueta }} <span class="count">{{ chip.cuantas }}</span>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  <form class="searchbox" method="get" role="search">
+    {% comment %} El estado viaja escondido para no perderlo al buscar: es
+       la contraparte de que la búsqueda viaje en los chips. {% endcomment %}
+    {% if estado_activo %}
+      <input type="hidden" name="estado" value="{{ estado_activo }}">
+    {% endif %}
+    {% comment %} El icono es decorativo y la etiqueta la lleva el propio
+       control: un `aria-label` en el `<input>` en vez de un `<label>`
+       visible, porque el marcador de posición ya dice lo mismo y dos
+       textos iguales uno encima de otro es ruido. Lo que no puede faltar
+       es el nombre accesible. {% endcomment %}
+    <span class="ico" aria-hidden="true">🔍</span>
+    <input id="filtro-q" type="search" name="q" value="{{ busqueda }}"
+           aria-label="Buscar por nombre de la editorial"
+           placeholder="Buscar editorial">
+    <button class="btn btn-primary btn-row" type="submit">Buscar</button>
+  </form>
+</div>
+
+{% comment %} Cuántas se están viendo, y de cuántas. Es la respuesta que un
+   filtro tiene que dar y que antes solo daba contando la tabla. {% endcomment %}
+<p class="filtros-cuenta">
+  {% if hay_filtros %}
+    <strong>{{ cuantas }}</strong> de {{ total }}
+    {% if total == 1 %}{{ nombre }}{% else %}{{ plural }}{% endif %}
+    · <a href="{{ url_limpia }}">Quitar filtros</a>
+  {% else %}
+    <strong>{{ total }}</strong>
+    {% if total == 1 %}{{ nombre }}{% else %}{{ plural }}{% endif %} en total
+  {% endif %}
+</p>

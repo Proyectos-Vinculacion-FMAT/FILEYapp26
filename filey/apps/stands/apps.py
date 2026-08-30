@@ -55,10 +55,13 @@ class StandsConfig(AppConfig):
                         "Reservas", "🎟️", "stands:reservas",
                         tambien=("stands:detalle_reserva",),
                     ),
-                    SeccionPanel("Pagos por validar", "🧾"),
+                    SeccionPanel(
+                        "Pagos por validar", "🧾", "stands:pagos",
+                        tambien=("stands:movimiento",),
+                    ),
                     SeccionPanel("Expositores", "👥"),
                     SeccionPanel("Mapa del salón", "🗺️", "stands:mapa_completo"),
-                    SeccionPanel("Configuración", "⚙️"),
+                    SeccionPanel("Configuración", "⚙️", "stands:configuracion"),
                 ),
                 crear_configuracion=configuracion.crear_por_defecto,
             )

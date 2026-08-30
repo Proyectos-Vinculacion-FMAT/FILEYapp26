@@ -16,4 +16,8 @@ app_name = "ferias"
 urlpatterns = [
     path("ferias/", views.elegir_feria, name="elegir"),
     path("admin/ferias/", views.mis_ferias, name="mis_ferias"),
+    # Cambiar de cara sin volver a identificarse. Vive fuera de toda
+    # feria —la barra superior sale también donde no hay ninguna— y
+    # recibe el slug para saber a dónde devolver a quien la pulsa.
+    path("modo/", views.cambiar_modo, name="modo"),
 ]

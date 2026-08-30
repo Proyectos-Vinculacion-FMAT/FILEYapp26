@@ -22,7 +22,11 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MinLengthValidator, MinValueValidator
+from django.core.validators import (
+    MinLengthValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_delete
@@ -512,6 +516,15 @@ class Documento(models.Model):
         DOC_ABONO = "doc_abono", "Documento de abono"
         OTRO = "otro", "Otro"
 
+    #: Los que se adjuntan **a la solicitud** y se revisan al dictaminar.
+    #:
+    #: No están todos los de la editorial a propósito. Las cartas de
+    #: representación se enseñan **junto a su sello** —es la única forma
+    #: de saber cuál autoriza a cuál (`RN-17`)— y los comprobantes de
+    #: pago son de una reserva, no del expediente: listarlos aquí pondría
+    #: un recibo del banco entre los papeles que se dictaminan.
+    DE_LA_FICHA = (Tipo.CONSTANCIA_FISCAL, Tipo.LISTA_TITULOS)
+
     tipo = models.CharField(max_length=24, choices=Tipo.choices)
     archivo = models.FileField(
         upload_to=CarpetaDeLaFeria("documentos"),
@@ -667,8 +680,49 @@ class ConfiguracionSistema(models.Model):
     fecha_limite_pronto_pago = models.DateField(
         "fecha límite del pronto pago", null=True, blank=True
     )
+    # ── Los datos bancarios (`CU-STD-015`) ───────────────────
+    #
+    # Seis campos y no un bloque de texto, aunque el modelo de datos los
+    # describía así. `CU-STD-015` paso 3 pide enseñarlos **estructurados**
+    # —titular, banco, cuenta, CLABE, sucursal, referencia— y desde un
+    # `TextField` la pantalla no puede: o los pinta en crudo o adivina
+    # dónde parte cada renglón. Estructurados, además, se pueden copiar
+    # uno a uno, que es lo que alguien hace de verdad frente a la app del
+    # banco.
+    #
+    # Todos opcionales: una convocatoria recién creada no los tiene, y
+    # eso no es un error — es que aún no se han publicado.
+    banco_titular = models.CharField(
+        "titular de la cuenta", max_length=160, blank=True,
+        help_text="A nombre de quién se hace la transferencia.",
+    )
+    banco_nombre = models.CharField("banco", max_length=80, blank=True)
+    banco_cuenta = models.CharField("número de cuenta", max_length=40, blank=True)
+    banco_clabe = models.CharField(
+        "CLABE", max_length=40, blank=True,
+        help_text="18 dígitos. Se admiten espacios.",
+        validators=[
+            RegexValidator(
+                # Se cuentan los dígitos, no los caracteres: una CLABE se
+                # dicta y se copia en grupos, y rechazar los espacios
+                # obliga a limpiarla a mano justo donde un dígito de menos
+                # manda el dinero a ningún sitio.
+                regex=r"^(?:\s*\d){18}\s*$",
+                message="La CLABE lleva 18 dígitos.",
+            )
+        ],
+    )
+    banco_sucursal = models.CharField("sucursal", max_length=120, blank=True)
+    banco_referencia = models.CharField(
+        "concepto o referencia", max_length=160, blank=True,
+        help_text="Qué debe escribir la editorial al pagar. Ejemplo: su nombre.",
+    )
+    #: Lo que no cabe en los seis campos: horarios, a quién avisar, qué
+    #: hacer con el comprobante. Va **debajo** de los datos, como nota.
     instrucciones_pago = models.TextField(
-        blank=True, help_text="Banco, cuenta, CLABE, sucursal y referencia."
+        "instrucciones adicionales",
+        blank=True,
+        help_text="Lo que haga falta decir además de los datos de la cuenta.",
     )
 
     class Meta:
@@ -687,6 +741,17 @@ class ConfiguracionSistema(models.Model):
 
     def __str__(self):
         return f"Configuración de {self.convocatoria.nombre}"
+
+    @property
+    def tiene_datos_bancarios(self) -> bool:
+        """Si hay cuenta que enseñar (`CU-STD-015`).
+
+        Basta con la CLABE o el número de cuenta: es lo único con lo que
+        alguien puede pagar de verdad. Con el resto y sin ellos, la
+        pantalla enseñaría una ficha bonita con la que no se puede hacer
+        una transferencia.
+        """
+        return bool(self.banco_clabe or self.banco_cuenta)
 
 
 class Notificacion(models.Model):

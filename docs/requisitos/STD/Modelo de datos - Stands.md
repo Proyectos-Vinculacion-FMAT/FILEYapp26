@@ -541,7 +541,8 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | plazo_reserva_dias | Días de vigencia de la reserva (30). |
 | descuento_pronto_pago | Porcentaje del pronto pago. **10% por omisión, configurable** (RN-04). |
 | fecha_limite_pronto_pago | Fecha de corte del pronto pago. Es **una fecha de la convocatoria, igual para todos**, no un contador por reserva (RN-04): quien reserva tarde tiene menos días. |
-| instrucciones_pago | Texto/datos bancarios (banco, cuenta, CLABE, sucursal, referencia). |
+| banco_titular, banco_nombre, banco_cuenta, banco_clabe, banco_sucursal, banco_referencia | Los datos de la cuenta, **un campo cada uno** (cambio del 2026-08-29). Este documento los describía como un solo texto, y desde un `TextField` la pantalla no puede cumplir CU-STD-015 paso 3 —«instrucciones estructuradas»—: o los pinta en crudo o adivina dónde parte cada renglón. Separados se copian de uno en uno, que es lo que alguien hace frente a la app de su banco. Todos opcionales: una convocatoria recién creada no los tiene todavía. `banco_clabe` valida 18 dígitos, admitiendo los espacios con los que una CLABE se dicta. |
+| instrucciones_pago | Lo que no cabe en los seis campos: horarios, a quién avisar, qué hacer con el comprobante. Se pinta **debajo** de la ficha, como nota. |
 | ~~salon_showfloor~~ | **Movido a `MapaShowfloor.salon`** (§3.13) el 2026-08-27: es un dato del mapa, no de las condiciones económicas de la convocatoria. |
 
 > [!note] Las fechas de apertura y cierre **no** están aquí

@@ -18,7 +18,14 @@ from comun.almacenamiento import DocumentoAdmisible
 from comun import validadores
 from comun.validadores import validar_cp
 
-from .models import MATERIALES, TEMATICAS, Documento, Editorial, Movimiento
+from .models import (
+    MATERIALES,
+    TEMATICAS,
+    ConfiguracionSistema,
+    Documento,
+    Editorial,
+    Movimiento,
+)
 
 
 #: Cuántos sellos caben. El tope es del formulario, no del dominio: una
@@ -482,7 +489,7 @@ class AbonoForm(MarcaLosInvalidos, forms.Form):
     """
 
     monto = forms.DecimalField(
-        label="Cuánto abonaste",
+        label="Monto del pago",
         min_value=Decimal("0.01"),
         max_digits=12,
         decimal_places=2,
@@ -492,7 +499,7 @@ class AbonoForm(MarcaLosInvalidos, forms.Form):
         },
     )
     metodo = forms.ChoiceField(
-        label="Cómo pagaste",
+        label="Método de pago",
         # `RN-08`: los tres dejan rastro bancario, que es lo que hace
         # comprobable la validación. El efectivo no está y no es un
         # olvido — no se puede validar contra nada.
@@ -505,11 +512,103 @@ class AbonoForm(MarcaLosInvalidos, forms.Form):
     # administración (`RN-15`) — ahí es la base la que lo sostiene; aquí
     # es la pantalla, porque es el único camino por el que llega.
     comprobante = forms.FileField(
-        label="Comprobante del banco",
+        label="Comprobante de pago",
         required=True,
-        help_text="El recibo de la transferencia, el depósito o el cheque.",
+        help_text="El recibo del banco: transferencia, depósito o cheque.",
         validators=[DocumentoAdmisible()],
         error_messages={
-            "required": "Adjunta el comprobante: sin él no podemos validar el abono."
+            "required": (
+                "Adjunta el comprobante. Sin él no podemos validar tu pago."
+            )
         },
     )
+
+
+class ConfiguracionForm(MarcaLosInvalidos, forms.ModelForm):
+    """Los ajustes de una convocatoria de stands (`CU-STD-034`).
+
+    Un solo formulario para las dos mitades —lo que cuesta y dónde se
+    paga— porque es una sola pantalla y una sola decisión: abrir la
+    venta. Partirlo obligaría a guardar dos veces para dejar la
+    convocatoria operable.
+
+    **No lleva `convocatoria`.** La fila la elige la URL, y ofrecerla
+    como campo dejaría mover una configuración de una convocatoria a
+    otra desde el navegador.
+
+    Tampoco lleva `mapa_json`: importar un mapa reemplaza el showfloor
+    entero y es del operador de la plataforma (`ADR-0005`), no de quien
+    ajusta un precio. Vive en `/f/<slug>/django-admin/`.
+    """
+
+    class Meta:
+        model = ConfiguracionSistema
+        fields = [
+            "costo_m2",
+            "porcentaje_anticipo",
+            "plazo_reserva_dias",
+            "descuento_pronto_pago",
+            "fecha_limite_pronto_pago",
+            "banco_titular",
+            "banco_nombre",
+            "banco_cuenta",
+            "banco_clabe",
+            "banco_sucursal",
+            "banco_referencia",
+            "instrucciones_pago",
+        ]
+        widgets = {
+            # `type="date"` y no un calendario propio: el del navegador ya
+            # sabe de meses y de bisiestos, y en el móvil abre el selector
+            # nativo.
+            "fecha_limite_pronto_pago": forms.DateInput(
+                attrs={"type": "date"}, format="%Y-%m-%d"
+            ),
+            "costo_m2": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "porcentaje_anticipo": forms.NumberInput(
+                attrs={"min": "0", "max": "100"}
+            ),
+            "plazo_reserva_dias": forms.NumberInput(attrs={"min": "1"}),
+            "descuento_pronto_pago": forms.NumberInput(
+                attrs={"min": "0", "max": "100"}
+            ),
+            "instrucciones_pago": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": (
+                        "Manda el comprobante el mismo día. Si pagas con "
+                        "cheque, avísanos antes."
+                    ),
+                }
+            ),
+        }
+
+    #: Ayudas de pantalla. Van aquí y no en el modelo por lo mismo que las
+    #: de la ficha: el modelo describe el dato, no cómo se teclea.
+    AYUDAS = {
+        "costo_m2": "El precio base. Cada espacio cuesta esto por su superficie.",
+        "porcentaje_anticipo": "Cuánto hay que cubrir para confirmar la reserva.",
+        "plazo_reserva_dias": "Días que aguanta una reserva esperando el anticipo.",
+        "descuento_pronto_pago": "Se aplica al reservar y se retira si vence el plazo.",
+        "fecha_limite_pronto_pago": (
+            "Es la misma para todos: quien reserva tarde tiene menos días."
+        ),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nombre, ayuda in self.AYUDAS.items():
+            self.fields[nombre].help_text = ayuda
+        # El precio nace en cero y con cero no se puede vender: se pide
+        # aquí, que es la pantalla donde se pone, y no en el modelo — una
+        # convocatoria recién creada tiene derecho a no tenerlo todavía.
+        self.fields["costo_m2"].required = True
+
+    def clean_costo_m2(self):
+        costo = self.cleaned_data["costo_m2"]
+        if costo <= 0:
+            raise ValidationError(
+                "Pon el costo por metro cuadrado: con cero, cada espacio "
+                "saldría gratis."
+            )
+        return costo

@@ -824,3 +824,125 @@ def test_el_detalle_ensena_la_fotografia_y_no_la_ficha_viva(client, escenario):
 
     assert "Ediciones del Mayab" in cuerpo
     assert "Nombre cambiado despues" not in cuerpo
+
+
+# ── A2 · cada sello con su carta (RN-17) ──────────────────────
+
+
+def _con_sellos(feria, ana, *nombres_con_carta):
+    """Una solicitud enviada con esos sellos, cada uno con carta o sin ella.
+
+    Los sellos se crean **antes** de enviar porque lo que se dictamina es
+    la fotografía (`RN-22`), y la fotografía guarda los nombres que había
+    en ese momento.
+    """
+    with schema_context(feria.schema_name):
+        conv = fabricas.convocatoria()
+        ficha = fabricas.editorial(ana)
+        for nombre, con_carta in nombres_con_carta:
+            sello = ficha.sellos.create(nombre=nombre)
+            if con_carta:
+                Documento.objects.create(
+                    tipo=Documento.Tipo.CARTA_REPRESENTACION,
+                    archivo=SimpleUploadedFile(
+                        f"{nombre}.pdf", b"%PDF autoriza"
+                    ),
+                    nombre_original=f"carta-{nombre}.pdf",
+                    editorial=ficha,
+                    sello=sello,
+                )
+        solicitud = solicitudes.enviar_solicitud(
+            convocatoria=conv, persona=ana, editorial=ficha
+        )
+    return conv, solicitud
+
+
+def test_cada_sello_ensena_su_carta_al_lado(client, feria_2027):
+    """`RN-17`: quien dictamina comprueba **qué carta autoriza qué sello**.
+
+    En la lista de documentos todas se llaman «Carta de representación»,
+    así que ahí la relación no existe. Es el motivo de que la carta se
+    pinte pegada a su sello.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+    _, solicitud = _con_sellos(
+        feria_2027, ana, ("Fondo Azul", True), ("Fondo Verde", True)
+    )
+    with schema_context(feria_2027.schema_name):
+        azul = Documento.objects.get(nombre_original="carta-Fondo Azul.pdf")
+        verde = Documento.objects.get(nombre_original="carta-Fondo Verde.pdf")
+    client.force_login(_admin_de(feria_2027))
+
+    plano = re.sub(
+        r"\s+",
+        " ",
+        client.get(
+            _url(feria_2027, "detalle_solicitud", solicitud_id=solicitud.pk)
+        ).content.decode(),
+    )
+
+    # Cada nombre y su enlace, en el mismo renglón y en ese orden: es la
+    # relación que la pantalla tiene que dejar ver.
+    for nombre, documento in (("Fondo Azul", azul), ("Fondo Verde", verde)):
+        enlace = _url(feria_2027, "documento", documento_id=documento.pk)
+        assert f'{nombre}</span> <a href="{enlace}"' in plano, nombre
+
+
+def test_un_sello_sin_carta_se_señala(client, feria_2027):
+    """Es lo que hay que reclamar, y tiene que verse de un vistazo."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+    _, solicitud = _con_sellos(feria_2027, ana, ("Fondo Azul", False))
+    client.force_login(_admin_de(feria_2027))
+
+    plano = re.sub(
+        r"\s+",
+        " ",
+        client.get(
+            _url(feria_2027, "detalle_solicitud", solicitud_id=solicitud.pk)
+        ).content.decode(),
+    )
+
+    assert "Fondo Azul</span> <span class=\"badge badge-changes\">Sin carta" in plano
+
+
+def test_las_cartas_ya_no_salen_sueltas_entre_los_documentos(client, feria_2027):
+    """Estaban en dos sitios y en uno de los dos no se sabía de quién eran."""
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+    _, solicitud = _con_sellos(feria_2027, ana, ("Fondo Azul", True))
+    client.force_login(_admin_de(feria_2027))
+
+    cuerpo = client.get(
+        _url(feria_2027, "detalle_solicitud", solicitud_id=solicitud.pk)
+    ).content.decode()
+
+    assert cuerpo.count("carta-Fondo Azul.pdf") == 1
+    assert "Carta de representación</strong>" not in cuerpo
+
+
+def test_un_comprobante_de_pago_no_es_parte_de_la_solicitud(client, feria_2027):
+    """Los comprobantes cuelgan de la editorial, pero son de una reserva.
+
+    Sin filtrar por tipo, el expediente que se dictamina acababa
+    enseñando un recibo del banco entre la constancia fiscal y la lista
+    de títulos.
+    """
+    with schema_context(feria_2027.schema_name):
+        ana = fabricas.persona()
+    _, solicitud = _con_sellos(feria_2027, ana, ("Fondo Azul", True))
+    with schema_context(feria_2027.schema_name):
+        Documento.objects.create(
+            tipo=Documento.Tipo.COMPROBANTE_PAGO,
+            archivo=SimpleUploadedFile("recibo.pdf", b"%PDF"),
+            nombre_original="recibo-del-banco.pdf",
+            editorial=ana.editorial,
+        )
+    client.force_login(_admin_de(feria_2027))
+
+    cuerpo = client.get(
+        _url(feria_2027, "detalle_solicitud", solicitud_id=solicitud.pk)
+    ).content.decode()
+
+    assert "recibo-del-banco.pdf" not in cuerpo

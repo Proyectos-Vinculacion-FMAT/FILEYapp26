@@ -160,6 +160,13 @@ al 2026-08-11 ya no coincide con el prototipo:
   y se eliminó.
 - **2 hex sueltos** que en el prototipo ya son token: `#aab3c0` (`--gris-400`) y el degradado
   `#1d8a4e`/`#0a6b53` de `.banner-infantil` (`--color-verde-tal*`).
+- ~~La regla de los controles de texto iba **detrás**~~ — corregida el 2026-08-29. La copia
+  enumeraba `text`, `email`, `tel` y `select`, y el prototipo además `number` y `textarea`; un
+  `<input type="number">` caía en el estilo de fábrica del navegador y salía angosto al lado de
+  uno de texto. **No solo derivan los tokens: también las reglas**, y ésta no se veía hasta que
+  una pantalla mezcló los dos tipos en la misma tarjeta (la configuración de la convocatoria).
+  `date` y `search` se añadieron ahí y **no están en el prototipo**, que no tiene campos nativos
+  de esos.
 
 **Regla mientras las dos existan:** al tocar un token o un componente compartido en el
 prototipo, propágalo a `filey.css` en el mismo cambio; y al portar una pantalla, copia al

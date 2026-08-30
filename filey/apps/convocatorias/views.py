@@ -13,7 +13,7 @@ de una edición. Tenerla en `ferias` obligaba a que la app global de
 
 from django.shortcuts import render
 
-from apps.ferias.permisos import administra, tiene_alcance_de_dueno
+from apps.ferias.permisos import tiene_alcance_de_dueno, ve_como_admin
 
 from .servicios import catalogo
 
@@ -33,8 +33,15 @@ def catalogo_de_la_feria(peticion):
     para que no haya dos respuestas distintas a "¿administra ésta?".
     Cuentan también al operador de la plataforma, que no tiene fila en
     ``AdminFeria`` y aun así opera cualquier feria (`ADR-0005`).
+
+    Cuál se pinta lo decide además **por qué puerta entró**: la misma
+    persona puede coordinar el showfloor y tener su propia editorial, y
+    entrando por el acceso de participante viene a lo segundo.
     """
-    es_administrador = administra(peticion)
+    # `ve_como_admin` y no `administra`: quien administra esta feria y
+    # además participa en ella puede entrar por el acceso de participante,
+    # y entonces esta pantalla es su escaparate, no su panel.
+    es_administrador = ve_como_admin(peticion)
     feria = peticion.tenant
 
     return render(

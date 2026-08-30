@@ -22,7 +22,8 @@
 
 {% block encabezado_titulo %}{{ datos.nombre }}{% endblock %}
 {% block encabezado_texto %}
-  {{ convocatoria.nombre }} · enviada el {{ solicitud.fecha_envio|date:"j \d\e F \d\e Y" }}
+  {{ convocatoria.nombre }} · Solicitud #{{ solicitud.pk }} · enviada el
+  {{ solicitud.fecha_envio|date:"j \d\e F \d\e Y" }}
 {% endblock %}
 
 {% block contenido %}
@@ -39,8 +40,11 @@
     {% include "stands/parciales/resumen_solicitud.html" %}
 
     <div class="section-card card">
-      <div class="section-head"><h3>Documentos</h3>
-        <p>Los vigentes de la editorial.</p></div>
+      <div class="section-head"><h3>Documentos de la ficha</h3>
+        <p>
+          Constancia de situación fiscal y lista de títulos, en su versión
+          vigente. Las cartas de representación van con su sello.
+        </p></div>
       <div class="section-body">
         {% if documentos %}
           <ul class="multi-input">
@@ -59,7 +63,7 @@
              `target="_blank"` porque quien revisa abre cuatro seguidos y
              perder la pantalla del dictamen en cada uno es peor. {% endcomment %}
         {% else %}
-          <p>No adjuntó documentos.</p>
+          <p>La editorial no adjuntó documentos.</p>
         {% endif %}
       </div>
     </div>
@@ -68,8 +72,8 @@
   <div>
     {% if solicitud.se_puede_dictaminar %}
       <div class="section-card card">
-        <div class="section-head"><h3>Resolver</h3>
-          <p>Se le avisa por correo en cuanto resuelvas.</p></div>
+        <div class="section-head"><h3>Resolver la solicitud</h3>
+          <p>La editorial recibe un correo con el resultado.</p></div>
         <div class="section-body">
           <form method="post" novalidate>
             {% csrf_token %}
@@ -77,19 +81,19 @@
               <label for="{{ form.motivo.id_for_label }}">{{ form.motivo.label }}</label>
               {{ form.motivo }}
               <span class="hint">
-                Obligatorio para pedir cambios: es lo que la persona lee para
-                saber qué corregir.
+                Obligatorio al solicitar cambios: es el texto que recibe la
+                editorial.
               </span>
             </div>
             <div class="form-actions">
               <button class="btn btn-primary btn-block" type="submit" name="accion" value="aceptar">
-                Aceptar
+                Aceptar la solicitud
               </button>
               <button class="btn btn-ghost btn-block" type="submit" name="accion" value="cambios">
                 Solicitar cambios
               </button>
               <button class="btn btn-danger btn-block" type="submit" name="accion" value="rechazar">
-                Rechazar
+                Rechazar la solicitud
               </button>
             </div>
           </form>
@@ -102,12 +106,13 @@
         <div class="section-body">
           <div class="field"><label>Resultado</label>
             {% include "stands/parciales/badge_estado.html" %}</div>
-          <div class="field"><label>Revisada</label>
+          <div class="field"><label>Fecha de revisión</label>
             {{ solicitud.fecha_revision|date:"j \d\e F \d\e Y, H:i" }}</div>
-          <div class="field"><label>Por</label>
+          <div class="field"><label>Revisada por</label>
             {{ solicitud.revisado_por|default:"—" }}</div>
           {% if solicitud.motivo_peticion %}
-            <div class="field"><label>Motivo</label>{{ solicitud.motivo_peticion }}</div>
+            <div class="field"><label>Motivo registrado</label>
+              {{ solicitud.motivo_peticion }}</div>
           {% endif %}
         </div>
       </div>
@@ -130,7 +135,7 @@
             {% endfor %}
           </ul>
         {% else %}
-          <p class="hint">Todavía no se ha enviado ninguno.</p>
+          <p class="hint">Aún no se ha enviado ningún correo.</p>
         {% endif %}
       </div>
     </div>

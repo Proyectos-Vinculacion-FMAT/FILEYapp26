@@ -57,7 +57,14 @@
           </li>
         {% endif %}
       </ul>
-      <span class="hint">Todo esto se ajusta en la configuración de esta edición.</span>
+      {% comment %} El aviso enlaza a donde se arregla: dejarlo en «se
+         ajusta en algún sitio» obliga a buscar el menú. El mapa no —lo
+         carga el equipo técnico (ADR-0005)— y la pantalla de ajustes lo
+         dice. {% endcomment %}
+      <a class="btn btn-primary btn-row"
+         href="{% url 'stands:configuracion' convocatoria_id=convocatoria.pk %}">
+        Ir a la configuración
+      </a>
     </div>
   </div>
 {% endif %}
@@ -75,7 +82,9 @@
       </a>
     {% endif %}
     {% if por_validar %}
-      <a class="stat-card accent-gold" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">
+      {% comment %} Enlaza a su cola desde el 2026-08-29: antes llevaba a
+         las reservas, que era lo más cerca que había. {% endcomment %}
+      <a class="stat-card accent-gold" href="{% url 'stands:pagos' convocatoria_id=convocatoria.pk %}">
         <span class="k">Abonos por validar</span>
         <span class="v">{{ por_validar }}</span>
         <span class="foot">No bajan el saldo hasta que los valides</span>
@@ -182,7 +191,7 @@
   {% else %}
     sin campaña de pronto pago
   {% endif %}
-  · se ajusta en la configuración de esta edición.
+  · <a href="{% url 'stands:configuracion' convocatoria_id=convocatoria.pk %}">ajustar</a>.
 </p>
 
 {% endblock %}

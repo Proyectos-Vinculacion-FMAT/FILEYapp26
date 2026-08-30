@@ -139,10 +139,14 @@ class ConfiguracionConMapaForm(forms.ModelForm):
 class ConfiguracionSistemaAdmin(admin.ModelAdmin):
     """Precios, plazos y el mapa de una convocatoria (`CU-STD-034`, `039`).
 
-    La pantalla propia es A10 y no existe todavía; mientras tanto es
-    desde aquí. **El alta no se ofrece**: la fila la crea el alta de la
-    convocatoria (`CU-FER-005` paso 6), y crear una a mano dejaría dos
-    para la misma convocatoria o una huérfana.
+    **La pantalla de verdad es A10** —`stands:configuracion`, del panel—
+    y es la que usa quien administra la feria. Esto sigue existiendo por
+    lo que A10 no puede tener: la **importación del mapa**, que reemplaza
+    el showfloor entero y es del operador de la plataforma (`ADR-0005`).
+
+    **El alta no se ofrece**: la fila la crea el alta de la convocatoria
+    (`CU-FER-005` paso 6), y crear una a mano dejaría dos para la misma
+    convocatoria o una huérfana.
 
     .. important:: El mapa solo lo carga el operador de la plataforma
 
@@ -162,12 +166,22 @@ class ConfiguracionSistemaAdmin(admin.ModelAdmin):
         "plazo_reserva_dias",
         "descuento_pronto_pago",
         "fecha_limite_pronto_pago",
+        "cuenta_publicada",
     )
     list_select_related = ("convocatoria",)
     readonly_fields = ("resumen_del_mapa",)
-
     def has_add_permission(self, peticion):
         return False
+
+    @admin.display(description="Cuenta publicada", boolean=True)
+    def cuenta_publicada(self, obj):
+        """Si ya hay dónde pagar. Sin esto, quien reserva no puede.
+
+        Va en la lista y no como filtro: un `list_filter` sobre la CLABE
+        pondría cada número de cuenta en la barra lateral, que es
+        exactamente lo que no se enseña de una cuenta bancaria.
+        """
+        return obj.tiene_datos_bancarios
 
     def get_fieldsets(self, peticion, obj=None):
         economicas = (
@@ -180,14 +194,36 @@ class ConfiguracionSistemaAdmin(admin.ModelAdmin):
                     "plazo_reserva_dias",
                     "descuento_pronto_pago",
                     "fecha_limite_pronto_pago",
-                    "instrucciones_pago",
                 )
             },
         )
+        # `CU-STD-015`: es lo que el expositor copia frente a la app de su
+        # banco, así que va en su propio bloque y no mezclado con los
+        # precios. Mientras no esté puesto, su pantalla dice que todavía
+        # no publicamos la cuenta, en vez de enseñar una ficha vacía.
+        bancarias = (
+            "Datos bancarios",
+            {
+                "fields": (
+                    "banco_titular",
+                    "banco_nombre",
+                    "banco_cuenta",
+                    "banco_clabe",
+                    "banco_sucursal",
+                    "banco_referencia",
+                    "instrucciones_pago",
+                ),
+                "description": (
+                    "Se le enseñan tal cual a quien tiene una reserva. Sin "
+                    "cuenta ni CLABE no se publica nada."
+                ),
+            },
+        )
         if not peticion.user.is_superuser:
-            return (economicas,)
+            return (economicas, bancarias)
         return (
             economicas,
+            bancarias,
             (
                 "Mapa del showfloor",
                 {

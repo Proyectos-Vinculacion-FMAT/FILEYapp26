@@ -39,6 +39,15 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    consultan `administra()` y `tiene_alcance_de_dueno()`, que son las dos funciones que
    responden "¿administra ésta?" para los decoradores **y** para las pantallas. El middleware de feria **no comprueba permisos** —corre antes de
    `AuthenticationMiddleware`, así que no hay `request.user`—: solo fija el schema.
+   > **Autoridad y cara son dos preguntas.** `administra()` dice qué puede hacer y no la mueve
+   > nada que decida quien mira: de ella cuelgan los decoradores, la entrega de archivos y el
+   > recorte de `RN-18`. `ve_como_admin()` dice desde qué lado está mirando **ahora**, y es la
+   > que usan la barra superior, el catálogo y el detalle de un espacio. La diferencia es la
+   > puerta por la que entró (`sesion.contexto_de_la_sesion`): una misma cuenta coordina una
+   > feria y tiene su editorial dentro de ella, y por el acceso de participante viene a lo
+   > segundo. `ve_como_admin()` **solo quita**; entrar por la puerta de administración no
+   > convierte a nadie en administrador. La barra ofrece el conmutador y abrir una pantalla de
+   > administración devuelve esa cara sola.
 3. **Capas por app:** `models.py` (datos e invariantes, modelos gordos) → `services/` (reglas de
    negocio) → `views.py` (traduce HTTP ↔ servicio, vistas delgadas) → plantillas.
    Si una regla no se puede llamar desde un comando de `manage.py` sin pasar por HTTP, está en
@@ -93,8 +102,7 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 - **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene dos verticales completas:
   - **La solicitud de expositor** (CU-STD-001 a 008): la ficha oficial en U1, la cola de
     revisión y el detalle en A1 y A2, el dictamen con su aviso por correo, los adjuntos con
-    permiso, y `ConfiguracionSistema` (CU-STD-034) editable desde `/f/<slug>/django-admin/`
-    mientras no exista A10.
+    permiso.
   - **El mapa del showfloor** (CU-STD-009, 010, 032, 039): `MapaShowfloor`, `Stand` y
     `DecoracionMapa`; la importación desde JSON —`servicios/mapas.py`, la pantalla del admin de
     la edición y `manage.py importar_mapa`—; y el mapa dibujado en **SVG servido**, que es la
@@ -112,13 +120,23 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
 
   - **La cuenta y sus pagos** (CU-STD-013, 014, 015, 016, 017): `Movimiento`, y la pantalla
     del expositor —`/f/<slug>/stands/<id>/mi-reserva/`— con tres pestañas por `?ver=`:
-    resumen, pagos y el plano en modo consulta. Un abono que reporta el expositor nace
+    resumen, pagos y el plano en modo consulta. Los **datos bancarios son seis campos** de
+    `ConfiguracionSistema` (titular, banco, cuenta, CLABE, sucursal, referencia) y no un
+    bloque de texto: `CU-STD-015` pide enseñarlos estructurados, y así se copian de uno en uno
+    frente a la app del banco. Los declara quien administra desde
+    la pantalla de configuración del panel. Un abono que reporta el expositor nace
     `pendiente_validacion` y **no baja el saldo**: `Reserva.monto_abonado` solo cuenta lo
     validado, y lo que está en revisión ocupa sitio para que nadie reporte dos veces la misma
     transferencia. El pronto pago se aplica al reservar y **caduca**: si llega la fecha de
     corte sin liquidar se retira y el total sube (`RN-04`, `CU-STD-023` A1). Lo hace
     `servicios/pagos.py::caducar_pronto_pago`; mientras no exista la barrida diaria hay que
     llamarlo desde el cron con `manage.py caducar_pronto_pago --todas`.
+
+  - **La configuración de la convocatoria** (CU-STD-034, vista A10): precios, plazos, el
+    descuento de pronto pago y los datos bancarios, en
+    `/f/<slug>/stands/<id>/configuracion/`. Es de quien **administra la feria**, no del
+    equipo técnico — el `/f/<slug>/django-admin/` sigue sirviendo la misma fila, pero solo
+    porque ahí vive también la importación del mapa, que es del operador (`ADR-0005`).
 
   **El flujo del expositor es una secuencia, no un menú** (`RN-23`): solicitud → revisión →
   espacios → confirmación → cuenta. La puerta del módulo es `stands:inicio` —a donde apunta
@@ -129,9 +147,16 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   lleva una sola reserva viva por convocatoria**, y lo sostiene un índice único parcial sobre
   `registro`, no solo el servicio.
 
-  **Falta la validación del pago y el reloj**: CU-STD-018, 019, 020 y 033 tienen servicio
-  (`servicios/pagos.py`) pero no pantalla de administración —la sección «Pagos por validar»
-  se pinta apagada—, y CU-STD-022, 024, 025 y 035 a 038 siguen sin construirse.
+  - **La validación de los pagos** (CU-STD-018, vista A5): la cola de
+    `/f/<slug>/stands/<id>/pagos/`, transversal a todas las reservas de la convocatoria, y el
+    detalle de un abono en un modal que trae htmx —la misma vista sirve la pantalla suelta sin
+    JavaScript, como el detalle de un espacio—. Es lo que cierra el ciclo del dinero: hasta que
+    existió, un abono nacía `pendiente_validacion` y **no había ningún camino** para darlo por
+    bueno, así que `RN-13` y `RN-14` eran código muerto.
+
+  **Falta el registro manual de abonos y el reloj**: CU-STD-019, 020 y 033 tienen servicio
+  (`servicios/pagos.py`) pero no pantalla —van en A4, el detalle de una reserva—, y
+  CU-STD-022, 024, 025 y 035 a 038 siguen sin construirse.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel

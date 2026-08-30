@@ -310,7 +310,7 @@ def test_sin_reserva_se_manda_al_mapa(client, listo):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "Todavía no tienes ninguna reserva" in cuerpo
+    assert "Aún no tienes una reserva" in cuerpo
     assert "Ir al mapa" in cuerpo
 
 
@@ -329,7 +329,7 @@ def test_una_vencida_lo_avisa_sin_cambiar_de_estado(client, listo):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "Se venció el plazo" in cuerpo
+    assert "Venció el plazo" in cuerpo
     assert "Por confirmar" in cuerpo, "se pintó como si el sistema ya hubiera hecho algo"
     assert "Vencida" in cuerpo
 
@@ -354,7 +354,7 @@ def test_no_veo_las_reservas_de_otra_editorial(client, listo):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "Todavía no tienes ninguna reserva" in cuerpo
+    assert "Aún no tienes una reserva" in cuerpo
 
 
 # ── CU-STD-028 y 029 · el panel ───────────────────────────────

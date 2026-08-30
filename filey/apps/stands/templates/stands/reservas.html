@@ -17,30 +17,7 @@
 
 {% block contenido %}
 
-<form class="toolbar-row" method="get">
-  <div class="field">
-    <label for="filtro-estado">Estado</label>
-    <select id="filtro-estado" name="estado">
-      <option value="">Todos</option>
-      {% for valor, etiqueta in estados %}
-        <option value="{{ valor }}" {% if valor == estado_activo %}selected{% endif %}>{{ etiqueta }}</option>
-      {% endfor %}
-      <option value="vencidas" {% if estado_activo == 'vencidas' %}selected{% endif %}>
-        Vencidas sin anticipo
-      </option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="filtro-q">Editorial</label>
-    <input id="filtro-q" type="search" name="q" value="{{ busqueda }}" placeholder="Nombre de la editorial">
-  </div>
-  <div class="form-actions">
-    <button class="btn btn-primary" type="submit">Filtrar</button>
-    {% if hay_filtros %}
-      <a class="btn btn-ghost" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">Quitar filtros</a>
-    {% endif %}
-  </div>
-</form>
+{% include "stands/parciales/filtros.html" with nombre="reserva" plural="reservas" url_limpia=url_limpia %}
 
 {% if reservas %}
   <table class="table">

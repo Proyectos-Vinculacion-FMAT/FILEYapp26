@@ -56,7 +56,8 @@ def escenario(feria_2027):
         mapas.importar(convocatoria=conv, datos=_mapa())
         cfg = configuracion.de_la_convocatoria(conv)
         cfg.costo_m2 = Decimal("2500")
-        cfg.instrucciones_pago = "BBVA · CLABE 012 345 678 901 234 567"
+        cfg.banco_nombre = "BBVA"
+        cfg.banco_clabe = "012 345 678 901 234 567"
         # Con fecha: sin ella el pronto pago no aplica aunque el
         # porcentaje esté puesto (`RN-04`), y la cuenta saldría sin
         # descuento — que es justo lo que estas pruebas comprueban.
@@ -271,6 +272,7 @@ def test_la_cuenta_dice_total_anticipo_y_saldo(client, escenario):
     ).content.decode()
 
     assert "CLABE" in pagos
+    assert "012 345 678 901 234 567" in pagos
 
 
 def test_reportar_un_abono_lo_deja_pendiente_de_validar(client, escenario):
@@ -291,7 +293,7 @@ def test_reportar_un_abono_lo_deja_pendiente_de_validar(client, escenario):
     )
     cuerpo = respuesta.content.decode()
 
-    assert "Registramos tu abono" in cuerpo
+    assert "Registramos tu pago" in cuerpo
     assert "En revisión" in cuerpo
     with schema_context(feria.schema_name):
         movimiento = Movimiento.objects.get()
@@ -350,7 +352,7 @@ def test_sin_reserva_la_cuenta_ofrece_el_mapa(client, escenario):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "Todavía no tienes ninguna reserva" in cuerpo
+    assert "Aún no tienes una reserva" in cuerpo
     assert _url(feria, "stands:mapa", convocatoria_id=conv.pk) in cuerpo
 
 
