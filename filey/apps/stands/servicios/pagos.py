@@ -32,13 +32,14 @@ from django.db import models, transaction
 from django.utils import timezone
 
 from ..models import (
+    BitacoraSTD,
     DescuentoAplicado,
     Documento,
     Movimiento,
     Reserva,
     Stand,
 )
-from . import avisos
+from . import avisos, bitacora
 from . import reservas as servicio_reservas
 
 logger = logging.getLogger(__name__)
@@ -176,6 +177,14 @@ def registrar(
         movimiento.estado,
     )
     if manual:
+        bitacora.anotar(
+            persona=persona,
+            accion=BitacoraSTD.Accion.ABONO_MANUAL,
+            objeto=reserva,
+            movimiento=movimiento.pk,
+            monto=str(monto),
+            metodo=metodo,
+        )
         # `CU-STD-019` pasos 8 y 9: suma en el acto y pasa por los
         # umbrales, igual que si alguien acabara de validarlo.
         reevaluar(reserva)
@@ -265,6 +274,13 @@ def validar(*, movimiento: Movimiento, administrador) -> Reserva:
     movimiento.save(update_fields=["estado", "validado_por", "fecha_validacion"])
 
     logger.info("Abono %s validado por %s", movimiento.pk, administrador.pk)
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.ABONO_VALIDADO,
+        objeto=reserva,
+        movimiento=movimiento.pk,
+        monto=str(movimiento.monto),
+    )
     return reevaluar(reserva)
 
 
@@ -296,6 +312,14 @@ def rechazar(*, movimiento: Movimiento, administrador, motivo: str = "") -> Movi
         update_fields=["estado", "validado_por", "fecha_validacion", "motivo_rechazo"]
     )
     logger.info("Abono %s rechazado por %s", movimiento.pk, administrador.pk)
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.ABONO_RECHAZADO,
+        objeto=movimiento.reserva,
+        movimiento=movimiento.pk,
+        monto=str(movimiento.monto),
+        motivo=movimiento.motivo_rechazo,
+    )
     return movimiento
 
 
@@ -343,6 +367,14 @@ def aplicar_descuento_especial(
         reserva.pk,
         administrador.pk,
     )
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.DESCUENTO_APLICADO,
+        objeto=reserva,
+        porcentaje=porcentaje,
+        motivo=motivo.strip()[:200],
+        total_antes=str(reserva.monto_total),
+    )
     # Instancia recién traída, por lo mismo que en `caducar_pronto_pago`:
     # `_recalcular_total` lee los descuentos con `reserva.descuentos.all()`
     # y quien llame desde una pantalla llega con `prefetch_related`
@@ -379,6 +411,17 @@ def retirar_descuento_especial(*, reserva: Reserva, administrador) -> Reserva:
         descuento.porcentaje,
         reserva.pk,
         administrador.pk,
+    )
+    # Se anota **antes** de borrar: es de las pocas acciones que no dejan
+    # rastro en ninguna otra parte, porque lo que hace es quitar la fila
+    # que lo explicaba.
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.DESCUENTO_RETIRADO,
+        objeto=reserva,
+        porcentaje=descuento.porcentaje,
+        motivo=descuento.motivo,
+        total_antes=str(reserva.monto_total),
     )
     descuento.delete()
     # Instancia recién traída, por lo mismo que en `caducar_pronto_pago`:
@@ -441,6 +484,17 @@ def caducar_pronto_pago(reserva: Reserva) -> Reserva:
         limite,
         reserva.monto_abonado,
         reserva.monto_total,
+    )
+    # Sin persona: no lo decidió nadie, se cumplió `RN-04`. Y como el
+    # descuento se borra, sin esta línea la subida del total no tendría
+    # explicación en ninguna parte.
+    bitacora.anotar(
+        persona=None,
+        accion=BitacoraSTD.Accion.PRONTO_PAGO_CADUCADO,
+        objeto=reserva,
+        porcentaje=descuento.porcentaje,
+        vencio=limite.isoformat(),
+        total_antes=str(reserva.monto_total),
     )
     descuento.delete()
     # Se recalcula sobre una instancia **recién traída**, no sobre la que

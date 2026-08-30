@@ -110,10 +110,10 @@ cada caso de uso decide qué hacer con ese fallo:
 - **`pronto_pago`** (automático): es **idempotente**. Que ya exista no es un error, es que ya
   estaba aplicado. No debe alarmar a nadie.
 - **`especial`** (manual): **sí es un error y se muestra**. Para cambiar el porcentaje hay que
-  modificar el que existe —dejando rastro en la `Bitacora`— o retirarlo y volver a aplicarlo,
-  no acumular uno encima. Retirarlo es `servicios/pagos.py::retirar_descuento_especial`, y su
-  botón vive en A4: mientras no existió, el error de arriba pedía algo que no se podía hacer
-  desde ninguna parte.
+  retirar el que existe y volver a aplicarlo, no acumular uno encima. Retirarlo es
+  `servicios/pagos.py::retirar_descuento_especial`, y su botón vive en A4: mientras no existió,
+  el error de arriba pedía algo que no se podía hacer desde ninguna parte. Las dos operaciones
+  quedan en `BitacoraSTD` —y retirar **solo** ahí, porque borra la fila que lo explicaba—.
 
 *Dónde se aplica:* CU-STD-020, CU-STD-023.
 

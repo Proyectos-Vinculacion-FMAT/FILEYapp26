@@ -233,10 +233,33 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
     > enlazan la constancia y lo dicen; buscar por RFC o facturar sin abrir el PDF exige
     > añadirlo a la ficha de U1, y eso lo manda el documento oficial.
 
-  **Falta**: la pantalla A9 de CU-STD-033, que hoy solo existe desde
-  `/f/<slug>/django-admin/`. Y `BitacoraSTD` (modelo de datos §3.12) no existe: la citan 033,
-  035, 036 y `RN-05` como el rastro de quién hizo qué, que fuera de la cancelación vive solo
-  en el log.
+  - **La bitácora** (`BitacoraSTD`, modelo de datos §3.12): una línea de tiempo de las
+    acciones de administración, **partida por convocatoria** — una feria puede tener la
+    general y la de un pabellón (`RN-19`), y son dos ventas distintas—. **Su pantalla es
+    `/f/<slug>/django-admin/`** y no una del panel —se consulta tres veces al año y cuando
+    algo no cuadra—, en solo lectura y con la convocatoria como primer filtro.
+
+    No sustituye al rastro de cada fila (`Movimiento.validado_por`, `Reserva.cancelada_por`):
+    contesta «¿qué pasó con esta convocatoria el martes?». Doce acciones, de las que **cinco
+    no dejan rastro en ninguna otra parte** porque borran una fila o sobreescriben una fecha:
+    retirar un descuento, caducar un pronto pago, prorrogar, mover el corte e importar un
+    mapa. **No entra lo del aplicante** —solicitar, reportar un abono, reservar—: ya se ve en
+    su cola, y anotarlo llenaría la línea de ruido.
+
+    > [!note] `convocatoria` se guarda al anotar, no se deduce al leer
+    > Sale del objeto por una tabla explícita de cinco entradas en `servicios/bitacora.py`.
+    > Adivinar recorriendo relaciones sería un `getattr` en cadena que falla en silencio, y
+    > una entrada sin convocatoria queda fuera de todos los filtros sin que nada lo señale.
+
+    > [!note] Se anota dentro de la transacción, y anotar nunca tumba la acción
+    > Al revés que el correo, que va con `on_commit` porque no se puede deshacer: una anotación
+    > sí, y una que sobreviviera a un rollback diría que pasó algo que no pasó. Si la escritura
+    > falla, se registra en el log y se traga — perder una línea de historial es mejor que
+    > revertir un cobro que el banco ya respaldó.
+
+  **Falta solo la pantalla A9 de CU-STD-033** (corregir un espacio del mapa), que hoy se hace
+  desde `/f/<slug>/django-admin/`. Con ella entraría también la décima acción de la bitácora:
+  `importar` no recibe hoy quién lo hace, y firmar la entrada como «el sistema» sería mentira.
 - **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel

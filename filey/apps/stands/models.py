@@ -904,9 +904,26 @@ class BitacoraSTD(models.Model):
         RESERVA_PRORROGADA = "reserva_prorrogada", "Prorrogó el plazo"
         CORTE_MOVIDO = "corte_movido", "Movió el corte del pago total"
         RESERVA_CANCELADA = "reserva_cancelada", "Canceló la reserva"
-        # El recinto
+        # La puerta y las condiciones
+        SOLICITUD_DICTAMINADA = "solicitud_dictaminada", "Dictaminó una solicitud"
+        CONFIGURACION_CAMBIADA = "configuracion_cambiada", "Cambió la configuración"
+
         MAPA_IMPORTADO = "mapa_importado", "Importó el mapa"
 
+    # El conjunto está cerrado **y coincide con lo que se anota**. Lo que
+    # no entra es lo que hace el aplicante —enviar su solicitud, reportar
+    # un abono, armar el carrito—: eso ya se ve en su propia cola, y
+    # anotarlo llenaría la línea de tiempo de ruido que nadie viene a
+    # leer. Ni los avisos por correo, cuyo rastro es `Notificacion`.
+
+    #: De qué convocatoria es lo que pasó. **No se deduce del objeto al
+    #: leer**: se guarda al anotar, porque una feria puede tener varias
+    #: convocatorias de stands (`RN-19`) y "la bitácora de la feria" sin
+    #: separarlas mezcla dos ventas distintas, con dos mapas y dos
+    #: precios. Es también lo que hace utilizable el filtro del admin.
+    convocatoria = models.ForeignKey(
+        Convocatoria, on_delete=models.CASCADE, related_name="bitacora_stands"
+    )
     #: Nulo cuando lo hace el sistema —la barrida diaria caducando un
     #: pronto pago—, igual que `DescuentoAplicado.aplicado_por`. Que no
     #: haya persona **es** el dato: nadie lo decidió, se cumplió una regla.
@@ -935,9 +952,11 @@ class BitacoraSTD(models.Model):
         verbose_name_plural = "bitácora de stands"
         ordering = ["-fecha"]
         indexes = [
-            # Las dos preguntas que se le hacen: "¿qué pasó con esta
-            # reserva?" y "¿qué pasó esta semana?".
+            # Las tres preguntas que se le hacen: "¿qué pasó con esta
+            # reserva?", "¿qué ha pasado en esta convocatoria?" y "¿qué
+            # pasó esta semana?".
             models.Index(fields=["entidad_tipo", "entidad_id"]),
+            models.Index(fields=["convocatoria", "-fecha"]),
             models.Index(fields=["-fecha"]),
         ]
 

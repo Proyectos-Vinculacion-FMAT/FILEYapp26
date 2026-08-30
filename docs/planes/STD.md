@@ -298,7 +298,12 @@ diagnóstico: tiene `--seco` con el detalle reserva por reserva.
 > tiene: la ficha en papel lo entrega como constancia adjunta, no como campo. Ver A7 en
 > [`Estructura de vistas`](<../requisitos/STD/Estructura de vistas - Stands.md>).
 >
-> Queda la pantalla A9 de `033`, que hoy solo se hace desde el admin de Django.
+> Y con `BitacoraSTD` (2026-08-30) queda cerrado §3.12: **su pantalla es el admin de Django**,
+> en solo lectura. Decisión del cliente, y la correcta — se consulta tres veces al año, y una
+> sección propia en la barra lateral costaría más de lo que resuelve.
+>
+> Queda la pantalla A9 de `033`, que hoy solo se hace desde el admin de Django, y que se
+> aplaza a propósito (2026-08-30).
 
 - Listados de reservas y de expositores, con el detalle de cada uno.
 - ~~Configuración de la convocatoria (`CU-STD-034`)~~ — **construida el 2026-08-29**, adelantada

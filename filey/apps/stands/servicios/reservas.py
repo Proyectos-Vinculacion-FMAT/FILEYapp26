@@ -26,6 +26,7 @@ from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.convocatorias.servicios import registros
 
 from ..models import (
+    BitacoraSTD,
     DescuentoAplicado,
     Movimiento,
     Reserva,
@@ -33,7 +34,7 @@ from ..models import (
     Solicitud,
     Stand,
 )
-from . import avisos
+from . import avisos, bitacora
 from . import configuracion as servicio_configuracion
 
 logger = logging.getLogger(__name__)
@@ -481,6 +482,15 @@ def prorrogar(*, reserva: Reserva, administrador, fecha) -> Reserva:
         fecha,
         administrador.pk,
     )
+    # Sin esto, prorrogar es invisible: la fecha vieja se sobreescribe y
+    # no queda dónde leer que alguien dio más tiempo, ni cuánto.
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.RESERVA_PRORROGADA,
+        objeto=reserva,
+        vencia=anterior.isoformat(),
+        vence=fecha.isoformat(),
+    )
     return reserva
 
 
@@ -517,6 +527,13 @@ def mover_fecha_de_corte(*, reserva: Reserva, administrador, fecha) -> Reserva:
         anterior,
         fecha,
         administrador.pk,
+    )
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.CORTE_MOVIDO,
+        objeto=reserva,
+        antes=anterior.isoformat() if anterior else None,
+        ahora=fecha.isoformat() if fecha else None,
     )
     return reserva
 
@@ -568,6 +585,14 @@ def cancelar(*, reserva: Reserva, administrador, motivo: str = "") -> Reserva:
         reserva.pk,
         administrador.pk,
         ", ".join(claves) or "—",
+    )
+    bitacora.anotar(
+        persona=administrador,
+        accion=BitacoraSTD.Accion.RESERVA_CANCELADA,
+        objeto=reserva,
+        motivo=reserva.motivo_cancelacion,
+        espacios=claves,
+        abonado=str(reserva.monto_abonado),
     )
     # Como los avisos de los umbrales: después del commit. Un correo no
     # se puede deshacer, y si la transacción se revierte la editorial se

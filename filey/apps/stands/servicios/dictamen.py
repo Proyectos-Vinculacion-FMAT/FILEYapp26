@@ -13,8 +13,8 @@ import logging
 from django.db import transaction
 from django.utils import timezone
 
-from ..models import Notificacion, Solicitud
-from . import avisos
+from ..models import BitacoraSTD, Notificacion, Solicitud
+from . import avisos, bitacora
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,19 @@ def _resolver(
         actual.motivo_peticion = motivo
         actual.save(
             update_fields=["estado", "fecha_revision", "revisado_por", "motivo_peticion"]
+        )
+        # Dentro de la transacción, como todo lo que anota la bitácora.
+        # `Solicitud` ya guarda quién y cuándo; lo que esto añade es que
+        # el dictamen aparezca **en la misma línea de tiempo** que el
+        # dinero — aceptar es lo que habilita a reservar (`RN-16`), así
+        # que es el primer eslabón de todo lo que viene después.
+        bitacora.anotar(
+            persona=revisor,
+            accion=BitacoraSTD.Accion.SOLICITUD_DICTAMINADA,
+            objeto=actual,
+            editorial=actual.datos_editorial.get("nombre", ""),
+            resultado=estado,
+            motivo=motivo,
         )
 
     logger.info("Solicitud %s resuelta como %s", actual.pk, estado)

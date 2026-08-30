@@ -409,7 +409,10 @@ def ajustes_de_la_convocatoria(peticion, convocatoria_id):
     if peticion.method == "POST":
         form = ConfiguracionForm(peticion.POST, instance=ajustes)
         if form.is_valid():
-            form.save()
+            # Por el servicio y no `form.save()` a secas: guardar y anotar
+            # qué cambió son una sola operación, y una vista no es el
+            # sitio donde eso se decide.
+            configuracion.guardar(form=form, administrador=peticion.user)
             messages.success(
                 peticion,
                 "Guardamos la configuración. Las reservas que ya existen "
