@@ -147,6 +147,17 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   lleva una sola reserva viva por convocatoria**, y lo sostiene un índice único parcial sobre
   `registro`, no solo el servicio.
 
+  > [!warning] `Solicitud` tiene **dos** conjuntos de estados y significan cosas distintas
+  > `VIVOS` es «esperando dictamen» (`pendiente`, `cambios_solicitados`): lo que cuenta la cola
+  > de A1 y lo que enseña la pantalla del aplicante. `OCUPAN_EL_REGISTRO` son esos dos **más
+  > `aceptada`**: lo que impide enviar otra solicitud, y lo que sostienen a la vez
+  > `enviar_solicitud` y el índice `una_solicitud_en_juego_por_registro`.
+  >
+  > Usar `VIVOS` para lo segundo fue un error real hasta el 2026-08-30: un expositor ya
+  > aceptado podía mandar otra solicitud, y rechazársela **no le quitaba** la habilitación para
+  > reservar, porque `RN-16` la lee de la aceptada. Volver a aplicar es lo que `RN-22` abre tras
+  > un **rechazo**, no tras entrar.
+
   - **La validación de los pagos** (CU-STD-018, vista A5): la cola de
     `/f/<slug>/stands/<id>/pagos/`, transversal a todas las reservas de la convocatoria, y el
     detalle de un abono en un modal que trae htmx —la misma vista sirve la pantalla suelta sin
@@ -164,6 +175,14 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
     saldo en el acto (`CU-STD-019` paso 6) — lo asienta quien coteja contra el banco, así que
     no tiene a quién esperar—; y el tope de «lo que ya reportaste ocupa sitio» **no le aplica**,
     porque quien administra es quien resuelve esa cola.
+
+    > [!warning] Un descuento solo se mueve en una reserva viva
+    > Las dos funciones que tocan el especial son las únicas del dominio que reescriben
+    > `monto_total` (`RN-01`), y sobre una `cancelada` no hay nada que descontar: el importe
+    > pasa a ser el registro de lo que esa reserva costó. Lo comprueba
+    > `pagos.py::_exigir_reserva_viva`, que además bloquea la fila. La guarda vivía solo en la
+    > plantilla de A4 hasta el 2026-08-30, y como la vista despacha la acción sin volver a
+    > preguntar, un POST le reescribía el total a una reserva cerrada sin que nada protestara.
 
     > [!warning] Cualquier cambio de descuento recalcula sobre una instancia recién traída
     > `_recalcular_total` lee los descuentos con `reserva.descuentos.all()`. Quien llega desde

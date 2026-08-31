@@ -95,7 +95,7 @@ def test_la_cola_trae_lo_que_espera_decision(client, con_abono):
         _url(feria, "stands:pagos", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "7500.00" in cuerpo
+    assert "7,500.00" in cuerpo
     assert "Transferencia" in cuerpo
     assert abono.reserva.editorial.nombre in cuerpo
 
@@ -122,8 +122,8 @@ def test_entrar_a_la_cola_ya_es_filtrar(client, con_abono):
     cola = client.get(url).content.decode()
     rechazados = client.get(url, {"estado": "rechazado"}).content.decode()
 
-    assert "7500.00" in cola and "300.00" not in cola
-    assert "300.00" in rechazados and "7500.00" not in rechazados
+    assert "7,500.00" in cola and "300.00" not in cola
+    assert "300.00" in rechazados and "7,500.00" not in rechazados
     assert "Por validar" in cola, "el primer chip nombra el filtro por omisión"
 
 
@@ -170,7 +170,7 @@ def test_el_modal_y_la_pantalla_suelta_son_la_misma_vista(client, con_abono):
     assert "<html" in pagina, "la suelta trae su chasis"
     assert "<html" not in modal, "el modal es solo el cuerpo"
     for cuerpo in (pagina, modal):
-        assert "7500.00" in cuerpo
+        assert "7,500.00" in cuerpo
         assert "Validar el abono" in cuerpo
     assert 'class="modal-back"' in modal, "y trae su propio velo"
 
@@ -190,7 +190,7 @@ def test_el_modal_anuncia_lo_que_hara_la_validacion(client, con_abono):
     ).content.decode()
 
     assert "Si validas este abono" in cuerpo
-    assert "7500.00 de $15000.00" in " ".join(cuerpo.split())
+    assert "7,500.00 de $15,000.00" in " ".join(cuerpo.split())
     assert "La reserva pasaría a" in cuerpo
     assert "confirmada" in cuerpo
     assert "Abrir el comprobante" in cuerpo
@@ -264,7 +264,7 @@ def test_validar_suma_al_saldo_y_confirma_la_reserva(client, con_abono):
         follow=True,
     )
 
-    assert "Validaste $7500.00" in respuesta.content.decode()
+    assert "Validaste $7,500.00" in respuesta.content.decode()
     with schema_context(feria.schema_name):
         abono.refresh_from_db()
         reserva.refresh_from_db()

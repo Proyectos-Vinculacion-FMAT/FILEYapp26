@@ -27,6 +27,7 @@ from apps.convocatorias.servicios import registros
 from apps.ferias import permisos
 from apps.ferias.permisos import requiere_admin_feria
 from apps.registros.permisos import requiere_participante
+from comun.formatos import pesos
 
 from .formularios import (
     MAXIMO_SELLOS,
@@ -583,9 +584,18 @@ def pagos_por_validar(peticion, convocatoria_id):
 
     # Sin estado en la URL, la cola son los pendientes. `todos` es la
     # salida explícita a la vista completa.
+    #
+    # Un valor que no reconocemos se **normaliza a vacío** y no solo se
+    # ignora: si se conservara, el filtro caería a los pendientes pero
+    # ningún chip saldría marcado —el primero se activa con `not
+    # pedido`— y el buscador arrastraría la basura en su campo oculto.
+    # La pantalla diría entonces que no hay filtro puesto mientras
+    # enseña una lista filtrada.
+    if pedido not in (TODOS, *Movimiento.Estado.values):
+        pedido = ""
     if pedido == TODOS:
         filtro = None
-    elif pedido in Movimiento.Estado.values:
+    elif pedido:
         filtro = pedido
     else:
         filtro = Movimiento.Estado.PENDIENTE
@@ -685,7 +695,7 @@ def movimiento(peticion, movimiento_id):
                 reserva = pagos.validar(movimiento=abono, administrador=peticion.user)
                 messages.success(
                     peticion,
-                    f"Validaste ${abono.monto} de "
+                    f"Validaste {pesos(abono.monto)} de "
                     f"{abono.reserva.editorial.nombre}. La reserva quedó "
                     f"{reserva.get_estado_display().lower()}.",
                 )
@@ -1005,11 +1015,16 @@ def _ocupacion(mapa, reservas_vivas) -> dict:
     if not total:
         return {"hay_ocupacion": False}
 
+    # `con_saldo` trae lo abonado sumado en la misma consulta. Sin él,
+    # `monto_abonado` es una propiedad que agrega por reserva: el panel
+    # de una convocatoria con ochenta reservas vivas hacía ochenta
+    # consultas para pintar dos cifras.
+    con_lo_abonado = list(reservas.con_saldo(reservas_vivas))
     comprometido = sum(
-        (r.monto_total for r in reservas_vivas), start=Decimal("0.00")
+        (r.monto_total for r in con_lo_abonado), start=Decimal("0.00")
     )
     cobrado = sum(
-        (r.monto_abonado for r in reservas_vivas), start=Decimal("0.00")
+        (r.monto_abonado for r in con_lo_abonado), start=Decimal("0.00")
     )
     return {
         "hay_ocupacion": True,
@@ -1050,13 +1065,21 @@ def documento(peticion, documento_id):
     **Un 404 y no un 403 cuando no se puede.** Un 403 confirmaría que ese
     documento existe, que es justo lo que no queremos decirle a alguien
     que está probando identificadores.
+
+    Y un 404 también cuando el archivo se perdió del almacén
+    (`CU-STD-005` E1): es otra incidencia —queda en el log como tal—
+    pero la misma respuesta, porque la alternativa era un 500 que cortaba
+    la revisión entera en vez de fallar solo ese enlace.
     """
     adjunto = get_object_or_404(
         Documento.objects.select_related("editorial"), pk=documento_id
     )
     if not archivos.puede_ver(peticion, adjunto):
         raise Http404("No hay ningún documento con ese identificador.")
-    return archivos.entregar(adjunto)
+    try:
+        return archivos.entregar(adjunto)
+    except archivos.ArchivoNoDisponible as exc:
+        raise Http404(str(exc)) from exc
 
 
 # ── El mapa del showfloor ─────────────────────────────────────
@@ -1722,7 +1745,7 @@ def registrar_abono(peticion, convocatoria_id):
 
     messages.success(
         peticion,
-        f"Registramos tu pago de ${movimiento.monto}. "
+        f"Registramos tu pago de {pesos(movimiento.monto)}. "
         "Te avisamos en cuanto lo validemos contra el banco.",
     )
     return destino
@@ -1850,10 +1873,10 @@ def detalle_reserva(peticion, reserva_id):
                     al_dia = Reserva.objects.get(pk=reserva.pk)
                     messages.success(
                         peticion,
-                        f"Asentaste ${movimiento_nuevo.monto} en la reserva "
+                        f"Asentaste {pesos(movimiento_nuevo.monto)} en la reserva "
                         f"de {reserva.editorial.nombre}. Quedó "
                         f"{al_dia.get_estado_display().lower()}, con "
-                        f"${al_dia.monto_pendiente} pendientes.",
+                        f"{pesos(al_dia.monto_pendiente)} pendientes.",
                     )
                     return aqui
             else:
@@ -1882,7 +1905,7 @@ def detalle_reserva(peticion, reserva_id):
                         peticion,
                         f"Aplicaste un {form_descuento.cleaned_data['porcentaje']}% "
                         f"de descuento. La reserva pasa a "
-                        f"${al_dia.monto_total} y queda "
+                        f"{pesos(al_dia.monto_total)} y queda "
                         f"{al_dia.get_estado_display().lower()}.",
                     )
                     return aqui
@@ -1972,7 +1995,7 @@ def detalle_reserva(peticion, reserva_id):
                 messages.success(
                     peticion,
                     f"Retiraste el descuento especial. La reserva vuelve a "
-                    f"${al_dia.monto_total}.",
+                    f"{pesos(al_dia.monto_total)}.",
                 )
                 return aqui
         else:

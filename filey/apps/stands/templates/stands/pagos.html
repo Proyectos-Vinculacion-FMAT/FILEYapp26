@@ -1,4 +1,5 @@
 {% extends "layouts/admin.html" %}
+{% load dinero %}
 
 {% block migaja %}Stands · Pagos por validar{% endblock %}
 
@@ -46,7 +47,7 @@
             <strong>{{ abono.reserva.editorial.nombre }}</strong><br>
             <span class="hint">{{ abono.reserva.registro.persona.correo }}</span>
           </td>
-          <td class="num">${{ abono.monto|floatformat:2 }}</td>
+          <td class="num">{{ abono.monto|pesos }}</td>
           <td>
             {{ abono.get_metodo_display }}
             {% if abono.origen == 'admin_manual' %}

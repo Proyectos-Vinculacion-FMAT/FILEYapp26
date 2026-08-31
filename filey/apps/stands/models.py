@@ -393,10 +393,25 @@ class Solicitud(models.Model):
         RECHAZADA = "rechazada", "Rechazada"
         CAMBIOS_SOLICITADOS = "cambios_solicitados", "Cambios solicitados"
 
-    #: Los dos estados en los que una solicitud sigue en juego. De un
-    #: registro cuelgan N solicitudes con **como mucho una viva**
-    #: (`RN-22`), y eso lo sostiene una restricción única parcial.
+    #: Los dos estados en los que una solicitud sigue **esperando
+    #: dictamen**. Es lo que cuenta la cola de A1 y lo que impide enviar
+    #: otra mientras tanto.
     VIVOS = (Estado.PENDIENTE, Estado.CAMBIOS_SOLICITADOS)
+
+    #: Los estados que **ocupan el registro**: los dos de arriba más
+    #: `aceptada`. De un registro cuelgan N solicitudes (`RN-22`) con
+    #: como mucho una de éstas, y eso lo sostiene una restricción única
+    #: parcial.
+    #:
+    #: `aceptada` entró el 2026-08-30. Hasta entonces la restricción solo
+    #: cubría `VIVOS`, así que quien ya estaba aceptado podía mandar otra
+    #: solicitud: quedaba una `aceptada` y una `pendiente` del mismo
+    #: registro, la cola de A1 enseñaba a alguien que ya era expositor, y
+    #: rechazar esa segunda **no le quitaba** la habilitación para
+    #: reservar, porque ésa la da la primera (`RN-16`). Volver a aplicar
+    #: es lo que `RN-22` abre **tras un rechazo**, no tras una
+    #: aceptación: quien ya entró no tiene nada que volver a pedir.
+    OCUPAN_EL_REGISTRO = (*VIVOS, Estado.ACEPTADA)
 
     registro = models.ForeignKey(
         RegistroConvocatoria,
@@ -441,17 +456,19 @@ class Solicitud(models.Model):
         ordering = ["-fecha_envio"]
         constraints = [
             # `RN-22`: de un registro cuelgan todas las solicitudes de esa
-            # persona a esa convocatoria, con **como mucho una viva**.
+            # persona a esa convocatoria, con **como mucho una en juego**.
             # Tras un rechazo se puede volver a aplicar; mientras haya una
-            # pendiente o con cambios pedidos, no.
+            # pendiente, con cambios pedidos **o ya aceptada**, no.
             #
-            # Es parcial —solo sobre los dos estados vivos— y por eso hace
+            # Es parcial —solo sobre esos tres estados— y por eso hace
             # falta PostgreSQL. Comprobarlo solo en el servicio dejaría
             # pasar dos envíos simultáneos.
             models.UniqueConstraint(
                 fields=["registro"],
-                condition=Q(estado__in=("pendiente", "cambios_solicitados")),
-                name="una_solicitud_viva_por_registro",
+                condition=Q(
+                    estado__in=("pendiente", "cambios_solicitados", "aceptada")
+                ),
+                name="una_solicitud_en_juego_por_registro",
             ),
             # Una solicitud resuelta dice quién la resolvió y cuándo. Sin
             # esto, un dictamen a medias —estado cambiado, revisor

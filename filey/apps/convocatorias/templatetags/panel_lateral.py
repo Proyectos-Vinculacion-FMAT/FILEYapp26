@@ -99,6 +99,7 @@ def barra_lateral(context):
     peticion = context.get("request")
     convocatoria = context.get("convocatoria")
     feria = getattr(peticion, "tenant", None)
+    usuario = getattr(peticion, "user", None)
     resolucion = getattr(peticion, "resolver_match", None)
     vista_actual = resolucion.view_name if resolucion is not None else ""
 
@@ -116,6 +117,29 @@ def barra_lateral(context):
             vista_actual,
         ),
     ]
+
+    # El admin de Django **de esta edición** (`comun/admin_feria.py`).
+    # Solo para quien puede entrar: su puerta es `is_staff`, la misma que
+    # `/django-admin/`, y ofrecérselo al dueño de una feria que no lo sea
+    # es mandarlo a un formulario de acceso que no va a poder pasar.
+    #
+    # Va aquí y no en la barra superior porque lo que sirve es contenido
+    # de **esta** feria —el alta de convocatorias, la importación del
+    # mapa, la bitácora—: sin este enlace se llega escribiendo la URL a
+    # mano, que es como se ha llegado hasta ahora.
+    en_una_feria = feria is not None and not getattr(feria, "es_la_de_sistema", False)
+    if en_una_feria and getattr(usuario, "is_staff", False):
+        de_la_feria.append(
+            {
+                "etiqueta": "Admin de Django",
+                "icono": "🛠️",
+                "url": f"{feria.url}django-admin/",
+                "planeada": False,
+                # Nunca activa: es otro sitio, con su propio chasis. Una
+                # entrada marcada mientras se mira otra pantalla miente.
+                "activa": False,
+            }
+        )
 
     grupos = [_grupo(feria.nombre if feria else "Esta feria", de_la_feria)]
 

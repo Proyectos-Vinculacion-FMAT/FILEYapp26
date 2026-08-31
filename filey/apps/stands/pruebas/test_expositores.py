@@ -299,7 +299,7 @@ def test_las_reservas_enlazan_a_su_gestion(client, convocatoria):
 
     assert f"/stands/reserva/{reserva.pk}/" in cuerpo
     # Dos espacios de 6 m² a $2 500.
-    assert "30000.00" in cuerpo
+    assert "30,000.00" in cuerpo
 
 
 def test_sin_reservas_lo_dice_sin_alarmar(client, convocatoria):

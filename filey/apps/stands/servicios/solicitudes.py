@@ -47,6 +47,50 @@ def solicitud_viva(convocatoria: Convocatoria, persona) -> Solicitud | None:
     )
 
 
+def _solicitud_que_ocupa_el_registro(
+    convocatoria: Convocatoria, persona
+) -> Solicitud | None:
+    """La solicitud que impide enviar otra, si la hay.
+
+    Distinta de `solicitud_viva`: ésta cuenta también la `aceptada`
+    (`Solicitud.OCUPAN_EL_REGISTRO`). Son dos preguntas parecidas con
+    dos respuestas distintas y por eso son dos funciones —
+    `solicitud_viva` contesta "¿hay algo esperando dictamen?", que es lo
+    que quiere la pantalla; ésta contesta "¿puede enviar otra?", que es
+    lo que quiere el servicio.
+    """
+    if persona is None or not getattr(persona, "is_authenticated", False):
+        return None
+    return (
+        Solicitud.objects.filter(
+            registro__convocatoria=convocatoria,
+            registro__persona=persona,
+            estado__in=Solicitud.OCUPAN_EL_REGISTRO,
+        )
+        .select_related("editorial")
+        .first()
+    )
+
+
+def _por_que_no_puede_enviar(solicitud: Solicitud) -> str:
+    """El aviso de `E2`, que no es el mismo en los dos casos.
+
+    Con una aceptada, "no puedes enviar otra mientras esa siga abierta"
+    sería falso y desorientaría: no está abierta, está resuelta a favor.
+    Lo que toca decir es que ya es expositor y a dónde ir.
+    """
+    if solicitud.estado == Solicitud.Estado.ACEPTADA:
+        return (
+            "Tu solicitud en esta convocatoria ya fue aceptada: no hace falta "
+            "enviar otra. Continúa a elegir tus espacios."
+        )
+    return (
+        "Ya tienes una solicitud en esta convocatoria "
+        f"({solicitud.get_estado_display().lower()}). "
+        "No puedes enviar otra mientras esa siga abierta."
+    )
+
+
 def ultima_solicitud(convocatoria: Convocatoria, persona) -> Solicitud | None:
     """La más reciente, viva o no. Es lo que rutea `CU-STD-003`.
 
@@ -156,20 +200,20 @@ def enviar_solicitud(
     un registro sin solicitud sería una inscripción fantasma en los
     conteos de `FER`.
 
-    E2: si la persona ya tiene una solicitud viva, no se crea otra. Si
-    tiene cambios pedidos, se reedita la misma (`CU-STD-002`); si fue
-    rechazada, **no bloquea** — se aplica de nuevo con la misma
+    E2: si la persona ya tiene una solicitud **en juego**, no se crea
+    otra. Si tiene cambios pedidos, se reedita la misma (`CU-STD-002`);
+    si fue rechazada, **no bloquea** — se aplica de nuevo con la misma
     editorial (`RN-22`).
+
+    "En juego" incluye la `aceptada`, y no solo las dos vivas: quien ya
+    entró no tiene nada que volver a pedir. Ver
+    `Solicitud.OCUPAN_EL_REGISTRO`.
     """
     _convocatoria_que_admite(convocatoria)
 
-    viva = solicitud_viva(convocatoria, persona)
-    if viva is not None:
-        raise EnvioRechazado(
-            "Ya tienes una solicitud en esta convocatoria "
-            f"({viva.get_estado_display().lower()}). "
-            "No puedes enviar otra mientras esa siga abierta."
-        )
+    ocupada = _solicitud_que_ocupa_el_registro(convocatoria, persona)
+    if ocupada is not None:
+        raise EnvioRechazado(_por_que_no_puede_enviar(ocupada))
 
     # El registro se pide a `FER` declarando el tipo que esperamos. Es la
     # única comprobación que existe de que este expediente no cuelgue de

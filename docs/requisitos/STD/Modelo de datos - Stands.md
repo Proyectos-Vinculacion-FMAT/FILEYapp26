@@ -235,7 +235,7 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
-| registro_id | FK → `RegistroConvocatoria` (`FER`). **Uno a muchos**: el registro es la inscripción de esa persona a esa convocatoria, y de él cuelgan todas sus solicitudes a lo largo del tiempo — con **como mucho una viva** (RN-22). Ver las notas de abajo. |
+| registro_id | FK → `RegistroConvocatoria` (`FER`). **Uno a muchos**: el registro es la inscripción de esa persona a esa convocatoria, y de él cuelgan todas sus solicitudes a lo largo del tiempo — con **como mucho una en juego** (RN-22). Ver las notas de abajo. |
 | datos_editorial | **Fotografía** de los datos de la editorial tal como se enviaron (RN-22). Corregir la ficha después no reescribe lo que el administrador dictaminó. |
 | sellos | Fotografía de los sellos declarados en el envío. |
 | editorial_id | FK → Editorial. |
@@ -271,8 +271,13 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 > **Y desde el 2026-08-27 tampoco es una por registro.** Tras un rechazo, la misma persona puede
 > volver a aplicar con la misma editorial (RN-22): la solicitud rechazada se conserva y la nueva
 > nace con su propia fotografía. Lo único único es **persona ↔ registro** dentro de una
-> convocatoria; de ese registro cuelgan N solicitudes con **como mucho una viva** (`pendiente` o
-> `cambios_solicitados`).
+> convocatoria; de ese registro cuelgan N solicitudes con **como mucho una en juego**
+> (`pendiente`, `cambios_solicitados` o `aceptada`).
+>
+> Lo sostiene el índice único parcial `una_solicitud_en_juego_por_registro` (migración `0018`).
+> Hasta el 2026-08-30 se llamaba `una_solicitud_viva_por_registro` y cubría solo los dos
+> primeros estados, con lo que un expositor **ya aceptado** podía enviar otra solicitud; ver la
+> advertencia de `RN-22`.
 
 > [!important] La invariante que la base de datos NO puede sostener (ADR-0006)
 > `registro_id` es una clave foránea real, pero **el `tipo` que decide que este expediente es de
@@ -717,12 +722,12 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 - **Editorial** 1—N **SelloEditorial**.
 - **RegistroConvocatoria** (`FER`) 1—N **Solicitud** (RN-22): es el enganche del dominio con su
   convocatoria (§3.3). De un registro cuelgan todas las solicitudes de esa persona a esa
-  convocatoria a lo largo del tiempo, con **como mucho una viva** (`pendiente` o
-  `cambios_solicitados`); tras un rechazo se puede volver a aplicar. Una misma persona puede
+  convocatoria a lo largo del tiempo, con **como mucho una en juego** (`pendiente`,
+  `cambios_solicitados` o `aceptada`); tras un rechazo se puede volver a aplicar. Una misma persona puede
   tener además varios registros en la misma feria, si hay varias convocatorias de stands.
 - **Convocatoria** (`FER`) 1—1 **ConfiguracionSistema**: una configuración por convocatoria de
   stands, no una por feria (§3.11).
-- **Editorial** 1—N **Solicitud**: una viva **por convocatoria** (no por feria), con reenvío
+- **Editorial** 1—N **Solicitud**: una en juego **por convocatoria** (no por feria), con reenvío
   tras solicitud de cambios y solicitud nueva tras rechazo (RN-22).
 - **Convocatoria** (`FER`) 1—1 **MapaShowfloor** 1—N **Stand** (RN-19): el mapa y sus espacios
   son de la convocatoria. `MapaShowfloor` 1—N **DecoracionMapa**.

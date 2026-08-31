@@ -1,3 +1,4 @@
+{% load dinero %}
 {% comment %} ===========================================================
    El detalle de un abono y las dos decisiones sobre él (CU-STD-018).
 
@@ -35,7 +36,7 @@
     <div>
       <span class="hint">Abono reportado</span>
       <strong class="abono-monto" id="modal-titulo">
-        ${{ movimiento.monto|floatformat:2 }}
+        {{ movimiento.monto|pesos }}
       </strong>
       <p>
         {{ movimiento.get_metodo_display }} ·
@@ -113,8 +114,8 @@
         <div class="progreso-cabecera">
           <span class="hint">Si validas este abono</span>
           <strong>
-            ${{ proyeccion.despues|floatformat:2 }} de
-            ${{ proyeccion.total|floatformat:2 }}
+            {{ proyeccion.despues|pesos }} de
+            {{ proyeccion.total|pesos }}
           </strong>
         </div>
         <div class="progreso-barra">

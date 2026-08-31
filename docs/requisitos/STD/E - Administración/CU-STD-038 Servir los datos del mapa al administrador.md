@@ -60,8 +60,28 @@ El administrador abre el mapa completo del panel y el componente emite su petici
 
 - El componente recibe la retícula, los stands y las decoraciones de **esta convocatoria**.
 - Cada stand viaja con su **estado real**: `disponible`, `reservado` u `ocupado` (RN-10, RN-18).
-- Los stands que forman parte de una reserva viajan además con quién los tiene y el saldo
-  pendiente de esa reserva (RN-18).
+- Quien administra alcanza, para cada stand reservado, quién lo tiene y el saldo pendiente de
+  esa reserva (RN-18) — **no en este JSON**; ver la nota de abajo.
+
+> [!important] Construido el 2026-08-29 · lo de la reserva no viaja en el mapa
+> `apps/stands/servicios/mapa_json.py::para_el_canvas` con `con_detalle=True` entrega los tres
+> estados sin colapsar, y **eso es todo lo que distingue este caso de uso de CU-STD-037**. La
+> editorial, el estado de la reserva y su saldo **no van en el JSON**: los sirve
+> `views.detalle_stand`, que es la vista del panel lateral del paso 4 de
+> [CU-STD-032](<CU-STD-032 Visualizar el mapa completo (con quién reservó y saldo pendiente).md>),
+> y los trae solo si quien pregunta administra.
+>
+> **Por qué así.** El canvas no dibuja nada con esos datos —no pinta el nombre de la editorial
+> sobre el espacio, ni colorea por saldo—, así que mandarlos en la carga inicial sería enviar
+> 151 nombres y 151 importes a un cliente que no los usa, en la petición que ya es la más
+> pesada de la pantalla. Y como el recorte de `RN-09` se juega en este mismo archivo, cuanto
+> menos viaje por aquí menos superficie hay donde equivocarse: el modal se pide de uno en uno y
+> pasa por su propia comprobación.
+>
+> Los pasos 5 y 6 de abajo se conservan porque describen bien **qué tiene que poder saber** el
+> administrador; lo que cambia es por qué puerta. Si algún día el componente quiere pintar la
+> ocupación por editorial, este caso de uso es el que hay que ampliar y el `con_detalle` de
+> `para_el_canvas` es donde entra.
 
 ### En fallo
 
@@ -74,8 +94,9 @@ El administrador abre el mapa completo del panel y el componente emite su petici
 3. El sistema toma la retícula de la convocatoria y sus stands (RN-19).
 4. El sistema calcula el precio de cada stand (RN-01) con el `costo_m2` de esta convocatoria.
 5. El sistema entrega el estado **real** de cada stand, **sin colapsar** (RN-18).
-6. Para cada stand que pertenece a una reserva, el sistema añade la editorial que la tiene, el
-   estado de esa reserva y su saldo pendiente.
+6. Para cada stand que pertenece a una reserva, el sistema pone a disposición la editorial que
+   la tiene, el estado de esa reserva y su saldo pendiente — por la vista de detalle del
+   espacio, no en esta carga (ver la nota de las postcondiciones).
 7. El sistema entrega la retícula, los stands y las decoraciones.
 8. El componente dibuja el mapa.
 
@@ -113,8 +134,9 @@ El administrador abre el mapa completo del panel y el componente emite su petici
 - Retícula del mapa: tamaño de celda, columnas, filas y metros por celda.
 - Stands: clave, etiqueta, zona, forma en la retícula, metros cuadrados, precio calculado, qué
   incluye y **estado real**.
-- Por stand reservado: editorial, estado de la reserva y saldo pendiente.
 - Decoraciones.
+- Por stand reservado —**servido aparte**, al abrir el espacio—: editorial, estado de la
+  reserva y saldo pendiente.
 
 ## Reglas de negocio aplicables
 

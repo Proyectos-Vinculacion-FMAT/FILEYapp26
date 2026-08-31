@@ -24,6 +24,7 @@ pantalla y darlo por consola dejen exactamente el mismo estado.
 import logging
 from dataclasses import dataclass
 
+from django.db import transaction
 from django.db.models import QuerySet
 
 from apps.registros.models import Persona
@@ -36,6 +37,16 @@ logger = logging.getLogger(__name__)
 
 class AccesoRechazado(Exception):
     """La operación no se puede intentar (feria archivada, retirar al dueño…)."""
+
+
+@dataclass
+class ResultadoTransferencia:
+    acceso: AdminFeria
+    persona: Persona
+    anterior: Persona | None
+    cuenta_creada: bool = False
+    aviso_enviado: bool = False
+    error_aviso: str = ""
 
 
 @dataclass
@@ -76,8 +87,8 @@ def dar_acceso(
     """Da acceso administrativo a una persona sobre esta feria (`CU-FER-003`).
 
     Nunca crea otro dueño: ``es_dueno`` se queda en falso. La propiedad
-    se asigna al crear la feria (CU-FER-001) y transferirla es un caso
-    de uso que todavía no existe.
+    se asigna al crear la feria (CU-FER-001) y se mueve con
+    ``transferir_propiedad``, no por aquí.
     """
     correo = (correo or "").strip().lower()
     if not correo:
@@ -172,8 +183,9 @@ def retirar_acceso(*, acceso: AdminFeria) -> Persona:
     """
     # ── E2: una feria no puede quedarse sin dueño ─────────────
     # Nadie podría volver a dar acceso a nadie, ni siquiera el operador
-    # sin entrar por consola. La salida es transferir la propiedad,
-    # que todavía es un caso de uso pendiente.
+    # sin entrar por consola. La salida es `transferir_propiedad`, que
+    # deja al dueño anterior como administrador: retirarlo después es ya
+    # este mismo caso de uso, sin excepción que hacer.
     if acceso.es_dueno:
         raise AccesoRechazado(
             "No se puede retirar al dueño de la feria: se quedaría sin nadie "
@@ -187,3 +199,109 @@ def retirar_acceso(*, acceso: AdminFeria) -> Persona:
         "Acceso a la feria %s retirado a %s", acceso.feria.slug, persona.correo
     )
     return persona
+
+
+def transferir_propiedad(
+    *,
+    feria: Feria,
+    correo: str,
+    nombre: str = "",
+    primer_apellido: str = "",
+    segundo_apellido: str = "",
+    transferida_por: Persona | None = None,
+    enviar_aviso: bool = True,
+) -> ResultadoTransferencia:
+    """Pasa la propiedad de una feria a otra persona.
+
+    Hoy solo la ejecuta el **operador de la plataforma** desde
+    `/django-admin/` (`ADR-0005`). El caso de uso que falta es el del
+    propio dueño, para poder salir sin depender del equipo técnico; ver
+    los temas abiertos del modelo de datos de `FER`.
+
+    Lo que hace, y en este orden:
+
+    1. Resuelve la cuenta de destino —la reutiliza tal cual si existe,
+       igual que `dar_acceso`; la crea si no—.
+    2. Degrada al dueño actual a administrador. **No lo retira**: quien
+       montó la edición sigue conociéndola, y dejarlo fuera de un
+       traspaso obligaría a darle acceso otra vez a continuación.
+    3. Promueve a la persona de destino.
+
+    Los tres pasos van en una transacción porque el estado intermedio
+    —una feria sin dueño, o con dos— es justamente el que prohíbe
+    `un_solo_dueno_por_feria`, y el que dejaría una edición que nadie
+    puede administrar si algo falla a la mitad.
+
+    :raises AccesoRechazado: y no se cambia nada.
+    """
+    correo = (correo or "").strip().lower()
+    if not correo:
+        raise AccesoRechazado("Hace falta el correo de quien va a recibir la feria.")
+
+    persona = Persona.objects.filter(correo=correo).first()
+    cuenta_creada = persona is None
+
+    dueno_actual = AdminFeria.objects.filter(feria=feria, es_dueno=True).first()
+    if dueno_actual is not None and persona is not None:
+        if dueno_actual.persona_id == persona.pk:
+            # Ya es su dueño. Se devuelve tal cual en vez de rechazar:
+            # el resultado que pedían ya se cumple, y un error aquí
+            # obligaría a la pantalla a distinguir un caso que no
+            # cambia nada.
+            return ResultadoTransferencia(
+                acceso=dueno_actual, persona=persona, anterior=persona
+            )
+
+    with transaction.atomic():
+        if cuenta_creada:
+            persona = Persona.objects.create_user(
+                correo=correo,
+                nombre=nombre,
+                primer_apellido=primer_apellido,
+                segundo_apellido=segundo_apellido,
+            )
+
+        # Primero soltar y después asignar: el índice único parcial es
+        # inmediato, así que promover con el dueño anterior todavía
+        # marcado lo violaría.
+        anterior = None
+        if dueno_actual is not None:
+            anterior = dueno_actual.persona
+            dueno_actual.es_dueno = False
+            dueno_actual.save(update_fields=["es_dueno"])
+
+        acceso, _ = AdminFeria.objects.get_or_create(
+            feria=feria,
+            persona=persona,
+            defaults={"creado_por": transferida_por},
+        )
+        acceso.es_dueno = True
+        acceso.save(update_fields=["es_dueno"])
+
+    logger.info(
+        "Propiedad de la feria %s transferida de %s a %s",
+        feria.slug,
+        anterior.correo if anterior else "(sin dueño)",
+        persona.correo,
+    )
+
+    # El aviso va **fuera** de la transacción y su fallo no la deshace:
+    # la propiedad ya cambió y quien la recibe entra en cuanto conozca la
+    # dirección. Mismo criterio que `dar_acceso`.
+    aviso_enviado = False
+    error_aviso = ""
+    if enviar_aviso:
+        try:
+            avisos.avisar_dueno_de_feria(feria, persona)
+            aviso_enviado = True
+        except avisos.AvisoFallido as exc:
+            error_aviso = str(exc)
+
+    return ResultadoTransferencia(
+        acceso=acceso,
+        persona=persona,
+        anterior=anterior,
+        cuenta_creada=cuenta_creada,
+        aviso_enviado=aviso_enviado,
+        error_aviso=error_aviso,
+    )

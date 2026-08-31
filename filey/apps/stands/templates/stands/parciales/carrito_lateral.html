@@ -1,3 +1,4 @@
+{% load dinero %}
 {% comment %} ===========================================================
    El carrito al lado del mapa (`CU-STD-011`).
 
@@ -84,7 +85,7 @@
       </div>
       <div class="carrito-fila es-total">
         <span>Subtotal</span>
-        <span>${{ total|floatformat:2 }}</span>
+        <span>{{ total|pesos }}</span>
       </div>
       <a class="btn btn-primary btn-block"
          href="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">

@@ -1,4 +1,5 @@
 {% extends "layouts/admin.html" %}
+{% load dinero %}
 
 {% block migaja %}Stands · Resumen{% endblock %}
 
@@ -158,12 +159,12 @@
         </div>
         <div>
           <span class="hint">Comprometido</span>
-          <strong>${{ comprometido|floatformat:2 }}</strong>
+          <strong>{{ comprometido|pesos }}</strong>
           <span class="hint">suma de las reservas activas</span>
         </div>
         <div>
           <span class="hint">Cobrado</span>
-          <strong>${{ cobrado|floatformat:2 }}</strong>
+          <strong>{{ cobrado|pesos }}</strong>
           <span class="hint">solo abonos validados</span>
         </div>
       </div>

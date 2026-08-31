@@ -326,6 +326,38 @@ def rechazar(*, movimiento: Movimiento, administrador, motivo: str = "") -> Movi
 # ── CU-STD-020 · el descuento especial ────────────────────────
 
 
+def _exigir_reserva_viva(reserva: Reserva, que_se_iba_a_hacer: str) -> Reserva:
+    """Trae la reserva bloqueada y se niega si ya está cerrada.
+
+    Las dos funciones que mueven un descuento son las únicas del dominio
+    que reescriben `monto_total`, y `RN-01` acota esa licencia a las
+    reservas **vivas**: «los descuentos sí lo mueven, y en reservas
+    vivas». Sobre una cancelada no hay nada que descontar — `RN-11` dice
+    que cancelar cierra, y el importe pasa a ser el registro de lo que
+    esa reserva costó.
+
+    Hasta el 2026-08-30 la comprobación existía **solo en la plantilla**
+    de A4 (``{% if esta_viva %}``), así que un POST con
+    ``accion=descuento_especial`` sobre una cancelada le reescribía el
+    total sin que nada protestara: la vista despacha la acción sin
+    volver a preguntar, y `reevaluar` sale temprano en las canceladas,
+    de modo que el estado quedaba bien y la cifra mal. Es la regla 3 de
+    `CLAUDE.md` — lo que no se puede llamar desde `manage.py` sin pasar
+    por HTTP está en el sitio equivocado.
+
+    Bloquea la fila, como `validar` y `cancelar`: se decide sobre el
+    estado que hay ahora, no sobre el que traía la instancia que pintó
+    la pantalla.
+    """
+    reserva = Reserva.objects.select_for_update().get(pk=reserva.pk)
+    if reserva.estado not in Reserva.VIVAS:
+        raise PagoRechazado(
+            f"Esta reserva está {reserva.get_estado_display().lower()}: ya no "
+            f"tiene sentido {que_se_iba_a_hacer}."
+        )
+    return reserva
+
+
 @transaction.atomic
 def aplicar_descuento_especial(
     *, reserva: Reserva, administrador, porcentaje: int, motivo: str
@@ -340,6 +372,8 @@ def aplicar_descuento_especial(
     segundo intento **sí es un error que se enseña** —al revés que el
     pronto pago, que es automático e idempotente—: para cambiar el
     porcentaje hay que retirar el que hay.
+
+    Solo sobre una reserva **viva**: ver `_exigir_reserva_viva`.
     """
     if not motivo or not motivo.strip():
         raise PagoRechazado(
@@ -348,6 +382,9 @@ def aplicar_descuento_especial(
         )
     if not 1 <= porcentaje <= 100:
         raise PagoRechazado("El porcentaje tiene que estar entre 1 y 100.")
+
+    reserva = _exigir_reserva_viva(reserva, "aplicarle un descuento")
+
     if reserva.descuentos.filter(tipo=DescuentoAplicado.Tipo.ESPECIAL).exists():
         raise PagoRechazado(
             "Esta reserva ya tiene un descuento especial. Retíralo antes de "
@@ -399,7 +436,11 @@ def retirar_descuento_especial(*, reserva: Reserva, administrador) -> Reserva:
     sigue pagada, con saldo pendiente otra vez.
 
     El pronto pago no se toca: son independientes (`RN-06`).
+
+    Solo sobre una reserva **viva**: ver `_exigir_reserva_viva`.
     """
+    reserva = _exigir_reserva_viva(reserva, "retirarle el descuento")
+
     descuento = reserva.descuentos.filter(
         tipo=DescuentoAplicado.Tipo.ESPECIAL
     ).first()
@@ -635,8 +676,25 @@ def _estado_para(reserva: Reserva, abonado: Decimal) -> str:
     `estado_si_se_valida` —para **anunciar** el efecto antes de que
     alguien pulse—. Que sea una sola función es lo que impide que la
     pantalla prometa "quedaría confirmada" y el cobro haga otra cosa.
+
+    .. important:: Un total de cero está cubierto
+
+       Hasta el 2026-08-30 esto exigía además ``monto_total > 0`` para
+       dar una reserva por pagada, y eso dejaba atrapada en `confirmada`
+       a la que recibía un descuento especial del 100% —que `RN-07`
+       contempla, es el convenio institucional—: total cero, saldo cero,
+       y `RN-14` sin cumplirse. Sus espacios se quedaban en
+       `reservado` para siempre, no salía el correo de liquidación
+       (`CU-STD-027`) y la ocupación del panel los contaba como
+       apartados.
+
+       La guarda existía para que una reserva de una convocatoria sin
+       precio no se marcara pagada sola. Ya no hace falta:
+       `reservas.crear` rechaza `costo_m2` en cero desde el
+       2026-08-29, así que el único camino a un total de cero es un
+       descuento deliberado — y ése **sí** está liquidado.
     """
-    if abonado >= reserva.monto_total and reserva.monto_total > 0:
+    if abonado >= reserva.monto_total:
         # `RN-14`: cubierto el total, la reserva queda pagada y sus
         # espacios pasan a `ocupado` (`RN-10`).
         return Reserva.Estado.PAGADA

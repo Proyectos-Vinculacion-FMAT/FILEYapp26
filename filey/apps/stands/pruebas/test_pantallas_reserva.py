@@ -82,7 +82,7 @@ def test_agregar_y_quitar_espacios(client, listo):
     cuerpo = _agregar(client, feria, conv, "A2").content.decode()
     assert "A1" in cuerpo and "A2" in cuerpo
     # Dos de 6 m² a 2 500.
-    assert "30000.00" in cuerpo
+    assert "30,000.00" in cuerpo
 
     cuerpo = client.post(
         _url(feria, "stands:carrito", convocatoria_id=conv.pk),
@@ -90,7 +90,7 @@ def test_agregar_y_quitar_espacios(client, listo):
         follow=True,
     ).content.decode()
 
-    assert "15000.00" in cuerpo
+    assert "15,000.00" in cuerpo
 
 
 def test_agregar_dos_veces_el_mismo_no_lo_duplica(client, listo):
@@ -101,7 +101,7 @@ def test_agregar_dos_veces_el_mismo_no_lo_duplica(client, listo):
     cuerpo = _agregar(client, feria, conv, "A1").content.decode()
 
     assert cuerpo.count('name="clave" value="A1"') == 1
-    assert "15000.00" in cuerpo
+    assert "15,000.00" in cuerpo
 
 
 def test_el_carrito_no_aparta_nada(client, listo):
@@ -163,7 +163,7 @@ def test_un_espacio_que_se_perdio_se_nombra_y_no_suma(client, listo):
     assert "Alguien reservó antes que tú" in cuerpo
     assert "Ya no disponible" in cuerpo
     # El total cuenta solo lo tomable: 15 000, no 30 000.
-    assert "15000.00" in cuerpo
+    assert "15,000.00" in cuerpo
 
 
 def test_sin_habilitacion_no_hay_carrito(client, listo):
@@ -226,7 +226,7 @@ def test_lo_que_dice_el_resumen_es_lo_que_se_cobra(client, listo):
     cuerpo = client.get(
         _url(feria, "stands:carrito", convocatoria_id=conv.pk)
     ).content.decode()
-    prometido = re.findall(r"13500\.00", cuerpo)
+    prometido = re.findall(r"13,500\.00", cuerpo)
     assert prometido, "el resumen no enseña el total con descuento"
 
     client.post(_url(feria, "stands:reservar", convocatoria_id=conv.pk), follow=True)
@@ -295,10 +295,12 @@ def test_mi_reserva_dice_total_abonado_pendiente_y_fechas(client, listo):
         _url(feria, "stands:cuenta", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "15000.00" in cuerpo
-    assert "7500.00" in cuerpo  # el anticipo del 50%
+    assert "15,000.00" in cuerpo
+    assert "7,500.00" in cuerpo  # el anticipo del 50%
     assert "Por confirmar" in cuerpo
-    assert "Vence el anticipo" in cuerpo
+    # El plazo va pegado a su importe, en el pie del estado de cuenta.
+    assert "Anticipo para confirmar" in cuerpo
+    assert "vence el" in cuerpo
 
 
 def test_sin_reserva_se_manda_al_mapa(client, listo):
@@ -380,7 +382,7 @@ def test_la_cola_de_reservas_las_lista(client, listo):
     ).content.decode()
 
     assert "Ediciones del Mayab" in cuerpo
-    assert "15000.00" in cuerpo
+    assert "15,000.00" in cuerpo
 
 
 def test_el_filtro_de_vencidas_va_en_la_consulta(client, listo):
@@ -436,8 +438,8 @@ def test_el_detalle_avisa_si_el_desglose_dejo_de_cuadrar(client, listo):
     ).content.decode()
 
     assert "ya no coincide con lo cobrado" in cuerpo
-    assert "15000.00" in cuerpo  # lo cobrado
-    assert "18000.00" in cuerpo  # lo que saldría hoy
+    assert "15,000.00" in cuerpo  # lo cobrado
+    assert "18,000.00" in cuerpo  # lo que saldría hoy
 
 
 def test_el_detalle_no_avisa_cuando_todo_cuadra(client, listo):
@@ -627,7 +629,7 @@ def test_el_dinero_separa_lo_comprometido_de_lo_cobrado(client, listo):
         _url(feria, "stands:panel", convocatoria_id=conv.pk)
     ).content.decode()
 
-    assert "Comprometido" in cuerpo and "15000.00" in cuerpo
+    assert "Comprometido" in cuerpo and "15,000.00" in cuerpo
     assert "Cobrado" in cuerpo and "0.00" in cuerpo
 
 
@@ -767,8 +769,8 @@ def test_la_misma_cifra_en_el_carrito_lateral_y_en_el_de_confirmar(client, listo
     ).content.decode()
 
     # 15 000 − 10% de pronto pago.
-    assert "13500.00" in lateral
-    assert "13500.00" in confirmar
+    assert "13,500.00" in lateral
+    assert "13,500.00" in confirmar
 
 
 def test_el_admin_no_lleva_carrito_al_lado(client, listo):

@@ -19,6 +19,33 @@ dependencias:
 
 El sistema consolida el descuento por pronto pago si la editorial liquida el monto total con descuento antes de la fecha límite establecida. Si la fecha expira sin que se haya liquidado, el sistema retira la oferta y ajusta el monto pendiente al precio regular.
 
+> [!important] Construido el 2026-08-27 · el descuento se aplica **al reservar**, no al liquidar
+> El flujo principal de abajo describe el descuento como algo que se *registra cuando se
+> cumple la condición* (pasos 3 y 4), reevaluado con cada abono o por la rutina diaria. **No es
+> lo que se construyó, y la diferencia es deliberada.**
+>
+> `servicios/reservas.py::crear` inserta el `DescuentoAplicado` de tipo `pronto_pago` en el
+> momento de reservar, si `pronto_pago_vigente()` devuelve un porcentaje. Así la cifra que la
+> editorial **acepta** ya lo lleva puesto, que es lo que el paso 3 de
+> [CU-STD-012](<../B - Reserva/CU-STD-012 Realizar la reserva de los stands seleccionados.md>)
+> pide enseñar: el total con descuento, el tiempo que queda para conservarlo y a cuánto sube si
+> se deja pasar. Con el modelo de abajo, el carrito tendría que prometer un descuento que
+> todavía no existe en ninguna fila y que el aplicante solo vería al pagar del todo.
+>
+> El `A1` es entonces lo que **de verdad** hace el reloj: `servicios/pagos.py::caducar_pronto_pago`
+> lo retira si llega la fecha de corte sin liquidar, y el total sube. `RN-04` está redactada
+> sobre el modelo construido —«se aplica al reservar y caduca»—; este caso de uso conserva su
+> redacción original porque describe bien la **regla comercial**, que no cambió: se paga menos
+> si se paga antes del corte.
+>
+> **Lo que la diferencia sí cambia, y hay que saber:** poner o ampliar
+> `fecha_limite_pronto_pago` (`CU-STD-034`) **no le da el descuento a las reservas que ya
+> existen**. Solo lo llevan las que nacieron con la fecha vigente. Es coherente con `RN-01`
+> —el total se congela al reservar— y con que `RN-04` sea una campaña con corte y no un
+> beneficio por reserva, pero no se deduce de la pantalla de configuración: si se abre la
+> campaña tarde, hay que decidir a mano qué se hace con lo ya reservado (`CU-STD-020` es la
+> herramienta).
+
 ## Actores
 
 - **Actor principal:** Sistema

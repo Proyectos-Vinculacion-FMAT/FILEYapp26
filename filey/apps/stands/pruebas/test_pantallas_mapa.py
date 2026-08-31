@@ -644,7 +644,7 @@ def test_quien_administra_ve_quien_reservo_y_cuanto_debe(client, escenario):
 
     assert "Ediciones del Mayab" in cuerpo
     assert "Pendiente" in cuerpo
-    assert "15000.00" in cuerpo
+    assert "15,000.00" in cuerpo
     assert "Ver la reserva" in cuerpo
 
 
