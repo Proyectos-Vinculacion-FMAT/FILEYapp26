@@ -126,6 +126,12 @@ def _entregar(
         tipo=tipo,
         estado=estado,
         detalle_error=detalle,
+        # La dirección **usada**, no la que tenga la ficha al leerla: es
+        # lo único que contesta «¿a qué buzón salió?» un mes después.
+        destino=destino,
+        # Lo deja el backend de Resend; con `locmem` no hay acuse y
+        # queda vacío, que es información correcta y no un hueco.
+        referencia_externa=str(getattr(mensaje, "acuse_proveedor", "") or "")[:120],
         **a_que,
     )
 

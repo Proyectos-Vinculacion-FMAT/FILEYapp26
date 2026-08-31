@@ -12,6 +12,7 @@ from django import forms
 
 from comun import validadores
 
+from .estados_mx import ESTADO_POR_DEFECTO, ESTADOS_MX
 from .paises import PAIS_POR_DEFECTO, PAISES
 
 
@@ -82,6 +83,25 @@ class RegistroForm(forms.Form):
         },
     )
 
+    # ── Solo si el país es México ─────────────────────────────
+    #
+    # `required=False` en los dos y la exigencia en `clean()`: si
+    # `entidad` fuera obligatoria a nivel de campo, quien se registra
+    # desde Colombia no podría enviar el formulario por no llenar un
+    # desplegable que la pantalla ni siquiera le enseña.
+    entidad = forms.ChoiceField(
+        label="Estado",
+        choices=ESTADOS_MX,
+        initial=ESTADO_POR_DEFECTO,
+        required=False,
+        error_messages={"invalid_choice": "Ese estado no está en la lista."},
+    )
+    ciudad = forms.CharField(
+        label="Ciudad",
+        max_length=120,
+        required=False,
+    )
+
     def clean_nombre(self):
         return self.cleaned_data["nombre"].strip()
 
@@ -109,6 +129,37 @@ class RegistroForm(forms.Form):
         digitos = validadores.solo_digitos(self.cleaned_data["telefono"])
         validadores.telefono(digitos)
         return digitos
+
+    def clean_ciudad(self):
+        return self.cleaned_data["ciudad"].strip()
+
+    def clean(self):
+        """El estado y la ciudad **son de México y de nadie más**.
+
+        Fuera de México no se piden —la pantalla los esconde— y aquí se
+        descartan, aunque lleguen: sin esto, un POST fabricado a mano
+        dejaría a alguien de Bogotá con «Yucatán» guardado, y una
+        consulta por entidad contaría personas que no viven ahí.
+
+        Dentro de México la entidad sí se exige. En la práctica nunca
+        falta —el desplegable nace en Yucatán y un `<select>` siempre
+        manda algo—, así que este error solo lo ve quien envía el
+        formulario a mano; que exista es lo que impide que la columna
+        quede a medias.
+        """
+        datos = super().clean()
+
+        if datos.get("pais") != PAIS_POR_DEFECTO:
+            datos["entidad"] = ""
+            datos["ciudad"] = ""
+            # Un `invalid_choice` sobre un campo que la pantalla no
+            # enseñó no se puede corregir: quien lo ve no encuentra
+            # dónde. El valor ya se descartó, así que el error sobra.
+            self.errors.pop("entidad", None)
+        elif not datos.get("entidad"):
+            self.add_error("entidad", "Elige tu estado.")
+
+        return datos
 
 
 class CodigoForm(forms.Form):

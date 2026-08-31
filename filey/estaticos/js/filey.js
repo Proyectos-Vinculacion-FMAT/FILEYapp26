@@ -88,6 +88,15 @@ document.addEventListener('alpine:init', () => {
     nombre: '',
     primerApellido: '',
     telefono: '',
+    pais: 'MX',
+
+    // Estado y ciudad solo se piden dentro de México (CU-REG-001): un
+    // catálogo de 32 entidades mexicanas no describe una dirección en
+    // Bogotá. Esto solo los **esconde**; quien decide es el servidor,
+    // que los descarta igual si el país no es México.
+    get esMexico() {
+      return this.pais === 'MX';
+    },
 
     // El segundo apellido y el país no entran en la validación: el
     // primero es opcional (CU-REG-001, E1) y el segundo es un <select>

@@ -43,7 +43,12 @@ class ResendBackend(BaseEmailBackend):
         enviados = 0
         for mensaje in email_messages:
             try:
-                self._enviar_uno(mensaje)
+                # El acuse se cuelga del mensaje porque `send_messages`
+                # solo puede devolver un conteo, y quien lo necesita es
+                # quien compuso el correo —para poder casar su fila con
+                # el panel del proveedor cuando alguien pregunte si
+                # llegó—. Con `locmem` nadie lo pone y queda vacío.
+                mensaje.acuse_proveedor = self._enviar_uno(mensaje)
             except EmailDeliveryError:
                 if not self.fail_silently:
                     raise

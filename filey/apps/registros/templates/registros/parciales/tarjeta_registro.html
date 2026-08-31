@@ -98,6 +98,8 @@
         <select id="id_pais"
                 name="pais"
                 autocomplete="country"
+                x-init="pais = $el.value"
+                x-model="pais"
                 class="{% if form.pais.errors %}is-invalid{% endif %}">
           {% for codigo, nombre in form.pais.field.choices %}
             <option value="{{ codigo }}"
@@ -108,6 +110,53 @@
       {% for error in form.pais.errors %}
         <p class="msg-error">{{ error }}</p>
       {% endfor %}
+    </div>
+
+    {% comment %} Estado y ciudad **solo si el país es México** (`CU-REG-001`):
+       un catálogo de 32 entidades mexicanas no describe una dirección en
+       Bogotá. Los esconde Alpine al cambiar el país, y quien llegue sin
+       JavaScript los ve siempre — que es la degradación buena: se pintan
+       de más, no de menos, y el servidor los descarta igual si el país no
+       es México (`RegistroForm.clean`).
+
+       `x-cloak` para que no parpadeen antes de que Alpine arranque: sin
+       él, quien se registra desde el extranjero ve dos campos aparecer y
+       desaparecer. {% endcomment %}
+    <div x-show="esMexico" x-cloak>
+      <div class="field">
+        <label for="id_entidad">Estado <span class="req">*</span></label>
+        <div class="select-wrap">
+          <select id="id_entidad"
+                  name="entidad"
+                  autocomplete="address-level1"
+                  class="{% if form.entidad.errors %}is-invalid{% endif %}">
+            {% for codigo, nombre in form.entidad.field.choices %}
+              <option value="{{ codigo }}"
+                      {% if form.entidad.value|stringformat:"s" == codigo %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% for error in form.entidad.errors %}
+          <p class="msg-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      {% comment %} Opcional y rotulada como tal: lo que sitúa a la persona
+         es el estado, y exigir la ciudad dejaría fuera a quien escribe
+         desde una localidad cuyo nombre oficial no conoce. {% endcomment %}
+      <div class="field">
+        <label for="id_ciudad">Ciudad <span class="opt">(opcional)</span></label>
+        <input type="text"
+               id="id_ciudad"
+               name="ciudad"
+               value="{{ form.ciudad.value|default:'' }}"
+               placeholder="Mérida"
+               autocomplete="address-level2"
+               class="{% if form.ciudad.errors %}is-invalid{% endif %}">
+        {% for error in form.ciudad.errors %}
+          <p class="msg-error">{{ error }}</p>
+        {% endfor %}
+      </div>
     </div>
 
     <button class="btn btn-primary btn-block btn-lg" type="submit" :disabled="!completo">

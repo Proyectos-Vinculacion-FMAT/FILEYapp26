@@ -88,6 +88,7 @@ def test_crear_cuenta_manda_el_codigo(client, codigo_fijo):
             "segundo_apellido": "Ejemplo",
             "telefono": "999 000 1234",
             "pais": "MX",
+            "entidad": "YUC",
         },
     )
 
@@ -114,6 +115,7 @@ def test_el_correo_del_registro_sale_de_la_sesion_no_del_formulario(client, codi
             "primer_apellido": "Anónima",
             "telefono": "9990009999",
             "pais": "MX",
+            "entidad": "YUC",
             "correo": "victima@ejemplo.com",
         },
     )
@@ -132,6 +134,7 @@ def test_un_telefono_ya_usado_se_reporta_en_su_campo(client, participante, codig
             "primer_apellido": "Persona",
             "telefono": participante.telefono,
             "pais": "MX",
+            "entidad": "YUC",
         },
     )
 

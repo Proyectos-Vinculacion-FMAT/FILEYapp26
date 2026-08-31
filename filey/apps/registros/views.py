@@ -265,6 +265,9 @@ def registro(peticion):
         segundo_apellido=datos["segundo_apellido"],
         telefono=datos["telefono"],
         pais=datos["pais"],
+        # Vacías fuera de México: el formulario ya las descartó.
+        entidad=datos["entidad"],
+        ciudad=datos["ciudad"],
     )
 
     # Paso 8: continúa automáticamente en CU-REG-002.

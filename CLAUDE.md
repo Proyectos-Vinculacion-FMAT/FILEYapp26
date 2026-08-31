@@ -91,6 +91,16 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   y alta de cuenta. `apps/registros/` es la app de referencia; `apps/notificaciones/` encapsula
   el envío de correo (Resend). `REG` acaba en cuanto hay sesión: lo que se ve después es de
   `FER`.
+
+  > [!warning] `Persona.estado` **no** es una entidad federativa
+  > Es el estado de la cuenta (`activa`/`inactiva`). La entidad se llama **`entidad`** —ese
+  > nombre ya estaba tomado— y su etiqueta en pantalla sí es «Estado». Con `ciudad`, son los
+  > dos campos que **solo se piden si el país es México** (`CU-REG-001` A2): fuera se quedan
+  > vacíos, y `RegistroForm.clean` los descarta aunque lleguen, porque un POST fabricado a
+  > mano no pasa por la pantalla que los esconde. Los dos catálogos guardan **código y no
+  > nombre** —`MX`, `YUC`— por el mismo motivo: el nombre se escribe de varias formas y el
+  > código no (`registros/paises.py`, `registros/estados_mx.py`). Para copiarlos a una ficha
+  > que guarda texto —el domicilio fiscal de `STD`— está `Persona.estado_nombre`.
 - **Construido:** `FER` (Core Ferias) — `apps/ferias/` (capa `public`: `Feria`, `AdminFeria`,
   el alta desde `/django-admin/`, las dos pantallas de elegir feria y los accesos de una feria
   en `/f/<slug>/accesos/`) y `apps/convocatorias/` (capa por feria: `Convocatoria` y su
