@@ -1,5 +1,6 @@
 {% extends "layouts/panel.html" %}
 {% load flujo %}
+{% load dinero %}
 
 {% comment %} ===========================================================
    U5 y U6 · Mi reserva y sus pagos (CU-STD-013, 014, 015, 016, 017).
@@ -56,26 +57,24 @@
         <strong>Venció el plazo para cubrir el anticipo.</strong>
         Tus espacios siguen apartados, pero la reserva puede cancelarse.
         Para regularizarla faltan
-        <strong>${{ falta_para_el_anticipo|floatformat:2 }}</strong>.
+        <strong>{{ falta_para_el_anticipo|pesos }}</strong>.
         <a href="?ver=pagos">Registra tu pago</a> o escríbenos para pedir una
         prórroga.
       </div>
     </div>
   {% endif %}
 
-  <div class="section-card card">
-    <div class="section-head">
-      <div>
-        <h3>
-          Reserva #{{ reserva.pk }}
-          {% include "stands/parciales/badge_reserva.html" with reserva=reserva vencida=vencida %}
-        </h3>
-        <p>
-          {{ reserva.lineas.count }} espacio{{ reserva.lineas.count|pluralize }},
-          reservados el {{ reserva.fecha_creacion|date:"j \d\e F \d\e Y" }}.
-        </p>
-      </div>
-    </div>
+  {% comment %} La identidad de la reserva es de las tres pestañas, no del
+     resumen: por eso va aquí arriba y el estado de cuenta no la repite.
+     Un renglón y no una tarjeta — era una `.section-card` con cabecera y
+     sin cuerpo. {% endcomment %}
+  <div class="reserva-identidad">
+    <h2>Reserva #{{ reserva.pk }}</h2>
+    {% include "stands/parciales/badge_reserva.html" with reserva=reserva vencida=vencida %}
+    <span class="hint">
+      {{ reserva.lineas.count }} espacio{{ reserva.lineas.count|pluralize }},
+      apartados el {{ reserva.fecha_creacion|date:"j \d\e F \d\e Y" }}
+    </span>
   </div>
 
   <div class="pestanas">
@@ -95,10 +94,160 @@
 
     {% comment %} ── Resumen ── {% endcomment %}
     {% if ver == 'resumen' %}
+      {% comment %} ── El estado de cuenta ──
+
+         La pregunta que trae aquí a una editorial es una sola: «¿cuánto
+         debo y para cuándo?». Hasta ahora se contestaba en la cuarta
+         celda de una rejilla de cuatro, dentro de la tarjeta del
+         desglose y con el mismo peso que el subtotal. Aquí es la primera
+         cifra de la pantalla y el desglose pasa a ser su respaldo, que
+         es el papel que le toca: nadie entra a auditar la resta, entra a
+         ver si le toca pagar.
+
+         Los dos compromisos con fecha van en el pie de esta misma
+         tarjeta porque son **una sola frase** —*tanto, para tal día*—:
+         el importe estaba aquí y la fecha en una tarjeta «Fechas clave»
+         más abajo, así que había que recordar una cifra mientras se
+         buscaba la otra. {% endcomment %}
+      <section class="estado-cuenta" aria-labelledby="saldo-titulo">
+        <div class="estado-cuenta-cuerpo">
+          <div class="estado-cuenta-cabecera">
+            <div>
+              {% if reserva.monto_pendiente > 0 %}
+                <h3 class="estado-cuenta-etiqueta" id="saldo-titulo">Saldo pendiente</h3>
+                <p class="estado-cuenta-monto">{{ reserva.monto_pendiente|pesos }}</p>
+                <p class="estado-cuenta-de">
+                  de <strong>{{ reserva.monto_total|pesos }}</strong> ·
+                  llevas cubierto el {{ porcentaje_pagado }}%
+                </p>
+              {% else %}
+                <h3 class="estado-cuenta-etiqueta" id="saldo-titulo">Reserva liquidada</h3>
+                <p class="estado-cuenta-monto">{{ reserva.monto_total|pesos }}</p>
+                <p class="estado-cuenta-de">Pagada por completo. No queda saldo.</p>
+              {% endif %}
+
+              {% comment %} Lo reportado y todavía sin validar, junto a la
+                 cifra. Es lo que explica que el saldo no baje después de
+                 registrar un pago (`RN-13`); sin decirlo, la pantalla
+                 parece no haberse enterado. {% endcomment %}
+              {% if en_revision %}
+                <p class="estado-cuenta-revision">
+                  <span>
+                    <strong>{{ en_revision|pesos }}</strong> en revisión,
+                    todavía sin descontar del saldo.
+                  </span>
+                </p>
+              {% endif %}
+            </div>
+
+            {% if reserva.monto_pendiente > 0 %}
+              <div class="estado-cuenta-accion">
+                {% comment %} `CU-STD-014` paso 2: lo que falta para el
+                   anticipo es la cifra que decide si alguien paga hoy, y
+                   no es el saldo. Se decía solo cuando ya había vencido
+                   —cuando ya no sirve para evitarlo—. Si venció, el aviso
+                   de arriba es el que manda y aquí no se repite. {% endcomment %}
+                {% if falta_para_el_anticipo > 0 and not vencida %}
+                  <p class="estado-cuenta-falta">
+                    Faltan <strong>{{ falta_para_el_anticipo|pesos }}</strong>
+                    para confirmar tu reserva.
+                  </p>
+                {% endif %}
+                <a class="btn btn-primary" href="?ver=pagos">Registrar un pago</a>
+              </div>
+            {% endif %}
+          </div>
+
+          {% comment %} Los dos umbrales dibujados sobre la barra: al
+             anticipo la reserva se confirma (`RN-13`) y al 100% queda
+             pagada (`RN-14`). Sin las marcas, la barra solo dice «vas por
+             la mitad» y no **qué pasa** al llegar.
+
+             El umbral llega del contexto y no escrito aquí: es de la
+             convocatoria (`RN-02`) y se cambia desde A10. Los hitos van
+             como leyenda y no pinchados en su porcentaje —una etiqueta
+             pinchada al 15% se sale del marco—; el número los ata igual a
+             la marca de la barra. {% endcomment %}
+          <div class="progreso">
+            <div class="progreso-barra">
+              <span class="progreso-hecho" style="width: {{ porcentaje_pagado }}%"></span>
+              <span class="progreso-marca" style="left: {{ umbral }}%"></span>
+            </div>
+            <ul class="progreso-hitos">
+              <li class="progreso-hito{% if porcentaje_pagado >= umbral %} es-alcanzada{% endif %}">
+                {{ umbral }}% · se confirma
+              </li>
+              <li class="progreso-hito{% if porcentaje_pagado >= 100 %} es-alcanzada{% endif %}">
+                100% · queda liquidada
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <dl class="compromisos">
+          <div class="compromiso">
+            <dt>Anticipo para confirmar</dt>
+            <dd class="compromiso-monto">{{ reserva.anticipo|pesos }}</dd>
+            {% if reserva.estado == 'por_confirmar' %}
+              <dd class="compromiso-plazo{% if vencida %} es-vencida{% endif %}">
+                {{ ajustes.porcentaje_anticipo }}% del total ·
+                {% if vencida %}venció{% else %}vence{% endif %} el
+                {{ reserva.fecha_vencimiento_anticipo|date:"j \d\e F \d\e Y" }}
+              </dd>
+            {% else %}
+              <dd class="compromiso-plazo es-cumplido">Cubierto</dd>
+            {% endif %}
+          </div>
+          <div class="compromiso">
+            <dt>Pago total</dt>
+            <dd class="compromiso-monto">{{ reserva.monto_total|pesos }}</dd>
+            {% if reserva.estado == 'pagada' %}
+              <dd class="compromiso-plazo es-cumplido">Liquidado</dd>
+            {% elif reserva.fecha_corte_pago_total %}
+              <dd class="compromiso-plazo">
+                Corte el {{ reserva.fecha_corte_pago_total|date:"j \d\e F \d\e Y" }}
+              </dd>
+            {% endif %}
+          </div>
+        </dl>
+      </section>
+
+      {% comment %} `CU-STD-013` paso 5: el pronto pago no está ganado
+         hasta liquidar. Se dice cuánto queda y a cuánto sube el total si
+         se deja pasar — con la fecha sola no hay nada que sopesar.
+
+         Va pegado al estado de cuenta y no al final del desglose: es una
+         decisión sobre el saldo que se acaba de leer, no una nota al pie
+         de la resta. {% endcomment %}
+      {% if pronto_pago %}
+        <div class="note {% if pronto_pago.vencido %}note-warn{% else %}note-gold{% endif %}">
+          <div class="ico">🏷️</div>
+          <div>
+            {% if pronto_pago.vencido %}
+              <strong>Venció el plazo del pronto pago.</strong>
+              El descuento del {{ pronto_pago.porcentaje }}% se retira y tu
+              reserva vuelve a
+              <strong>{{ pronto_pago.total_sin_el|pesos }}</strong>.
+            {% else %}
+              <strong>Conservas el {{ pronto_pago.porcentaje }}% de descuento
+              si pagas el total antes del
+              {{ pronto_pago.fecha|date:"j \d\e F" }}.</strong>
+              {% if pronto_pago.dias == 0 %}
+                El plazo vence hoy.
+              {% else %}
+                Te quedan {{ pronto_pago.dias }} día{{ pronto_pago.dias|pluralize }}.
+              {% endif %}
+              Después de esa fecha tu reserva sube a
+              <strong>{{ pronto_pago.total_sin_el|pesos }}</strong>.
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
       <div class="section-card card">
         <div class="section-head">
           <div>
-            <h3>Desglose del costo</h3>
+            <h3>Cómo se calcula tu total</h3>
             <p>Los descuentos se aplican uno sobre otro, en este orden.</p>
           </div>
         </div>
@@ -116,117 +265,11 @@
                 <strong>El desglose no coincide con el total de tu reserva.</strong>
                 Cambió la tarifa o la forma de un espacio después de que
                 reservaste. Tu reserva sigue en
-                <strong>${{ reserva.monto_total|floatformat:2 }}</strong>: el
+                <strong>{{ reserva.monto_total|pesos }}</strong>: el
                 precio que aceptaste no cambia.
               </div>
             </div>
           {% endif %}
-
-          <div class="info-grid">
-            <div>
-              <span class="hint">Total de la reserva</span>
-              <strong>${{ reserva.monto_total|floatformat:2 }}</strong>
-            </div>
-            <div>
-              <span class="hint">Anticipo para confirmar</span>
-              <strong>${{ reserva.anticipo|floatformat:2 }}</strong>
-              <span class="hint">{{ ajustes.porcentaje_anticipo }}% del total</span>
-            </div>
-            <div>
-              <span class="hint">Abonado</span>
-              <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
-            </div>
-            <div>
-              <span class="hint">Saldo pendiente</span>
-              <strong>${{ reserva.monto_pendiente|floatformat:2 }}</strong>
-            </div>
-          </div>
-
-          {% comment %} Los dos umbrales dibujados sobre la barra: al
-             anticipo la reserva se confirma (RN-13) y al 100% queda
-             pagada (RN-14). Sin las marcas, la barra solo dice "vas por
-             la mitad" y no **qué pasa** al llegar.
-
-             El umbral llega del contexto y no escrito aquí: es de la
-             convocatoria (RN-02) y se cambia desde A10. {% endcomment %}
-          <div class="progreso">
-            <div class="progreso-cabecera">
-              <span class="hint">Avance del pago</span>
-              <strong>{{ porcentaje_pagado }}%</strong>
-            </div>
-            <div class="progreso-barra">
-              <span class="progreso-hecho" style="width: {{ porcentaje_pagado }}%"></span>
-              <span class="progreso-marca" style="left: {{ umbral }}%"></span>
-            </div>
-            <div class="progreso-marcas">
-              <span class="{% if porcentaje_pagado >= umbral %}es-alcanzada{% endif %}">
-                {{ umbral }}% · se confirma
-              </span>
-              <span class="{% if porcentaje_pagado >= 100 %}es-alcanzada{% endif %}">
-                100% · queda pagada
-              </span>
-            </div>
-          </div>
-
-          {% comment %} CU-STD-013 paso 5: el pronto pago no está ganado
-             hasta liquidar. Se dice cuánto queda y a cuánto sube el total
-             si se deja pasar — con la fecha sola no hay nada que
-             sopesar. {% endcomment %}
-          {% if pronto_pago %}
-            <div class="note {% if pronto_pago.vencido %}note-warn{% else %}note-gold{% endif %}">
-              <div class="ico">🏷️</div>
-              <div>
-                {% if pronto_pago.vencido %}
-                  <strong>Venció el plazo del pronto pago.</strong>
-                  El descuento del {{ pronto_pago.porcentaje }}% se retira y tu
-                  reserva vuelve a
-                  <strong>${{ pronto_pago.total_sin_el|floatformat:2 }}</strong>.
-                {% else %}
-                  <strong>Conservas el {{ pronto_pago.porcentaje }}% de descuento
-                  si pagas el total antes del
-                  {{ pronto_pago.fecha|date:"j \d\e F" }}.</strong>
-                  {% if pronto_pago.dias == 0 %}
-                    El plazo vence hoy.
-                  {% else %}
-                    Te quedan {{ pronto_pago.dias }} día{{ pronto_pago.dias|pluralize }}.
-                  {% endif %}
-                  Después de esa fecha tu reserva sube a
-                  <strong>${{ pronto_pago.total_sin_el|floatformat:2 }}</strong>.
-                {% endif %}
-              </div>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="section-card card">
-        <div class="section-head">
-          <div>
-            <h3>Fechas clave</h3>
-            <p>Hasta cuándo tienes para cada pago.</p>
-          </div>
-        </div>
-        <div class="section-body">
-          <div class="info-grid">
-            <div>
-              <span class="hint">Vence el anticipo</span>
-              <strong{% if vencida %} class="es-vencida"{% endif %}>
-                {{ reserva.fecha_vencimiento_anticipo|date:"j \d\e F \d\e Y" }}
-              </strong>
-            </div>
-            {% if reserva.fecha_corte_pago_total %}
-              <div>
-                <span class="hint">Corte del pago total</span>
-                <strong>{{ reserva.fecha_corte_pago_total|date:"j \d\e F \d\e Y" }}</strong>
-              </div>
-            {% endif %}
-            {% if ajustes.fecha_limite_pronto_pago %}
-              <div>
-                <span class="hint">Límite del pronto pago</span>
-                <strong>{{ ajustes.fecha_limite_pronto_pago|date:"j \d\e F \d\e Y" }}</strong>
-              </div>
-            {% endif %}
-          </div>
         </div>
       </div>
 
@@ -234,7 +277,7 @@
         <div class="section-head">
           <div>
             <h3>Espacios reservados</h3>
-            <p>Quedaron apartados cuando confirmaste la reserva.</p>
+            <p>Quedaron apartados en cuanto los reservaste.</p>
           </div>
         </div>
         <div class="section-body">
@@ -366,7 +409,7 @@
               <div class="note note-info">
                 <div class="ico">⏳</div>
                 <div>
-                  Tienes <strong>${{ en_revision|floatformat:2 }}</strong> en
+                  Tienes <strong>{{ en_revision|pesos }}</strong> en
                   revisión. Los estamos validando contra el banco; no los
                   registres otra vez.
                 </div>
@@ -419,7 +462,7 @@
                 {% for movimiento in movimientos %}
                   <tr>
                     <td>{{ movimiento.fecha_registro|date:"j M Y" }}</td>
-                    <td class="num">${{ movimiento.monto|floatformat:2 }}</td>
+                    <td class="num">{{ movimiento.monto|pesos }}</td>
                     <td>{{ movimiento.get_metodo_display }}</td>
                     <td>
                       {% if movimiento.estado == 'validado' %}
@@ -535,7 +578,7 @@
                   <span class="badge badge-open">{{ linea.stand.clave }}</span>
                 {% endfor %}
               </td>
-              <td class="num">${{ anterior.monto_total|floatformat:2 }}</td>
+              <td class="num">{{ anterior.monto_total|pesos }}</td>
               <td>{% include "stands/parciales/badge_reserva.html" with reserva=anterior vencida=False %}</td>
             </tr>
           {% endfor %}

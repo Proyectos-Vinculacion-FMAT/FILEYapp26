@@ -56,6 +56,14 @@ siempre.
 > recalcula es `servicios/pagos.py::_recalcular_total`, y **solo lo llaman los cambios de
 > descuento**.
 >
+> **«Vivas» lo comprueba el servicio, no la pantalla.** Sobre una `Cancelada` no se descuenta:
+> `RN-11` dice que cancelar cierra, y a partir de ahí el importe es el registro de lo que esa
+> reserva costó. Lo sostiene `pagos.py::_exigir_reserva_viva`, que bloquea la fila y se niega.
+> Hasta el 2026-08-30 la única guarda era `{% if esta_viva %}` en la plantilla de A4, y un POST
+> con `accion=descuento_especial` sobre una cancelada le reescribía el total sin que nada
+> protestara — la vista despacha la acción sin volver a preguntar, y `reevaluar` sale temprano
+> en las canceladas, así que el estado quedaba bien y la cifra mal.
+>
 > Hasta el 2026-08-29 esta advertencia decía «ningún servicio puede reescribir `monto_total` de
 > una reserva que no esté `Por confirmar`», que contradecía a los dos casos de uso de arriba.
 
@@ -284,9 +292,23 @@ nueva**, con su propia fotografía; la rechazada se conserva.
 
 > [!important] Esto corrige una relación del modelo de `FER`
 > `FER` §3.4 describía `RegistroConvocatoria` 1—1 `Solicitud`. Con reaplicación tras rechazo la
-> relación es **1—N**, con **como mucho una solicitud viva** (`pendiente` o
-> `cambios_solicitados`) por registro. Lo único que sigue siendo 1—1 es *persona ↔ registro*
-> dentro de una convocatoria.
+> relación es **1—N**, con **como mucho una solicitud en juego** por registro. Lo único que
+> sigue siendo 1—1 es *persona ↔ registro* dentro de una convocatoria.
+
+> [!warning] «En juego» son tres estados, no dos
+> Lo que ocupa el registro es `pendiente`, `cambios_solicitados` **y `aceptada`**. Volver a
+> aplicar es lo que esta regla abre **tras un rechazo**: quien ya entró no tiene nada que
+> volver a pedir, y su habilitación para reservar (`RN-16`) la da esa aceptación.
+>
+> Hasta el 2026-08-30 el catálogo decía «viva» y tanto el servicio como la restricción de la
+> base contaban solo los dos primeros, así que un expositor **ya aceptado** podía mandar otra
+> solicitud: quedaban dos filas del mismo registro, la cola de A1 enseñaba a alguien que ya era
+> expositor y rechazar esa segunda **no le quitaba** la habilitación, porque `RN-16` la lee de
+> la primera. Lo sostienen ahora `Solicitud.OCUPAN_EL_REGISTRO`, el índice único parcial
+> `una_solicitud_en_juego_por_registro` y `servicios/solicitudes.py::enviar_solicitud`.
+>
+> `Solicitud.VIVOS` sigue existiendo y significa otra cosa —«esperando dictamen»—: es lo que
+> cuenta la cola de A1. Son dos preguntas distintas y por eso son dos conjuntos.
 
 *Dónde se aplica:* CU-STD-001, CU-STD-002, CU-STD-005, CU-STD-006.
 
@@ -338,6 +360,17 @@ ajustó a mano.
 
 Cuando los abonos validados cubren el total, la reserva pasa a `Pagada` y sus stands pasan a
 `Ocupado` (RN-10).
+
+> [!note] Un total de cero **está cubierto**
+> Es el caso del descuento especial del 100%, que `RN-07` contempla —el convenio
+> institucional—. Hasta el 2026-08-30 `pagos.py::_estado_para` exigía además que el total fuera
+> mayor que cero, y esas reservas se quedaban atrapadas en `Confirmada`: sin correo de
+> liquidación (`CU-STD-027`), con sus espacios en `Reservado` para siempre y contadas como
+> apartadas en la ocupación del panel.
+>
+> La guarda protegía de una reserva sin precio, y ya no hace falta: `reservas.py::crear`
+> rechaza una convocatoria con `costo_m2` en cero desde el 2026-08-29, así que el único camino
+> a un total de cero es un descuento que alguien decidió.
 
 *Dónde se aplica:* CU-STD-018, CU-STD-019, CU-STD-027.
 

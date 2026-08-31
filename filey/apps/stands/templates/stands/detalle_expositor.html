@@ -1,4 +1,5 @@
 {% extends "layouts/admin.html" %}
+{% load dinero %}
 
 {% comment %} ===========================================================
    A7 · El expediente de un expositor (CU-STD-031).
@@ -207,8 +208,8 @@
                   <span class="badge badge-open">{{ linea.stand.clave }}</span>
                 {% endfor %}
               </td>
-              <td class="num">${{ reserva.monto_total|floatformat:2 }}</td>
-              <td class="num">${{ reserva.monto_pendiente|floatformat:2 }}</td>
+              <td class="num">{{ reserva.monto_total|pesos }}</td>
+              <td class="num">{{ reserva.monto_pendiente|pesos }}</td>
               <td>{% include "stands/parciales/badge_reserva.html" with reserva=reserva vencida=reserva.esta_vencida %}</td>
               <td>
                 <a class="btn btn-ghost btn-row"

@@ -1,4 +1,5 @@
 {% extends "layouts/admin.html" %}
+{% load dinero %}
 
 {% block migaja %}Stands · Reservas · Detalle{% endblock %}
 
@@ -63,7 +64,7 @@
         <br>Motivo: {{ reserva.motivo_cancelacion }}
       {% endif %}
       {% if reserva.monto_abonado > 0 %}
-        <br><strong>Quedaron ${{ reserva.monto_abonado|floatformat:2 }}
+        <br><strong>Quedaron {{ reserva.monto_abonado|pesos }}
         abonados</strong> a esta reserva. Los movimientos no se borran: qué
         se hace con ese saldo se acuerda fuera del sistema.
       {% endif %}
@@ -89,19 +90,19 @@
       </div>
       <div>
         <span class="hint">Total de la reserva</span>
-        <strong>${{ reserva.monto_total|floatformat:2 }}</strong>
+        <strong>{{ reserva.monto_total|pesos }}</strong>
       </div>
       <div>
         <span class="hint">Abonado</span>
-        <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
+        <strong>{{ reserva.monto_abonado|pesos }}</strong>
       </div>
       <div>
         <span class="hint">Pendiente</span>
-        <strong>${{ reserva.monto_pendiente|floatformat:2 }}</strong>
+        <strong>{{ reserva.monto_pendiente|pesos }}</strong>
       </div>
       <div>
         <span class="hint">Anticipo</span>
-        <strong>${{ reserva.anticipo|floatformat:2 }}</strong>
+        <strong>{{ reserva.anticipo|pesos }}</strong>
       </div>
       <div>
         <span class="hint">Vence el anticipo</span>
@@ -187,8 +188,8 @@
             <div class="ico">⚠️</div>
             <div>
               <strong>El desglose ya no coincide con lo cobrado.</strong>
-              Se cobraron ${{ reserva.monto_total|floatformat:2 }} y con los
-              valores de hoy saldrían ${{ recalculado.subtotal|floatformat:2 }}.
+              Se cobraron {{ reserva.monto_total|pesos }} y con los
+              valores de hoy saldrían {{ recalculado.subtotal|pesos }}.
               Alguien cambió la tarifa o la forma de un espacio después de
               reservar. Lo que ya se cobró no cambia.
             </div>
@@ -299,7 +300,7 @@
       <div class="note note-info">
         <div class="ico">⏳</div>
         <div>
-          Hay <strong>${{ en_revision|floatformat:2 }}</strong> reportados y
+          Hay <strong>{{ en_revision|pesos }}</strong> reportados y
           sin resolver. Todavía no bajan el saldo: valídalos o recházalos
           desde el historial.
         </div>
@@ -322,7 +323,7 @@
           {% for abono in movimientos %}
             <tr>
               <td>{{ abono.fecha_registro|date:"j M Y, H:i" }}</td>
-              <td class="num">${{ abono.monto|floatformat:2 }}</td>
+              <td class="num">{{ abono.monto|pesos }}</td>
               <td>{{ abono.get_metodo_display }}</td>
               <td>
                 {% if abono.origen == 'admin_manual' %}
@@ -459,7 +460,7 @@
               espacio{{ reserva.lineas.count|pluralize }} y no se deshace.</strong>
               Vuelven al mapa y cualquier otra editorial puede tomarlos.
               {% if reserva.monto_abonado > 0 %}
-                Hay <strong>${{ reserva.monto_abonado|floatformat:2 }}</strong>
+                Hay <strong>{{ reserva.monto_abonado|pesos }}</strong>
                 abonados: los movimientos no se borran, pero qué se hace con
                 ese saldo se acuerda fuera del sistema.
               {% endif %}

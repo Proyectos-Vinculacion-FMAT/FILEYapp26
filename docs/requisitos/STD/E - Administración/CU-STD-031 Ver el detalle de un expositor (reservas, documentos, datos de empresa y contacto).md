@@ -50,7 +50,10 @@ Selección de un expositor en el listado para ver su detalle (vista A7).
 
 ### E1. Expositor inexistente
 1. El enlace o ID buscado es inválido.
-2. El sistema muestra un error y regresa al aplicante a la lista de expositores.
+2. El sistema responde **404**, con la navegación del panel intacta para volver a la lista.
+
+> [!note] Igual que `CU-STD-029` E1
+> Un 404 y no una redirección con aviso, por la misma razón: ver la nota de aquel caso de uso.
 
 ## Postcondiciones
 

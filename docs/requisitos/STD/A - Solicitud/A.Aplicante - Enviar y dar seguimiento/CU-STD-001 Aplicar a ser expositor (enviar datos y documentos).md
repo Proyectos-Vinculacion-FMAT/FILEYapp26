@@ -35,7 +35,7 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 
 - El aplicante tiene sesión iniciada.
 - La convocatoria de stands a la que aplica está `abierta`.
-- La persona no tiene una solicitud **viva** en **esta** convocatoria (RN-22): se admite como mucho una en `pendiente` o `cambios_solicitados`. Si la previa tiene cambios solicitados, se reedita la misma (CU-STD-002); si fue rechazada, se crea una nueva con la misma editorial.
+- La persona no tiene una solicitud **en juego** en **esta** convocatoria (RN-22): se admite como mucho una en `pendiente`, `cambios_solicitados` o `aceptada`. Si la previa tiene cambios solicitados, se reedita la misma (CU-STD-002); si fue rechazada, se crea una nueva con la misma editorial; si ya fue aceptada, no hay nada que volver a enviar y el siguiente paso es elegir espacios (CU-STD-009).
 
 ## Postcondiciones
 
@@ -80,11 +80,11 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 
 ### E2. Ya existe una solicitud para la editorial/cuenta
 
-1. En el paso 6 el sistema detecta que la persona ya tiene una solicitud **viva** en esta convocatoria.
+1. En el paso 6 el sistema detecta que la persona ya tiene una solicitud **en juego** en esta convocatoria.
 2. El sistema impide crear una nueva y avisa al aplicante.
-3. Si la solicitud previa tiene cambios solicitados, el sistema lo dirige a editarla y reenviarla (CU-STD-002). Si fue rechazada, **no bloquea**: permite crear la nueva (RN-22).
+3. Si la solicitud previa tiene cambios solicitados, el sistema lo dirige a editarla y reenviarla (CU-STD-002). Si ya fue **aceptada**, se lo dice y lo manda a elegir espacios: no está bloqueado, está un paso más adelante. Si fue rechazada, **no bloquea**: permite crear la nueva (RN-22).
 
-> [!note] Una solicitud viva **por convocatoria**, no por editorial
+> [!note] Una solicitud en juego **por convocatoria**, no por editorial
 > Hasta el 2026-08-27 esto decía "una solicitud por editorial/cuenta". Con varias convocatorias
 > de stands en la misma feria, la misma editorial puede tener una solicitud viva en cada una.
 

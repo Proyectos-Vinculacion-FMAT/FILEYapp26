@@ -317,7 +317,7 @@ def test_la_cuenta_dice_cuanto_sube_si_se_pasa_la_fecha(client, listo):
 
     assert "10% de descuento" in cuerpo
     assert "10 días" in cuerpo
-    assert "15000.00" in cuerpo, "a cuánto sube si lo deja pasar"
+    assert "15,000.00" in cuerpo, "a cuánto sube si lo deja pasar"
 
 
 def test_el_carrito_dice_cuanto_sube_si_se_pasa_la_fecha(client, listo):
@@ -335,7 +335,7 @@ def test_el_carrito_dice_cuanto_sube_si_se_pasa_la_fecha(client, listo):
 
     assert "10 días" in cuerpo
     assert "sube a" in cuerpo
-    assert "15000.00" in cuerpo
+    assert "15,000.00" in cuerpo
 
 
 # ── CU-STD-016 · el formulario de abono ───────────────────────
@@ -416,7 +416,7 @@ def test_el_aviso_de_vencida_dice_cuanto_falta_para_el_anticipo(client, listo):
     ).content.decode()
 
     assert "Venció el plazo" in cuerpo
-    assert "6750.00" in cuerpo, "el 50% de 13 500, que es lo que falta"
+    assert "6,750.00" in cuerpo, "el 50% de 13 500, que es lo que falta"
 
 
 # ── ADR-0007 · los archivos no se quedan huérfanos ────────────

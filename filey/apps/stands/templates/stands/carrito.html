@@ -1,5 +1,6 @@
 {% extends "layouts/panel.html" %}
 {% load flujo %}
+{% load dinero %}
 
 {% comment %} ===========================================================
    CU-STD-011 y CU-STD-012 · La selección y el resumen antes de reservar.
@@ -98,7 +99,7 @@
               </td>
               <td class="num">{{ linea.metros_cuadrados|floatformat:0 }} m²</td>
               <td class="num">
-                {% if linea.disponible %}${{ linea.precio|floatformat:2 }}{% else %}—{% endif %}
+                {% if linea.disponible %}{{ linea.precio|pesos }}{% else %}—{% endif %}
               </td>
               <td>
                 <form method="post" action="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
@@ -128,7 +129,7 @@
       <div class="info-grid">
         <div>
           <span class="hint">Para confirmar hay que cubrir</span>
-          <strong>${{ anticipo|floatformat:2 }}</strong>
+          <strong>{{ anticipo|pesos }}</strong>
           <span class="hint">{{ porcentaje_anticipo }}% del total</span>
         </div>
         <div>
@@ -156,7 +157,7 @@
               — {{ dias_pronto_pago }} día{{ dias_pronto_pago|pluralize }}.
             {% endif %}
             Después de esa fecha se retira y la reserva sube a
-            <strong>${{ total_sin_pronto_pago|floatformat:2 }}</strong>.
+            <strong>{{ total_sin_pronto_pago|pesos }}</strong>.
           </div>
         </div>
       {% endif %}

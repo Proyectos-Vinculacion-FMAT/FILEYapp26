@@ -117,6 +117,37 @@ class Feria(TenantMixin):
     fecha_fin = models.DateField(null=True, blank=True)
     creada_en = models.DateTimeField(auto_now_add=True)
 
+    # ── El pie de página de esta edición ──────────────────────
+    #
+    # Los tres en blanco por omisión, y en blanco **significa heredar**
+    # de `settings.PIE_*` — no significa un pie vacío. Es la diferencia
+    # que importa al dar de alta una edición: nace con el pie de la
+    # plataforma puesto y solo se toca lo que de verdad cambia, que
+    # normalmente es el correo de contacto y no la universidad entera.
+    #
+    # Son tres campos y no un bloque de texto por la misma razón que los
+    # datos bancarios de STD: el pie tiene una forma —quién, de qué
+    # dependencia, dónde—, y un `TextField` la perdería y obligaría a
+    # que alguien escribiera el `<strong>` a mano.
+    pie_entidad = models.CharField(
+        max_length=60,
+        blank=True,
+        verbose_name="pie · entidad",
+        help_text="El nombre en negritas. En blanco, el de la plataforma.",
+    )
+    pie_dependencia = models.CharField(
+        max_length=180,
+        blank=True,
+        verbose_name="pie · dependencia",
+        help_text="Quién organiza, tras el nombre. En blanco, el de la plataforma.",
+    )
+    pie_contacto = models.CharField(
+        max_length=240,
+        blank=True,
+        verbose_name="pie · contacto",
+        help_text="Dirección y correo, en el segundo renglón. En blanco, el de la plataforma.",
+    )
+
     # `True`: al guardar una feria nueva se crea su schema y se migra.
     # Es lo que convierte el alta en una operación completa.
     auto_create_schema = True

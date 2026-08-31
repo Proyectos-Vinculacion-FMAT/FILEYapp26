@@ -260,9 +260,9 @@ def test_la_cuenta_dice_total_anticipo_y_saldo(client, escenario):
     ).content.decode()
 
     # Dos de 6 m² a 2 500, con el 10% de pronto pago por omisión.
-    assert "30000.00" in cuerpo
-    assert "27000.00" in cuerpo  # total con descuento
-    assert "13500.00" in cuerpo  # anticipo del 50%
+    assert "30,000.00" in cuerpo
+    assert "27,000.00" in cuerpo  # total con descuento
+    assert "13,500.00" in cuerpo  # anticipo del 50%
     assert "A1" in cuerpo and "A2" in cuerpo
 
     # Las instrucciones de pago viven en su pestaña (`CU-STD-015`), que

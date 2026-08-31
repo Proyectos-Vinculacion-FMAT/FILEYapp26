@@ -349,6 +349,26 @@ WHITENOISE_AUTOREFRESH = DEBUG
 URL_BASE = os.getenv("URL_BASE", "http://localhost:8000").rstrip("/")
 
 
+# ── El pie de página, fuera de toda feria ─────────────────────
+# Quién organiza y dónde encontrarlo. Estos tres valores son los de la
+# **plataforma**: salen en las pantallas que no cuelgan de `/f/<slug>/`
+# —el acceso, «mis ferias», elegir edición— y son además el valor por
+# omisión de toda feria que no declare el suyo (`Feria.pie_*`).
+#
+# Van al entorno y no a la plantilla porque quien despliega el sistema
+# no es quien lo escribe: una instalación de otra universidad cambia el
+# pie sin tocar el repositorio ni esperar un despliegue nuestro.
+
+PIE_ENTIDAD = os.getenv("PIE_ENTIDAD", "FILEY")
+PIE_DEPENDENCIA = os.getenv(
+    "PIE_DEPENDENCIA", "Coordinación General de Contenidos · UADY"
+)
+PIE_CONTACTO = os.getenv(
+    "PIE_CONTACTO",
+    "Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org",
+)
+
+
 # ── Correo (Notificaciones vía Resend) ────────────────────────
 # TODO el correo del proyecto sale por `django.core.mail`; quién lo
 # entrega lo decide este ajuste. Antes el OTP hablaba con Resend por su

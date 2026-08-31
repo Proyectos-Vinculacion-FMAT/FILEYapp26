@@ -31,6 +31,7 @@ firma. Quien llama no cambia, así que el día que haya bucket la mejora
 entra sola con la variable de entorno.
 """
 
+import logging
 import mimetypes
 
 from django.conf import settings
@@ -40,9 +41,23 @@ from apps.ferias.permisos import administra
 
 from ..models import Documento
 
+logger = logging.getLogger(__name__)
+
 #: Con qué `Content-Type` se sirve algo cuya extensión no reconocemos.
 #: Es lo que fuerza al navegador a guardarlo en vez de interpretarlo.
 TIPO_DESCONOCIDO = "application/octet-stream"
+
+
+class ArchivoNoDisponible(Exception):
+    """La fila existe y el archivo no (`CU-STD-005` E1).
+
+    Pasa cuando el almacén perdió el fichero pero la fila sigue: un
+    volumen que no se montó, una restauración a medias, un borrado
+    manual. Es una excepción propia y no un `FileNotFoundError` suelto
+    porque quien llama tiene que poder distinguirla de "no tienes
+    permiso" — son el mismo 404 en la respuesta y dos incidencias
+    distintas en el log.
+    """
 
 
 def puede_ver(peticion, documento: Documento) -> bool:
@@ -99,8 +114,26 @@ def entregar(documento: Documento):
     nombre = documento.nombre_original or documento.archivo.name
     tipo, _ = mimetypes.guess_type(nombre)
 
+    # `CU-STD-005` E1. Sin esto, un archivo que ya no está en el almacén
+    # levantaba `FileNotFoundError` dentro de la vista y salía un 500:
+    # quien revisaba una solicitud se encontraba una página de error del
+    # servidor en vez de una incidencia sobre **ese** documento, y el
+    # resto de la revisión quedaba interrumpida.
+    try:
+        contenido = documento.archivo.open("rb")
+    except FileNotFoundError as exc:
+        logger.error(
+            "El documento %s (%s) no está en el almacén: %s",
+            documento.pk,
+            documento.archivo.name,
+            exc,
+        )
+        raise ArchivoNoDisponible(
+            "Este documento ya no está disponible."
+        ) from exc
+
     respuesta = FileResponse(
-        documento.archivo.open("rb"),
+        contenido,
         # `as_attachment=False` para que un PDF se vea en el navegador:
         # quien revisa una solicitud abre cuatro documentos seguidos y
         # descargarlos todos es peor. La lista blanca de extensiones de

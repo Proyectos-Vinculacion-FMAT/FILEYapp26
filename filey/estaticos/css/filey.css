@@ -68,10 +68,23 @@
 
 * { box-sizing: border-box; }
 
-html, body { height: 100%; }
+html { height: 100%; }
 
+/* El pie se apoya en el fondo de la ventana cuando la pantalla no da
+   para llenarla —una cuenta sin reserva, un listado vacío, un 403—, y
+   baja con el contenido cuando sí. No es un pie fijo: sigue estando al
+   final del documento, solo que el hueco sobrante se lo queda el
+   contenido en vez de dejar la franja azul flotando a media pantalla
+   con gris debajo.
+
+   `body` en columna flexible y `min-height` contra la altura de `html`
+   —no `100vh`—: en los navegadores con barra de direcciones que se
+   esconde, `100vh` es más alto que lo visible y deja un hueco. */
 body {
   margin: 0;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-filey);
   color: var(--tinta);
   background: var(--gris-050);
@@ -165,6 +178,14 @@ a.home:hover { opacity: 0.88; }
 
 /* ===================== Layout ===================== */
 .page { max-width: var(--maxw); margin: 0 auto; padding: 28px 24px 64px; }
+/* El contenido crece hasta empujar el pie abajo; `0 auto` para que no
+   encoja por debajo de lo que ocupa cuando sí hay de sobra.
+
+   `width: 100%` es obligatorio, no defensivo: `.page` centra con
+   `margin: 0 auto`, y un margen automático en el eje transversal
+   **anula el estirado** de un ítem flexible. Sin esto la columna se
+   encoge al ancho de su contenido y `--maxw` deja de mandar. */
+main.page { flex: 1 0 auto; width: 100%; }
 
 .page-head { margin-bottom: 22px; }
 .page-head h1 { margin: 0 0 6px; font-size: 26px; color: var(--color-azul-institucional-enfoque); }
@@ -517,6 +538,7 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 
 /* ===================== Footer ===================== */
 .footer {
+  flex: 0 0 auto;
   background: var(--color-azul-institucional); color: rgba(255,255,255,.78); margin-top: 40px;
   border-top: 3px solid var(--color-dorado-encabezado);
 }
@@ -845,6 +867,11 @@ tr.es-no-disponible { opacity: .55; }
    alto se toca esto y nada más. */
 :root { --alto-topbar: 67px; }
 
+/* El `min-height` se queda: la barra lateral es `sticky` y mide
+   `100vh - topbar`, así que el chasis de administración ya llena la
+   ventana por su cuenta y el pie cae debajo del pliegue **a propósito**.
+   Empujarlo al borde inferior exigiría restarle al alto de la barra un
+   pie que se dobla en pantalla estrecha. */
 .admin-body { display: flex; min-height: calc(100vh - var(--alto-topbar)); }
 
 .sidebar {
@@ -1167,12 +1194,138 @@ a.stat-card:focus-visible { outline: 2px solid var(--color-dorado-encabezado); o
 .progreso-marca {
   position: absolute; top: 0; bottom: 0;
   width: 2px; background: var(--color-blanco);
+  /* El contorno no es adorno: en blanco sobre el tramo sin cubrir la
+     marca desaparecía —el track es casi blanco—, justo en el caso en
+     que el umbral importa, que es cuando todavía no se alcanzó. */
+  box-shadow: 0 0 0 1px rgba(27, 35, 48, .28);
 }
 .progreso-marcas {
   display: flex; justify-content: space-between;
   font-size: 12px; color: var(--gris-500);
 }
 .progreso-marcas .es-alcanzada { color: var(--ok-600); font-weight: 600; }
+
+/* ═══ U5 · el estado de cuenta (STD · CU-STD-013, 014) ═════════════
+   La pregunta que trae aquí a una editorial es una sola —«¿cuánto debo
+   y para cuándo?»— y se contestaba en la cuarta celda de una rejilla de
+   cuatro, con el mismo peso que el subtotal y dentro de la tarjeta del
+   desglose. Aquí es la primera cifra de la pantalla; el desglose pasa a
+   ser su respaldo, que es el papel que le toca.
+
+   La jerarquía la hace **solo la tipografía**: la misma tarjeta blanca
+   del resto del sistema, sin fondo de color ni degradado, con el saldo a
+   32 px en tinta y su etiqueta a 11.5 px en versalitas. Es un estado de
+   cuenta y se lee como uno impreso: cifras alineadas, filetes finos y
+   nada que compita con los números. */
+.estado-cuenta {
+  background: var(--color-blanco);
+  border: 1px solid var(--gris-200);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-sm);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+.estado-cuenta-cuerpo { padding: 24px 26px 22px; }
+
+.estado-cuenta-cabecera {
+  display: flex; flex-wrap: wrap; gap: 18px 32px;
+  align-items: flex-start; justify-content: space-between;
+}
+.estado-cuenta-etiqueta {
+  margin: 0; font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--gris-500);
+}
+/* El salto de la etiqueta a la cifra es toda la jerarquía de la
+   pantalla. En tinta y no en azul institucional: el azul es de los
+   títulos, y esto no es un título sino el dato. */
+.estado-cuenta-monto {
+  margin: 4px 0 0; font-size: 32px; line-height: 1.1; font-weight: 700;
+  letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--tinta);
+}
+.estado-cuenta-de { margin: 7px 0 0; font-size: 13.5px; color: var(--gris-500); }
+.estado-cuenta-de strong { color: var(--gris-700); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* Lo reportado y todavía sin validar. Va junto a la cifra porque explica
+   por qué el saldo no bajó después de registrar un pago (`RN-13`): sin
+   esta línea, la pantalla parece no haberse enterado. El punto ámbar es
+   el color de «pendiente de validación» en todo el sistema. */
+.estado-cuenta-revision {
+  margin: 10px 0 0; font-size: 13px; color: var(--gris-700);
+  display: flex; align-items: baseline; gap: 7px;
+}
+.estado-cuenta-revision::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--warn-600); flex: 0 0 7px;
+}
+.estado-cuenta-revision strong { font-variant-numeric: tabular-nums; }
+
+.estado-cuenta-accion {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 10px; text-align: right; margin-left: auto;
+}
+.estado-cuenta-falta { margin: 0; font-size: 13.5px; color: var(--gris-700); max-width: 46ch; }
+.estado-cuenta-falta strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
+
+/* Los dos hitos, como leyenda y no pinchados en su porcentaje: pinchada,
+   la etiqueta del umbral se sale del marco cuando la convocatoria pone
+   un anticipo bajo. El número los ata igual a la marca de la barra. */
+.progreso-hitos {
+  display: flex; flex-wrap: wrap; gap: 6px 22px;
+  margin: 10px 0 0; padding: 0; list-style: none;
+  font-size: 12.5px; color: var(--gris-500);
+}
+.progreso-hito { display: flex; align-items: center; gap: 7px; }
+.progreso-hito::before {
+  content: ""; width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px;
+  border: 1.5px solid var(--gris-300);
+}
+.progreso-hito.es-alcanzada { color: var(--ok-600); font-weight: 600; }
+.progreso-hito.es-alcanzada::before { background: var(--ok-600); border-color: var(--ok-600); }
+
+/* Los dos compromisos con fecha, en el pie de la misma tarjeta. Estaban
+   en dos sitios —el importe en la rejilla del desglose y la fecha en una
+   tarjeta «Fechas clave» más abajo—, y son una sola frase: *tanto, para
+   tal día*. Separados, había que recordar una cifra mientras se buscaba
+   la otra.
+
+   El filete que los parte es el mismo de `.section-head`: aquí no hace
+   falta un componente nuevo, hace falta que se lea como el resto. */
+.compromisos {
+  margin: 0; padding: 16px 26px 18px;
+  background: var(--gris-050); border-top: 1px solid var(--gris-200);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 32px;
+}
+.compromiso { min-width: 0; }
+.compromiso dt {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--gris-500);
+}
+.compromiso dd { margin: 3px 0 0; }
+.compromiso-monto {
+  font-size: 18px; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--tinta);
+}
+.compromiso-plazo { font-size: 13px; color: var(--gris-700); }
+.compromiso-plazo.es-cumplido { color: var(--ok-600); font-weight: 600; }
+
+@media (max-width: 920px) {
+  .estado-cuenta-cabecera { flex-direction: column; }
+  .estado-cuenta-accion { align-items: flex-start; text-align: left; margin-left: 0; }
+  .estado-cuenta-monto { font-size: 28px; }
+}
+
+/* La identidad de la reserva, encima de las pestañas: es de las tres y
+   no del resumen. Era una `.section-card` con cabecera y sin cuerpo, o
+   sea una barra gris con dos bordes pegados y nada debajo. */
+.reserva-identidad {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px;
+  margin-bottom: 16px;
+}
+.reserva-identidad h2 {
+  margin: 0; font-size: 17px; color: var(--color-azul-institucional-enfoque);
+  font-variant-numeric: tabular-nums;
+}
+.reserva-identidad .hint { margin-left: auto; }
 
 /* Los datos bancarios, tal como los captura la convocatoria. `pre-wrap`
    respeta los saltos de línea de un CLABE escrito en su renglón. */

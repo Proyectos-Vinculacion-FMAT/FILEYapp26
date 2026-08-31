@@ -67,6 +67,18 @@ El administrador selecciona una solicitud desde la lista (CU-STD-004).
 1. En el paso 3 o 4 un documento adjunto no puede recuperarse o está dañado.
 2. El sistema informa la incidencia y permite continuar revisando el resto de la información.
 
+> [!note] Construido el 2026-08-30 · la incidencia es de ese documento, no de la pantalla
+> El detalle de la solicitud **no comprueba los archivos al pintarse**: enseña sus enlaces y
+> falla, si falla, al abrir uno. `servicios/archivos.py::entregar` levanta `ArchivoNoDisponible`
+> cuando la fila existe y el fichero no —un volumen sin montar, una restauración a medias— y
+> `views.documento` lo convierte en **404**, dejando en el log qué documento y qué ruta faltan.
+>
+> Cumple el paso 2 en lo que importa: lo que se rompe es ese enlace, no la revisión. Lo que
+> **no** hace es anticiparlo — para marcar «no disponible» al lado del documento habría que
+> preguntarle al almacén por cada uno al pintar la pantalla, que en disco son cuatro `stat` y
+> con bucket serían cuatro peticiones de red en cada carga de A2. Si algún día pasa de ser
+> teórico, ése es el cambio.
+
 ## Datos relevantes
 
 ### Entradas

@@ -16,6 +16,7 @@ apps, y separarla ahí es lo que evita que cada una la maquete otra vez.
 """
 
 from django import template
+from django.conf import settings
 
 from comun.urls import url_publica
 
@@ -132,3 +133,38 @@ def _cambio_de_feria(feria, zona_admin, usuario, autenticada):
     if seleccion.ferias_para_participante().count() < 2:
         return None
     return {"texto": "Cambiar de feria", "url": url_publica("ferias:elegir")}
+
+
+@register.inclusion_tag("componentes/pie.html", takes_context=True)
+def pie(context):
+    """El pie de la edición en la que estamos, o el de la plataforma.
+
+    Está aquí y no en un `{% include %}` por lo mismo que la barra: lo
+    que dice depende de en qué feria estamos, y esa pregunta la contesta
+    esta app. Una pantalla no elige su pie —lo dibuja y ya—.
+
+    Cada campo cae por su cuenta a `settings.PIE_*`, y no el bloque
+    entero: una feria que solo cambia su correo de contacto no tiene por
+    qué volver a escribir la dependencia para no perderla.
+    """
+    feria = getattr(context.get("request"), "tenant", None)
+    if feria is not None and feria.es_la_de_sistema:
+        # La fila de sistema no es una feria (ver `Feria`): su pie es el
+        # de la plataforma, que es lo que ya devuelve el `None`.
+        feria = None
+    return {
+        "entidad": _del_pie(feria, "pie_entidad", settings.PIE_ENTIDAD),
+        "dependencia": _del_pie(feria, "pie_dependencia", settings.PIE_DEPENDENCIA),
+        "contacto": _del_pie(feria, "pie_contacto", settings.PIE_CONTACTO),
+    }
+
+
+def _del_pie(feria, campo: str, por_omision: str) -> str:
+    """Lo que declare la feria para ese campo, o lo de la plataforma.
+
+    Con `getattr` y no con acceso directo: dentro de un `schema_context`
+    —un comando, la barrida, una prueba— `request.tenant` puede ser el
+    `FakeTenant` de `django-tenants`, que solo sabe su `schema_name`. Un
+    pie es lo último que debería tumbar una pantalla.
+    """
+    return (getattr(feria, campo, "") or "").strip() or por_omision

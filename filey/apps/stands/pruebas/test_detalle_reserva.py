@@ -99,7 +99,7 @@ def test_la_pantalla_lista_los_abonos_de_la_reserva(client, con_reserva):
         _url(feria, "stands:detalle_reserva", reserva_id=reserva.pk)
     ).content.decode()
 
-    assert "2500.00" in cuerpo
+    assert "2,500.00" in cuerpo
     assert "Transferencia" in cuerpo
     # Y el aviso de que eso todavía no baja el saldo, que es lo que evita
     # que alguien lo dé por cobrado al leer la tabla.
@@ -164,7 +164,7 @@ def test_el_abono_manual_nace_validado_y_baja_el_saldo(client, con_reserva):
         follow=True,
     )
 
-    assert "Asentaste $7500.00" in respuesta.content.decode()
+    assert "Asentaste $7,500.00" in respuesta.content.decode()
     with schema_context(feria.schema_name):
         movimiento = Movimiento.objects.get()
         assert movimiento.estado == Movimiento.Estado.VALIDADO

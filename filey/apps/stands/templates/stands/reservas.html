@@ -1,4 +1,5 @@
 {% extends "layouts/admin.html" %}
+{% load dinero %}
 
 {% block migaja %}Stands · Reservas{% endblock %}
 
@@ -41,8 +42,8 @@
           </td>
           <td>{{ r.lineas.count }}</td>
           <td>{% include "stands/parciales/badge_reserva.html" with reserva=r vencida=r.esta_vencida %}</td>
-          <td class="num">${{ r.monto_total|floatformat:2 }}</td>
-          <td class="num">${{ r.monto_pendiente|floatformat:2 }}</td>
+          <td class="num">{{ r.monto_total|pesos }}</td>
+          <td class="num">{{ r.monto_pendiente|pesos }}</td>
           <td>{{ r.fecha_vencimiento_anticipo|date:"j M Y" }}</td>
           <td>
             <a class="btn btn-ghost btn-row" href="{% url 'stands:detalle_reserva' reserva_id=r.pk %}">
