@@ -305,9 +305,15 @@ class NotificacionAdmin(admin.ModelAdmin):
     reciba.
     """
 
-    list_display = ("tipo", "destinatario", "estado", "fecha_envio")
+    # `destino` y no solo `destinatario`: la pregunta que trae a alguien
+    # aquí es «¿a qué buzón salió?», y la persona no la contesta —la
+    # dirección sale de la ficha, que puede no ser la de la cuenta—.
+    list_display = (
+        "tipo", "destinatario", "destino", "estado", "fecha_envio", "referencia_externa"
+    )
     list_filter = ("estado", "tipo")
     list_select_related = ("destinatario",)
+    search_fields = ("destino", "referencia_externa")
 
     def has_add_permission(self, peticion):
         return False

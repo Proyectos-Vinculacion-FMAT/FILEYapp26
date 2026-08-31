@@ -36,6 +36,12 @@ FORMULARIO = {
     "segundo_apellido": "",
     "telefono": "999 000 1234",
     "pais": "MX",
+    # Dentro de México el estado se exige (`CU-REG-001`). No se omite
+    # aquí para dejarlo por omisión: el desplegable siempre manda uno, y
+    # un formulario base al que le falte un campo obligatorio haría que
+    # cada prueba de arriba fallara por el motivo equivocado.
+    "entidad": "YUC",
+    "ciudad": "Mérida",
 }
 
 

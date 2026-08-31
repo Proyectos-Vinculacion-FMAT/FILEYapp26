@@ -857,6 +857,23 @@ class Notificacion(models.Model):
     # administrador necesita para reintentar a mano (`CU-STD-008` E1).
     detalle_error = models.TextField("detalle del error", blank=True)
 
+    # ── A dónde fue, y con qué acuse ──────────────────────────
+    #
+    # `destinatario` es la **persona**, y no basta para contestar «¿a qué
+    # buzón llegó?»: la dirección sale de la ficha
+    # (`datos_editorial["correo_electronico"]`), que puede no ser la de
+    # la cuenta y que se puede corregir después. Sin guardarla aquí, un
+    # aviso de hace un mes ya no dice a dónde salió.
+    destino = models.EmailField("dirección de destino", blank=True)
+    # El acuse del proveedor —el id que devuelve Resend—. Es lo que
+    # permite pasar de «lo mandamos» a «esto fue lo que pasó después»:
+    # `enviada` solo significa que la API lo aceptó, y el rebote, el
+    # filtro de spam y la supresión ocurren más tarde y solo constan en
+    # el panel del proveedor. Vacío con el backend de pruebas.
+    referencia_externa = models.CharField(
+        "acuse del proveedor", max_length=120, blank=True
+    )
+
     class Meta:
         verbose_name = "notificación"
         verbose_name_plural = "notificaciones"

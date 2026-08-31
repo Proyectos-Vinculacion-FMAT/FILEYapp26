@@ -22,6 +22,8 @@ from django.utils import timezone
 
 from comun.validadores import telefono as validar_telefono
 
+from . import estados_mx
+from .estados_mx import ESTADOS_MX
 from .paises import PAISES
 
 
@@ -117,8 +119,31 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     # alta por comando sin pedirlo; el formulario de CU-REG-001 sí lo
     # exige.
     pais = models.CharField(max_length=2, choices=PAISES, blank=True)
+    # ── Dónde, dentro de México ───────────────────────────────
+    #
+    # Las dos **solo se piden si `pais` es «MX»** (`CU-REG-001`): un
+    # catálogo de 32 entidades mexicanas no describe una dirección en
+    # Bogotá, y una ciudad sin estado que la sitúe tampoco. Fuera de
+    # México quedan en blanco, que es información correcta y no un
+    # hueco — por eso ninguna de las dos es obligatoria en la base.
+    #
+    # Se llama `entidad` y no `estado` porque **`estado` ya está
+    # tomado**: es el estado de la cuenta, ahí abajo. «Entidad
+    # federativa» es además el término oficial; la etiqueta que ve la
+    # gente sigue siendo «Estado».
+    entidad = models.CharField(
+        "estado", max_length=3, choices=ESTADOS_MX, blank=True
+    )
+    # Texto libre y opcional a propósito: no hay catálogo de municipios
+    # que valga la pena mantener para esto, y exigirla dejaría fuera a
+    # quien escribe desde una localidad que no sabe cómo se llama
+    # oficialmente. Lo que sitúa a la persona es la entidad.
+    ciudad = models.CharField("ciudad", max_length=120, blank=True)
     estado = models.CharField(
-        max_length=10, choices=Estado.choices, default=Estado.ACTIVA
+        "estado de la cuenta",
+        max_length=10,
+        choices=Estado.choices,
+        default=Estado.ACTIVA,
     )
     fecha_registro = models.DateTimeField(default=timezone.now)
     ultimo_acceso = models.DateTimeField(null=True, blank=True)
@@ -146,6 +171,17 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     # de la barra superior quieren exactamente lo mismo. Al ser
     # propiedades, cualquier plantilla de EVT/TAL/STD/VIS las tiene
     # disponibles sin `{% load %}`.
+
+    @property
+    def estado_nombre(self) -> str:
+        """La entidad escrita como se lee, no su código.
+
+        Existe para proponerla en fichas que guardan el estado como texto
+        —el domicilio fiscal de una editorial en `STD`, que sale de un
+        documento en papel—. La cuenta guarda `YUC` porque el código no
+        cambia; lo que se copia a un domicilio es «Yucatán».
+        """
+        return estados_mx.nombre_de(self.entidad) if self.entidad else ""
 
     @property
     def nombre_completo(self) -> str:

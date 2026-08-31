@@ -49,6 +49,14 @@ DE_LA_CUENTA = {
     "responsable_stand": "nombre_completo",
     "correo_electronico": "correo",
     "telefono_celular": "telefono",
+    # El domicilio de la editorial no es el de la persona, pero empieza
+    # igual de menudo: quien tramita desde Mérida registra una editorial
+    # yucateca. Se **propone**, no se impone —como el resto de
+    # `DE_LA_CUENTA`, solo entra en la ficha en blanco y se puede
+    # cambiar—, y las dos quedan vacías en una cuenta de fuera de México
+    # porque ahí nunca se preguntaron (`CU-REG-001`).
+    "estado": "estado_nombre",
+    "municipio": "ciudad",
 }
 
 

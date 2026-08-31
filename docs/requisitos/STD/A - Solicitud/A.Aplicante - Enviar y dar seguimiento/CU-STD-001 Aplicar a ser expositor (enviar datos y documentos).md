@@ -51,13 +51,31 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 
 ## Flujo principal
 
-1. El aplicante abre el formulario de solicitud.
+1. El aplicante abre el formulario de solicitud. El sistema **propone** lo que la cuenta ya sabe —responsable del stand, correo de contacto, teléfono celular y, si la cuenta es de México, estado y municipio— y dice en pantalla qué campos vienen propuestos.
 2. El aplicante captura los datos de la editorial: domicilio, contactos (director general, comercial, editorial y de promoción), giro, responsable y nombre del antepecho del stand, materiales, temáticas y sellos editoriales que representa.
 3. El aplicante adjunta los documentos requeridos: constancia de situación fiscal y lista de títulos.
 4. El aplicante envía la solicitud.
 5. El sistema valida que los campos obligatorios y los documentos requeridos estén completos.
 6. El sistema crea el registro de la persona en esta convocatoria si aún no existe, y registra la solicitud en estado `pendiente` con su fecha de envío, asociándola a la editorial y a ese registro.
 7. El sistema confirma al aplicante que su solicitud fue enviada y se encuentra en revisión.
+
+> [!note] Lo de la cuenta se propone, no se impone
+> El domicilio fiscal de una editorial no es el de la persona, pero empieza igual de menudo:
+> quien tramita desde Mérida registra una editorial yucateca. Por eso el estado y el municipio
+> llegan propuestos desde `Persona.entidad` y `Persona.ciudad` (`CU-REG-001`) — y se pueden
+> cambiar, como el resto de lo propuesto.
+>
+> Tres condiciones, y las tres importan:
+> - **Solo en la ficha en blanco.** Con una ficha guardada la fuente es la ficha: si se
+>   repropusiera lo de la cuenta, quien cambiara su ciudad personal se encontraría cambiado el
+>   domicilio de la editorial sin haberlo tocado.
+> - **Una cuenta de fuera de México no propone nada**, porque ahí esos dos campos nunca se
+>   preguntaron.
+> - Lo que se copia al domicilio es el **nombre** de la entidad («Yucatán»), no su código
+>   (`YUC`): `Editorial.estado` es texto libre porque sale de un documento en papel.
+>
+> La pantalla lo dice. Un campo que aparece lleno sin explicación se lee como un dato que el
+> sistema sabe de ti y no te contó de dónde.
 
 ## Flujos alternos
 
