@@ -322,6 +322,9 @@ textarea { resize: vertical; min-height: 80px; }
 .btn-special { background: var(--color-blanco); color: var(--color-azul-institucional); box-shadow: var(--sombra-sm); }
 .btn-special:hover, .btn-special:focus-visible { background: var(--color-dorado-encabezado); color: var(--color-blanco); text-decoration: none; }
 .btn-block { width: 100%; }
+/* `.btn` fija display, así que el atributo hidden no basta por sí solo
+   (mismo motivo y misma solución que `.modal-back[hidden]` en EVT). */
+.btn[hidden] { display: none; }
 .btn-lg { padding: 14px 24px; font-size: 15.5px; }
 
 .form-actions {
@@ -353,6 +356,9 @@ textarea { resize: vertical; min-height: 80px; }
 .conv-body p { margin: 0; font-size: 13.5px; color: var(--gris-700); flex: 1; }
 .conv-dates { font-size: 12.5px; color: var(--gris-500); display: flex; align-items: center; gap: 6px; }
 .conv-foot { padding: 0 18px 18px; }
+/* Pie con más de una acción: las apila. Lo usan las tarjetas cuya segunda
+   acción solo aparece cuando ya hay una solicitud registrada (EVT, VIS). */
+.conv-foot-apilado { display: flex; flex-direction: column; gap: 8px; }
 
 .badge {
   display: inline-flex; align-items: center; gap: 6px;
