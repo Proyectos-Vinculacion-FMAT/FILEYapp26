@@ -17,6 +17,10 @@
   "use strict";
 
   var KEY = "filey_evt_demo_v1";
+  // La configuración de la convocatoria también es estado de EVT, aunque la
+  // escriba common/db-evt.js: reiniciar el guion tiene que devolver también
+  // las fechas de fábrica, o el proponente vería las que tocó el admin.
+  var CONV_KEY = "filey_evt_conv_v1";
 
   var DEFAULT = {
     // "El mar que nos habita" — EVE-2027-0042 (Editorial La Nave)
@@ -51,7 +55,10 @@
       return s;
     },
     reset: function () {
-      try { localStorage.removeItem(KEY); } catch (e) {}
+      try {
+        localStorage.removeItem(KEY);
+        localStorage.removeItem(CONV_KEY);
+      } catch (e) {}
     },
 
     /* ---- Atajos del guion ---- */

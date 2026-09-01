@@ -248,16 +248,19 @@ erDiagram
         string tipo_presentador
         string nombre_autor_1
         string semblanza_autor_1
+        boolean autor_1_participa
         string nombre_autor_2
         string semblanza_autor_2
+        boolean autor_2_participa
         string nombre_autor_3
         string semblanza_autor_3
+        boolean autor_3_participa
         string nombre_autor_4
         string semblanza_autor_4
+        boolean autor_4_participa
         string nombre_autor_5
         string semblanza_autor_5
-        boolean autor_participa
-        string nombres_de_autores_presentes
+        boolean autor_5_participa
         string nombre_participante_1
         string semblanza_participante_1
         string nombre_participante_2
@@ -271,10 +274,10 @@ erDiagram
         string tipo_presentador
         string nombre_editor_1
         string semblanza_editor_1
+        boolean editor_1_participa
         string nombre_editor_2
         string semblanza_editor_2
-        boolean editor_participa
-        string nombres_de_editores_presentes
+        boolean editor_2_participa
         string nombre_participante_1
         string semblanza_participante_1
         string nombre_participante_2
@@ -476,11 +479,20 @@ de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo
 | tipo_presentador | Rol del proponente respecto a la publicación: `autor`, `editor`, `antologador`, `compilador` o `coordinador`. |
 | nombre_autor_1 … 5 | Nombres tal como aparecen en la portada. Obligatorio el primero; hasta cinco. |
 | semblanza_autor_1 … 5 | Semblanza de cada autor, en el mismo orden. |
-| autor_participa | Indica si el autor estará presente en la actividad. |
-| nombres_de_autores_presentes | Nombres de quienes sí asistirán, cuando no todos los autores participan. |
+| autor_1_participa … 5 | Si ese autor estará presente en la actividad. Uno por autor, en el mismo orden que su nombre. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial. Obligatorio; si la publicación es independiente, se anota así. |
+
+> [!warning] Cambio 2026-08-30 — quién participa se marca por autor
+> Antes eran dos campos: `autor_participa`, un sí/no sobre «el autor» que es ambiguo en
+> cuanto hay más de uno, y `nombres_de_autores_presentes`, una lista escrita a mano que
+> repetía nombres ya capturados y podía contradecirlos.
+>
+> Ahora es una casilla por autor —`autor_1_participa … 5`—, junto a su nombre y su
+> semblanza. Un solo lugar dice quién asiste, no se puede nombrar a alguien que no esté
+> en la lista de autores, y saber cuántos asisten no obliga a leer texto libre.
+> `Actividad_PresentacionRevista` sigue el mismo patrón con `editor_1_participa … 2`.
 
 `ejemplar_fisico_entregado` ya no vive en esta tabla: al ser un dato que **solo el
 administrador escribe**, se movió a `DetallesAdminSolicitud` (§3.1), con nota de que aplica
@@ -498,8 +510,7 @@ tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), anclado a es
 | tipo_presentador | Rol del proponente respecto a la publicación. Mismo conjunto de valores que en `Actividad_PresentacionLibro`. |
 | nombre_editor_1 … 2 | Nombres de los editores. Obligatorio el primero; hasta dos. |
 | semblanza_editor_1 … 2 | Semblanza de cada editor, en el mismo orden. |
-| editor_participa | Indica si el editor estará presente en la actividad. |
-| nombres_de_editores_presentes | Nombres de quienes sí asistirán, cuando no todos los editores participan. |
+| editor_1_participa … 2 | Si ese editor estará presente en la actividad. Uno por editor, en el mismo orden que su nombre. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial responsable de la revista. |

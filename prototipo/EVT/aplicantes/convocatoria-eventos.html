@@ -26,15 +26,15 @@
   .fecha-leyenda .lg-pend  { background:var(--azul-600); }
   .fecha-leyenda .lg-fin   { background:var(--err-600); }
 
-  /* Cupos: solo ocupados, sin barra ni máximo */
-  .cupo-count {
+  /* Solicitudes enviadas: un conteo por procedencia, sin barra ni máximo */
+  .envio-count {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     padding:11px 0; border-bottom:1px solid var(--gris-200);
   }
-  .cupo-count:last-child { border-bottom:none; }
-  .cupo-count strong { font-size:14px; color:var(--color-azul-institucional); }
-  .cupo-count .ocup { font-size:13px; color:var(--gris-500); white-space:nowrap; }
-  .cupo-count .ocup b {
+  .envio-count:last-child { border-bottom:none; }
+  .envio-count strong { font-size:14px; color:var(--color-azul-institucional); }
+  .envio-count .conteo { font-size:13px; color:var(--gris-500); white-space:nowrap; }
+  .envio-count .conteo b {
     display:inline-block; min-width:24px; text-align:center; margin-right:4px;
     font-size:14px; color:var(--azul-600); background:var(--azul-050);
     border-radius:6px; padding:2px 7px;
@@ -111,7 +111,7 @@
 
   <!-- Hero -->
   <div class="info-hero">
-    <span class="badge badge-open">Convocatoria abierta</span>
+    <span class="badge badge-open" id="conv-badge">Convocatoria abierta</span>
     <h1>Actividades FILEY 2027 — Eventos</h1>
     <p>Convocatoria de la Coordinación General de Contenidos para conformar el programa general
        de la feria: conversatorios, conferencias, charlas, mesas redondas, lecturas, encuentros
@@ -124,15 +124,15 @@
     <div>
       <!-- Fechas -->
       <div class="card section-card">
-        <div class="section-head"><span class="num">1</span><div><h3>Fechas clave</h3><p>Calendario oficial de la convocatoria</p></div></div>
+        <div class="section-head"><span class="num">1</span><div><h3>Fechas clave</h3><p>Las fija la Coordinación al publicar la convocatoria</p></div></div>
         <div class="section-body">
           <dl class="dl-dates">
-            <div class="row"><dt><span class="dot"></span> Apertura de la convocatoria</dt><dd>1 de julio de 2027<span class="fecha-estado is-fin">Finalizó</span></dd></div>
-            <div class="row"><dt><span class="dot"></span> Cierre de recepción de propuestas</dt><dd>31 de agosto de 2027<span class="fecha-estado is-curso">En curso</span></dd></div>
-            <div class="row"><dt><span class="dot"></span> Notificación de resultados</dt><dd>30 de septiembre de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
-            <div class="row"><dt><span class="dot"></span> Asignación de salas y horarios</dt><dd>Octubre de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
-            <div class="row"><dt><span class="dot"></span> Ventana de ajustes</dt><dd>1 – 15 de octubre de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
-            <div class="row"><dt><span class="dot"></span> Realización de la feria</dt><dd>Marzo de 2028<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Recepción de propuestas</dt><dd data-fecha="recepcion">Del 7 de agosto al 2 de octubre de 2026<span class="fecha-estado is-curso">En curso</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Notificación de resultados</dt><dd data-fecha="notificacion">13 de noviembre de 2026<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Ventana de ajustes</dt><dd data-fecha="ajustes">Del 14 de noviembre al 4 de diciembre de 2026<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Asignación de salas y horarios</dt><dd data-fecha="asignacion">22 de enero de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Realización de la feria</dt><dd data-fecha="feria">Del 13 al 21 de marzo de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
+            <div class="row"><dt><span class="dot"></span> Entrega de constancias</dt><dd data-fecha="constancias">26 de abril de 2027<span class="fecha-estado is-pend">Pendiente</span></dd></div>
           </dl>
           <div class="fecha-leyenda">
             <span><i class="lg lg-curso"></i> En curso</span>
@@ -222,33 +222,24 @@
       </div>
     </div>
 
-    <!-- Columna lateral: cupos -->
+    <!-- Columna lateral: conteo de solicitudes -->
     <aside>
       <div class="card section-card">
-        <div class="section-head"><span class="num">4</span><div><h3>Cupos por categoría</h3><p>Espacios ocupados (sin límite de cupo)</p></div></div>
+        <div class="section-head"><span class="num">4</span><div><h3>Solicitudes enviadas</h3><p>Propuestas recibidas hasta hoy en esta convocatoria</p></div></div>
         <div class="section-body">
-          <div class="cupos">
-            <div class="cupo-count">
-              <strong>Literaria · Externo</strong>
-              <span class="ocup"><b>32</b> ocupados</span>
-            </div>
-            <div class="cupo-count">
-              <strong>Literaria · UADY</strong>
-              <span class="ocup"><b>18</b> ocupados</span>
-            </div>
-            <div class="cupo-count">
-              <strong>Académica · Externo</strong>
-              <span class="ocup"><b>27</b> ocupados</span>
-            </div>
-            <div class="cupo-count">
-              <strong>Académica · UADY</strong>
-              <span class="ocup"><b>30</b> ocupados</span>
-            </div>
+          <div class="envio-count">
+            <strong>UADY</strong>
+            <span class="conteo"><b data-envios="uady">48</b> enviadas</span>
+          </div>
+          <div class="envio-count">
+            <strong>Externas</strong>
+            <span class="conteo"><b data-envios="externo">59</b> enviadas</span>
           </div>
           <div class="note note-gold" style="margin:18px 0 0">
             <div class="ico">🏷️</div>
-            <div>La categoría (literaria/académica) la define el comité al revisar tu propuesta;
-              el cupo UADY/externo se asigna según tu perfil.</div>
+            <div>No se desglosan por categoría (literaria o académica): esa la define el
+              comité al revisar cada propuesta, así que hasta la temporada de revisión lo
+              único que se sabe de una solicitud es de dónde viene.</div>
           </div>
         </div>
       </div>
@@ -277,6 +268,81 @@
   <div><strong>FILEY 2027</strong> — Coordinación General de Contenidos · UADY</div>
   <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org</div>
 </div></footer>
+
+<script src="../../common/db-evt.js"></script>
+<script src="../demo.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!window.FileyEVT) return;
+
+  var ESTADOS = {
+    curso: { cls: 'is-curso', txt: 'En curso' },
+    pend:  { cls: 'is-pend',  txt: 'Pendiente' },
+    fin:   { cls: 'is-fin',   txt: 'Finalizó' }
+  };
+  var BADGES = {
+    abierta:  { cls: 'badge-open',   txt: 'Convocatoria abierta' },
+    cerrada:  { cls: 'badge-closed', txt: 'Convocatoria cerrada' },
+    borrador: { cls: 'badge-soon',   txt: 'Convocatoria próxima' }
+  };
+
+  function pintarFecha(clave, texto, estado) {
+    var dd = document.querySelector('[data-fecha="' + clave + '"]');
+    if (!dd) return;
+    var e = ESTADOS[estado] || ESTADOS.pend;
+    dd.textContent = texto;
+    var chip = document.createElement('span');
+    chip.className = 'fecha-estado ' + e.cls;
+    chip.textContent = e.txt;
+    dd.appendChild(chip);
+  }
+
+  FileyEVT.ready().then(function () {
+    var c = FileyEVT.getConfig();
+    var ajIni = FileyEVT.ajustesInicio();
+
+    /* Sección 1 — ninguna fecha está escrita en esta pantalla: todas salen
+       de lo que la Coordinación guardó en admin-evt-configuracion.html. La
+       recepción es UNA fila con UN estado; su apertura y su cierre son los
+       dos extremos de la misma ventana, no dos hitos independientes. */
+    pintarFecha('recepcion',
+      FileyEVT.rangoLargo(c.recepcion.apertura, c.recepcion.cierre),
+      FileyEVT.estadoRecepcion());
+    pintarFecha('notificacion',
+      FileyEVT.fechaLarga(c.notificacion),
+      FileyEVT.estadoDeFecha(c.notificacion));
+    pintarFecha('ajustes',
+      FileyEVT.rangoLargo(ajIni, c.ajustes_limite),
+      FileyEVT.estadoDeRango(ajIni, c.ajustes_limite));
+    pintarFecha('asignacion',
+      FileyEVT.fechaLarga(c.asignacion),
+      FileyEVT.estadoDeFecha(c.asignacion));
+    pintarFecha('feria',
+      FileyEVT.rangoLargo(c.feria.inicio, c.feria.fin),
+      FileyEVT.estadoDeRango(c.feria.inicio, c.feria.fin));
+    pintarFecha('constancias',
+      FileyEVT.fechaLarga(c.constancias),
+      FileyEVT.estadoDeFecha(c.constancias));
+
+    /* El distintivo de la cabecera sale de `estado`, no de comparar fechas:
+       adelantar el cierre no cierra la convocatoria (CU-FER-008). */
+    var badge = document.getElementById('conv-badge');
+    var b = BADGES[c.estado] || BADGES.borrador;
+    badge.className = 'badge ' + b.cls;
+    badge.textContent = b.txt;
+
+    /* Sección 4 — conteo de lo enviado, no cupos: la categoría no existe
+       todavía. La propuesta del guión (Editorial La Nave) es externa, así
+       que si ya se envió, suma. */
+    var uady = c.solicitudes.uady;
+    var externo = c.solicitudes.externo;
+    if (window.FileyDemo && FileyDemo.get().emqnhEnviada) externo += 1;
+    document.querySelector('[data-envios="uady"]').textContent = uady;
+    document.querySelector('[data-envios="externo"]').textContent = externo;
+  });
+})();
+</script>
 
 </body>
 </html>

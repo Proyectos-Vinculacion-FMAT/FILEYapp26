@@ -71,8 +71,9 @@
       <div class="page-head">
         <h1>Configuración de la convocatoria</h1>
         <p>Define las fechas clave y los cupos por categoría. Cada fecha se refleja en el calendario
-           —usa las flechas <b>‹ ›</b> para navegar entre meses y ver apertura, cierre, notificación,
-           ventana de ajustes y asignación. Al guardar, la convocatoria queda publicada para los proponentes.</p>
+           —usa las flechas <b>‹ ›</b> para navegar entre meses y ver la ventana de recepción, la
+           notificación, la ventana de ajustes y la asignación. Lo que guardes aquí es lo que leen
+           los proponentes en la convocatoria: al guardar, queda publicada.</p>
       </div>
 
       <div class="cal-wrap">
@@ -84,33 +85,33 @@
             <div class="date-list">
               <div class="date-item">
                 <span class="swatch ev-apertura"></span>
-                <span class="lbl">Apertura</span>
-                <input type="date" id="kAp" value="2027-07-01">
+                <span class="lbl">Recepción · desde</span>
+                <input type="date" id="kAp" value="2026-08-07">
               </div>
               <div class="date-item">
                 <span class="swatch ev-cierre"></span>
-                <span class="lbl">Cierre</span>
-                <input type="date" id="kCi" value="2027-08-31">
+                <span class="lbl">Recepción · hasta</span>
+                <input type="date" id="kCi" value="2026-10-02">
               </div>
               <div class="date-item">
                 <span class="swatch ev-notif"></span>
                 <span class="lbl">Notificación</span>
-                <input type="date" id="kNo" value="2027-09-30">
+                <input type="date" id="kNo" value="2026-11-13">
               </div>
               <div class="date-item">
                 <span class="swatch ev-ajustes"></span>
                 <span class="lbl">Límite de ajustes</span>
-                <input type="date" id="kAj" value="2027-10-15">
+                <input type="date" id="kAj" value="2026-12-04">
               </div>
               <div class="date-item">
                 <span class="swatch ev-asignacion"></span>
                 <span class="lbl">Asignación de horario</span>
-                <input type="date" id="kAs" value="2027-10-22">
+                <input type="date" id="kAs" value="2027-01-22">
               </div>
               <div class="date-item">
                 <span class="swatch ev-constancias"></span>
                 <span class="lbl">Constancias</span>
-                <input type="date" id="kCo" value="2028-03-31">
+                <input type="date" id="kCo" value="2027-04-26">
               </div>
             </div>
           </div>
@@ -141,7 +142,7 @@
           <div class="cal-toolbar">
             <button class="cal-nav" id="calPrev" title="Mes anterior">‹</button>
             <button class="cal-nav" id="calNext" title="Mes siguiente">›</button>
-            <span class="month" id="calMonth">Agosto 2027</span>
+            <span class="month" id="calMonth">Octubre 2026</span>
             <button class="cal-nav cal-today" id="calHoy" title="Ir al cierre">Cierre</button>
             <span class="badge badge-open" id="calBadge">Convocatoria abierta</span>
           </div>
@@ -194,6 +195,7 @@
   </div>
 </div>
 
+<script src="../../common/db-evt.js"></script>
 <script src="../demo.js"></script>
 <script>
 (function(){
@@ -202,8 +204,8 @@
 
   // Hitos: leen su valor del input correspondiente (edítalos y el calendario se actualiza)
   var KEYS = [
-    { id:'kAp', cls:'ev-apertura',    label:'Apertura de convocatoria' },
-    { id:'kCi', cls:'ev-cierre',      label:'Cierre de recepción' },
+    { id:'kAp', cls:'ev-apertura',    label:'Abre recepción' },
+    { id:'kCi', cls:'ev-cierre',      label:'Cierra recepción' },
     { id:'kNo', cls:'ev-notif',       label:'Notificación de resultados' },
     { id:'kAj', cls:'ev-ajustes',     label:'Límite de ajustes' },
     { id:'kAs', cls:'ev-asignacion',  label:'Asignación de horario' },
@@ -215,7 +217,7 @@
   var badge = document.getElementById('calBadge');
 
   // Vista inicial: mes de cierre
-  var curY = 2027, curM = 7; // Agosto = índice 7
+  var curY = 2026, curM = 9; // Octubre = índice 9 (el mes del cierre)
 
   function val(id){ var el = document.getElementById(id); return el ? el.value : ''; }
   function pad(n){ return (n<10?'0':'') + n; }
@@ -311,6 +313,26 @@
 
   render();
 
+  /* ===== Las fechas vienen del pseudo-backend, no del HTML =====
+     Los `value=` de los <input> son la semilla de fábrica; lo que manda es
+     lo último que se guardó aquí. En Django estos campos son
+     `Convocatoria.fecha_apertura` / `.fecha_cierre` y la configuración de
+     EVT, y la pantalla los trae del servidor en el contexto de la vista. */
+  function volcarConfig(c) {
+    document.getElementById('kAp').value = c.recepcion.apertura;
+    document.getElementById('kCi').value = c.recepcion.cierre;
+    document.getElementById('kNo').value = c.notificacion;
+    document.getElementById('kAj').value = c.ajustes_limite;
+    document.getElementById('kAs').value = c.asignacion;
+    document.getElementById('kCo').value = c.constancias;
+    var p = c.recepcion.cierre.split('-');
+    curY = +p[0];
+    curM = +p[1] - 1;
+    render();
+  }
+
+  if (window.FileyEVT) FileyEVT.ready().then(function () { volcarConfig(FileyEVT.getConfig()); });
+
   /* ===== Doble verificación: resumen + confirmación antes de publicar ===== */
   var MES_ABR = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   function fmtFecha(isoStr){
@@ -323,11 +345,35 @@
       '<span style="color:var(--gris-500);font-size:13.5px">' + nombre + '</span>' +
       '<strong style="color:var(--azul-900);font-size:13.5px">' + valor + '</strong></div>';
   }
+  /* El aviso de abajo promete que las fechas van en orden; esto es lo que
+     lo cumple. Importa desde que se guardan de verdad: una configuración
+     desordenada se vería como prosa sin sentido en la convocatoria
+     ("Del 29 de diciembre al 15 de octubre"). */
+  var ORDEN = [
+    ['kAp', 'la apertura de la recepción'],
+    ['kCi', 'el cierre de la recepción'],
+    ['kNo', 'la notificación de resultados'],
+    ['kAj', 'el límite de ajustes'],
+    ['kAs', 'la asignación de horario'],
+    ['kCo', 'la entrega de constancias']
+  ];
+  function fechasEnOrden(){
+    for (var i = 1; i < ORDEN.length; i++) {
+      var previa = val(ORDEN[i-1][0]), actual = val(ORDEN[i][0]);
+      if (previa && actual && actual < previa) {
+        window.FileyDemo.toast(
+          'Revisa las fechas: ' + ORDEN[i][1] + ' no puede ir antes que ' + ORDEN[i-1][1] + '.', 'warn');
+        return false;
+      }
+    }
+    return true;
+  }
+
   window.abrirPublicar = function(){
+    if (!fechasEnOrden()) return;
     var cupos = document.querySelectorAll('.cal-panel .field input[type="text"]');
     document.getElementById('pub-resumen').innerHTML =
-      filaResumen('Apertura de convocatoria', fmtFecha(val('kAp'))) +
-      filaResumen('Cierre de recepción', fmtFecha(val('kCi'))) +
+      filaResumen('Recepción de propuestas', fmtFecha(val('kAp')) + ' — ' + fmtFecha(val('kCi'))) +
       filaResumen('Notificación de resultados', fmtFecha(val('kNo'))) +
       filaResumen('Límite de ajustes', fmtFecha(val('kAj'))) +
       filaResumen('Asignación de horario', fmtFecha(val('kAs'))) +
@@ -337,6 +383,18 @@
     document.getElementById('m-publicar').hidden = false;
   };
   document.getElementById('btn-publicar-ok').addEventListener('click', function(){
+    /* Publicar es lo que escribe la configuración: a partir de aquí la
+       convocatoria del proponente muestra estas fechas y este estado. */
+    if (window.FileyEVT) {
+      FileyEVT.saveConfig({
+        estado: 'abierta',
+        recepcion: { apertura: val('kAp'), cierre: val('kCi') },
+        notificacion: val('kNo'),
+        ajustes_limite: val('kAj'),
+        asignacion: val('kAs'),
+        constancias: val('kCo')
+      });
+    }
     document.getElementById('m-publicar').hidden = true;
     window.FileyDemo.toast('Convocatoria publicada. Los proponentes ya pueden verla y aplicar.', 'ok');
     setTimeout(function(){ window.location.href = 'admin-evt-propuestas.html'; }, 1100);

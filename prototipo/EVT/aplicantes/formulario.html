@@ -98,46 +98,65 @@
     <div class="card section-card">
       <div class="section-head">
         <span class="num">1</span>
-        <div><h3>Datos de participación</h3><p>Comunes a cualquier tipo de actividad</p></div>
+        <div><h3>Datos de participación</h3><p>Se precargan de tu cuenta; solo capturas institución y cargo</p></div>
       </div>
       <div class="section-body">
         <div class="grid-2">
           <div class="field field-prefill">
             <label>Nombre completo <span class="req">*</span></label>
-            <input type="text" value="Laura Peniche Uc" readonly>
+            <input type="text" value="Laura Peniche Uc" data-de-cuenta="nombre_completo" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
           <div class="field field-prefill">
             <label>Correo electrónico <span class="req">*</span></label>
-            <input type="email" value="contacto@editoriallanave.mx" readonly>
+            <input type="email" value="contacto@editoriallanave.mx" data-de-cuenta="correo" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
         </div>
         <div class="grid-2">
           <div class="field field-prefill">
             <label>Número telefónico <span class="req">*</span></label>
-            <input type="tel" value="999 456 7890" readonly>
+            <input type="tel" value="999 456 7890" data-de-cuenta="telefono" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+          <div class="field field-prefill">
+            <label>País <span class="req">*</span></label>
+            <input type="text" value="México" data-de-cuenta="pais" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+        </div>
+        <!-- Estado va aparte del país porque son dos datos, no uno. Hoy sale fijo:
+             REG todavía no lo captura (`Modelo de datos - Eventos` §2.1); cuando
+             suba a REG se precarga igual que el resto y esta pantalla no cambia.
+             Ciudad no aparece: no se va a capturar por ahora, y un campo que
+             nadie llena ni guarda solo estorba. -->
+        <div class="grid-2">
+          <div class="field field-prefill">
+            <label>Estado <span class="req">*</span></label>
+            <input type="text" value="Yucatán" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
           <div class="field">
-            <label>Dependencia o institución <span class="req">*</span></label>
-            <input type="text" value="Editorial La Nave">
+            <label>Cargo <span class="opt">(opcional)</span></label>
+            <input type="text" name="cargo" value="Coordinadora editorial">
           </div>
         </div>
-        <div class="grid-2">
-          <div class="field">
-            <label>Cargo <span class="opt">(opcional)</span></label>
-            <input type="text" value="Coordinadora editorial">
-          </div>
-          <div class="field">
-            <label>Ciudad / Estado <span class="req">*</span></label>
-            <input type="text" value="Mérida, Yucatán">
+        <div class="field">
+          <label>Dependencia o institución <span class="req">*</span></label>
+          <div class="evt-institucion">
+            <input type="text" name="institucion" value="Editorial La Nave">
+            <label class="evt-check">
+              <input type="checkbox" name="es_uady"> Es de la UADY
+            </label>
           </div>
         </div>
         <div class="note note-info" style="margin:6px 0 0">
           <div class="ico">ℹ️</div>
-          <div>Tu nombre, correo y teléfono se toman de tu cuenta. Solo completa los datos
-            de la institución y ubicación.</div>
+          <div>Todo lo de arriba sale de tu cuenta. Lo único que capturas aquí es la
+            <strong>institución y el cargo</strong>: una misma persona puede aplicar
+            representando a instituciones distintas, así que se piden por solicitud.
+            <strong>En el prototipo</strong>, el estado sale fijo —REG todavía no lo
+            pide.</div>
         </div>
       </div>
     </div>
@@ -205,6 +224,42 @@
 <script src="../demo.js"></script>
 <script src="../app.js"></script>
 <script>
+  /* Precarga desde la cuenta. El registro de REG guarda estos datos en
+     `filey_reg_persona`; sin cuenta creada quedan los del guion (Laura P.).
+     En Django no hay que guardarlos aparte: la vista pasa `request.user` y la
+     plantilla lee `usuario.nombre_completo`, `.correo`, `.telefono` y
+     `.get_pais_display`. Estado y ciudad no están aquí porque REG todavía no
+     los captura (`Modelo de datos - Eventos` 2.1). */
+  (function () {
+    var persona = null;
+    try { persona = JSON.parse(localStorage.getItem("filey_reg_persona")); } catch (e) {}
+    if (!persona || !persona.nombre) return;
+
+    function poner(clave, valor) {
+      var campo = document.querySelector('[data-de-cuenta="' + clave + '"]');
+      if (campo && valor) campo.value = valor;
+    }
+
+    poner("nombre_completo",
+      [persona.nombre, persona.primer_apellido, persona.segundo_apellido]
+        .filter(Boolean).join(" "));
+    poner("correo", persona.correo);
+    /* Se guarda solo con dígitos; aquí se agrupa para leerlo. */
+    poner("telefono", String(persona.telefono || "").replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3"));
+
+    /* El país se guarda como código ISO: el nombre sale del mismo catálogo
+       que usa el registro, para no tener dos listas que puedan divergir. */
+    if (persona.pais) {
+      fetch("../../common/db/REG/semillas/paises.json", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (paises) {
+          var p = paises.find(function (x) { return x.codigo === persona.pais; });
+          poner("pais", p ? p.nombre : persona.pais);
+        })
+        .catch(function () { poner("pais", persona.pais); });
+    }
+  })();
+
   // Envío real (demo): registra la propuesta y sigue a la confirmación.
   document.getElementById("btn-enviar").addEventListener("click", function () {
     var grid = document.getElementById("tipo-grid");

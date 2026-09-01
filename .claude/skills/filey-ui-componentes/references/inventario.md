@@ -4,7 +4,7 @@
 Regenerar con `./prototipo/scripts/gen-inventario.sh` tras cualquier cambio en un `styles.css`.
 Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 
-**78 tokens · 393 definiciones de clase · 39 sin uso detectado en HTML/JS.**
+**78 tokens · 405 definiciones de clase · 39 sin uso detectado en HTML/JS.**
 
 ## Cómo usar este archivo
 
@@ -132,8 +132,8 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.hint` | common | 198 | EVT, REG |
 | `.req` | common | 199 | EVT, REG, VIS |
 | `.opt` | common | 200 | EVT, REG, VIS |
-| `.select-wrap` | common | 217 | VIS |
-| `.is-open` | common | 245 | VIS |
+| `.select-wrap` | common | 217 | REG, VIS |
+| `.is-open` | common | 245 | REG, VIS |
 | `.field-prefill` | common | 256 | EVT, VIS |
 | `.tag-auto` | common | 257 | EVT, VIS |
 | `.grid-2` | common | 263 | EVT, VIS |
@@ -156,58 +156,59 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.btn-ghost` | common | 318 | EVT, REG, VIS |
 | `.btn-special` | common | 322 | EVT, VIS |
 | `.btn-block` | common | 324 | EVT, REG |
-| `.btn-lg` | common | 325 | EVT, REG, VIS |
-| `.form-actions` | common | 327 | EVT, VIS |
-| `.spacer` | common | 331 | EVT, VIS |
-| `.conv-grid` | common | 334 | EVT, REG |
-| `.conv-card` | common | 335 | EVT, REG |
-| `.is-closed` | common | 341 | REG |
-| `.conv-banner` | common | 342 | EVT, REG |
-| `.banner-stand` | common | 348 | EVT, REG |
-| `.banner-infantil` | common | 349 | EVT, REG |
-| `.banner-eventos` | common | 350 | EVT, REG |
-| `.banner-visitas` | common | 351 | EVT, REG |
-| `.conv-body` | common | 352 | EVT, REG |
-| `.conv-dates` | common | 354 | EVT, REG |
-| `.conv-foot` | common | 355 | EVT, REG |
-| `.badge` | common | 357 | EVT, REG |
-| `.badge-open` | common | 363 | EVT, REG |
-| `.badge-closed` | common | 364 | REG |
-| `.badge-soon` | common | 365 | REG |
-| `.badge-pending` | common | 366 | EVT |
-| `.badge-accepted` | common | 367 | EVT |
-| `.badge-rejected` | common | 368 | EVT |
-| `.badge-changes` | common | 369 | EVT |
-| `.info-hero` | common | 372 | EVT |
-| `.info-grid` | common | 382 | EVT, VIS |
-| `.dl-dates` | common | 384 | EVT |
-| `.row` | common | 385 | EVT |
-| `.dot` | common | 392 | EVT, REG, VIS, common |
-| `.cupos` | common | 394 | EVT |
-| `.cupo` | common | 395 | EVT |
-| `.top` | common | 398 | EVT |
-| `.bar` | common | 401 | EVT, VIS |
-| `.full` | common | 403 | EVT |
-| `.req-list` | common | 405 | EVT |
-| `.ck` | common | 407 | EVT |
-| `.types-row` | common | 409 | EVT |
-| `.type-pill` | common | 410 | EVT |
-| `.cta-bar` | common | 412 | EVT, VIS |
-| `.table` | common | 421 | EVT |
-| `.folio` | common | 425 | EVT, VIS |
-| `.confirm-card` | common | 428 | EVT, VIS |
-| `.check` | common | 429 | EVT, VIS |
-| `.folio-box` | common | 435 | EVT, VIS |
-| `.note` | common | 444 | EVT, REG, VIS |
-| `.note-info` | common | 449 | EVT, REG, VIS |
-| `.note-warn` | common | 450 | EVT, REG, VIS |
-| `.note-gold` | common | 451 | EVT, REG |
-| `.closed-overlay` | common | 453 | REG |
-| `.proto-bar` | common | 460 | EVT, REG, VIS |
-| `.proto-bar-inner` | common | 464 | EVT, REG, VIS |
-| `.sep` | common | 467 | EVT, REG, VIS |
-| `.footer` | common | 471 | EVT, REG, VIS |
-| `.footer-inner` | common | 475 | EVT, REG, VIS |
+| `.btn-lg` | common | 328 | EVT, REG, VIS |
+| `.form-actions` | common | 330 | EVT, VIS |
+| `.spacer` | common | 334 | EVT, VIS |
+| `.conv-grid` | common | 337 | EVT, REG |
+| `.conv-card` | common | 338 | EVT, REG |
+| `.is-closed` | common | 344 | REG |
+| `.conv-banner` | common | 345 | EVT, REG |
+| `.banner-stand` | common | 351 | EVT, REG |
+| `.banner-infantil` | common | 352 | EVT, REG |
+| `.banner-eventos` | common | 353 | EVT, REG |
+| `.banner-visitas` | common | 354 | EVT, REG |
+| `.conv-body` | common | 355 | EVT, REG |
+| `.conv-dates` | common | 357 | EVT, REG |
+| `.conv-foot` | common | 358 | EVT, REG |
+| `.conv-foot-apilado` | common | 361 | REG |
+| `.badge` | common | 363 | EVT, REG |
+| `.badge-open` | common | 369 | EVT, REG |
+| `.badge-closed` | common | 370 | REG |
+| `.badge-soon` | common | 371 | REG |
+| `.badge-pending` | common | 372 | EVT |
+| `.badge-accepted` | common | 373 | EVT |
+| `.badge-rejected` | common | 374 | EVT |
+| `.badge-changes` | common | 375 | EVT |
+| `.info-hero` | common | 378 | EVT |
+| `.info-grid` | common | 388 | EVT, VIS |
+| `.dl-dates` | common | 390 | EVT |
+| `.row` | common | 391 | EVT |
+| `.dot` | common | 398 | EVT, REG, VIS, common |
+| `.cupos` | common | 400 | EVT |
+| `.cupo` | common | 401 | EVT |
+| `.top` | common | 404 | EVT |
+| `.bar` | common | 407 | EVT, VIS |
+| `.full` | common | 409 | EVT |
+| `.req-list` | common | 411 | EVT |
+| `.ck` | common | 413 | EVT |
+| `.types-row` | common | 415 | EVT |
+| `.type-pill` | common | 416 | EVT |
+| `.cta-bar` | common | 418 | EVT, VIS |
+| `.table` | common | 427 | EVT |
+| `.folio` | common | 431 | EVT, VIS |
+| `.confirm-card` | common | 434 | EVT, VIS |
+| `.check` | common | 435 | EVT, VIS |
+| `.folio-box` | common | 441 | EVT, VIS |
+| `.note` | common | 450 | EVT, REG, VIS |
+| `.note-info` | common | 455 | EVT, REG, VIS |
+| `.note-warn` | common | 456 | EVT, REG, VIS |
+| `.note-gold` | common | 457 | EVT, REG |
+| `.closed-overlay` | common | 459 | REG |
+| `.proto-bar` | common | 466 | EVT, REG, VIS |
+| `.proto-bar-inner` | common | 470 | EVT, REG, VIS |
+| `.sep` | common | 473 | EVT, REG, VIS |
+| `.footer` | common | 477 | EVT, REG, VIS |
+| `.footer-inner` | common | 481 | EVT, REG, VIS |
 | `.auth-hero` | REG | 8 | EVT, REG |
 | `.logo-lg` | REG | 8 | EVT, REG |
 | `.is-admin` | REG | 14 | REG, VIS |
@@ -326,6 +327,17 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.taken` | EVT | 253 | — |
 | `.mini-act` | EVT | 253 | — |
 | `.pv-foot` | EVT | 254 | EVT |
+| `.evt-persona` | EVT | 261 | EVT |
+| `.evt-persona__head` | EVT | 265 | EVT |
+| `.evt-persona__n` | EVT | 266 | EVT |
+| `.evt-persona__quitar` | EVT | 270 | EVT |
+| `.field` | EVT | 274 | EVT, REG, VIS |
+| `.evt-check` | EVT | 280 | EVT |
+| `.evt-institucion` | EVT | 290 | EVT |
+| `.evt-agregar` | EVT | 294 | EVT |
+| `.evt-contador` | EVT | 303 | EVT |
+| `.is-tope` | EVT | 304 | EVT |
+| `.evt-bloqueo` | EVT | 318 | EVT |
 | `.banner-infantil` | VIS | 43 | EVT, REG |
 | `.btn-green` | VIS | 46 | VIS |
 | `.auth-hero` | VIS | 50 | EVT, REG |
@@ -375,7 +387,7 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.folio` | VIS | 160 | EVT, VIS |
 | `.vis-tabla__toggle` | VIS | 161 | VIS |
 | `.vis-tabla__toggle-icon` | VIS | 167 | VIS |
-| `.is-open` | VIS | 169 | VIS |
+| `.is-open` | VIS | 169 | REG, VIS |
 | `.vis-tabla__row-detail` | VIS | 171 | VIS |
 | `.vis-tabla-detail` | VIS | 175 | VIS |
 | `.vis-tabla-detail__inner` | VIS | 176 | VIS |
