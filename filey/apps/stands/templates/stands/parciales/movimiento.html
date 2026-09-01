@@ -1,0 +1,220 @@
+{% load dinero %}
+{% comment %} ===========================================================
+   El detalle de un abono y las dos decisiones sobre él (CU-STD-018).
+
+   Lo usan el modal de la cola (A5) y la pantalla suelta, que es la que
+   sale sin JavaScript. Trae su propio velo para que htmx pueda dejarlo
+   dentro de un hueco vacío.
+
+   Contexto que espera:
+
+     movimiento   el Movimiento
+     reserva      su Reserva, para poder decidir con el saldo delante
+     proyeccion   qué le haría este abono a la reserva, o None
+     desde        por qué puerta se entró: «cola» (A5) o «reserva» (A4)
+     url_volver   a dónde vuelve al cerrar y tras decidir
+     en_modal     si va dentro del velo o suelto en una pantalla
+
+   `desde` viaja en cada formulario para que la decisión devuelva a quien
+   la tomó a donde estaba. Es una de dos palabras y no una URL: en un
+   parámetro, una URL sería un redirector abierto.
+
+   **Los dos botones no son simétricos.** Validar mueve dinero y es la
+   acción esperada: va a la derecha, primaria y de un clic. Rechazar
+   abre el motivo antes de ejecutarse — no porque el caso de uso lo
+   exija (CU-STD-018 A1 lo deja opcional) sino porque es lo único que la
+   editorial va a leer en su historial (CU-STD-017), y porque separa la
+   destructiva de la confirmatoria (ley de Fitts).
+   =========================================================== {% endcomment %}
+{% if en_modal %}<div class="modal-back" data-cerrar-modal>{% endif %}
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+  {% comment %} El monto es el héroe: es la cifra que se coteja contra el
+     estado de cuenta, y el resto de la cabecera es su pie de foto. Lleva
+     el tratamiento de número grande que ya usan las tarjetas del resumen
+     (30px/800, cifras de ancho fijo), no uno nuevo. {% endcomment %}
+  <div class="modal-head abono-cabecera">
+    <div>
+      <span class="hint">Abono reportado</span>
+      <strong class="abono-monto" id="modal-titulo">
+        {{ movimiento.monto|pesos }}
+      </strong>
+      <p>
+        {{ movimiento.get_metodo_display }} ·
+        {{ movimiento.fecha_registro|date:"j \d\e F \d\e Y, H:i" }} ·
+        {% if movimiento.origen == 'admin_manual' %}
+          lo registró la feria
+        {% else %}
+          lo registró la editorial
+        {% endif %}
+      </p>
+    </div>
+    {% include "stands/parciales/badge_movimiento.html" %}
+  </div>
+
+  <div class="modal-body">
+    <div class="info-grid">
+      <div>
+        <span class="hint">Editorial</span>
+        <strong>{{ reserva.editorial.nombre }}</strong>
+        <span class="hint">{{ reserva.registro.persona.correo }}</span>
+      </div>
+      <div>
+        <span class="hint">Reserva</span>
+        <strong>
+          <a href="{% url 'stands:detalle_reserva' reserva_id=reserva.pk %}">
+            #{{ reserva.pk }}
+          </a>
+        </strong>
+        <span class="hint">{{ reserva.get_estado_display }}</span>
+      </div>
+    </div>
+
+    {% comment %} ── Lo primero que hay que hacer ──
+
+       Los pasos 3 y 4 de CU-STD-018 son abrir el comprobante y cotejarlo
+       contra el banco: es **el trabajo**, no un dato más. Por eso es un
+       bloque golpeable y no un enlace de texto entre etiquetas.
+
+       Pestaña nueva porque se compara con otra ventana, y perder esta
+       pantalla en cada uno es lo que vuelve tedioso validar diez
+       seguidos. {% endcomment %}
+    {% if movimiento.comprobante %}
+      <a class="comprobante" target="_blank" rel="noopener"
+         href="{% url 'stands:documento' documento_id=movimiento.comprobante.pk %}">
+        <span class="comprobante-ico" aria-hidden="true">🧾</span>
+        <span class="comprobante-texto">
+          <strong>Abrir el comprobante</strong>
+          <span class="hint">{{ movimiento.comprobante.nombre_original|default:"archivo" }}</span>
+        </span>
+        <span class="comprobante-flecha" aria-hidden="true">↗</span>
+      </a>
+    {% else %}
+      <div class="note note-warn">
+        <div class="ico">📎</div>
+        <div>
+          <strong>Sin comprobante adjunto.</strong>
+          No hay nada que cotejar contra el banco.
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} ── Y lo que va a pasar si se valida ──
+
+       CU-STD-018 paso 8: al validar, el sistema evalúa si el nuevo saldo
+       cruza el 50% (RN-13) o el 100% (RN-14). Enseñarlo **antes** de
+       pulsar es la diferencia entre decidir y calcular de cabeza con tres
+       cifras sueltas.
+
+       Dos tramos en la misma barra: en verde lo ya validado y en ámbar lo
+       que este abono añadiría. El ámbar no es decoración — es el color de
+       «pendiente de validación» en todo el sistema, y al validar pasa a
+       verde. {% endcomment %}
+    {% if proyeccion %}
+      <div class="proyeccion">
+        <div class="progreso-cabecera">
+          <span class="hint">Si validas este abono</span>
+          <strong>
+            {{ proyeccion.despues|pesos }} de
+            {{ proyeccion.total|pesos }}
+          </strong>
+        </div>
+        <div class="progreso-barra">
+          <span class="progreso-hecho" style="width: {{ proyeccion.pct_abonado }}%"></span>
+          <span class="progreso-suma" style="width: {{ proyeccion.pct_este }}%"></span>
+          <span class="progreso-marca" style="left: {{ proyeccion.umbral }}%"></span>
+        </div>
+        <div class="progreso-marcas">
+          <span>{{ proyeccion.umbral }}% · se confirma</span>
+          <span>100% · queda pagada</span>
+        </div>
+        <p class="proyeccion-efecto">
+          {% if proyeccion.cambia %}
+            La reserva pasaría a
+            <strong>{{ proyeccion.estado_resultante|lower }}</strong>.
+          {% else %}
+            La reserva seguiría {{ proyeccion.estado_resultante|lower }}:
+            este abono no alcanza el siguiente umbral.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+    {% if movimiento.estado != 'pendiente_validacion' %}
+      {% comment %} Ya resuelto: el modal pasa a ser de consulta. Quién y
+         cuándo, que es lo que se pregunta meses después. {% endcomment %}
+      <div class="note note-info">
+        <div class="ico">🕓</div>
+        <div>
+          <strong>{{ movimiento.get_estado_display }}</strong>
+          el {{ movimiento.fecha_validacion|date:"j \d\e F \d\e Y, H:i" }}
+          por {{ movimiento.validado_por.nombre_completo|default:"—" }}.
+          {% if movimiento.motivo_rechazo %}
+            <br>Motivo: {{ movimiento.motivo_rechazo }}
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if movimiento.estado == 'pendiente_validacion' %}
+    {% comment %} Alpine solo decide **cuál de los dos pies** se ve. Sin
+       JavaScript se ven los dos: rechazar con su motivo queda debajo, que
+       es más largo pero funciona igual. {% endcomment %}
+    <div x-data="{ rechazando: false }">
+      <div class="modal-foot" x-show="!rechazando">
+        <a class="btn btn-ghost" href="{{ url_volver }}" data-cerrar-modal>
+          {% if en_modal %}Cerrar
+          {% elif desde == 'reserva' %}Volver a la reserva
+          {% else %}Volver a la cola{% endif %}
+        </a>
+        <button class="btn btn-danger" type="button" @click="rechazando = true">
+          Rechazar
+        </button>
+        <form method="post" action="{% url 'stands:movimiento' movimiento_id=movimiento.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="validar">
+          <input type="hidden" name="desde" value="{{ desde }}">
+          <button class="btn btn-primary" type="submit">Validar el abono</button>
+        </form>
+      </div>
+
+      <form class="modal-foot es-rechazo" method="post" x-show="rechazando" x-cloak
+            action="{% url 'stands:movimiento' movimiento_id=movimiento.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="rechazar">
+        <input type="hidden" name="desde" value="{{ desde }}">
+        <div class="field">
+          <label for="motivo-rechazo">Motivo del rechazo</label>
+          <textarea id="motivo-rechazo" name="motivo" rows="2"
+                    placeholder="El comprobante no coincide con el depósito."></textarea>
+          <span class="hint">
+            Es lo que la editorial verá en su historial. Opcional, pero sin él
+            solo verá que se rechazó.
+          </span>
+        </div>
+        <div class="modal-acciones">
+          <button class="btn btn-ghost" type="button" @click="rechazando = false">
+            Volver
+          </button>
+          <button class="btn btn-danger" type="submit">Rechazar el abono</button>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="modal-foot">
+      <a class="btn btn-ghost" href="{{ url_volver }}" data-cerrar-modal>
+        {% if en_modal %}Cerrar
+        {% elif desde == 'reserva' %}Volver a la reserva
+        {% else %}Volver a la cola{% endif %}
+      </a>
+      {% comment %} Desde A4 ya se está en la reserva: el segundo botón
+         sería un enlace a la pantalla que se está mirando. {% endcomment %}
+      {% if desde != 'reserva' %}
+        <a class="btn btn-primary" href="{% url 'stands:detalle_reserva' reserva_id=reserva.pk %}">
+          Ver la reserva
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% if en_modal %}</div>{% endif %}

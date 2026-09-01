@@ -1,0 +1,32 @@
+{% comment %} ===========================================================
+   Dónde va el expositor dentro del trámite.
+
+   Cinco pasos —solicitud, revisión, espacios, confirmación, pago— que
+   se pintan igual en las cuatro pantallas del flujo. Los resuelve
+   `{% barra_de_pasos %}` (`templatetags/flujo.py`); esta plantilla solo
+   los dibuja.
+
+   Va en todas y no solo en la primera: la ley Zeigarnik de
+   `filey-identidad` pide que un trámite de varios pasos diga siempre
+   dónde se está y qué falta, y este dura semanas —entre enviar la
+   solicitud y pagarla puede pasar un mes—.
+
+   `<ol>` y no `<div>`: es una secuencia, y para quien navega con lector
+   de pantalla el número de paso es la información.
+   =========================================================== {% endcomment %}
+<ol class="pasos" aria-label="Pasos para exponer">
+  {% for paso in pasos %}
+    <li class="paso{% if paso.hecho %} es-hecho{% endif %}{% if paso.actual %} es-actual{% endif %}"
+        {% if paso.actual %}aria-current="step"{% endif %}>
+      {% if paso.url %}
+        <a href="{{ paso.url }}">
+          <span class="paso-num" aria-hidden="true">{% if paso.hecho %}✓{% else %}{{ paso.numero }}{% endif %}</span>
+          <span class="paso-nombre">{{ paso.etiqueta }}</span>
+        </a>
+      {% else %}
+        <span class="paso-num" aria-hidden="true">{% if paso.hecho %}✓{% else %}{{ paso.numero }}{% endif %}</span>
+        <span class="paso-nombre">{{ paso.etiqueta }}</span>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ol>

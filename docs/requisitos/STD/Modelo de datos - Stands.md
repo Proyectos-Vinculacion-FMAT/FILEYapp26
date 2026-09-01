@@ -1,11 +1,11 @@
 ---
 estado: propuesta
-version: "2.1"
+version: "3.0"
 tags:
   - tipo/modelo-de-datos
   - dom/std
 fecha: 2026-06-18
-fecha_actualizacion: 2026-08-25
+fecha_actualizacion: 2026-08-27
 ---
 # Modelo de datos — Stands (reserva, pago y confirmación)
 
@@ -38,6 +38,25 @@ fecha_actualizacion: 2026-08-25
 > | `Solicitud` gana **`registro_id`** → `RegistroConvocatoria` (`FER`). Es el enganche del dominio con su convocatoria. | §3.3 |
 > | `ReservaStand` **pierde** `metros_cuadrados_snapshot` y `precio_snapshot`. | §3.7 |
 > | `DescuentoAplicado` gana una **restricción única por (`reserva_id`, `tipo`)**: como mucho un pronto pago y un especial por reserva. | §3.9 |
+
+<!-- -->
+
+> [!important] Cambio 2026-08-27 — el mapa es de la convocatoria y el modelo lo puede generar (v3.0)
+> Ronda de decisiones tomada al planear la construcción del módulo. Cierra seis de los temas
+> abiertos de §6 y abre el modelo a generar el JSON del mapa sin datos externos.
+>
+> | Decisión | Dónde | Regla |
+> | --- | --- | --- |
+> | **Un mapa por convocatoria.** `Stand` gana `convocatoria_id`; aparecen `MapaShowfloor` y `DecoracionMapa`. | §3.5, §3.13, §3.14 | RN-19 |
+> | **El modelo lleva ya todo lo que el mapa dibuja**: retícula, forma en celdas, formas irregulares y zona. | §3.5, §3.13 | RN-19 |
+> | **Los estados del mapa son los del dominio.** El componente se ajusta al dominio, no al revés. | §3.5 | RN-20 |
+> | **El precio se queda como estaba**: `m² × costo_m2` de la convocatoria. La zona es descriptiva y **no** fija precio. | §3.11 | RN-01, RN-19 |
+> | **`Solicitud` es un snapshot**, y tras un rechazo se puede volver a aplicar con la misma editorial. La relación con el registro pasa a **1—N**. | §3.3 | RN-22 |
+> | **Una editorial por persona y por feria**, en los dos sentidos. | §3.1 | RN-21 |
+> | **`Notificacion` es tabla de `STD`**, con el envío en `apps/notificaciones`. **La bitácora, una por módulo.** | §3.10, §3.12 | — |
+>
+> Las reglas viven ahora en un documento propio:
+> [`Reglas de negocio - Stands`](<Reglas de negocio - Stands.md>).
 
 ---
 
@@ -100,13 +119,30 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 ### 3.1 Editorial
 > Datos provenientes de la Ficha de Registro para Expositores.
 
+> [!important] La ficha es **la fuente** de los campos de U1 (decisión 2026-08-27)
+> Qué se le pide a un expositor al aplicar lo dice
+> [`Registro-para-Expositores-FILEY-2026.pdf`](<../../soporte/documentos proporcionados por FILEY/Material para Registro de Actividades FILEY 2027/Registro-para-Expositores-FILEY-2026.pdf>),
+> y solo ella. Ni las bases, ni el prototipo de Angular, ni este documento cuando abrevie.
+>
+> No es celo: son **dos PDF distintos y hacen cosas distintas**.
+> `Convocatoria Expositores 2026.pdf` son las *bases* —quién puede participar, precios, plazos,
+> forma de pago— y **no trae un solo campo de formulario**; dice que la ficha va "anexa". Los
+> campos están únicamente en la ficha.
+>
+> La regla nace de haberla incumplido: la fila `tematicas` de aquí abajo decía *"lista de
+> temáticas (Administración, Arte, Infantil, …)"*, con puntos suspensivos, y al construir U1 esos
+> puntos se rellenaron con lo que había en el mock del prototipo Angular. Salieron nueve
+> temáticas inventadas donde la ficha tiene 61. **Un catálogo abreviado en este documento no
+> autoriza a completarlo de memoria: se abre el PDF.**
+
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
 | persona_id | FK → `Persona` (`REG`). Quién presenta y administra esta editorial. |
 | nombre | Nombre de la editorial. |
 | domicilio_calle, domicilio_numero, domicilio_colonia | Domicilio. |
-| cp, municipio, estado, pais | Domicilio (cont.). |
+| cp, municipio, estado | Domicilio (cont.). |
+| pais | **Código ISO de dos letras**, no el nombre (`MX`), igual que `Persona.pais` y por el mismo motivo: el nombre cambia y se escribe de varias formas, el código no. Guardarlos igual es además lo que permite proponer por omisión el país de la cuenta. La **fotografía** de §3.3 guarda el nombre, que es lo que se lee. |
 | director_general_nombre, director_general_email | Contacto. |
 | director_comercial_nombre, director_comercial_email | Contacto. |
 | director_editorial_nombre, director_editorial_email | Contacto. |
@@ -120,9 +156,64 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | total_sellos | Total de sellos editoriales participantes. |
 | cantidad_libros_aprox | Cantidad aproximada de libros. |
 | cantidad_titulos_aprox | Cantidad aproximada de títulos. |
-| materiales | Multivalor: Libro, Audiolibro, Revista, Material didáctico, Libros electrónicos, Otro. |
-| tematicas | Multivalor: lista de temáticas (Administración, Arte, Infantil, …). |
+| materiales | Multivalor: Libro, Audiolibro, Revista, Material didáctico, Libros electrónicos, Otro. Con `materiales_otro` para el texto de «Otro (especificar)». |
+| tematicas | Multivalor: las **61 entradas** de la Ficha de Registro p. 2 (60 temáticas más «Otros»). Con `tematicas_otra` para el texto. |
 | constancia_fiscal_id | FK → Documento — Constancia de Situación Fiscal. Permite emitir facturas por fuera del sistema. |
+
+> [!note] Validado contra la ficha oficial (2026-08-27)
+> Se comparó campo por campo con `Registro-para-Expositores-FILEY-2026.pdf`. Todo lo de arriba
+> coincide, y aparecieron cuatro huecos que ya se cerraron: el catálogo de temáticas tenía nueve
+> entradas y la ficha tiene 61; faltaba el texto de «Otro (especificar)» en materiales y en
+> temáticas; faltaba la aceptación de las bases (§3.3); y el aviso de que cambiar el antepecho
+> después se cobra.
+>
+> **Lo que no se construyó, y por qué:** la ficha ofrece «Tipo de stand: Básico / Personalizado».
+> Se descartó por decisión del equipo — el básico 3×2 son $15,000, que es exactamente el
+> `costo_m2` de $2,500 por sus 6 m², así que la distinción no cambia ni el precio ni el modelo.
+>
+> **Resuelto el 2026-08-28 — manda la ficha.** Las bases admiten *"instituciones de educación
+> superior, librerías, asociaciones civiles y dependencias gubernamentales"*, pero la ficha solo
+> ofrece `Editor / Librero / Distribuidor` en el campo `giro`. Los dos documentos se
+> contradicen y **se le hace caso solo a la ficha**: es el formulario que la gente llena y
+> firma, y las bases describen quién puede participar, no cómo se clasifica.
+>
+> Consecuencia práctica: una universidad o una asociación civil sí puede exponer, y al llenar
+> la ficha elige el giro que más se le parezca. Si eso resulta incómodo en la práctica, la
+> salida es ampliar `Giro`, no reabrir la contradicción.
+>
+> Y las bases confirman que la deuda de `es_recurrente` (§2.a) es una **regla operativa real**:
+> *"se respetará a los participantes de la última edición"* al asignar espacios.
+
+<!-- -->
+
+> [!note] El catálogo de temáticas está verificado (2026-08-28)
+> Las 61 entradas de `apps/stands/models.py::TEMATICAS` se contrastaron contra la ficha y son
+> correctas. Se dan por buenas.
+>
+> Cómo se llegó a ellas, que explica por qué hacía falta verificarlas: la ficha oficial es un
+> **escaneo sin capa de texto** —`pdftotext` no devuelve nada—, así que se transcribieron
+> leyendo la imagen de la página 2, columna por columna. La aritmética cuadraba —21 + 22 + 19
+> impresas, menos «Pintura», que aparece repetida— pero una lista de 61 leída de un escaneo es
+> justo donde se esconde una errata, y por eso no se daba por buena sin que alguien la mirara.
+>
+> `test_las_tematicas_son_las_de_la_ficha` fija la cuenta y las dos erratas del impreso que sí
+> se corrigieron (`Braile` → Braille, `Sofware` → Software).
+>
+> Contexto de por qué importa: hasta el 2026-08-27 la lista tenía **nueve** entradas inventadas a
+> partir del mock del prototipo Angular.
+
+<!-- -->
+
+> [!important] Una editorial por persona, y una persona por editorial (RN-21)
+> Dentro de una feria la relación es **1—1 en los dos sentidos**: una `Persona` tiene una
+> `Editorial` y una `Editorial` pertenece a una `Persona`. Representar a otras casas editoras
+> **no** se modela con una segunda `Editorial`: eso es `SelloEditorial` más su carta de
+> representación (RN-17).
+>
+> Corrige la relación "1—N" que decía §4 hasta el 2026-08-27, y la justificación de §3.3 que
+> hablaba de "una persona representando a dos editoriales".
+
+<!-- -->
 
 > [!note] `Editorial` es de la feria, `Persona` es global
 > Una editorial que expone en 2027 y en 2028 tiene **dos** registros `Editorial`, uno en cada
@@ -144,9 +235,12 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
-| registro_id | FK → `RegistroConvocatoria` (`FER`). **Uno a uno**: una solicitud es la participación de esa persona en la convocatoria de stands de esta feria. Ver la nota de abajo. |
+| registro_id | FK → `RegistroConvocatoria` (`FER`). **Uno a muchos**: el registro es la inscripción de esa persona a esa convocatoria, y de él cuelgan todas sus solicitudes a lo largo del tiempo — con **como mucho una en juego** (RN-22). Ver las notas de abajo. |
+| datos_editorial | **Fotografía** de los datos de la editorial tal como se enviaron (RN-22). Corregir la ficha después no reescribe lo que el administrador dictaminó. |
+| sellos | Fotografía de los sellos declarados en el envío. |
 | editorial_id | FK → Editorial. |
 | estado | `pendiente` / `aceptada` / `rechazada` / `cambios_solicitados`. |
+| bases_aceptadas | Que se aceptaron las bases al enviar. En papel es la firma bajo *"RECONOZCO Y ACEPTO LAS BASES DE PARTICIPACIÓN"* (ficha p. 2). Va aquí y no en `Editorial` porque se aceptan las bases **de esta convocatoria**, en el momento de enviar: es parte de la fotografía. |
 | fecha_envio | Fecha de envío. |
 | fecha_revision | Fecha de revisión. |
 | revisado_por | FK → `Persona` (`REG`) — el administrador que dictaminó. |
@@ -163,7 +257,8 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 >   decide nada sobre una `Editorial`, cuyos datos se pueden corregir después del cierre.
 > - **`Editorial` es un expediente, no una inscripción.** Sigue colgando de `Persona` y se llena
 >   una vez por feria. Poner ahí el `registro_id` obligaría a crear la editorial completa antes
->   de existir la solicitud, e impediría que una persona representara a dos editoriales.
+>   de existir la solicitud, y ataría el expediente a **una** convocatoria cuando la misma
+>   editorial puede aplicar a varias de la misma feria.
 > - **La cadena queda entera sin duplicar nada:**
 >   `Persona → RegistroConvocatoria → Solicitud → Editorial → Reserva → Movimiento`. Ni `Reserva`
 >   ni `Movimiento` necesitan su propio `registro_id`: llegan a la convocatoria por la solicitud.
@@ -171,11 +266,37 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 > **Ojo desde el 2026-08-25:** ya no hay una sola convocatoria de stands por feria, así que "la
 > solicitud de esta persona en esta feria" **ya no es una sola cosa**. La misma editorial puede
 > aplicar a dos convocatorias de stands de la misma edición y tener dos solicitudes, dos reservas
-> y dos saldos. Lo que sigue siendo único es la solicitud **por registro**: uno a uno.
+> y dos saldos.
+>
+> **Y desde el 2026-08-27 tampoco es una por registro.** Tras un rechazo, la misma persona puede
+> volver a aplicar con la misma editorial (RN-22): la solicitud rechazada se conserva y la nueva
+> nace con su propia fotografía. Lo único único es **persona ↔ registro** dentro de una
+> convocatoria; de ese registro cuelgan N solicitudes con **como mucho una en juego**
+> (`pendiente`, `cambios_solicitados` o `aceptada`).
+>
+> Lo sostiene el índice único parcial `una_solicitud_en_juego_por_registro` (migración `0018`).
+> Hasta el 2026-08-30 se llamaba `una_solicitud_viva_por_registro` y cubría solo los dos
+> primeros estados, con lo que un expositor **ya aceptado** podía enviar otra solicitud; ver la
+> advertencia de `RN-22`.
 
-> *Nota de diseño:* la información del formulario se solapa con **Editorial**. Decidir con
-> el equipo si la solicitud guarda una copia (snapshot) de los datos enviados o si
-> referencia directamente a la editorial. Los **documentos** de la solicitud se modelan en `Documento`.
+> [!important] La invariante que la base de datos NO puede sostener (ADR-0006)
+> `registro_id` es una clave foránea real, pero **el `tipo` que decide que este expediente es de
+> stands vive un salto más allá**, en `Convocatoria`. Nada en el esquema impide colgar una
+> `Solicitud` de stands de un registro de una convocatoria de eventos.
+>
+> PostgreSQL podría expresarlo con una clave foránea compuesta, pero Django no la soporta de
+> forma usable. Se acepta como **invariante de código**: el servicio que crea la solicitud
+> comprueba `registro.convocatoria.tipo == STD` y hay una prueba que lo fija. Es la única
+> invariante del dominio en esta situación, y por eso está escrita aquí y en
+> [ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>).
+
+<!-- -->
+
+> [!note] Snapshot, resuelto el 2026-08-27
+> El tema abierto desde la v1.0 —*¿la solicitud copia los datos o referencia a la editorial?*—
+> queda cerrado: **copia** (RN-22). `editorial_id` se conserva para saber de quién es el
+> expediente y para las pantallas de administración (CU-STD-030, CU-STD-031); lo que se
+> dictamina son los datos de la fotografía. Los **documentos** se modelan en `Documento`.
 
 ### 3.4 Documento
 | Atributo | Descripción |
@@ -184,19 +305,76 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | tipo | `comprobante_pago`, `carta_representacion`, `lista_titulos`, `constancia_fiscal`, `doc_abono`, `otro`. |
 | archivo_url | Ubicación/almacenamiento del archivo. |
 | fecha_carga | Fecha de carga. |
-| entidad_tipo | Entidad relacionada (`editorial`, `aplicacion`, `movimiento`). |
-| entidad_id | Id de la entidad relacionada. |
+| ~~entidad_tipo~~ | **Desviación al construir (2026-08-27):** ver la nota. |
+| ~~entidad_id~~ | **Desviación al construir (2026-08-27):** ver la nota. |
+
+> [!important] Se construyó con claves foráneas reales, no con una referencia polimórfica
+> `entidad_tipo` / `entidad_id` describe una referencia que **la base de datos no puede
+> validar**: una fila puede apuntar a una tabla que no toca, o a un id que no existe, y nada lo
+> impide. Es exactamente lo que
+> [ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>) descartó al elegir entre
+> `RegistroConvocatoria` y el `RouterSolicitudes` de `EVT`.
+>
+> Con una feria por schema hay además un agravante concreto: un `ContentType` de Django dice
+> `"app.modelo"`, y ese par significaría **una fila distinta en cada edición**.
+>
+> Lo construido son **columnas anulables con una restricción que exige exactamente una**:
+> `editorial` y `solicitud` hoy, `movimiento` cuando exista la fase de pago. Cuesta una columna
+> por destino y a cambio la integridad la sostiene PostgreSQL.
+
+<!-- -->
+
+> [!note] Dónde caen los archivos (2026-08-27)
+> `archivo` es un `FileField` con `upload_to=CarpetaDeLaFeria("documentos")`, así que la ruta
+> queda `feria_2027/documentos/<uuid>.pdf`: el aislamiento por feria llega también al disco, y
+> el nombre original —que suele traer datos personales— no sobrevive en la ruta. Se conserva
+> aparte, en `nombre_original`, para poder decirle a la persona cuál subió. Ver
+> [ADR-0007](<../../adr/0007-los-archivos-empiezan-en-disco.md>).
+>
+> **Ningún documento se sirve por una URL.** La vista que los entrega comprobando quién pregunta
+> está pendiente; hasta que exista, A2 los lista y no los deja descargar.
 
 ### 3.5 Stand
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
-| clave | Identificador visible en el mapa. |
-| pos_x, pos_y | Ubicación/coordenadas en el mapa. |
-| ancho, largo | Dimensiones. |
-| metros_cuadrados | Superficie (base del cálculo de precio). |
-| estado | `Disponible` / `Reservado` / `Ocupado`. |
+| convocatoria_id | FK → `Convocatoria` (`FER`), con `tipo = STD`. **El mapa es de la convocatoria** (RN-19), no de la feria. |
+| clave | Identificador del espacio (`IN-01`). Único dentro de su convocatoria. |
+| etiqueta | Lo que se pinta dentro de la caja en el mapa (`Internacional 01`). |
+| zona | Pabellón o sección (`Pabellón Internacional`). **Descriptiva: no fija precio** — ver la nota. |
+| col, fila | Esquina superior izquierda, **en celdas** de la retícula (§3.13). |
+| ancho_celdas, alto_celdas | Tamaño en celdas. Nulos en un stand de forma irregular. |
+| rectangulos | Formas irregulares (L, T): lista de rectángulos en celdas cuya unión es el stand. Nulo en un stand rectangular, que usa los cuatro campos de arriba. |
+| estado | `Disponible` / `Reservado` / `Ocupado` (RN-10). Son también los tres estados que viajan al componente de mapa (RN-20). |
 | incluye | Descripción de lo que incluye (estructura, contactos, exhibidores, etc.). |
+
+> [!important] `metros_cuadrados` es **derivado**, no una columna (2026-08-27)
+> La superficie sale de la forma en la retícula y de `MapaShowfloor.metros_por_celda` (§3.13):
+> para un stand rectangular, `ancho_celdas × alto_celdas × metros_por_celda²`; para uno
+> irregular, la suma de sus rectángulos.
+>
+> Es el mismo criterio que retiró los snapshots de `ReservaStand` (§3.7): con la superficie
+> almacenada **y** dibujada habría dos fuentes para la misma cifra, y el día que discreparan
+> —alguien mueve un stand en el editor y no toca el número— el mapa y la factura dirían cosas
+> distintas sin que nadie se entere. Lo que sí queda congelado es `Reserva.monto_total` (RN-01).
+>
+> **La contrapartida, que hay que tener presente al dibujar:** la retícula tiene que ser lo
+> bastante fina para expresar las medidas reales. Un stand de 3 × 2.5 m no cabe en una retícula
+> de un metro por celda; con `metros_por_celda = 0.5` sí.
+
+<!-- -->
+
+> [!note] `zona` no fija precio, y es deliberado
+> Dentro de una convocatoria **todos los stands se cobran al mismo `costo_m2`** (RN-01), así que
+> dos zonas del mismo mapa solo pueden diferir en precio por su tamaño. La `zona` sirve para
+> agrupar, rotular y filtrar.
+>
+> Si el cliente quiere pabellones a precios por metro distintos, eso son **convocatorias
+> distintas** —cada una con su mapa y su configuración—, que es exactamente el caso que la
+> decisión del 2026-08-25 habilitó. El mapa de muestra `filey-map.json`, con cuatro precios por
+> zona, describe cuatro convocatorias o un solo precio; no una convocatoria con cuatro tarifas.
+
+<!-- -->
 
 > [!note] El mapa se rehace cada edición, y eso ahora sale gratis
 > Los stands pertenecen al schema de su feria, así que rediseñar el showfloor de 2028 no toca
@@ -212,9 +390,25 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | fecha_creacion | Inicio del plazo de 30 días. |
 | fecha_vencimiento_anticipo | `fecha_creacion` + 30 días. |
 | fecha_corte_pago_total | Fecha de bloqueo/límite de pago del 100% (modificable por admin). |
-| monto_total | Suma de líneas, con descuento aplicado. |
+| monto_total | Suma de líneas, con los descuentos aplicados en secuencia (RN-06). Ver la nota: se congela frente al mapa y al precio, **no** frente a los descuentos. |
 | monto_abonado | Derivado de movimientos validados. |
 | monto_pendiente | Derivado (`monto_total − monto_abonado`). |
+| cancelada_por, fecha_cancelacion, motivo_cancelacion | Quién la cerró, cuándo y por qué (CU-STD-035 A1, añadidos el 2026-08-30). Cancelar es la **única acción irreversible del dominio** y la única que libera espacios, así que deja su rastro en la fila —como `Movimiento` con `validado_por`/`motivo_rechazo`— sin esperar a que exista la `Bitacora` (§3.12). El motivo es opcional y aun así conviene: la editorial lo lee en su correo. |
+
+> [!important] `monto_total` se congela frente al precio, no frente a los descuentos
+> Es una distinción que ningún documento hacía y que separa dos comportamientos opuestos:
+>
+> | Cambia… | ¿Se recalcula `monto_total`? |
+> | --- | --- |
+> | `costo_m2` de la convocatoria (CU-STD-034) | **No.** Lo cobrado no se mueve (RN-01). |
+> | La forma o superficie de un stand (CU-STD-033) | **No.** Solo cambia el desglose (§3.7). |
+> | Se consolida o vence el pronto pago (CU-STD-023) | **Sí**, inmediatamente. |
+> | Se aplica o se retira un descuento especial (CU-STD-020) | **Sí**, inmediatamente. |
+>
+> Tiene sentido: un cambio de tarifa no debe alcanzar a quien ya aceptó un precio, pero un
+> descuento **es** una modificación deliberada de lo que esa reserva cuesta. Por eso CU-STD-020
+> recalcula en su paso 7 y vuelve a evaluar los umbrales del 50% y el 100% (RN-13, RN-14): bajar
+> el total puede dejar una reserva pagada sin que entre un peso más.
 
 ### 3.7 ReservaStand
 | Atributo | Descripción |
@@ -226,8 +420,9 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 `ReservaStand` es ahora una tabla puramente de unión: qué stands entran en qué reserva.
 
 > [!warning] Se eliminó el snapshot de m² y precio — qué se gana y qué se pierde
-> **Se gana** que deje de haber dos fuentes de verdad para la misma cifra. Los m² del stand
-> están en `Stand.metros_cuadrados` y el precio se deriva de `ConfiguracionSistema.costo_m2`
+> **Se gana** que deje de haber dos fuentes de verdad para la misma cifra. Los m² del stand se
+> **derivan de su forma** en la retícula y de `MapaShowfloor.metros_por_celda` —no son una
+> columna, ver la nota de §3.5— y el precio se deriva de `ConfiguracionSistema.costo_m2`
 > (§3.11); copiarlos a la línea abría la puerta a que la copia y el original discreparan sin que
 > nadie se enterara.
 >
@@ -258,50 +453,90 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | comprobante_id | FK → Documento (obligatorio en abono manual del admin). |
 | registrado_por | FK → `Persona` (`REG`). |
 | fecha_registro | Fecha de registro. |
-| validado_por | FK → `Persona` (`REG`) — el administrador que validó. |
+| validado_por | FK → `Persona` (`REG`) — el administrador que validó. En un abono manual es quien lo asentó: nace `validado` (CU-STD-019, paso 6). |
 | fecha_validacion | Fecha de validación. |
+| motivo_rechazo | Por qué se rechazó, opcional (CU-STD-018 A1, paso 3). El aplicante lo ve en su historial (CU-STD-017); sin él solo ve que se rechazó. |
 
 ### 3.9 DescuentoAplicado
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
 | reserva_id | FK → Reserva. |
-| tipo | `pronto_pago` (10%) / `especial`. |
-| porcentaje | Porcentaje aplicado. |
+| tipo | `pronto_pago` / `especial`. **El porcentaje no es del tipo**: el del pronto pago se configura por convocatoria y el del especial lo fija el administrador en cada caso (RN-04, RN-07). |
+| porcentaje | Porcentaje aplicado, copiado al consolidarse. Se guarda **por fila**: es lo que permite reconstruir el desglose aunque después cambie la configuración. |
 | motivo | Obligatorio para `especial`. |
 | aplicado_por | FK → `Persona` (`REG`); nulo cuando lo aplica el sistema (pronto pago automático, CU-STD-023). |
 | fecha | Fecha de solicitud. |
 
 **Restricciones:**
 
-- Único por (`reserva_id`, `tipo`): una reserva tiene **como máximo un** descuento de
-  `pronto_pago` y **como máximo un** descuento `especial`. Nunca más de dos filas en total.
+- Único por (`reserva_id`, `tipo`) — **RN-05**: una reserva tiene como máximo un `pronto_pago` y
+  como máximo un `especial`. Nunca más de dos filas.
 
-> [!important] La regla vive en la base de datos, no en la vista
+> [!important] El tope vive en la base de datos, no en la vista
 > Antes esto era una frase en la sección de relaciones ("máximo dos"), y una frase no impide
 > nada: dos administradores aplicando un descuento especial a la vez, o CU-STD-023 corriendo dos
-> veces sobre la misma reserva, insertaban dos filas del mismo tipo y el total salía mal. Con la
-> restricción única, el segundo intento **falla en la escritura** y cada caso de uso decide qué
-> hacer:
+> veces sobre la misma reserva, insertaban dos filas del mismo tipo y el total salía mal. El
+> segundo intento **falla en la escritura**; qué hacer con ese fallo lo decide cada caso de uso
+> (RN-05).
+
+<!-- -->
+
+> [!important] Los dos tipos **se acumulan** (RN-06)
+> Un `pronto_pago` y un `especial` conviven en la misma reserva y se aplican los dos. **No son
+> excluyentes** — el resumen al pie de este documento decía "descuentos no acumulables" hasta el
+> 2026-08-27 y era falso.
 >
-> - **`pronto_pago` (CU-STD-023, automático):** el segundo intento es idempotente — si ya existe,
->   no es un error, es que el descuento ya estaba aplicado. No debe alarmar a nadie.
-> - **`especial` (CU-STD-020, manual):** el segundo intento **sí** es un error que se muestra. El
->   administrador que quiera cambiar el porcentaje tiene que modificar el existente —dejando
->   rastro en `Bitacora`— o retirarlo y volver a aplicarlo, no acumular uno encima.
+> Se aplican **en secuencia**, no sumando porcentajes: 10% y 15% dan un descuento efectivo del
+> **23.5%**, no del 25%. Cualquier consulta que sume las dos filas para mostrar "el descuento
+> total" da un número que no es el que se cobra.
 >
-> Falta decidir si retirar un descuento borra la fila o la marca; hoy el modelo no tiene estado
-> en esta entidad. Ver §6.
+> El orden no altera el total —la multiplicación es conmutativa— pero el desglose se presenta
+> siempre con el pronto pago arriba, que es el que el expositor ya conocía al reservar.
+
+<!-- -->
+
+> [!question] Falta decidir si retirar un descuento borra la fila o la marca
+> Hoy la entidad no tiene estado. Cambiar un especial exige borrar la fila o editarla, y el
+> modelo no dice cuál; si se borra, la `Bitacora` es el único rastro. Ver §6.
 
 ### 3.10 Notificacion
+
+> [!important] La tabla es de `STD`; el envío no (2026-08-27)
+> Se separan dos cosas que se venían confundiendo:
+>
+> | | Quién | Dónde |
+> | --- | --- | --- |
+> | **El registro** de que se notificó algo | `STD` | Esta tabla, en el schema de la feria |
+> | **El envío** del correo | `apps/notificaciones` | Capa compartida, ya construida |
+>
+> `STD` **no manda correos por su cuenta**: compone el contenido y se lo entrega a
+> `apps/notificaciones`, igual que ya hace `REG` con el OTP. Todo el correo del proyecto sale por
+> `django.core.mail`, y quién lo entrega lo decide un ajuste, no el dominio.
+>
+> Lo que sí es de `STD` es el registro: `referencia_tipo`/`referencia_id` apuntan a una
+> `Solicitud` o a una `Reserva`, que viven en el schema de **esta** feria, y esa pareja de
+> valores significaría otra cosa en otra edición. Por eso la tabla no puede estar en `public`.
+>
+> Es el mismo reparto que la bitácora (§3.12): el registro es del dominio, el mecanismo es
+> compartido.
+
+<!-- -->
+
+> [!note] `estado` dice lo que contestó el envío, no lo que hizo el buzón
+> `enviada` significa que el proveedor aceptó el mensaje; `fallida`, que no se pudo entregar.
+> Que la persona lo lea, o que su servidor lo rebote horas después, queda fuera del alcance.
+
+
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
 | destinatario_id | FK → `Persona` (`REG`). |
-| tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `aplicacion_cambios`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_cancelada`. |
+| tipo | `aplicacion_aceptada`, `aplicacion_rechazada`, `aplicacion_cambios`, `reserva_confirmada`, `reserva_pagada`, `posible_cancelacion`, `reserva_vencida`, `reserva_cancelada`. `reserva_vencida` se añadió el 2026-08-30: es el aviso de CU-STD-024, el **único que no va al aplicante** —`RN-12` escala el vencimiento a quien administra—, y sin un tipo propio no se distinguía del que recibe la editorial (`posible_cancelacion`) ni se podía preguntar si ya se avisó. |
 | fecha_envio | Fecha de envío. |
 | estado | `enviada` / `fallida`. |
-| referencia_tipo, referencia_id | Entidad relacionada (solicitud / reserva). |
+| detalle_error | Qué contestó el transporte cuando `estado` es `fallida`. Es lo que permite reintentar a mano (CU-STD-008 E1). |
+| solicitud_id, reserva_id | De qué habla el aviso. **Dos claves foráneas reales y exactamente una llena**, no la pareja `referencia_tipo`/`referencia_id` que describía la v3.0: una referencia genérica no la puede comprobar la base, y un aviso huérfano no se puede ni reintentar ni auditar. Lo sostiene la restricción `un_aviso_cuelga_de_exactamente_una_cosa` (2026-08-30). |
 
 ### 3.11 ConfiguracionSistema
 > Configuración de **una** convocatoria de stands. Una fila por convocatoria, no una por feria.
@@ -312,10 +547,12 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 | costo_m2 | Costo por metro cuadrado (p. ej. $2,500). |
 | porcentaje_anticipo | Porcentaje para confirmar (50%). |
 | plazo_reserva_dias | Días de vigencia de la reserva (30). |
-| descuento_pronto_pago | Porcentaje (10%). |
-| fecha_limite_pronto_pago | Fecha límite del pronto pago. |
-| instrucciones_pago | Texto/datos bancarios (banco, cuenta, CLABE, sucursal, referencia). |
-| salon_showfloor | Salón donde se monta el showfloor (p. ej. Salón Chichén Itzá). Viene del `Evento.salon` de la v1.0. |
+| descuento_pronto_pago | Porcentaje del pronto pago. **10% por omisión, configurable** (RN-04). |
+| fecha_limite_pronto_pago | Fecha de corte del pronto pago. Es **una fecha de la convocatoria, igual para todos**, no un contador por reserva (RN-04): quien reserva tarde tiene menos días. |
+| fecha_corte_pago_total | **La base** de la que cada reserva hereda su propia fecha de corte al confirmarse (CU-STD-026, paso 4); después el administrador la mueve una por una (CU-STD-036). Añadida el 2026-08-30: el paso 4 la daba por existente y no estaba en ninguna tabla, así que `Reserva.fecha_corte_pago_total` no lo escribía nadie y la pantalla del expositor lo pintaba «si lo tiene» sin tenerlo nunca. Es un `date`, como la del pronto pago: las dos se comparan con el día de hoy y una conversión de zona horaria de por medio mueve un cobro un día. |
+| banco_titular, banco_nombre, banco_cuenta, banco_clabe, banco_sucursal, banco_referencia | Los datos de la cuenta, **un campo cada uno** (cambio del 2026-08-29). Este documento los describía como un solo texto, y desde un `TextField` la pantalla no puede cumplir CU-STD-015 paso 3 —«instrucciones estructuradas»—: o los pinta en crudo o adivina dónde parte cada renglón. Separados se copian de uno en uno, que es lo que alguien hace frente a la app de su banco. Todos opcionales: una convocatoria recién creada no los tiene todavía. `banco_clabe` valida 18 dígitos, admitiendo los espacios con los que una CLABE se dicta. |
+| instrucciones_pago | Lo que no cabe en los seis campos: horarios, a quién avisar, qué hacer con el comprobante. Se pinta **debajo** de la ficha, como nota. |
+| ~~salon_showfloor~~ | **Movido a `MapaShowfloor.salon`** (§3.13) el 2026-08-27: es un dato del mapa, no de las condiciones económicas de la convocatoria. |
 
 > [!note] Las fechas de apertura y cierre **no** están aquí
 > Quién puede enviar una solicitud y hasta cuándo lo decide `Convocatoria` (`FER` §3.3), no esta
@@ -358,29 +595,142 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 > convocatoria que configura, en lugar de flotar sola en el schema.
 
 ### 3.12 Bitacora
+
+> [!important] Cada módulo tiene la suya — resuelto el 2026-08-27
+> Hasta hoy esto era un tema abierto en tres documentos a la vez: `BitacoraFER`, esta `Bitacora`
+> de `STD` y `BitacoraEVT` tienen la misma forma, y se venía diciendo que unificarlas "es lo
+> razonable".
+>
+> **Se decide lo contrario: la bitácora se queda por módulo.** Lo que se registra son las
+> acciones sensibles **de un dominio**, y esas no se parecen entre sí — validar un abono y
+> mover la fecha de cierre de una convocatoria no comparten ni vocabulario ni quién las lee.
+> Una tabla común obligaría a un `accion` que fuera la unión de todos los conjuntos cerrados, es
+> decir, ninguno.
+>
+> Queda cerrado también el aviso que `FER` §6 dejaba escrito —*"lo urgente es que el cuarto
+> dominio no añada la cuarta"*—: sí la añade, y a propósito.
+
+> [!note] Construida el 2026-08-30 como `BitacoraSTD`. **Su pantalla es el admin de Django**
+> Se consulta de tarde en tarde y cuando algo no cuadra, no todos los días: una sección propia
+> en el panel sería una entrada más en la barra lateral para algo que se abre tres veces al
+> año, y `/f/<slug>/django-admin/` ya trae filtrar por acción, buscar y recorrer por fecha.
+> Va en `admin_feria` —es de `TENANT_APPS`— y en **solo lectura**: una bitácora que se puede
+> reescribir no prueba nada.
+>
+> **No sustituye al rastro que ya vive en cada fila.** `Movimiento` dice quién validó,
+> `Solicitud` quién dictaminó y `Reserva` quién la canceló. Lo que ninguna contesta es «¿qué
+> pasó con esta convocatoria el martes?», que exige unir cinco tablas y ordenarlas por cinco
+> fechas distintas. Y hay cuatro acciones que **no dejan rastro en ninguna otra parte**, porque
+> borran una fila o sobreescriben una fecha: retirar un descuento especial, caducar un pronto
+> pago, prorrogar y mover el corte.
+>
+> Se escribe **dentro** de la transacción de la acción —al revés que los avisos por correo, que
+> esperan al commit porque no se pueden deshacer— y **anotar nunca tumba la acción**: un fallo
+> se registra en el log y se traga, como el del correo.
+
 | Atributo | Descripción |
 |----------|-------------|
 | id | Identificador único. |
-| persona_id | FK → `Persona` (`REG`) — quién ejecutó la acción. |
-| accion | Acción (validar abono, prorrogar, descuento especial, editar mapa, etc.). |
-| entidad_tipo, entidad_id | Objeto afectado. |
-| detalle | Datos del cambio. |
+| persona_id | FK → `Persona` (`REG`) — quién ejecutó la acción. **Nulo cuando la hace el sistema**: la barrida diaria caducando un pronto pago no la decidió nadie, se cumplió RN-04, y que no haya persona es el dato. |
+| convocatoria_id | FK → `Convocatoria`. **Se guarda al anotar, no se deduce al leer** (2026-08-30): una feria puede tener la convocatoria general y la de un pabellón (RN-19), y son dos ventas distintas con dos mapas y dos precios; mezclarlas obliga a leer la bitácora entera para encontrar una cosa. Sale del objeto anotado por una tabla explícita de cinco entradas —`reserva`, `solicitud`, `movimiento`, `configuracionsistema`, `mapashowfloor`—, no adivinando relaciones. |
+| accion | Conjunto cerrado, y **coincide con lo que se anota** — hay una prueba que falla si se declara una acción que nadie escribe: `abono_manual`, `abono_validado`, `abono_rechazado`, `descuento_aplicado`, `descuento_retirado`, `pronto_pago_caducado`, `reserva_prorrogada`, `corte_movido`, `reserva_cancelada`, `solicitud_dictaminada`, `configuracion_cambiada`, `mapa_importado`. |
+| entidad_tipo, entidad_id | Objeto afectado. Par suelto y no `contenttypes`: `ContentType` es una tabla de `public` y esto vive en el schema de la feria (ADR-0003), así que la relación cruzaría la frontera para nada. |
+| detalle | JSON con las cifras del cambio. Es lo que hace legible la línea sin abrir el objeto — y lo que sigue diciendo algo cuando el objeto ya cambió otra vez, o cuando la fila que lo explicaba se borró. |
 | fecha | Marca de tiempo. |
+
+> [!note] Lo que reporta el aplicante **no** entra
+> Un abono reportado ya se ve en la cola de A5. La bitácora es de acciones de administración;
+> anotar también las del aplicante —enviar la solicitud, reportar un abono, armar el carrito,
+> reservar— llenaría la línea de tiempo de ruido que nadie viene a leer. Tampoco entran los
+> avisos por correo, cuyo rastro es `Notificacion`, ni la barrida diaria, que no escribe en
+> `Reserva`: lo que hace queda en los avisos que manda.
+
+> [!important] Las doce acciones, y por qué cada una
+> | Acción | Quién | Por qué está |
+> | --- | --- | --- |
+> | `solicitud_dictaminada` | Administración | Aceptar es lo que habilita a reservar (RN-16): el primer eslabón de todo lo que viene después. |
+> | `abono_manual`, `abono_validado`, `abono_rechazado` | Administración | El dinero. Los nombra §3.12. |
+> | `descuento_aplicado` | Administración | RN-05 y CU-STD-020. |
+> | **`descuento_retirado`** | Administración | **Borra la fila que lo explicaba**: sin esto, el total sube y nada lo justifica. |
+> | **`pronto_pago_caducado`** | El sistema | Igual, y sin persona: no lo decidió nadie, se cumplió RN-04. |
+> | **`reserva_prorrogada`**, **`corte_movido`** | Administración | **Sobreescriben una fecha**: la vieja no se lee en ningún lado. |
+> | `reserva_cancelada` | Administración | La única acción irreversible (RN-11). |
+> | `configuracion_cambiada` | Administración | Lo más sensible que se toca desde una pantalla —el `costo_m2`, los plazos, la CLABE— y no dejaba rastro en ninguna parte. Guarda **qué campo, de qué a qué**. |
+> | `mapa_importado` | Operador, o el sistema desde un comando | La más destructiva: borra decenas de filas, y las viejas ya no existen. |
+>
+> Las cinco en negrita son las que **no dejan rastro en ninguna otra parte**. El resto lo
+> dejan en su propia fila (`Movimiento.validado_por`, `Reserva.cancelada_por`,
+> `Solicitud.revisado_por`) y están aquí para que la línea de tiempo esté completa: leerla
+> con huecos obliga a volver a unir cinco tablas, que es lo que esta tabla evita.
+
+### 3.13 MapaShowfloor
+> La retícula sobre la que se dibuja el showfloor de **una** convocatoria (RN-19). Una fila por
+> convocatoria de stands: sin ella no hay mapa, y una convocatoria recién creada no lo tiene
+> todavía (CU-STD-038 E2).
+
+| Atributo | Descripción |
+| --- | --- |
+| convocatoria_id | FK → `Convocatoria` (`FER`), con `tipo = STD`. **Único**: un mapa por convocatoria. |
+| columnas, filas | Tamaño de la retícula, en celdas. |
+| metros_por_celda | Cuántos metros mide el lado de una celda. Es lo que convierte la forma dibujada en superficie real, y por tanto en precio (RN-01). |
+| tamano_celda | Lado de la celda **en píxeles** al dibujar. Es presentación pura: no entra en ningún cálculo. |
+| salon | Recinto donde se monta este showfloor. |
+
+> [!note] `salon` se mueve aquí desde `ConfiguracionSistema`
+> Estaba en §3.11 como `salon_showfloor`, heredado del `Evento.salon` de la v1.0. Es un dato del
+> **mapa**, no de las condiciones económicas de la convocatoria, y ahora que el mapa es una
+> entidad tiene dónde vivir. `ConfiguracionSistema` se queda con lo que es: precios, porcentajes,
+> plazos y datos bancarios.
+
+> [!important] Con esto el JSON del mapa se genera entero desde el modelo
+> `MapaShowfloor` da la retícula, `Stand` da las formas y los estados, y `DecoracionMapa` el
+> resto del recinto. No queda ningún dato del mapa fuera de la base: el archivo
+> `filey-map.json` que usó el prototipo pasa a ser un **fixture de ejemplo**, no una fuente.
+>
+> **Comprobado el 2026-08-28 contra un mapa real.** El plano de 2026 se derivó entero a este
+> modelo (`filey/apps/stands/mapas/filey-2026.json`, 151 espacios) y no hizo falta ningún campo
+> que no estuviera ya aquí. Lo que sí se usó y conviene no perder de vista: `rectangulos` hace
+> falta de verdad —hay tres stands en L—, y `zona` quedó **nulo en los 151**, porque el plano no
+> agrupa por pabellones y ponerle nombre a las zonas habría sido inventarlas.
+
+### 3.14 DecoracionMapa
+> Lo que se dibuja en el mapa y **no** es un stand: escenarios, servicios, accesos, rótulos del
+> recinto. No se reserva, no tiene precio y no participa en ninguna regla de negocio.
+
+| Atributo | Descripción |
+| --- | --- |
+| id | Identificador único. |
+| mapa_id | FK → `MapaShowfloor`. |
+| tipo | `rectangulo` (una superficie con color y rótulo) / `texto` (solo un rótulo). |
+| col, fila | Posición en celdas. |
+| ancho_celdas, alto_celdas | Tamaño en celdas. Nulos cuando `tipo = texto`. |
+| color | Color de relleno. Nulo cuando `tipo = texto`. |
+| etiqueta | Rótulo (`Escenario principal`, `Sanitarios`, `Acceso norte`). |
+
+> [!note] Por qué es una entidad y no un campo JSON del mapa
+> El administrador las edita desde el mismo editor que los stands (CU-STD-033), y un rótulo mal
+> puesto se corrige tan a menudo como un stand. Guardarlas como un blob dentro de
+> `MapaShowfloor` haría que cualquier corrección reescribiera el mapa entero.
 
 ---
 
 ## 4. Relaciones principales
 
-- **Persona** (`REG`) 1—N **Editorial**: una persona puede representar a una editorial en esta
-  feria, y a otra en otra feria. Dentro de una misma feria, una editorial por persona.
+- **Persona** (`REG`) 1—1 **Editorial** *dentro de una feria* (RN-21): una persona tiene una
+  editorial en esta edición, y esa editorial es suya. Entre ediciones sí hay varias: la misma
+  persona vuelve a llenar su ficha cada año, en el schema de cada feria.
 - **Editorial** 1—N **SelloEditorial**.
-- **RegistroConvocatoria** (`FER`) 1—1 **Solicitud**: es el enganche del dominio con su
-  convocatoria (§3.3). Cada registro tiene una solicitud y solo una — pero una misma persona
-  puede tener varios registros en la misma feria si hay varias convocatorias de stands.
+- **RegistroConvocatoria** (`FER`) 1—N **Solicitud** (RN-22): es el enganche del dominio con su
+  convocatoria (§3.3). De un registro cuelgan todas las solicitudes de esa persona a esa
+  convocatoria a lo largo del tiempo, con **como mucho una en juego** (`pendiente`,
+  `cambios_solicitados` o `aceptada`); tras un rechazo se puede volver a aplicar. Una misma persona puede
+  tener además varios registros en la misma feria, si hay varias convocatorias de stands.
 - **Convocatoria** (`FER`) 1—1 **ConfiguracionSistema**: una configuración por convocatoria de
   stands, no una por feria (§3.11).
-- **Editorial** 1—N **Solicitud** (una activa por feria; permite reenvío tras solicitud de
-  cambios, o creación de nueva tras rechazo).
+- **Editorial** 1—N **Solicitud**: una en juego **por convocatoria** (no por feria), con reenvío
+  tras solicitud de cambios y solicitud nueva tras rechazo (RN-22).
+- **Convocatoria** (`FER`) 1—1 **MapaShowfloor** 1—N **Stand** (RN-19): el mapa y sus espacios
+  son de la convocatoria. `MapaShowfloor` 1—N **DecoracionMapa**.
 - **Editorial** 1—1 **Documento** (Constancia de Situación Fiscal).
 - **Solicitud** 1—N **Documento**; **Movimiento** 1—1 **Documento** (comprobante).
 - **Editorial** 1—N **Reserva**; **Reserva** 1—N **ReservaStand** N—1 **Stand**
@@ -403,7 +753,8 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 |---------|---------------------------|
 | Editorial / SelloEditorial | CU-STD-001, CU-STD-002, CU-STD-030, CU-STD-031 |
 | Solicitud / Documento | CU-STD-001–CU-STD-008, CU-STD-031 |
-| Stand | CU-STD-009, CU-STD-010, CU-STD-032, CU-STD-033 |
+| Stand | CU-STD-009, CU-STD-010, CU-STD-032, CU-STD-033, CU-STD-037, CU-STD-038 |
+| MapaShowfloor / DecoracionMapa | CU-STD-009, CU-STD-032, CU-STD-033, CU-STD-037, CU-STD-038 |
 | Reserva / ReservaStand | CU-STD-011–CU-STD-014, CU-STD-021, CU-STD-022, CU-STD-035, CU-STD-036, CU-STD-028, CU-STD-029 |
 | Movimiento | CU-STD-015–CU-STD-019, CU-STD-029 |
 | DescuentoAplicado | CU-STD-006, CU-STD-020, CU-STD-023 |
@@ -417,46 +768,63 @@ Todas las entidades de esta sección viven **dentro del schema de una feria**.
 
 ## 6. Temas abiertos del modelo
 
-- Confirmar si **Solicitud** guarda snapshot de datos o referencia a **Editorial**.
-- El único estado de cierre es `Cancelada` (decisión del administrador). El sistema no
-  libera reservas automáticamente.
-- Necesidad real de **Bitacora** (auditoría) — sugerida por las acciones sensibles del
-  administrador (validar abono, descuento especial, prórroga).
-- **Los casos de uso de `STD` dicen "la convocatoria" en singular.** Se escribieron cuando había
-  una sola convocatoria de stands por feria; desde el 2026-08-25 puede haber varias (§3.11). Hay
-  que revisarlos uno por uno para que cada mención diga **cuál**: CU-STD-001 (a qué convocatoria
-  aplica), CU-STD-010 y CU-STD-023 (con qué `costo_m2` calcula), CU-STD-034 (qué configuración
-  edita) y las pantallas de administración, que hoy listarían solicitudes de todas mezcladas.
-  Es la deuda más concreta que dejó ese cambio.
+### Resueltos el 2026-08-27
+
+- ~~**`RN-05` y `RN-06` nunca se definieron.**~~ **Ocupados el 2026-08-27** con las dos reglas de
+  descuentos que faltaban: el tope de uno por tipo (RN-05) y la acumulación en secuencia
+  (RN-06). Nunca habían significado nada, así que ocuparlos no recicla ninguna cita.
+- ~~**Los descuentos "no son acumulables".**~~ **Sí lo son** (RN-06): un pronto pago y un especial
+  conviven, aplicándose en secuencia. La frase del resumen al pie era falsa y está corregida.
+
+- ~~**¿En qué schema vive `Notificacion`?**~~ **Es tabla de `STD`**, en el schema de la feria;
+  `apps/notificaciones` se ocupa solo del envío (§3.10). Desbloquea CU-STD-008.
+- ~~**Falta el caso de uso de crear el mapa.**~~ **CU-STD-039**: se importa un JSON externo y el
+  sistema lo traduce a filas, exclusivo del superusuario. El editor del componente y su
+  `saveMap` quedan **fuera de alcance por ahora**.
+
+- ~~**Confirmar si `Solicitud` guarda snapshot de datos o referencia a `Editorial`.**~~
+  **Guarda snapshot** (RN-22, §3.3). Y de la misma decisión sale que tras un rechazo se puede
+  volver a aplicar con la misma editorial, lo que convierte la relación con el registro en 1—N.
+- ~~**Necesidad real de `Bitacora`.**~~ Se queda, **y una por módulo** (§3.12). Cierra también el
+  aviso de `FER` §6 sobre no añadir una cuarta.
+- ~~**Un mapa por feria o por convocatoria.**~~ **Por convocatoria** (RN-19). `Stand` gana
+  `convocatoria_id` y aparecen `MapaShowfloor` (§3.13) y `DecoracionMapa` (§3.14).
+- ~~**El modelo no podía generar el JSON del mapa.**~~ Ya puede: retícula, forma en celdas,
+  formas irregulares y zona están en el modelo (§3.5, §3.13).
+- ~~**Los estados del stand no coincidían con los del componente de mapa.**~~ Se igualan a los
+  del dominio; el componente se ajusta (RN-20).
+- ~~**Los cuatro precios por zona del mapa de muestra.**~~ El modelo de precio se queda como
+  está: `m² × costo_m2` por convocatoria. La zona **no** fija precio; pabellones a tarifas
+  distintas son convocatorias distintas (nota de §3.5).
+
+### Abiertos — necesitan decisión
+
 - **Homologar el nombre de `ConfiguracionSistema`** con el `ParametrosConvocatoria` de `EVT`.
-  Siguen siendo la misma figura —la configuración de una convocatoria dentro de una feria— con
-  dos nombres, y el de `STD` sigue diciendo "Sistema", que es justo lo que no es. El renombrado
-  del 2026-08-25 (`ParametrosSistema` → `ConfiguracionSistema`) fue el acordado y ya está
-  aplicado en los ocho documentos que lo mencionaban, pero **no cierra este punto**: si algún
-  día se homologa de verdad, el nombre que lo diría bien es `ConfiguracionConvocatoria`.
-- **Qué pasa al retirar un descuento.** La restricción única de §3.9 impide dos descuentos del
-  mismo tipo, pero `DescuentoAplicado` no tiene estado: cambiar un descuento especial exige
-  borrar la fila o editarla, y hoy el modelo no dice cuál. Si se decide borrarla, la `Bitacora`
-  es el único rastro de que existió.
+  Siguen siendo la misma figura con dos nombres, y el de `STD` sigue diciendo "Sistema", que es
+  justo lo que no es. El nombre que lo diría bien es `ConfiguracionConvocatoria`.
+- **Qué pasa al retirar un descuento.** La restricción única de §3.9 impide dos del mismo tipo,
+  pero `DescuentoAplicado` no tiene estado: cambiar un descuento especial exige borrar la fila o
+  editarla, y hoy el modelo no dice cuál. Si se borra, la `Bitacora` es el único rastro.
 - **Reconstruir el desglose de una reserva vieja.** Sin los snapshots de `ReservaStand` (§3.7),
-  el desglose por línea de una reserva confirmada se recalcula con los valores actuales del mapa
-  y de `costo_m2`. Falta decidir si eso basta o si CU-STD-029 (detalle de la reserva) necesita
-  mostrar el desglose tal como se aceptó — en cuyo caso la fuente es la `Bitacora`, no reponer
-  las columnas.
-- **`es_recurrente`**: `STD` necesita saber si un expositor ya participó en ediciones
-  anteriores (era un atributo de `Cuenta` en la v1.0). No se resuelve dentro de este dominio:
-  exige una tabla de participación histórica en la capa global. Es la misma deuda que ya
-  registran `REG` §5, `EVT` §5 y `FER` §6 — cuando se implemente, se implementa una vez para
-  los cuatro.
-- **Correo de contacto duplicado**: `Editorial.correo_electronico` convive con
-  `Persona.correo`. Se conservan ambos a propósito (§3.1), pero conviene confirmar con el
-  cliente que el segundo no debe prellenarse desde el primero al llenar la Ficha.
+  el desglose por línea se recalcula con los valores actuales. Falta decidir si eso basta o si
+  CU-STD-029 necesita mostrarlo tal como se aceptó — en cuyo caso la fuente es la `Bitacora`.
+- **`es_recurrente`**: exige una tabla de participación histórica en la capa global. Misma deuda
+  que `REG` §5, `EVT` §5 y `FER` §6; cuando se implemente, se implementa una vez para los cuatro.
+- **Correo de contacto duplicado**: `Editorial.correo_electronico` convive con `Persona.correo`.
+  Se conservan ambos a propósito (§3.1); confirmar con el cliente que el segundo no debe
+  prellenarse desde el primero.
+
+### En curso
+
+- **Los casos de uso de `STD` decían "la convocatoria" en singular.** Se escribieron cuando había
+  una sola convocatoria de stands por feria. La revisión está en marcha: CU-STD-001, 002, 004,
+  009, 010, 011, 012 y 034 son los afectados, y cada mención tiene que decir **cuál**.
 
 ---
 
 ## Reglas de negocio relacionadas
 
 Las reglas RN-01 a RN-17 que rigen estos datos (cálculo por m², anticipo del 50% con
-descuento, plazo de 30 días, descuentos no acumulables, estados de stand y reserva, etc.)
+descuento, plazo de 30 días, descuentos acumulables en secuencia, estados de stand y reserva, etc.)
 están documentadas en los requisitos del dominio y en el inventario de casos de uso
 (`CU-STD Índice.md`).

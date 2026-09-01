@@ -16,6 +16,7 @@ apps, y separarla ahí es lo que evita que cada una la maquete otra vez.
 """
 
 from django import template
+from django.conf import settings
 
 from comun.urls import url_publica
 
@@ -53,17 +54,40 @@ def topbar(context):
         # llamada «(sistema)».
         feria = None
 
-    acceso = permisos.acceso_a(peticion) if autenticada else None
+    # `ve_como_admin` y no `acceso_a`: el operador de la plataforma no
+    # tiene fila en `AdminFeria` y aun así ve la feria como quien la
+    # administra (`ADR-0005`). Si la barra preguntara distinto que el
+    # decorador, un superusuario vería el chasis de participante sobre
+    # pantallas de administración.
+    #
+    # Lo que **sí** la separa del decorador es la puerta: quien entró
+    # como participante ve la barra de participante aunque administre.
+    # Por eso el conmutador de abajo pregunta por `administra` —la
+    # autoridad, que no cambia— y no por esto.
+    #
     # `zona_admin` del contexto es lo que usan las pantallas de fuera de
     # una feria —"mis ferias"—, donde no hay `tenant` contra el que
     # comprobar nada.
-    zona_admin = acceso is not None or bool(context.get("zona_admin"))
+    zona_admin = (
+        autenticada and permisos.ve_como_admin(peticion)
+    ) or bool(context.get("zona_admin"))
+
+    # La autoridad, no la cara: el conmutador se ofrece a quien puede
+    # administrar esta feria **esté mirando como esté**. Es lo que hace
+    # posible el viaje de vuelta.
+    puede_administrar = autenticada and permisos.administra(peticion)
 
     return {
         "usuario": usuario,
         "autenticada": autenticada,
         "feria": feria,
         "zona_admin": zona_admin,
+        "puede_administrar": puede_administrar,
+        "url_modo": url_publica("ferias:modo"),
+        # El slug viaja al POST para poder devolver a la misma feria: el
+        # conmutador vive fuera de toda edición y sin esto no sabría de
+        # dónde salió quien lo pulsa.
+        "slug_feria": feria.slug if feria else "",
         "titulo": feria.nombre if feria else "FILEY",
         "subtitulo": _subtitulo(feria, zona_admin, autenticada),
         "url_inicio": _url_inicio(feria, zona_admin),
@@ -102,10 +126,45 @@ def _cambio_de_feria(feria, zona_admin, usuario, autenticada):
         return None
 
     if zona_admin:
-        if seleccion.ferias_administradas(usuario).count() < 2:
+        if len(seleccion.ferias_administradas(usuario)) < 2:
             return None
         return {"texto": "Mis ferias", "url": url_publica("ferias:mis_ferias")}
 
     if seleccion.ferias_para_participante().count() < 2:
         return None
     return {"texto": "Cambiar de feria", "url": url_publica("ferias:elegir")}
+
+
+@register.inclusion_tag("componentes/pie.html", takes_context=True)
+def pie(context):
+    """El pie de la edición en la que estamos, o el de la plataforma.
+
+    Está aquí y no en un `{% include %}` por lo mismo que la barra: lo
+    que dice depende de en qué feria estamos, y esa pregunta la contesta
+    esta app. Una pantalla no elige su pie —lo dibuja y ya—.
+
+    Cada campo cae por su cuenta a `settings.PIE_*`, y no el bloque
+    entero: una feria que solo cambia su correo de contacto no tiene por
+    qué volver a escribir la dependencia para no perderla.
+    """
+    feria = getattr(context.get("request"), "tenant", None)
+    if feria is not None and feria.es_la_de_sistema:
+        # La fila de sistema no es una feria (ver `Feria`): su pie es el
+        # de la plataforma, que es lo que ya devuelve el `None`.
+        feria = None
+    return {
+        "entidad": _del_pie(feria, "pie_entidad", settings.PIE_ENTIDAD),
+        "dependencia": _del_pie(feria, "pie_dependencia", settings.PIE_DEPENDENCIA),
+        "contacto": _del_pie(feria, "pie_contacto", settings.PIE_CONTACTO),
+    }
+
+
+def _del_pie(feria, campo: str, por_omision: str) -> str:
+    """Lo que declare la feria para ese campo, o lo de la plataforma.
+
+    Con `getattr` y no con acceso directo: dentro de un `schema_context`
+    —un comando, la barrida, una prueba— `request.tenant` puede ser el
+    `FakeTenant` de `django-tenants`, que solo sabe su `schema_name`. Un
+    pie es lo último que debería tumbar una pantalla.
+    """
+    return (getattr(feria, campo, "") or "").strip() or por_omision

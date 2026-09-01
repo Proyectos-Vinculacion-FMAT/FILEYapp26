@@ -34,7 +34,7 @@ El aplicante selecciona un stand disponible en el mapa.
 ## Precondiciones
 
 - El aplicante tiene sesión iniciada y está habilitado para reservar (RN-16).
-- El stand existe en el mapa del evento.
+- El stand existe en el mapa de esta convocatoria (RN-19).
 
 ## Postcondiciones
 

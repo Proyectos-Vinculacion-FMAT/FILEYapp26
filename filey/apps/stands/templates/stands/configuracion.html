@@ -1,0 +1,181 @@
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Configuración{% endblock %}
+
+{% comment %} ===========================================================
+   A10 · Configuración de la convocatoria (CU-STD-034).
+
+   Dos tarjetas y una nota, como el A10 del prototipo de Angular
+   (`a10-configuracion`): a la izquierda lo que cuesta, a la derecha
+   dónde se paga. Son las dos mitades de «abrir la venta» y por eso van
+   en una sola pantalla con un solo botón — guardar dos veces para dejar
+   la convocatoria operable invita a dejarse una a medias.
+
+   Lo que esta pantalla añade al prototipo es **decir lo que un cambio no
+   hace**: RN-01 congela el precio de las reservas que ya existen, y esa
+   es la duda con la que entra quien va a subir el costo por m² a mitad
+   de campaña. El prototipo lo pone de subtítulo; aquí se dice donde
+   pesa, junto al total de reservas vivas.
+
+   El mapa no se toca desde aquí: importarlo reemplaza el showfloor
+   entero y es del operador de la plataforma (ADR-0005).
+
+   Contexto que espera:
+
+     form             ConfiguracionForm ligado a esta convocatoria
+     configuracion    la fila, para lo que no se edita
+     mapa             el MapaShowfloor, o None
+     falta_precio     el costo por m² sigue en cero
+     falta_cuenta     no hay dónde pagar todavía
+     reservas_vivas   cuántas conservan su precio pase lo que pase
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Configuración — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Configuración{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% comment %} Lo que impide vender, arriba y antes del formulario: es la
+   razón por la que la mayoría de la gente entra aquí. {% endcomment %}
+{% if falta_precio or falta_cuenta %}
+  <div class="note note-warn">
+    <div class="ico">⚠️</div>
+    <div>
+      <strong>Falta algo para poder vender.</strong>
+      {% if falta_precio %}
+        Sin costo por metro cuadrado, cada espacio saldría en cero.
+      {% endif %}
+      {% if falta_cuenta %}
+        Sin cuenta bancaria, quien reserve no sabrá a dónde pagar.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+<form method="post" data-avisa-formato>
+  {% csrf_token %}
+
+  <div class="ajustes-columnas">
+    <div class="section-card card">
+      <div class="section-head">
+        <div class="num">1</div>
+        <div>
+          <h3>Costos y plazos</h3>
+          <p>Lo que cuesta un espacio y cuánto aguanta una reserva sin pago.</p>
+        </div>
+      </div>
+      <div class="section-body">
+        {% include "stands/parciales/campo.html" with campo=form.costo_m2 %}
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form.porcentaje_anticipo %}
+          {% include "stands/parciales/campo.html" with campo=form.plazo_reserva_dias %}
+        </div>
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form.descuento_pronto_pago %}
+          {% include "stands/parciales/campo.html" with campo=form.fecha_limite_pronto_pago %}
+        </div>
+        {% comment %} La base de la que hereda cada reserva al confirmarse
+           (CU-STD-026 paso 4). Va sola en su renglón y no emparejada con
+           la del pronto pago: las dos son fechas de cobro pero no son la
+           misma pregunta —una cierra una campaña, la otra dice hasta
+           cuándo hay para liquidar— y juntas se confunden. {% endcomment %}
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form.fecha_corte_pago_total %}
+        </div>
+
+        {% comment %} RN-01, dicho donde se duda. Solo cuando hay reservas:
+           sin ninguna, es ruido. {% endcomment %}
+        {% if reservas_vivas %}
+          <div class="note note-info">
+            <div class="ico">🔒</div>
+            <div>
+              <strong>Hay {{ reservas_vivas }} reserva{{ reservas_vivas|pluralize }}
+              en curso.</strong>
+              Cambiar el precio no las toca: conservan el total que aceptaron.
+              Lo nuevo aplica a las reservas siguientes.
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="section-card card">
+      <div class="section-head">
+        <div class="num">2</div>
+        <div>
+          <h3>Datos bancarios</h3>
+          <p>Se le enseñan tal cual a quien tiene una reserva por pagar.</p>
+        </div>
+      </div>
+      <div class="section-body">
+        {% include "stands/parciales/campo.html" with campo=form.banco_titular %}
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form.banco_nombre %}
+          {% include "stands/parciales/campo.html" with campo=form.banco_sucursal %}
+        </div>
+        <div class="grid-2">
+          {% include "stands/parciales/campo.html" with campo=form.banco_cuenta %}
+          {% include "stands/parciales/campo.html" with campo=form.banco_clabe %}
+        </div>
+        {% include "stands/parciales/campo.html" with campo=form.banco_referencia %}
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card card">
+    <div class="section-head">
+      <div class="num">3</div>
+      <div>
+        <h3>Instrucciones adicionales</h3>
+        <p>Lo que haga falta decir además de los datos de la cuenta. Opcional.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      {% include "stands/parciales/campo.html" with campo=form.instrucciones_pago %}
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{% url 'stands:panel' convocatoria_id=convocatoria.pk %}">
+      Volver al resumen
+    </a>
+    <button class="btn btn-primary btn-lg" type="submit">Guardar la configuración</button>
+  </div>
+</form>
+
+{% comment %} El mapa se enseña pero no se edita: quien administra tiene que
+   poder ver si hay showfloor cargado sin buscarlo en otra pantalla, y
+   cargarlo es del operador (ADR-0005). {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <div>
+      <h3>Mapa del salón</h3>
+      <p>Lo carga el equipo técnico desde el administrador de la edición.</p>
+    </div>
+  </div>
+  <div class="section-body">
+    {% if mapa %}
+      <div class="info-grid">
+        <div>
+          <span class="hint">Salón</span>
+          <strong>{{ mapa.salon }}</strong>
+        </div>
+        <div>
+          <span class="hint">Espacios</span>
+          <strong>{{ mapa.stands.count }}</strong>
+        </div>
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{% url 'stands:mapa_completo' convocatoria_id=convocatoria.pk %}">
+          Ver el mapa
+        </a>
+      </div>
+    {% else %}
+      <p class="hint">Todavía no hay ningún mapa cargado.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

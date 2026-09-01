@@ -29,8 +29,11 @@ feria.
 
 **Actores:**
 
-- **Operador de la plataforma** — el equipo técnico. Crea ferias y designa a su dueño. No es un
-  rol dentro de ninguna feria (CU-FER-001).
+- **Operador de la plataforma** — el equipo técnico (superusuario de Django). Crea ferias y
+  designa a su dueño (CU-FER-001) y, desde
+  [ADR-0005](<../../adr/0005-el-operador-alcanza-cualquier-feria.md>), alcanza **cualquier
+  feria**, incluido lo reservado a su dueño, sin tener fila en `AdminFeria`. Es la salida para
+  una edición cuyo dueño se fue.
 - **Dueño de la feria** — una persona por feria. Puede todo lo de la feria **y además** dar de
   alta y retirar a sus administradores (CU-FER-003, CU-FER-004) y administrar el catálogo de
   convocatorias (CU-FER-005 a CU-FER-009).

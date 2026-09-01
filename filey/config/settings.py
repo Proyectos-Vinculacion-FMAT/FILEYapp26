@@ -83,8 +83,13 @@ SHARED_APPS = [
 
 TENANT_APPS = [
     "apps.convocatorias",
-    # Aquí se añaden EVT, TAL, STD, VIS, PRG y SAL conforme se
-    # construyan: todos son contenido de una feria.
+    # Cada dominio vertical es **su propia app**, con sus tablas y su
+    # namespace de URLs: no comparten modelos entre sí ni con
+    # `apps.convocatorias`, que es la mitad por feria de `FER`. La
+    # dependencia va en una sola dirección (`ADR-0006`).
+    "apps.stands",
+    # Aquí se añaden EVT, VIS, PRG y SAL conforme se construyan: todos
+    # son contenido de una feria.
 ]
 
 INSTALLED_APPS = SHARED_APPS + [a for a in TENANT_APPS if a not in SHARED_APPS]
@@ -243,17 +248,90 @@ STATIC_URL = "estaticos/"
 STATICFILES_DIRS = [BASE_DIR / "estaticos"]
 STATIC_ROOT = BASE_DIR / "estaticos_recolectados"
 
+# ── Archivos que sube la gente ────────────────────────────────
+# Distintos de los estáticos y en casi todo lo contrario: los
+# estáticos son parte del despliegue, públicos y cacheables para
+# siempre; esto son actas constitutivas, RFC y comprobantes de pago
+# de personas concretas (`ADR-0007`).
+#
+# **Nada de esto se sirve por una URL.** No hay ruta para `MEDIA_URL`
+# en ningún urlconf, y es deliberado: cada módulo entrega sus archivos
+# por una vista que comprueba quién pregunta. `MEDIA_URL` existe
+# porque `FileField.url` la usa para componer, no porque algo la
+# resuelva.
+
+MEDIA_URL = "medios/"
+
+# Dónde caen los archivos con el almacenamiento local. Se saca del
+# entorno para que en Render apunte al disco montado y no al sistema de
+# archivos del contenedor, que se borra en cada despliegue.
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "medios"))
+
+# `local` (por omisión) o `s3`. Cambiar de uno a otro es cambiar esta
+# variable y las cuatro de abajo: no se toca código. Ver `ADR-0007`.
+ALMACENAMIENTO = os.getenv("ALMACENAMIENTO", "local").lower()
+
+if ALMACENAMIENTO == "s3":
+    # Sirve para cualquier almacén compatible con S3 —Supabase Storage,
+    # Cloudflare R2, AWS— porque lo único que los distingue es el
+    # endpoint. Requiere `django-storages[s3]` en requirements.txt, que
+    # no está instalado mientras nadie use esta rama.
+    _opciones_s3 = {
+        "bucket_name": os.getenv("S3_BUCKET"),
+        "endpoint_url": os.getenv("S3_ENDPOINT_URL"),
+        "access_key": os.getenv("S3_ACCESS_KEY"),
+        "secret_key": os.getenv("S3_SECRET_KEY"),
+    }
+    _VARIABLE_DE = {
+        "bucket_name": "S3_BUCKET",
+        "endpoint_url": "S3_ENDPOINT_URL",
+        "access_key": "S3_ACCESS_KEY",
+        "secret_key": "S3_SECRET_KEY",
+    }
+    _faltantes = sorted(_VARIABLE_DE[k] for k, v in _opciones_s3.items() if not v)
+    if _faltantes:
+        raise ImproperlyConfigured(
+            "ALMACENAMIENTO=s3 pero faltan estas variables: "
+            + ", ".join(_faltantes)
+            + ". Abortar es lo correcto: sin ellas el sistema arrancaría y "
+            "perdería en silencio todo lo que alguien subiera."
+        )
+    _almacen_por_defecto = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            **_opciones_s3,
+            # Privado, y con URL firmada de vida corta. Aun así, quien
+            # entrega el archivo sigue siendo la vista del módulo: el
+            # bucket no es la puerta.
+            "default_acl": "private",
+            "querystring_auth": True,
+            # Nunca pisar un archivo existente. Con nombres aleatorios no
+            # debería pasar, y si pasara sería un choque de UUID que
+            # preferimos ver como archivo nuevo y no como uno perdido.
+            "file_overwrite": False,
+        },
+    }
+else:
+    _almacen_por_defecto = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
+
+# ── Los dos almacenes ─────────────────────────────────────────
+
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": _almacen_por_defecto,
     "staticfiles": {
         # En producción se comprime y se versiona por hash: el navegador
         # puede cachear para siempre y aun así ver el CSS nuevo tras cada
         # despliegue. Eso exige haber corrido `collectstatic`, que en
         # desarrollo no se corre — de ahí las dos ramas.
+        # `comun.estaticos.EstaticosFiley` y no el de whitenoise a secas:
+        # deja el build de Godot del mapa fuera del manifiesto. Su
+        # `index.js` pide el `.wasm` por su nombre literal, así que
+        # hashearlo rompe el mapa **solo en producción**.
         "BACKEND": (
             "django.contrib.staticfiles.storage.StaticFilesStorage"
             if DEBUG
-            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            else "comun.estaticos.EstaticosFiley"
         ),
     },
 }
@@ -269,6 +347,26 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # en localhost, los enlaces no le sirven a nadie.
 
 URL_BASE = os.getenv("URL_BASE", "http://localhost:8000").rstrip("/")
+
+
+# ── El pie de página, fuera de toda feria ─────────────────────
+# Quién organiza y dónde encontrarlo. Estos tres valores son los de la
+# **plataforma**: salen en las pantallas que no cuelgan de `/f/<slug>/`
+# —el acceso, «mis ferias», elegir edición— y son además el valor por
+# omisión de toda feria que no declare el suyo (`Feria.pie_*`).
+#
+# Van al entorno y no a la plantilla porque quien despliega el sistema
+# no es quien lo escribe: una instalación de otra universidad cambia el
+# pie sin tocar el repositorio ni esperar un despliegue nuestro.
+
+PIE_ENTIDAD = os.getenv("PIE_ENTIDAD", "FILEY")
+PIE_DEPENDENCIA = os.getenv(
+    "PIE_DEPENDENCIA", "Coordinación General de Contenidos · UADY"
+)
+PIE_CONTACTO = os.getenv(
+    "PIE_CONTACTO",
+    "Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos@filey.org",
+)
 
 
 # ── Correo (Notificaciones vía Resend) ────────────────────────

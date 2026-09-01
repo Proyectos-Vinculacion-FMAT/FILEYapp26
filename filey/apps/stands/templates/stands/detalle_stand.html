@@ -1,0 +1,31 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   CU-STD-010 · El detalle de un espacio.
+
+   Pantalla propia y no solo el modal del mapa: el detalle tiene que
+   tener una URL que se pueda compartir y volver a abrir. El modal pide
+   este mismo cuerpo por htmx (`parciales/detalle_stand.html`).
+
+   El precio que se enseña es el **del espacio**. Los descuentos son de
+   la reserva entera (CU-STD-012), y adelantarlos aquí haría que la suma
+   de la pantalla no cuadrara con el total del carrito.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Espacio {{ stand.clave }} — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Espacio {{ stand.etiqueta }}{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% comment %} El cuerpo vive en un parcial porque lo comparte con el modal
+   del mapa: ahí se pide por htmx al pulsar un espacio. Dos copias de las
+   mismas cifras es cómo se llega a que una diga una cosa y la otra otra. {% endcomment %}
+<div class="section-card card">
+  <div class="section-body">
+    {% include "stands/parciales/detalle_stand.html" %}
+  </div>
+</div>
+
+{% endblock %}

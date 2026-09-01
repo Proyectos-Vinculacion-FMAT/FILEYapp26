@@ -1,0 +1,40 @@
+{% comment %} ===========================================================
+   Un campo de formulario, con su etiqueta, su ayuda y sus errores.
+
+   Contexto que espera:
+
+     campo   un BoundField
+
+   Existe porque la ficha de expositor tiene treinta campos y escribirlos
+   a mano sería repetir el mismo bloque treinta veces — y equivocarse en
+   dos. Marca el obligatorio con `.req` y el opcional con `.opt`, que es
+   lo que el prototipo hace; no hay forma de saberlo mirando la caja.
+
+   Tres cosas que no se ven y sostienen el resto:
+
+   - Los `id` son los que **Django ya apunta** en su `aria-describedby`
+     automático: `<auto_id>_helptext` y `<auto_id>_error`. Inventar otros
+     —`-ayuda`, `-error`— deja ese atributo señalando a elementos que no
+     existen, y el lector de pantalla anuncia «Teléfono celular,
+     obligatorio» y se calla.
+   - `role="alert"` en el error hace que se anuncie al aparecer, que es
+     justo lo que pasa cuando el navegador lo pone al salir del campo.
+   - La clase `is-invalid` la pone el formulario en `add_error`
+     (`MarcaLosInvalidos`), no esta plantilla: aquí no se sabe validar.
+   =========================================================== {% endcomment %}
+<div class="field">
+  <label for="{{ campo.id_for_label }}">
+    {{ campo.label }}
+    {% if campo.field.required %}<span class="req">*</span>{% else %}<span class="opt">opcional</span>{% endif %}
+  </label>
+  {{ campo }}
+  {% if campo.help_text %}
+    <span class="hint" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</span>
+  {% endif %}
+  {% comment %} El contenedor existe siempre, aunque esté vacío: es donde
+     el JavaScript escribe el aviso del navegador al salir del campo, y
+     un nodo que aparece de la nada mueve el resto de la página. {% endcomment %}
+  <span class="hint req campo-error" id="{{ campo.auto_id }}_error" role="alert">
+    {% for error in campo.errors %}{{ error }}{% if not forloop.last %} {% endif %}{% endfor %}
+  </span>
+</div>

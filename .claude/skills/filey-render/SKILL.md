@@ -162,26 +162,33 @@ reusan sin ver la vista. `{# … #}` es de **una sola línea**; multilínea se i
 
 ## 6. CSS: hay una copia, y ya derivó
 
-`filey/estaticos/css/filey.css` es una **copia a mano** de `prototipo/common/styles-base.css`
-+ `prototipo/REG/styles.css` (500 líneas, mismos nombres de token, verificado 2026-08-28). Es
-una segunda fuente, y no coincide con el prototipo:
+`filey/estaticos/css/filey.css` nació como **copia a mano** de `prototipo/common/styles-base.css`
++ `prototipo/REG/styles.css`, con los mismos nombres de token. Ya no es solo eso: con `STD`
+portado va por 1576 líneas contra las 571 de esas dos hojas, así que la mayor parte de su
+contenido ya no tiene original en el prototipo. Sigue siendo una segunda fuente, y esto es lo
+que no coincide (recalculado 2026-09-01, con `STD` ya dentro):
 
-- **La mayoría de los tokens "faltantes"** son de `VIS` (`--vis-cupos-*`, `--vis-nivel-*`,
-  `--vis-grad-*`…) y **no son drift**: `VIS` aún no se portó, así que no hay por qué traerlos
-  todavía. Antes de asumir que algo falta, compara contra el inventario regenerado
-  (`./prototipo/scripts/gen-inventario.sh`) y fíjate a qué dominio pertenece — no toda ausencia
-  es un error.
-- **Sí faltan de verdad**, porque son de estado (aplican a cualquier dominio ya portado):
-  `--err-200`, `--ok-200`, `--color-rojo-700/800`, `--color-rojo-degradado-oscuro`,
-  `--color-magenta-oscuro`, `--color-morado`.
-- **4 tokens no hace falta traerlos**: `--radio-card`, `--radio-btn`, `--radio-pill`,
-  `--sombra-card` están muertos también en el prototipo (cero usos — ver `filey-identidad`
-  §3), así que su ausencia en `filey.css` es correcta, no deuda.
-- **1 token muerto sobrevive** en `filey.css`: `--azul-300`, que en el prototipo era una
-  referencia rota y se eliminó de ahí.
-- **2 hex sueltos** que en el prototipo ya son token: `#aab3c0` (`--gris-400`) en el
-  placeholder de inputs, y el degradado `#1d8a4e`/`#0a6b53` de `.banner-infantil`
-  (`--color-verde-tal*`).
+- **9 tokens de `common` no están en `filey.css`.** Solo **5** son deuda —`--color-magenta-oscuro`,
+  `--color-morado`, `--color-rojo-700`, `--color-rojo-800`, `--color-rojo-degradado-oscuro`—; los
+  otros 4 (`--radio-btn`, `--radio-card`, `--radio-pill`, `--sombra-card`) están muertos también
+  en el prototipo (`filey-identidad` §3), así que su ausencia es correcta.
+- **Los tokens de dominio no cuentan como deriva.** `VIS` define 28 en su propia hoja y `EVT` 2
+  (`--ok-200`, `--err-200`); ninguno tiene por qué estar en `filey.css` mientras ese dominio no
+  se porte. Antes de dar una ausencia por deuda, mira en el inventario a qué capa pertenece.
+- **3 tokens viven solo en `filey.css`.** `--alto-topbar` y `--alto-etiqueta` son suyos —los usa
+  el chasis servido— y no deben bajar al prototipo. `--azul-300` sí es deriva, pero al revés:
+  ahí está definido y usado, y en el prototipo es una **referencia rota** (`check-ui.sh` E1).
+- **Ninguna referencia rota en `filey.css`**: cero `var()` sin definición de su lado.
+- **2 hex sueltos, y están en los dos lados** —no es que el prototipo ya los haya tokenizado—:
+  `#aab3c0` en el placeholder de los inputs y el degradado `#1d8a4e`/`#0a6b53` de
+  `.banner-infantil`. Es deuda compartida; en el prototipo la cuenta `check-ui.sh` (E3).
+- ~~La regla de los controles de texto iba **detrás**~~ — corregida el 2026-08-29. La copia
+  enumeraba `text`, `email`, `tel` y `select`, y el prototipo además `number` y `textarea`; un
+  `<input type="number">` caía en el estilo de fábrica del navegador y salía angosto al lado de
+  uno de texto. **No solo derivan los tokens: también las reglas**, y ésta no se veía hasta que
+  una pantalla mezcló los dos tipos en la misma tarjeta (la configuración de la convocatoria).
+  `date` y `search` se añadieron ahí y **siguen sin estar** en el prototipo, que no tiene campos
+  nativos de esos.
 
 **Regla mientras las dos existan:** al tocar un token o un componente compartido en el
 prototipo, propágalo a `filey.css` en el mismo cambio; y al portar una pantalla, copia al

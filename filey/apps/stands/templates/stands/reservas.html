@@ -1,0 +1,71 @@
+{% extends "layouts/admin.html" %}
+{% load dinero %}
+
+{% block migaja %}Stands · Reservas{% endblock %}
+
+{% comment %} ===========================================================
+   A · CU-STD-028 · La lista de reservas, filtrable.
+
+   «Vencidas» es un filtro y no un estado: vencer no cambia el estado de
+   la reserva (RN-12). Va en la consulta y no en la plantilla por lo
+   mismo que la cola de solicitudes — lo que no se pide no debe llegar.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Reservas — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Reservas de stands{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% include "stands/parciales/filtros.html" with nombre="reserva" plural="reservas" url_limpia=url_limpia %}
+
+{% if reservas %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Editorial</th>
+        <th>Espacios</th>
+        <th>Estado</th>
+        <th class="num">Total</th>
+        <th class="num">Pendiente</th>
+        <th>Vence</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reservas %}
+        <tr>
+          <td>
+            <strong>{{ r.editorial.nombre }}</strong><br>
+            <span class="hint">{{ r.registro.persona.correo }}</span>
+          </td>
+          <td>{{ r.lineas.count }}</td>
+          <td>{% include "stands/parciales/badge_reserva.html" with reserva=r vencida=r.esta_vencida %}</td>
+          <td class="num">{{ r.monto_total|pesos }}</td>
+          <td class="num">{{ r.monto_pendiente|pesos }}</td>
+          <td>{{ r.fecha_vencimiento_anticipo|date:"j M Y" }}</td>
+          <td>
+            <a class="btn btn-ghost btn-row" href="{% url 'stands:detalle_reserva' reserva_id=r.pk %}">
+              Ver
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="note note-info">
+    <div class="ico">📭</div>
+    <div>
+      {% if hay_filtros %}
+        Ninguna reserva cumple estos filtros. Ajústalos o quítalos para verlas
+        todas.
+      {% else %}
+        Todavía no hay ninguna reserva en esta convocatoria.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

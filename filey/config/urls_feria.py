@@ -13,6 +13,11 @@ contenido (`eventos/`, `talleres/`, `stands/`, `visitas/`) conforme se
 construyan: todos son contenido de una edición, y ninguno vive fuera de
 una.
 
+`django-admin/` es el admin de Django de esta edición: el mismo mecanismo
+que `/django-admin/`, sobre el otro lado de la frontera. Es lo que hoy
+da de alta las convocatorias (`CU-FER-005`), mientras no exista la
+pantalla del panel.
+
 `accesos/` es la excepción aparente: lo que administra —quién puede
 entrar a esta feria— vive en el schema `public`, no en el de la edición.
 Cuelga de aquí de todas formas porque la pregunta que responde sí es de
@@ -21,8 +26,18 @@ una feria concreta: *quién administra **ésta***.
 
 from django.urls import include, path
 
+from comun.admin_feria import admin_feria
+
 urlpatterns = [
+    # El admin de Django **de esta edición**. No es el mismo objeto que
+    # el de `/django-admin/`, y no puede serlo: aquel corre sobre
+    # `public`, donde las tablas de las apps de `TENANT_APPS` no existen.
+    # Ver `comun/admin_feria.py`.
+    path("django-admin/", admin_feria.urls),
     path("accesos/", include("apps.ferias.urls_accesos")),
+    path("", include("apps.stands.urls")),
+    # El catálogo va **al final**: sirve la raíz de la feria, así que
+    # cualquier prefijo de un módulo tiene que resolverse antes.
     path("", include("apps.convocatorias.urls")),
 ]
 

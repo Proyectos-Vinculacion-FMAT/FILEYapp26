@@ -265,6 +265,9 @@ def registro(peticion):
         segundo_apellido=datos["segundo_apellido"],
         telefono=datos["telefono"],
         pais=datos["pais"],
+        # Vacías fuera de México: el formulario ya las descartó.
+        entidad=datos["entidad"],
+        ciudad=datos["ciudad"],
     )
 
     # Paso 8: continúa automáticamente en CU-REG-002.
@@ -463,7 +466,13 @@ def _pantalla_codigo(peticion, contexto: str):
         return redirigir(peticion, "registros:acceso")
 
     # Éxito — paso 10-12: sesión, último acceso y destino.
-    sesion_service.iniciar(peticion, persona)
+    #
+    # El contexto viaja a la sesión: quien administra una feria **y**
+    # participa en ella entra por la puerta que quiera, y por la de
+    # participante se le enseña el portal de participante. Aquí no se
+    # sabe qué significa eso —`registros` no conoce ferias—; solo se
+    # anota la puerta.
+    sesion_service.iniciar(peticion, persona, contexto=contexto)
     # Las dos son pantallas de elegir feria, y las dos se saltan solas
     # cuando solo hay una (CU-FER-002, CU-FER-010). REG no sabe cuántas
     # hay ni tiene por qué: entrega la sesión y manda a elegir.

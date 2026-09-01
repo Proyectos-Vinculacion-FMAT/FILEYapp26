@@ -1,0 +1,90 @@
+{% extends "layouts/admin.html" %}
+
+{% comment %} ===========================================================
+   A6 · Quién está habilitado para reservar (CU-STD-030).
+
+   No es un listado de editoriales: son las que tienen la solicitud
+   **aceptada**, que es lo que las convierte en expositores (RN-16). De
+   ahí que la lista vacía mande a la bandeja de solicitudes (E1) — si no
+   hay ninguna, lo que falta es dictaminar.
+
+   Sin chips, al revés que las otras tres listas del panel: aquí solo hay
+   un estado por definición, y una barra con un solo filtro que no filtra
+   nada es un adorno. Lo que sí lleva es el buscador, porque el paso 4 es
+   localizar a uno concreto para atenderlo.
+   =========================================================== {% endcomment %}
+
+{% block migaja %}Stands · Expositores{% endblock %}
+
+{% block titulo %}Expositores — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Expositores{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% include "stands/parciales/filtros.html" with nombre="expositor" plural="expositores" url_limpia=url_limpia etiqueta_busqueda="Buscar por nombre de la editorial o por correo" placeholder="Buscar editorial o correo" %}
+
+{% if expositores %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Editorial</th>
+        <th>Contacto</th>
+        <th>Teléfono</th>
+        <th>Aceptada</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for solicitud in expositores %}
+        <tr>
+          <td>
+            <strong>{{ solicitud.editorial.nombre }}</strong><br>
+            <span class="hint">{{ solicitud.editorial.get_giro_display }}</span>
+          </td>
+          <td>
+            {% comment %} Dos correos y no uno: el de contacto de la ficha
+               puede ser un buzón comercial, y el de la cuenta es el de
+               quien tramita. Cuando hay que llamar a alguien, la
+               diferencia importa. {% endcomment %}
+            {{ solicitud.registro.persona.nombre_completo }}<br>
+            <span class="hint">{{ solicitud.editorial.correo_electronico }}</span>
+          </td>
+          <td>
+            {{ solicitud.editorial.telefono_celular|default:"—" }}
+            {% if solicitud.editorial.telefono_oficina %}
+              <br><span class="hint">{{ solicitud.editorial.telefono_oficina }}</span>
+            {% endif %}
+          </td>
+          <td>{{ solicitud.fecha_revision|date:"j M Y"|default:"—" }}</td>
+          <td>
+            <a class="btn btn-ghost btn-row"
+               href="{% url 'stands:detalle_expositor' editorial_id=solicitud.editorial.pk %}">
+              Ver expediente
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="note note-info">
+    <div class="ico">👥</div>
+    <div>
+      {% if hay_filtros %}
+        <strong>Ningún expositor coincide con esa búsqueda.</strong>
+        Prueba con parte del nombre o del correo.
+      {% else %}
+        {% comment %} E1. No dice «no hay editoriales» porque no es lo que
+           pasa: es que ninguna solicitud está aceptada todavía. {% endcomment %}
+        <strong>Todavía no hay expositores habilitados.</strong>
+        Una editorial entra a esta lista cuando su solicitud se acepta —
+        <a href="{% url 'stands:solicitudes' convocatoria_id=convocatoria.pk %}">revisa
+        la bandeja de solicitudes</a>.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -1,13 +1,13 @@
 ---
 estado: propuesta
-version: "0.1"
+version: "0.3"
 tags:
   - tipo/caso-de-uso
   - dom/fer
   - tema/formularios
   - tema/alcance
 fecha: 2026-08-25
-fecha_actualizacion: 2026-08-25
+fecha_actualizacion: 2026-08-27
 id: CU-FER-005
 dominio: FER
 responsable: Hugo Janssen
@@ -51,6 +51,36 @@ Abrirla al público es un acto distinto y deliberado (CU-FER-008).
 > administrador **sí** puede consultar el catálogo (CU-FER-006) — sin eso no podría operar su
 > propio módulo — y sigue pudiendo operar todo lo que cuelga de una convocatoria: dictaminar,
 > revisar solicitudes, validar abonos.
+
+> [!note] Implementación provisional (2026-08-27) — el alta vive en el admin de Django
+> Mientras la pantalla de este caso de uso no exista, las convocatorias se dan de alta desde
+> **`/f/<slug>/django-admin/`**, el admin de Django de la edición (`comun/admin_feria.py`). Es
+> otro `AdminSite` que el de `/django-admin/`, y tiene que serlo: `Convocatoria` vive en el
+> schema de la feria, y el admin de siempre corre sobre `public`, donde esa tabla no existe.
+>
+> **Lo que cambia mientras dure:** el actor real es el **operador de la plataforma** (`is_staff`),
+> no el dueño de la feria. El admin de Django se gobierna por `is_staff` y un dueño no lo es, así
+> que E3 —rechazar a quien no es dueño— todavía no se ejerce como lo describe este documento.
+>
+> **Lo que no cambia:** la convocatoria nace en `borrador` (paso 6), una edición archivada la
+> rechaza (E2), el aviso de A2 se muestra, y las validaciones de nombre y fechas se cumplen. La
+> lógica no está en la pantalla: vive en `apps/convocatorias/servicios/altas.py`, que es a quien
+> llamará también la pantalla del panel cuando se construya.
+
+<!-- -->
+
+> [!note] El paso 6 y E1 ya están construidos — falta quien los conteste (2026-08-27)
+> El alta le pregunta al **registro de módulos** ([ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>))
+> quién sirve el tipo de la convocatoria y llama al callback que ese módulo dejó inscrito,
+> **dentro de la misma transacción**. Si el callback revienta, la transacción se deshace entera
+> y no queda ni la convocatoria: eso es E1, y está probado.
+>
+> Lo que falta no es el mecanismo sino el módulo: `apps/stands` no existe, así que hoy nadie
+> se inscribe para `STD` y la convocatoria se crea sin configuración. **Que no haya módulo no es
+> un error** y no bloquea el alta — es el estado normal de los tres tipos.
+>
+> Sigue sin construirse la entrada de `BitacoraFER`, cuyo modelo no existe. Va en esa misma
+> transacción cuando exista.
 
 ## Disparador
 

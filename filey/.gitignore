@@ -9,10 +9,13 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# User-uploaded media
+# Lo que sube la gente. Nunca al repositorio: son actas constitutivas,
+# RFC y comprobantes de pago de personas concretas (ADR-0007).
+medios/
 media/
 
-# Static files (if running collectstatic locally)
+# Estáticos recolectados (si se corre collectstatic en local)
+estaticos_recolectados/
 staticfiles/
 static_root/
 

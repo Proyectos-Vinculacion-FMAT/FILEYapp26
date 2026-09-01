@@ -17,6 +17,8 @@
      url_salir     cerrar sesión (POST)
      url_acceso    entrar, para quien no tiene sesión
      cambio        {texto, url} para volver a la lista de ferias, o None
+     puede_administrar  ¿esta cuenta administra esta feria?
+     url_modo, slug_feria  el conmutador de cara (participante ↔ admin)
 
    Las tres direcciones vienen resueltas contra el urlconf público: la
    barra sale también dentro de `/f/<slug>/`, donde `{% url %}` no
@@ -35,6 +37,25 @@
     <nav class="topnav">
       {% if cambio %}
         <a href="{{ cambio.url }}">{{ cambio.texto }}</a>
+      {% endif %}
+
+      {% comment %} Quien administra una feria y además participa en ella
+         —una editorial que coordina el showfloor— entra por la puerta que
+         quiera, y desde aquí cambia de cara sin cerrar sesión. Se ofrece
+         por autoridad y no por la cara actual: si dependiera de la cara,
+         no habría viaje de vuelta.
+
+         POST y no enlace, como cerrar sesión: un GET que cambia el estado
+         de la sesión lo dispara cualquier precarga del navegador. {% endcomment %}
+      {% if puede_administrar %}
+        <form method="post" action="{{ url_modo }}" class="cambio-modo">
+          {% csrf_token %}
+          <input type="hidden" name="feria" value="{{ slug_feria }}">
+          <input type="hidden" name="modo" value="{% if zona_admin %}publico{% else %}admin{% endif %}">
+          <button class="btn-modo" type="submit">
+            {% if zona_admin %}Ver como participante{% else %}Volver a administración{% endif %}
+          </button>
+        </form>
       {% endif %}
 
       {% if autenticada %}

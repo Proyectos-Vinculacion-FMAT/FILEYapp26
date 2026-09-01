@@ -40,14 +40,26 @@ import functools
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 
+from comun.urls import url_publica
+
+from .services import sesion
+
 
 def requiere_participante(vista):
-    """Zona del participante: basta con tener sesión iniciada."""
+    """Zona del participante: basta con tener sesión iniciada.
+
+    Sirve **a los dos lados** de la frontera de `django-tenants`, y por
+    eso el destino se resuelve con ``url_publica`` y no con un
+    ``reverse`` normal: dentro de `/f/<slug>/` el urlconf activo es otro
+    y el nombre ``registros:acceso`` no existe ahí. Fuera de una feria da
+    exactamente la misma URL, así que no cambia nada para quien ya lo
+    usaba. Es el mismo criterio que `apps/ferias/permisos.py`.
+    """
 
     @functools.wraps(vista)
     def envoltura(peticion, *args, **kwargs):
         if not peticion.user.is_authenticated:
-            return redirect("registros:acceso")
+            return redirect(url_publica("registros:acceso"))
         return vista(peticion, *args, **kwargs)
 
     return envoltura
@@ -70,6 +82,10 @@ def requiere_admin(vista):
             # Tiene sesión de participante e intenta entrar al panel:
             # no es un problema de identidad, es falta de permiso.
             raise PermissionDenied("Tu cuenta no administra ninguna feria.")
+        # Entrar aquí **es** elegir administración: si venía mirando como
+        # participante, la sesión vuelve a esa cara para que el chasis no
+        # diga una cosa y la pantalla otra.
+        sesion.asegurar_contexto_admin(peticion)
         return vista(peticion, *args, **kwargs)
 
     return envoltura

@@ -1,0 +1,94 @@
+{% extends "layouts/admin.html" %}
+{% load dinero %}
+
+{% block migaja %}Stands · Pagos por validar{% endblock %}
+
+{% comment %} ===========================================================
+   A5 · La cola de pagos por validar (CU-STD-018).
+
+   Transversal a propósito: cruza todas las reservas de la convocatoria,
+   porque quien coteja contra el banco lo hace por lotes. La otra puerta
+   a la misma acción es el detalle de una reserva (A4).
+
+   **Entrar aquí ya es filtrar**: la cola son los pendientes, y los chips
+   sirven para mirar lo ya resuelto. Por eso el primero no dice «Todas»
+   como en las otras dos listas.
+
+   El detalle de cada abono se abre en un modal que trae htmx, y el mismo
+   enlace lleva a la pantalla suelta cuando no hay JavaScript: es la
+   misma vista, así que las dos no pueden decir cifras distintas.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Pagos por validar — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Pagos por validar{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% include "stands/parciales/filtros.html" with nombre="pago" plural="pagos" url_limpia=url_limpia %}
+
+{% if movimientos %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Editorial</th>
+        <th class="num">Monto</th>
+        <th>Método</th>
+        <th>Reportado</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for abono in movimientos %}
+        <tr>
+          <td>
+            <strong>{{ abono.reserva.editorial.nombre }}</strong><br>
+            <span class="hint">{{ abono.reserva.registro.persona.correo }}</span>
+          </td>
+          <td class="num">{{ abono.monto|pesos }}</td>
+          <td>
+            {{ abono.get_metodo_display }}
+            {% if abono.origen == 'admin_manual' %}
+              <span class="hint">Lo registró la feria</span>
+            {% endif %}
+          </td>
+          <td>{{ abono.fecha_registro|date:"j M Y, H:i" }}</td>
+          <td>{% include "stands/parciales/badge_movimiento.html" with movimiento=abono %}</td>
+          <td>
+            {% comment %} `hx-get` para el modal y `href` para cuando no hay
+               JavaScript: htmx intercepta el clic y, sin él, el enlace
+               lleva a la misma vista en su versión de pantalla. {% endcomment %}
+            <a class="btn {% if abono.estado == 'pendiente_validacion' %}btn-primary{% else %}btn-ghost{% endif %} btn-row"
+               href="{% url 'stands:movimiento' movimiento_id=abono.pk %}"
+               hx-get="{% url 'stands:movimiento' movimiento_id=abono.pk %}"
+               hx-target="#modal"
+               hx-swap="innerHTML">
+              {% if abono.estado == 'pendiente_validacion' %}Revisar{% else %}Ver{% endif %}
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="note note-ok">
+    <div class="ico">✅</div>
+    <div>
+      {% if hay_filtros %}
+        <strong>Ningún pago cumple estos filtros.</strong>
+        Ajústalos o quítalos para ver la cola completa.
+      {% else %}
+        <strong>No hay pagos por validar.</strong>
+        Cuando una editorial reporte uno, aparecerá aquí.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% comment %} El hueco donde htmx deja el modal. Vacío no ocupa nada; el
+   parcial trae su propio velo. {% endcomment %}
+<div id="modal"></div>
+
+{% endblock %}

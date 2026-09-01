@@ -54,7 +54,13 @@ Selección de una reserva para ver su detalle (vista A4).
 
 ### E1. Reserva inexistente
 1. El enlace o ID de la reserva buscada es inválido o la reserva fue eliminada de la base de datos (poco probable dado que solo se marcan como canceladas).
-2. El sistema muestra un mensaje de error y redirige a la lista general de reservas (CU-STD-028).
+2. El sistema responde **404**, con la navegación del panel intacta para volver a la lista (CU-STD-028).
+
+> [!note] Un 404 y no un aviso con redirección
+> Redactado como redirección hasta el 2026-08-30, y el código nunca lo hizo: `views.detalle_reserva`
+> usa `get_object_or_404`, como todas las vistas de detalle del módulo. Es deliberado y se deja
+> así — un aviso del tipo «esa reserva no existe» sobre la lista confirma, a quien esté probando
+> identificadores, cuáles **sí** existen. Vale lo mismo para `CU-STD-031` E1.
 
 ## Postcondiciones
 

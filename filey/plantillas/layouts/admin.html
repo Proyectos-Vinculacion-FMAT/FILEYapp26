@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load chasis panel_lateral %}
+
+{% comment %} ===========================================================
+   Layout de **todas** las pantallas de administración.
+
+       {% extends "layouts/admin.html" %}
+       {% block encabezado_titulo %}Solicitudes de expositor{% endblock %}
+       {% block contenido %} … {% endblock %}
+
+   La diferencia con `layouts/panel.html` es la barra lateral, y por eso
+   son dos layouts y no un bloque opcional: una pantalla de
+   administración sin navegación es un callejón, y dejarlo a que cada
+   plantilla se acuerde de incluirla garantiza que alguna no lo haga.
+
+   Lo que sí comparten es el chasis —barra superior y pie—, que sigue
+   viniendo de `componentes/`. Aquí solo cambia lo de en medio.
+
+   `{% block migaja %}` es el rastro de la barra superior del contenido:
+   dice dónde está uno dentro del módulo, que es lo que la barra lateral
+   no puede decir cuando la pantalla cuelga de una sección (el detalle de
+   una solicitud sigue marcando "Solicitudes").
+   =========================================================== {% endcomment %}
+
+{% block cuerpo %}
+{% topbar %}
+
+{% comment %} `abierta: true` en un objeto literal, no en un componente con
+   nombre: así solo depende de que Alpine cargue. Sin JavaScript la barra se
+   queda **abierta**, que es el estado útil — el botón desaparece y no pasa
+   nada más. Es la misma decisión que en las filas de sellos, y por el mismo
+   motivo: la degradación tiene que dejar la pantalla usable, no vacía. {% endcomment %}
+<div class="admin-body" x-data="{ abierta: true }">
+  {% block barra_lateral %}{% barra_lateral %}{% endblock %}
+
+  <div class="admin-main">
+    {% block toolbar %}
+      <div class="admin-toolbar">
+        {% comment %} `x-cloak` lo esconde hasta que Alpine arranque: un botón
+           que no hace nada durante medio segundo se pulsa igual. {% endcomment %}
+        <button type="button" class="menu-btn" x-cloak
+                @click="abierta = !abierta"
+                :aria-expanded="abierta ? 'true' : 'false'"
+                aria-controls="barra-lateral"
+                aria-label="Mostrar u ocultar el menú">☰</button>
+        <span class="crumb">{% block migaja %}{% endblock %}</span>
+      </div>
+    {% endblock %}
+
+    <div class="admin-content {% block clases_pagina %}{% endblock %}">
+      {% block encabezado %}
+        <div class="page-head">
+          <h1>{% block encabezado_titulo %}{% endblock %}</h1>
+          <p>{% block encabezado_texto %}{% endblock %}</p>
+        </div>
+      {% endblock %}
+
+      {% block contenido %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+{% pie %}
+{% endblock %}

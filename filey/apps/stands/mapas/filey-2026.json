@@ -1,0 +1,1499 @@
+{
+ "origen": "Derivado de «Plano FILEY 2026 Salón Chichén Itzá.pdf» (docs/soporte/documentos proporcionados por FILEY/…). Ver scripts/derivar-mapa/README.md.",
+ "grid": {
+  "salon": "Salón Chichén Itzá",
+  "cols": 167,
+  "rows": 59,
+  "meters_per_cell": 1.0,
+  "cell_size": 32
+ },
+ "stands": [
+  {
+   "id": "1",
+   "label": "1",
+   "status": "disponible",
+   "col": 38,
+   "row": 51,
+   "w": 9,
+   "h": 4
+  },
+  {
+   "id": "1A",
+   "label": "1A",
+   "status": "disponible",
+   "col": 47,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "1B",
+   "label": "1B",
+   "status": "disponible",
+   "col": 47,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "2",
+   "label": "2",
+   "status": "disponible",
+   "col": 56,
+   "row": 51,
+   "w": 12,
+   "h": 4
+  },
+  {
+   "id": "2A",
+   "label": "2A",
+   "status": "disponible",
+   "col": 75,
+   "row": 53,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "3",
+   "label": "3",
+   "status": "disponible",
+   "col": 81,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "4",
+   "label": "4",
+   "status": "disponible",
+   "col": 75,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "5",
+   "label": "5",
+   "status": "disponible",
+   "col": 78,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "6",
+   "label": "6",
+   "status": "disponible",
+   "col": 81,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "7",
+   "label": "7",
+   "status": "disponible",
+   "col": 84,
+   "row": 51,
+   "w": 3,
+   "h": 4
+  },
+  {
+   "id": "8",
+   "label": "8",
+   "status": "disponible",
+   "col": 92,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "9",
+   "label": "9",
+   "status": "disponible",
+   "col": 95,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "10",
+   "label": "10",
+   "status": "disponible",
+   "col": 98,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "11",
+   "label": "11",
+   "status": "disponible",
+   "col": 101,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "12",
+   "label": "12",
+   "status": "disponible",
+   "col": 92,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "13",
+   "label": "13",
+   "status": "disponible",
+   "col": 95,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "14",
+   "label": "14",
+   "status": "disponible",
+   "col": 98,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "15",
+   "label": "15",
+   "status": "disponible",
+   "col": 101,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "16",
+   "label": "16",
+   "status": "disponible",
+   "col": 111,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "17",
+   "label": "17",
+   "status": "disponible",
+   "col": 114,
+   "row": 53,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "18",
+   "label": "18",
+   "status": "disponible",
+   "col": 117,
+   "row": 53,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "19",
+   "label": "19",
+   "status": "disponible",
+   "col": 111,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "20",
+   "label": "20",
+   "status": "disponible",
+   "col": 114,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "21",
+   "label": "21",
+   "status": "disponible",
+   "col": 117,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "22",
+   "label": "22",
+   "status": "disponible",
+   "col": 120,
+   "row": 51,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "23",
+   "label": "23",
+   "status": "disponible",
+   "col": 129,
+   "row": 51,
+   "w": 12,
+   "h": 4
+  },
+  {
+   "id": "24",
+   "label": "24",
+   "status": "disponible",
+   "col": 38,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "24A",
+   "label": "24A",
+   "status": "disponible",
+   "col": 41,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "24B",
+   "label": "24B",
+   "status": "disponible",
+   "col": 44,
+   "row": 45,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "25",
+   "label": "25",
+   "status": "disponible",
+   "col": 38,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "25A",
+   "label": "25A",
+   "status": "disponible",
+   "col": 41,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "25B",
+   "label": "25B",
+   "status": "disponible",
+   "col": 44,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "26",
+   "label": "26",
+   "status": "disponible",
+   "col": 47,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "27",
+   "label": "27",
+   "status": "disponible",
+   "col": 56,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "28",
+   "label": "28",
+   "status": "disponible",
+   "col": 59,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "29",
+   "label": "29",
+   "status": "disponible",
+   "col": 56,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "30",
+   "label": "30",
+   "status": "disponible",
+   "col": 59,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "31",
+   "label": "31",
+   "status": "disponible",
+   "col": 62,
+   "row": 43,
+   "w": 6,
+   "h": 4
+  },
+  {
+   "id": "32",
+   "label": "32",
+   "status": "disponible",
+   "col": 75,
+   "row": 45,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "33",
+   "label": "33",
+   "status": "disponible",
+   "col": 81,
+   "row": 45,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "34",
+   "label": "34",
+   "status": "disponible",
+   "col": 75,
+   "row": 43,
+   "w": 12,
+   "h": 2
+  },
+  {
+   "id": "35",
+   "label": "35",
+   "status": "disponible",
+   "col": 92,
+   "row": 45,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "36",
+   "label": "36",
+   "status": "disponible",
+   "col": 98,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "37",
+   "label": "37",
+   "status": "disponible",
+   "col": 101,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "38",
+   "label": "38",
+   "status": "disponible",
+   "col": 92,
+   "row": 43,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "39",
+   "label": "39",
+   "status": "disponible",
+   "col": 98,
+   "row": 43,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "40",
+   "label": "40",
+   "status": "disponible",
+   "col": 111,
+   "row": 45,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "41",
+   "label": "41",
+   "status": "disponible",
+   "col": 117,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "42",
+   "label": "42",
+   "status": "disponible",
+   "col": 120,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "43",
+   "label": "43",
+   "status": "disponible",
+   "col": 111,
+   "row": 43,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "44",
+   "label": "44",
+   "status": "disponible",
+   "col": 117,
+   "row": 43,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "45",
+   "label": "45",
+   "status": "disponible",
+   "col": 129,
+   "row": 45,
+   "w": 12,
+   "h": 2
+  },
+  {
+   "id": "46",
+   "label": "46",
+   "status": "disponible",
+   "col": 129,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "46A",
+   "label": "46A",
+   "status": "disponible",
+   "col": 132,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "47",
+   "label": "47",
+   "status": "disponible",
+   "col": 135,
+   "row": 43,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "48",
+   "label": "48",
+   "status": "disponible",
+   "col": 147,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "49",
+   "label": "49",
+   "status": "disponible",
+   "col": 150,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "50",
+   "label": "50",
+   "status": "disponible",
+   "col": 153,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "51",
+   "label": "51",
+   "status": "disponible",
+   "col": 147,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "52",
+   "label": "52",
+   "status": "disponible",
+   "col": 150,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "53",
+   "label": "53",
+   "status": "disponible",
+   "col": 153,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "54",
+   "label": "54",
+   "status": "disponible",
+   "col": 156,
+   "row": 43,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "54A",
+   "label": "54A",
+   "status": "disponible",
+   "col": 156,
+   "row": 45,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "55",
+   "label": "55",
+   "status": "disponible",
+   "col": 38,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "55A",
+   "label": "55A",
+   "status": "disponible",
+   "col": 41,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "56",
+   "label": "56",
+   "status": "disponible",
+   "col": 44,
+   "row": 38,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "57",
+   "label": "57",
+   "status": "disponible",
+   "col": 38,
+   "row": 36,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "58",
+   "label": "58",
+   "status": "disponible",
+   "col": 44,
+   "row": 36,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "59",
+   "label": "59",
+   "status": "disponible",
+   "col": 47,
+   "row": 36,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "60",
+   "label": "60",
+   "status": "disponible",
+   "col": 56,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "61",
+   "label": "61",
+   "status": "disponible",
+   "col": 59,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "62",
+   "label": "62",
+   "status": "disponible",
+   "rects": [
+    {
+     "col": 56,
+     "row": 36,
+     "w": 12,
+     "h": 2
+    },
+    {
+     "col": 62,
+     "row": 38,
+     "w": 6,
+     "h": 2
+    }
+   ]
+  },
+  {
+   "id": "63",
+   "label": "63",
+   "status": "disponible",
+   "col": 38,
+   "row": 28,
+   "w": 9,
+   "h": 4
+  },
+  {
+   "id": "64",
+   "label": "64",
+   "status": "disponible",
+   "col": 47,
+   "row": 30,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "65",
+   "label": "65",
+   "status": "disponible",
+   "col": 47,
+   "row": 28,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "66",
+   "label": "66",
+   "status": "disponible",
+   "col": 56,
+   "row": 28,
+   "w": 3,
+   "h": 4
+  },
+  {
+   "id": "67",
+   "label": "67",
+   "status": "disponible",
+   "col": 59,
+   "row": 28,
+   "w": 9,
+   "h": 4
+  },
+  {
+   "id": "68",
+   "label": "68",
+   "status": "disponible",
+   "col": 75,
+   "row": 29,
+   "w": 12,
+   "h": 10,
+   "ocupante_2026": "Grupo Planeta"
+  },
+  {
+   "id": "69",
+   "label": "69",
+   "status": "disponible",
+   "col": 92,
+   "row": 29,
+   "w": 12,
+   "h": 10,
+   "ocupante_2026": "Universidad Autónoma de Yucatán"
+  },
+  {
+   "id": "70",
+   "label": "70",
+   "status": "disponible",
+   "col": 111,
+   "row": 29,
+   "w": 12,
+   "h": 10,
+   "ocupante_2026": "Penguin Random House"
+  },
+  {
+   "id": "71",
+   "label": "71",
+   "status": "disponible",
+   "col": 129,
+   "row": 29,
+   "w": 6,
+   "h": 10,
+   "ocupante_2026": "Delfín Editorial"
+  },
+  {
+   "id": "72",
+   "label": "72",
+   "status": "disponible",
+   "col": 135,
+   "row": 29,
+   "w": 6,
+   "h": 4
+  },
+  {
+   "id": "73",
+   "label": "73",
+   "status": "disponible",
+   "col": 135,
+   "row": 33,
+   "w": 6,
+   "h": 6
+  },
+  {
+   "id": "74",
+   "label": "74",
+   "status": "disponible",
+   "col": 147,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "75",
+   "label": "75",
+   "status": "disponible",
+   "col": 150,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "76",
+   "label": "76",
+   "status": "disponible",
+   "col": 153,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "77",
+   "label": "77",
+   "status": "disponible",
+   "col": 147,
+   "row": 36,
+   "w": 9,
+   "h": 2
+  },
+  {
+   "id": "78",
+   "label": "78",
+   "status": "disponible",
+   "col": 156,
+   "row": 36,
+   "w": 3,
+   "h": 4
+  },
+  {
+   "id": "79",
+   "label": "79",
+   "status": "disponible",
+   "col": 147,
+   "row": 30,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "80",
+   "label": "80",
+   "status": "disponible",
+   "col": 150,
+   "row": 30,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "81",
+   "label": "81",
+   "status": "disponible",
+   "col": 153,
+   "row": 30,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "82",
+   "label": "82",
+   "status": "disponible",
+   "col": 156,
+   "row": 30,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "83",
+   "label": "83",
+   "status": "disponible",
+   "col": 147,
+   "row": 28,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "84",
+   "label": "84",
+   "status": "disponible",
+   "col": 153,
+   "row": 28,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "85",
+   "label": "85",
+   "status": "disponible",
+   "col": 38,
+   "row": 22,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "86",
+   "label": "86",
+   "status": "disponible",
+   "col": 44,
+   "row": 22,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "87",
+   "label": "87",
+   "status": "disponible",
+   "col": 47,
+   "row": 22,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "88",
+   "label": "88",
+   "status": "disponible",
+   "col": 38,
+   "row": 20,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "89",
+   "label": "89",
+   "status": "disponible",
+   "col": 44,
+   "row": 20,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "90",
+   "label": "90",
+   "status": "disponible",
+   "col": 47,
+   "row": 20,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "91",
+   "label": "91",
+   "status": "disponible",
+   "col": 56,
+   "row": 22,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "92",
+   "label": "92",
+   "status": "disponible",
+   "col": 56,
+   "row": 20,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "93",
+   "label": "93",
+   "status": "disponible",
+   "col": 59,
+   "row": 20,
+   "w": 9,
+   "h": 4,
+   "ocupante_2026": "Librerías Gandhi"
+  },
+  {
+   "id": "94",
+   "label": "94",
+   "status": "disponible",
+   "col": 74,
+   "row": 22,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "95",
+   "label": "95",
+   "status": "disponible",
+   "col": 74,
+   "row": 20,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "96",
+   "label": "96",
+   "status": "disponible",
+   "col": 80,
+   "row": 20,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "97",
+   "label": "97",
+   "status": "disponible",
+   "rects": [
+    {
+     "col": 83,
+     "row": 20,
+     "w": 3,
+     "h": 2
+    },
+    {
+     "col": 80,
+     "row": 22,
+     "w": 6,
+     "h": 2
+    }
+   ]
+  },
+  {
+   "id": "98",
+   "label": "98",
+   "status": "disponible",
+   "col": 92,
+   "row": 22,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "99",
+   "label": "99",
+   "status": "disponible",
+   "col": 98,
+   "row": 22,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "100",
+   "label": "100",
+   "status": "disponible",
+   "col": 92,
+   "row": 20,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "101",
+   "label": "101",
+   "status": "disponible",
+   "col": 98,
+   "row": 20,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "102",
+   "label": "102",
+   "status": "disponible",
+   "col": 101,
+   "row": 20,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "103",
+   "label": "103",
+   "status": "disponible",
+   "col": 111,
+   "row": 22,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "104",
+   "label": "104",
+   "status": "disponible",
+   "col": 114,
+   "row": 22,
+   "w": 6,
+   "h": 2
+  },
+  {
+   "id": "105",
+   "label": "105",
+   "status": "disponible",
+   "col": 120,
+   "row": 22,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "106",
+   "label": "106",
+   "status": "disponible",
+   "col": 111,
+   "row": 20,
+   "w": 12,
+   "h": 2
+  },
+  {
+   "id": "107",
+   "label": "107",
+   "status": "disponible",
+   "col": 129,
+   "row": 20,
+   "w": 12,
+   "h": 4
+  },
+  {
+   "id": "108",
+   "label": "108",
+   "status": "disponible",
+   "col": 147,
+   "row": 22,
+   "w": 9,
+   "h": 2
+  },
+  {
+   "id": "109",
+   "label": "109",
+   "status": "disponible",
+   "rects": [
+    {
+     "col": 147,
+     "row": 20,
+     "w": 12,
+     "h": 2
+    },
+    {
+     "col": 156,
+     "row": 22,
+     "w": 3,
+     "h": 2
+    }
+   ]
+  },
+  {
+   "id": "110",
+   "label": "110",
+   "status": "disponible",
+   "col": 165,
+   "row": 25,
+   "w": 2,
+   "h": 6
+  },
+  {
+   "id": "111",
+   "label": "111",
+   "status": "disponible",
+   "col": 165,
+   "row": 31,
+   "w": 2,
+   "h": 6
+  },
+  {
+   "id": "112",
+   "label": "112",
+   "status": "disponible",
+   "col": 165,
+   "row": 37,
+   "w": 2,
+   "h": 12
+  },
+  {
+   "id": "113",
+   "label": "113",
+   "status": "disponible",
+   "col": 20,
+   "row": 36,
+   "w": 6,
+   "h": 4
+  },
+  {
+   "id": "114",
+   "label": "114",
+   "status": "disponible",
+   "col": 26,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "115",
+   "label": "115",
+   "status": "disponible",
+   "col": 29,
+   "row": 38,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "116",
+   "label": "116",
+   "status": "disponible",
+   "col": 26,
+   "row": 36,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "117",
+   "label": "117",
+   "status": "disponible",
+   "col": 29,
+   "row": 36,
+   "w": 3,
+   "h": 2
+  },
+  {
+   "id": "118",
+   "label": "118",
+   "status": "disponible",
+   "col": 20,
+   "row": 28,
+   "w": 5,
+   "h": 4
+  },
+  {
+   "id": "119",
+   "label": "119",
+   "status": "disponible",
+   "col": 25,
+   "row": 28,
+   "w": 4,
+   "h": 4
+  },
+  {
+   "id": "120",
+   "label": "120",
+   "status": "disponible",
+   "col": 29,
+   "row": 28,
+   "w": 3,
+   "h": 4
+  },
+  {
+   "id": "121",
+   "label": "121",
+   "status": "disponible",
+   "col": 11,
+   "row": 34,
+   "w": 4,
+   "h": 6
+  },
+  {
+   "id": "122",
+   "label": "122",
+   "status": "disponible",
+   "col": 11,
+   "row": 28,
+   "w": 4,
+   "h": 6
+  },
+  {
+   "id": "123",
+   "label": "123",
+   "status": "disponible",
+   "col": 11,
+   "row": 22,
+   "w": 4,
+   "h": 6
+  },
+  {
+   "id": "124",
+   "label": "124",
+   "status": "disponible",
+   "col": 38,
+   "row": 13,
+   "w": 6,
+   "h": 3
+  },
+  {
+   "id": "125",
+   "label": "125",
+   "status": "disponible",
+   "col": 44,
+   "row": 10,
+   "w": 12,
+   "h": 6,
+   "ocupante_2026": "Fondo de Cultura Económica"
+  },
+  {
+   "id": "126",
+   "label": "126",
+   "status": "disponible",
+   "col": 56,
+   "row": 10,
+   "w": 6,
+   "h": 6,
+   "ocupante_2026": "SEDECULTA"
+  },
+  {
+   "id": "127",
+   "label": "127",
+   "status": "disponible",
+   "col": 62,
+   "row": 10,
+   "w": 8,
+   "h": 6,
+   "ocupante_2026": "La Jornada Maya"
+  },
+  {
+   "id": "128",
+   "label": "128",
+   "status": "disponible",
+   "col": 76,
+   "row": 11,
+   "w": 10,
+   "h": 6,
+   "ocupante_2026": "Ayuntamiento de Mérida"
+  },
+  {
+   "id": "129",
+   "label": "129",
+   "status": "disponible",
+   "col": 87,
+   "row": 11,
+   "w": 10,
+   "h": 6,
+   "ocupante_2026": "Sanborns"
+  },
+  {
+   "id": "130",
+   "label": "130",
+   "status": "disponible",
+   "col": 102,
+   "row": 11,
+   "w": 8,
+   "h": 6,
+   "ocupante_2026": "Comunicación Institucional"
+  },
+  {
+   "id": "131",
+   "label": "131",
+   "status": "disponible",
+   "col": 110,
+   "row": 11,
+   "w": 15,
+   "h": 6,
+   "ocupante_2026": "SEGEY"
+  },
+  {
+   "id": "132",
+   "label": "132",
+   "status": "disponible",
+   "col": 127,
+   "row": 0,
+   "w": 7,
+   "h": 4
+  },
+  {
+   "id": "133",
+   "label": "133",
+   "status": "disponible",
+   "col": 134,
+   "row": 0,
+   "w": 7,
+   "h": 4,
+   "ocupante_2026": "Novedades"
+  },
+  {
+   "id": "134",
+   "label": "134",
+   "status": "disponible",
+   "col": 141,
+   "row": 0,
+   "w": 5,
+   "h": 4
+  },
+  {
+   "id": "135",
+   "label": "135",
+   "status": "disponible",
+   "col": 147,
+   "row": 0,
+   "w": 5,
+   "h": 4
+  },
+  {
+   "id": "136",
+   "label": "136",
+   "status": "disponible",
+   "col": 152,
+   "row": 0,
+   "w": 12,
+   "h": 4,
+   "ocupante_2026": "Océano"
+  },
+  {
+   "id": "137",
+   "label": "137",
+   "status": "disponible",
+   "col": 129,
+   "row": 11,
+   "w": 9,
+   "h": 3,
+   "ocupante_2026": "VR Editoras"
+  },
+  {
+   "id": "138",
+   "label": "138",
+   "status": "disponible",
+   "col": 129,
+   "row": 8,
+   "w": 3,
+   "h": 3
+  },
+  {
+   "id": "139",
+   "label": "139",
+   "status": "disponible",
+   "col": 132,
+   "row": 8,
+   "w": 3,
+   "h": 3
+  },
+  {
+   "id": "140",
+   "label": "140",
+   "status": "disponible",
+   "col": 135,
+   "row": 8,
+   "w": 3,
+   "h": 3
+  },
+  {
+   "id": "141",
+   "label": "141",
+   "status": "disponible",
+   "col": 143,
+   "row": 8,
+   "w": 9,
+   "h": 6,
+   "ocupante_2026": "UABC"
+  }
+ ],
+ "decorations": [
+  {
+   "type": "rect",
+   "col": 0,
+   "row": 4,
+   "w": 3,
+   "h": 2,
+   "label": "Seguridad"
+  },
+  {
+   "type": "rect",
+   "col": 3,
+   "row": 4,
+   "w": 3,
+   "h": 2,
+   "label": "Limpieza"
+  },
+  {
+   "type": "rect",
+   "col": 6,
+   "row": 4,
+   "w": 20,
+   "h": 18,
+   "label": "Bodega de expositores"
+  },
+  {
+   "type": "rect",
+   "col": 20,
+   "row": 10,
+   "w": 12,
+   "h": 12,
+   "label": "Sala Hernán Lara Zavala"
+  },
+  {
+   "type": "rect",
+   "col": 38,
+   "row": 10,
+   "w": 6,
+   "h": 3,
+   "label": "Botiquín"
+  },
+  {
+   "type": "rect",
+   "col": 156,
+   "row": 11,
+   "w": 5,
+   "h": 1,
+   "label": "Módulo de información"
+  },
+  {
+   "type": "rect",
+   "col": 7,
+   "row": 22,
+   "w": 4,
+   "h": 18,
+   "label": "Oficina FILEY"
+  },
+  {
+   "type": "rect",
+   "col": 7,
+   "row": 42,
+   "w": 8,
+   "h": 15,
+   "label": "Prensa FILEY-UADY"
+  },
+  {
+   "type": "rect",
+   "col": 20,
+   "row": 45,
+   "w": 12,
+   "h": 12,
+   "label": "Sala Effy Luz Vázquez"
+  },
+  {
+   "type": "rect",
+   "col": 153,
+   "row": 51,
+   "w": 12,
+   "h": 8,
+   "label": "Sala José Emilio Pacheco"
+  }
+ ]
+}
