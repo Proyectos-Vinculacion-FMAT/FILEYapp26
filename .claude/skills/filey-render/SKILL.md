@@ -9,7 +9,8 @@ Este skill responde **¿cómo llega al navegador?**. Los otros dos:
 
 | Necesitas | Skill |
 | --- | --- |
-| Elegir color, radio, tono, cuántos pasos lleva el flujo | `filey-identidad` |
+| Elegir color, radio, sombra | `filey-identidad` |
+| Cuántos pasos, campos u opciones; qué se revela y cuándo; cómo se redacta | `filey-ux` |
 | Saber si una clase existe y en qué capa vive el CSS | `filey-ui-componentes` |
 
 ## 0. Autoridad: qué manda sobre este skill
@@ -24,7 +25,7 @@ archivo está desactualizado:
    de dependencias entre apps y el estado actual.
 3. **`README.md` de la raíz** — el flujo de CI/CD: qué rama recibe qué, cuándo se abre un PR.
    No es arquitectura, pero condiciona cuándo este skill considera terminado un trabajo — ver
-   §9.
+   §10.
 4. Este skill, que resume lo anterior y añade el puente con el prototipo.
 
 ## 1. ¿Qué renderizador aplica?
@@ -214,7 +215,77 @@ nombre distinto para el mismo valor: eso es lo que vuelve irreconciliables las d
 6. La regla de negocio va a `services/`, no a la vista.
 7. La pantalla del prototipo se queda como estaba hasta que el dominio entero esté portado.
 
-## 8. Checklist
+### Lo que se separa en silencio entre los dos
+
+§6 cubre la deriva del **CSS**. Esta es la del **comportamiento**, que no la caza ningún script
+y salió entera de portar `CU-EVT-002`: cada punto de abajo divergió de verdad y hubo que
+volver.
+
+| Qué | Por qué se separa |
+| --- | --- |
+| **Orden de los campos** | En el prototipo lo fija el orden del generador; en Django, la plantilla. Nada los ata |
+| **Alto de los `<textarea>`** | Django pinta `rows="10"` por omisión y el navegador 2. Los dos son un accidente, no una decisión |
+| **Cuántas secciones** | Agrupar por tabla (Django) no es lo mismo que agrupar por lo que la persona percibe como una cosa (prototipo) |
+| **Radio contra casilla** | Un `BooleanField` de Django sale casilla; un sí/no explícito sale radio. Cambia si hay asterisco |
+| **Valores por omisión** | `checked` en el prototipo y `default=` en el modelo se escriben en sitios distintos |
+| **Texto de ejemplo** | Es del prototipo **y solo del prototipo**: acelera la demo y no puede llegar al programa |
+| **Rótulos** | Django los compone del nombre de la columna y salen sin acento («Titulo actividad») |
+
+Al portar, la pregunta no es «¿se ve parecido?» sino **«¿qué de esto lo decidió alguien y qué lo
+decidió el valor por omisión de la herramienta?»**. Lo segundo es lo que diverge.
+
+Y al revés: si el prototipo es la especificación visual, un arreglo que se encuentre al portar
+—un selector de más, un desplazamiento que tapa el encabezado— **vuelve al prototipo en el mismo
+cambio**. Si no, la próxima vez que alguien lo mire, el defecto sigue ahí y parece que Django
+es el que está mal.
+
+## 8. Una prueba corre en Windows y en Linux, o no sirve
+
+Se desarrolla en Windows y se despliega en Linux (Render). Una prueba que solo pasa en uno de
+los dos es peor que no tenerla: da luz verde en un lado y ruido en el otro, y quien la escribió
+no es quien la ve fallar.
+
+**Nunca afirmes sobre una ruta compuesta.** `os.path.join`, `os.path.split`, `str(tmp_path)` y
+`__file__` devuelven el separador del sistema: contrabarra en Windows, diagonal en Linux. Si el
+valor bajo prueba pasó por alguno de ellos, la cadena literal no es comparable.
+
+| En vez de | Escribe |
+| --- | --- |
+| `assert ruta.startswith("css/x")` | `assert PurePath(ruta).parts == ("css", "x")` |
+| Comparar la salida cruda de una API | Normaliza como lo hace la propia librería |
+| `open("/tmp/x")` | `tmp_path / "x"` (la fixture de pytest) |
+| Comparar una salida multilínea como una sola cadena | Compara con `salida.splitlines()` |
+
+> [!note] Normaliza con la función de la librería, no con un `replace` a mano
+> `comun/pruebas/test_estaticos.py::test_lo_demas_si_se_versiona` fue el caso real.
+> `HashedFilesMixin.hashed_name` arma el nombre con `os.path.join`, así que en Windows devuelve
+> `css\prueba.<hash>.css`. La prueba afirmaba `startswith("css/prueba.")` y fallaba **solo en
+> Windows**.
+>
+> El arreglo no fue un `.replace()` en la prueba, sino llamar a `almacen.clean_name(...)` — la
+> misma función con la que Django envuelve a todos los consumidores de `hashed_name`. Así la
+> prueba ejercita el camino real: `hashed_name` es el **único** punto que Django deja sin
+> normalizar, y afirmar ahí era afirmar en la capa equivocada.
+>
+> Y antes de declarar frágil una prueba, **recorre la cadena entera**. `FileField` también
+> arma su ruta con `os.path.normpath`, pero `FileSystemStorage._save` la normaliza antes de
+> devolverla, así que `archivo.name` trae diagonales en las dos plataformas y afirmar sobre él
+> es seguro. Medir en un paso intermedio es el mismo error, al revés.
+>
+> No hubo que tocar código de producción, y ese es el olor a buscar: si para que una prueba
+> pase en las dos plataformas hay que cambiar el programa, lo más probable es que la prueba
+> esté mirando el nivel que no toca.
+
+Tres cosas más que separan los dos entornos:
+
+- **Linux distingue mayúsculas.** `{% extends "Layouts/panel.html" %}` funciona en Windows y da
+  500 en Render. La prueba que la cubra tiene que existir; el sistema de archivos no te avisa.
+- **Nada de rutas absolutas escritas a mano** (`C:\...` ni `/tmp/...`): `tmp_path`, `tmpdir` o
+  `settings.MEDIA_ROOT` apuntado a una temporal.
+- **Los finales de línea.** Si comparas contra un archivo del repo, léelo en texto y compara por
+  líneas — `.gitattributes` fija LF en los `.sh`, pero no en todo.
+
+## 9. Checklist
 
 ```bash
 cd filey && python manage.py check && python manage.py runserver
@@ -231,10 +302,11 @@ cd filey && pytest                 # las pruebas viven en apps/<dom>/pruebas/
 - [ ] Ningún `<script src="https://…">`
 - [ ] Los tokens usados existen con el mismo nombre en el prototipo
 - [ ] Comentarios multilínea con `{% comment %}`
+- [ ] Ninguna prueba afirma sobre una ruta compuesta ni sobre un absoluto escrito a mano (§8)
 - [ ] El CU completo está cubierto —flujo principal y los alternos/excepción documentados—,
-      no solo la pantalla feliz (ver §9 antes de abrir el PR)
+      no solo la pantalla feliz (ver §10 antes de abrir el PR)
 
-## 9. Cuándo el trabajo está listo para PR
+## 10. Cuándo el trabajo está listo para PR
 
 El flujo de CI/CD vive en [`README.md`](../../../README.md) de la raíz del repo: rama personal
 → PR a `develop` (pruebas de integración) → PR a `QA` (pruebas de aceptación) → PR a `main`
@@ -258,4 +330,4 @@ tengas presente **antes de abrir el primer PR**, no después:
 - **Si `develop` o `QA` rechazan la feature, la corrección vuelve a tu rama personal** y sube
   por el mismo camino (PR a `develop`, luego a `QA` de nuevo) — nunca se parchea directo en
   `develop`/`QA`/`main`.
-- Antes de abrir el PR, corre el checklist de §8 completo, no solo la parte que tocaste.
+- Antes de abrir el PR, corre el checklist de §9 completo, no solo la parte que tocaste.
