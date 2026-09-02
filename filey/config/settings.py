@@ -88,8 +88,9 @@ TENANT_APPS = [
     # `apps.convocatorias`, que es la mitad por feria de `FER`. La
     # dependencia va en una sola dirección (`ADR-0006`).
     "apps.stands",
-    # Aquí se añaden EVT, VIS, PRG y SAL conforme se construyan: todos
-    # son contenido de una feria.
+    "apps.eventos",
+    # Aquí se añaden VIS, PRG y SAL conforme se construyan: todos son
+    # contenido de una feria.
 ]
 
 INSTALLED_APPS = SHARED_APPS + [a for a in TENANT_APPS if a not in SHARED_APPS]

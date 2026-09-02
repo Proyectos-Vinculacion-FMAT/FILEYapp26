@@ -566,3 +566,319 @@ document.addEventListener('alpine:init', () => {
     });
   });
 })();
+
+
+/**
+ * Pone o quita el asterisco de obligatorio de un campo, en vivo.
+ *
+ * Suelta y no dentro de un IIFE porque la usan dos reglas distintas —la
+ * semblanza que se vuelve obligatoria al escribir su nombre, y el
+ * presentador que hace falta cuando nadie de la publicación asiste—, y
+ * duplicarla dejaría dos formas de pintar lo mismo.
+ *
+ * Cambia también el atributo `required`, que es lo que ve el navegador,
+ * no solo el adorno de la etiqueta.
+ */
+function marcarObligatorio(campo, obligatorio) {
+  if (!campo) return;
+  campo.required = obligatorio;
+  var contenedor = campo.closest('.field');
+  var marca = contenedor && contenedor.querySelector('label .req, label .opt');
+  if (!marca) return;
+  marca.className = obligatorio ? 'req' : 'opt';
+  marca.textContent = obligatorio ? '*' : '(opcional)';
+}
+
+/* ══ EVT · la captura en cascada de personas ═══════════════════
+
+   La pantalla de propuesta trae **todas** las filas que admite el tipo,
+   porque sin JavaScript no habría forma de añadir una y esconderlas del
+   servidor dejaría campos inalcanzables. Esto es la mejora encima:
+
+   · se ve solo la primera fila, y las demás aparecen de una en una;
+   · la semblanza no se abre hasta que su nombre tiene algo escrito;
+   · no se puede agregar a la siguiente hasta completar la anterior.
+
+   Cada bloqueo **se ve y además se explica**: un control gris sin motivo
+   se lee como una avería, no como un paso pendiente. Y no se marca con
+   el cursor, que no se ve hasta que alguien ya intentó escribir.
+
+   Nada de esto valida: quien impide que se guarde media persona o un
+   hueco entre la 1 y la 3 es `validar_personas`, en el servidor. Aquí
+   solo se evita llegar hasta el envío para enterarse.
+
+   Se re-aplica tras cada swap de htmx porque elegir otro tipo de
+   actividad reemplaza la sección entera.
+   ═════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  function conTexto(campo) {
+    return campo && campo.value.trim() !== '';
+  }
+
+  function filaCompleta(fila) {
+    var nombre = fila.querySelector('input[type="text"]');
+    var bloque = fila.querySelector('[data-semblanza]');
+    var area = bloque && bloque.querySelector('textarea');
+    return conTexto(nombre) && (!area || conTexto(area));
+  }
+
+  /* Una fila se enseña si tiene algo escrito, si trae un error que
+     señalar, o si ya se reveló a mano. La primera, siempre. */
+  function debeVerse(fila) {
+    return (
+      fila.dataset.indice === '1' ||
+      fila.dataset.revelada === '1' ||
+      fila.querySelector('.msg-error') !== null ||
+      conTexto(fila.querySelector('input[type="text"]')) ||
+      conTexto(fila.querySelector('textarea'))
+    );
+  }
+
+  function refrescar(caja) {
+    var filas = Array.prototype.slice.call(caja.querySelectorAll('[data-persona]'));
+    var visibles = [];
+
+    filas.forEach(function (fila) {
+      var visible = debeVerse(fila);
+      fila.hidden = !visible;
+      if (visible) visibles.push(fila);
+
+      var nombre = fila.querySelector('input[type="text"]');
+      var bloque = fila.querySelector('[data-semblanza]');
+      if (!bloque) return;
+      var area = bloque.querySelector('textarea');
+      var contador = bloque.querySelector('.evt-contador');
+      var aviso = bloque.querySelector('[data-bloqueo]');
+      var hayNombre = conTexto(nombre);
+
+      /* No se borra lo ya escrito al vaciar el nombre: se apaga y se
+         conserva. */
+      area.disabled = !hayNombre;
+      if (aviso) aviso.hidden = hayNombre;
+      /* Y en cuanto hay nombre, su semblanza deja de ser opcional: media
+         persona no se puede mandar a un comité. Es la misma regla que
+         `validar_personas` hace cumplir en el servidor; esto solo la
+         enseña antes de pulsar enviar. */
+      marcarObligatorio(area, hayNombre);
+      if (contador) {
+        contador.hidden = !hayNombre;
+        contador.querySelector('[data-cuenta]').textContent = area.value.length;
+        contador.classList.toggle('is-tope', area.value.length >= area.maxLength);
+      }
+    });
+
+    visibles.forEach(function (fila, i) {
+      var quitar = fila.querySelector('[data-quitar]');
+      // Solo se puede quitar la última, y solo si no es la única.
+      if (quitar) quitar.hidden = !(i === visibles.length - 1 && i > 0);
+    });
+
+    var boton = caja.querySelector('[data-agregar]');
+    var aviso = caja.querySelector('[data-bloqueo-agregar]');
+    if (!boton) return;
+
+    var lleno = visibles.length >= filas.length;
+    var completas = visibles.every(filaCompleta);
+    boton.hidden = lleno;
+    boton.disabled = !completas;
+    if (aviso) {
+      aviso.hidden = lleno || completas;
+      aviso.textContent =
+        'Completa el nombre y la semblanza para agregar ' +
+        (caja.dataset.singular || 'la siguiente') + ' más.';
+    }
+  }
+
+  function refrescarTodo(raiz) {
+    (raiz || document)
+      .querySelectorAll('[data-personas]')
+      .forEach(refrescar);
+  }
+
+  document.addEventListener('click', function (evento) {
+    var agregar = evento.target.closest('[data-agregar]');
+    if (agregar) {
+      var caja = agregar.closest('[data-personas]');
+      var siguiente = Array.prototype.find.call(
+        caja.querySelectorAll('[data-persona]'),
+        function (fila) { return fila.hidden; }
+      );
+      if (siguiente) siguiente.dataset.revelada = '1';
+      refrescar(caja);
+      return;
+    }
+
+    var quitar = evento.target.closest('[data-quitar]');
+    if (quitar) {
+      var fila = quitar.closest('[data-persona]');
+      // Se vacía además de esconderse: una fila oculta con texto dentro
+      // seguiría viajando en el POST.
+      fila.querySelectorAll('input[type="text"], textarea').forEach(function (c) {
+        c.value = '';
+      });
+      delete fila.dataset.revelada;
+      refrescar(fila.closest('[data-personas]'));
+    }
+  });
+
+  document.addEventListener('input', function (evento) {
+    var caja = evento.target.closest('[data-personas]');
+    if (caja) refrescar(caja);
+  });
+
+  document.addEventListener('DOMContentLoaded', function () { refrescarTodo(); });
+  document.body.addEventListener('htmx:afterSwap', function (evento) {
+    refrescarTodo(evento.target);
+  });
+})();
+
+
+/* ══ EVT · el adjunto cargado se ve ════════════════════════════
+
+   El control nativo de archivo no dice qué se eligió, y en un formulario
+   con dos adjuntos eso deja a cualquiera sin saber si le faltó uno. Al
+   elegir, el bloque se queda en verde con el nombre del archivo — y se
+   queda: es la única confirmación que hay hasta que se envía.
+   ═════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  document.addEventListener('change', function (evento) {
+    var campo = evento.target;
+    if (campo.type !== 'file') return;
+    var caja = campo.closest('[data-adjunto]');
+    if (!caja) return;
+
+    var rotulo = caja.querySelector('[data-adjunto-nombre]');
+    var archivo = campo.files && campo.files[0];
+    caja.classList.toggle('is-cargado', !!archivo);
+    if (rotulo) rotulo.textContent = archivo ? archivo.name : 'Adjuntar archivo';
+  });
+})();
+
+
+/* ══ EVT · cuál tipo de actividad está elegido ═════════════════
+
+   Dos cosas que sin JavaScript resuelve la recarga de la página, y que
+   con htmx hay que rehacer aquí porque el swap solo cambia la sección 3:
+
+   · **Cuál tipo está elegido.** Los ocho botones viven en la sección 2,
+     que no se reemplaza; sin esto se quedarían con el resaltado del tipo
+     anterior y nadie sabría qué eligió.
+   · **Bajar a lo que acaba de aparecer.** La sección 3 sale debajo del
+     pliegue: si la vista no se mueve, elegir un tipo parece no hacer
+     nada.
+   ═════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  document.addEventListener('click', function (evento) {
+    var boton = evento.target.closest('[data-tipo-opt]');
+    if (!boton) return;
+    boton.parentNode.querySelectorAll('[data-tipo-opt]').forEach(function (otro) {
+      otro.classList.toggle('is-active', otro === boton);
+    });
+  });
+
+  document.body.addEventListener('htmx:afterSwap', function (evento) {
+    var seccion = evento.target;
+    if (!seccion || seccion.id !== 'campos-tipo' || seccion.hidden) return;
+    seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+
+
+/* ══ EVT · quién sostiene una presentación ═════════════════════
+
+   En libro y revista, la actividad la sostiene un autor —o editor— que
+   asista, **o** un presentador. Basta con uno de los dos. Mientras nadie
+   de la publicación esté marcado como que asiste, el primer presentador
+   pasa a ser obligatorio; en cuanto alguien se marca, deja de serlo.
+
+   Esto **no valida**: quien lo hace cumplir es `exigir_presentador`, en
+   el servidor. Aquí solo se adelanta la respuesta, para no descubrirlo
+   al pulsar enviar con treinta campos llenos detrás.
+
+   > [!warning] La regla queda escrita en dos sitios
+   > Aquí y en `formularios.py`. Se aceptó a sabiendas: la alternativa
+   > —pedirle al servidor que repinte la sección con cada clic— vaciaría
+   > los `<input type="file">`, porque ningún navegador deja repoblarlos,
+   > y quien ya adjuntó la portada la perdería al desmarcar un autor.
+   > Si la regla cambia, hay que tocar los dos.
+   ═════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  function conTexto(campo) {
+    return campo && campo.value.trim() !== '';
+  }
+
+  /* Las listas que llevan casilla de participación son las de la
+     publicación —autores, editores—; la que no la lleva, en esos tipos,
+     es la de presentadores. */
+  function listasDe(seccion) {
+    var todas = Array.prototype.slice.call(
+      seccion.querySelectorAll('[data-personas]')
+    );
+    return {
+      publicacion: todas.filter(function (caja) {
+        return caja.querySelector('input[name$="_participa"]');
+      }),
+      presentadores: todas.filter(function (caja) {
+        return !caja.querySelector('input[name$="_participa"]');
+      })[0],
+    };
+  }
+
+  function alguienAsiste(cajas) {
+    return cajas.some(function (caja) {
+      return Array.prototype.some.call(
+        caja.querySelectorAll('[data-persona]'),
+        function (fila) {
+          var casilla = fila.querySelector('input[name$="_participa"]');
+          return (
+            casilla &&
+            casilla.checked &&
+            conTexto(fila.querySelector('input[type="text"]'))
+          );
+        }
+      );
+    });
+  }
+
+  function refrescar(seccion) {
+    var listas = listasDe(seccion);
+    if (!listas.publicacion.length || !listas.presentadores) return;
+
+    var hacenFalta = !alguienAsiste(listas.publicacion);
+    var primera = listas.presentadores.querySelector('[data-persona]');
+    if (!primera) return;
+
+    marcarObligatorio(primera.querySelector('input[type="text"]'), hacenFalta);
+    marcarObligatorio(primera.querySelector('textarea'), hacenFalta);
+
+    var aviso = listas.presentadores.querySelector('[data-aviso-personas]');
+    if (aviso) {
+      aviso.hidden = !hacenFalta;
+      aviso.textContent =
+        'Nadie de la publicación está marcado como que asiste, así que hace ' +
+        'falta al menos un presentador: la actividad no puede quedarse sin ' +
+        'nadie delante.';
+    }
+  }
+
+  function refrescarTodo() {
+    var seccion = document.getElementById('campos-tipo');
+    if (seccion) refrescar(seccion);
+  }
+
+  ['change', 'input'].forEach(function (evento) {
+    document.addEventListener(evento, function (e) {
+      if (e.target.closest('#campos-tipo')) refrescarTodo();
+    });
+  });
+  document.addEventListener('DOMContentLoaded', refrescarTodo);
+  document.body.addEventListener('htmx:afterSwap', refrescarTodo);
+})();

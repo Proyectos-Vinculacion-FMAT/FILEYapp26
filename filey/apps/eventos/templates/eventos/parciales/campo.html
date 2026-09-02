@@ -1,0 +1,21 @@
+{% comment %} ===========================================================
+   Un campo de texto con su rótulo, su tope y sus errores.
+
+   Contexto: `campo`, un `BoundField`.
+
+   Existe porque el mismo bloque se repetía siete veces en la pantalla de
+   captura y la diferencia entre ellas era solo cuál campo. Lo que decide
+   si lleva asterisco o cuántos caracteres admite es el propio campo, no
+   quien lo incluye.
+   =========================================================== {% endcomment %}
+<div class="field">
+  <label for="{{ campo.id_for_label }}">
+    {{ campo.label }}
+    {% if campo.field.required %}<span class="req">*</span>
+    {% else %}<span class="opt">(opcional)</span>{% endif %}
+    {% if campo.field.max_length %}<span class="hint">— máx. {{ campo.field.max_length }} caracteres</span>{% endif %}
+    {% if campo.help_text %}<span class="hint">— {{ campo.help_text }}</span>{% endif %}
+  </label>
+  {{ campo }}
+  {% for error in campo.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+</div>
