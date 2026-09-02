@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 # check-ui.sh — Verifica las reglas de UI que un skill no puede garantizar por sí solo.
 #
-#   ./scripts/check-ui.sh            # verifica
-#   ./scripts/check-ui.sh --baseline # recalcula el trinquete de deuda tolerada
+#   ./prototipo/scripts/check-ui.sh            # verifica
+#   ./prototipo/scripts/check-ui.sh --baseline # recalcula el trinquete de deuda tolerada
 #
 # ERRORES (rompen, exit 1)
 #   E1  var(--token) sin definición y sin fallback
 #   E2  <svg> con width/height en un asset (el tamaño lo fija CSS)
 #   E3  color hex suelto en una regla CSS (fuera de :root)
+#   E4  `hidden` sobre un elemento cuya clase fija `display` (no lo esconde)
+#   E5  var(--token) sin definición en la copia de Django (filey/estaticos/css)
 #
-# AVISOS con trinquete (rompen solo si CRECEN respecto a scripts/.ui-baseline)
+# AVISOS con trinquete (rompen solo si CRECEN respecto a prototipo/scripts/.ui-baseline)
 #   W1  style="..." inline en HTML
 #   W2  clase usada en HTML/JS sin definición en ningún CSS ni bloque <style>
 #   W4  líneas de CSS embebido en <style> dentro de HTML (debe vivir en una capa)
@@ -22,9 +24,9 @@
 
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROTO="$ROOT/prototipo"
-BASE="$ROOT/scripts/.ui-baseline"
+BASE="$PROTO/scripts/.ui-baseline"
 MODE="${1:-check}"
 
 # Arrays null-delimitados: hay assets con espacios en el nombre.
@@ -120,6 +122,105 @@ else
   say "ok"
 fi
 
+# ---------------------------------------------------------------- E4
+# El atributo `hidden` vale `display: none` en la hoja del NAVEGADOR, así
+# que cualquier regla de autor con `display` lo pisa y el elemento se
+# queda a la vista. No da error, no avisa nada: solo no se esconde.
+#
+# Pasó tres veces al construir EVT (`.btn`, `.grid-2`, `.evt-persona`), y
+# las tres se descubrieron mirando la pantalla. La cura es una regla
+# acotada al componente —`.btn[hidden] { display: none }`—, no un
+# `!important` global.
+#
+# Se mira solo el caso estático: un elemento que trae `hidden` escrito en
+# el HTML. El que lo recibe desde JavaScript (`el.hidden = true`) no se
+# puede ver desde aquí, así que la regla del skill sigue haciendo falta.
+clases_con_display="$(mktemp)"
+trap 'rm -f "$tokens_definidos" "$clases_con_display"' EXIT
+
+awk '
+  # Se quitan los comentarios ANTES de mirar nada. Sin esto, una nota que
+  # mencione `.btn[hidden]` cuenta como si la regla existiera y la
+  # comprobación se queda callada para siempre — pasó al escribirla.
+  { linea = $0
+    if (incom) { if (sub(/.*\*\//, "", linea)) incom = 0; else next }
+    gsub(/\/\*[^*]*\*\//, "", linea)
+    if (sub(/\/\*.*$/, "", linea)) incom = 1 }
+
+  # Clases que fijan `display` en su propio bloque, que puede ocupar
+  # varias líneas.
+  linea ~ /^\.[A-Za-z0-9_-]+[[:space:]]*\{/ { sel = linea; sub(/[[:space:]]*\{.*/, "", sel); dentro = 1; tiene = 0 }
+  dentro && linea ~ /display[[:space:]]*:/ { tiene = 1 }
+  dentro && linea ~ /\}/ { if (tiene) print substr(sel, 2); dentro = 0 }
+
+  # Y las que ya traen su escape.
+  linea ~ /\[hidden\]/ { resto = linea; while (match(resto, /\.[A-Za-z0-9_-]+\[hidden\]/)) {
+      print "OK:" substr(resto, RSTART + 1, RLENGTH - 9)
+      resto = substr(resto, RSTART + RLENGTH) } }
+' "${css_files[@]}" 2>/dev/null | sort -u > "$clases_con_display"
+
+e4=$(grep -Hno -E '<[a-z][^>]*[[:space:]]hidden([[:space:]][^>]*)?>' "${html_files[@]}" 2>/dev/null \
+     | awk -F: -v lista="$clases_con_display" '
+       BEGIN { while ((getline l < lista) > 0) {
+                 if (l ~ /^OK:/) escapada[substr(l, 4)] = 1; else fija[l] = 1 } }
+       { etiqueta = $0
+         sub(/^[^:]*:[0-9]*:/, "", etiqueta)
+         if (match(etiqueta, /class="[^"]*"/) == 0) next
+         clases = substr(etiqueta, RSTART + 7, RLENGTH - 8)
+         n = split(clases, partes, /[[:space:]]+/)
+         for (i = 1; i <= n; i++)
+           if (partes[i] in fija && !(partes[i] in escapada))
+             print $1 ":" $2 "  ." partes[i] " fija display y el `hidden` no la esconde" }' \
+     | sort -u)
+
+head2 "E4 · hidden que no esconde (la clase fija display)"
+if [ -n "$e4" ]; then
+  say "$e4" | sed "s|$ROOT/||"
+  say "→ $(printf '%s
+' "$e4" | wc -l | contar) elemento(s). Añade \`.clase[hidden] { display: none }\`."
+  errors=$((errors + 1))
+else
+  say "ok"
+fi
+
+# ---------------------------------------------------------------- E5
+# La copia a mano de `filey/estaticos/css/filey.css` (ver `filey-render`
+# §6) puede quedarse con un `var()` que solo existe en el prototipo. El
+# fallo no se ve al arrancar: se ve como un color que falta en una
+# pantalla que nadie abrió todavía.
+#
+# Se salta sin protestar si no hay monolito en esta rama.
+css_django="$ROOT/filey/estaticos/css"
+head2 "E5 · var(--token) sin definición en la copia de Django"
+if [ -d "$css_django" ]; then
+  django_files=()
+  while IFS= read -r -d '' f; do django_files+=("$f"); done     < <(find "$css_django" -name '*.css' -print0 2>/dev/null)
+
+  if [ ${#django_files[@]} -eq 0 ]; then
+    say "ok (sin hojas)"
+  else
+    tokens_django="$(mktemp)"
+    grep -ho -- '--[A-Za-z0-9_-]\+[[:space:]]*:' "${django_files[@]}" 2>/dev/null       | sed 's/[[:space:]]*:$//' | sort -u > "$tokens_django"
+
+    e5=$(grep -Hno -- 'var([[:space:]]*--[A-Za-z0-9_-]\+[[:space:]]*)' "${django_files[@]}" 2>/dev/null          | sed 's/var([[:space:]]*/var(/; s/[[:space:]]*)$/)/'          | awk -F: -v def="$tokens_django" '
+           BEGIN { while ((getline linea < def) > 0) if (linea != "") ok[linea] = 1 }
+           { tok = $NF; sub(/^var\(/, "", tok); sub(/\)$/, "", tok)
+             if (!(tok in ok)) print $1 ":" $2 "  " tok }' | sort -u)
+    rm -f "$tokens_django"
+
+    if [ -n "$e5" ]; then
+      say "$e5" | sed "s|$ROOT/||"
+      say "→ $(printf '%s
+' "$e5" | wc -l | contar) referencia(s) rota(s) del lado de Django."
+      errors=$((errors + 1))
+    else
+      say "ok"
+    fi
+  fi
+else
+  say "ok (no hay monolito en esta rama)"
+fi
+
 # ---------------------------------------------------------------- W1 / W2 / W4
 w1=$(grep -o 'style="' "${html_files[@]}" 2>/dev/null | wc -l | contar)
 
@@ -152,7 +253,7 @@ if [ -f "$BASE" ]; then
 else
   inline_styles=$w1; clases_indefinidas=$w2; css_embebido=$w4
   write_baseline
-  say ""; say "ℹ️  Creado scripts/.ui-baseline con los valores actuales."
+  say ""; say "ℹ️  Creado prototipo/scripts/.ui-baseline con los valores actuales."
 fi
 
 ratchet() { # nombre, actual, techo, pista
@@ -162,7 +263,7 @@ ratchet() { # nombre, actual, techo, pista
     say "→ Creció en $(($2 - $3)). $4"
     errors=$((errors + 1))
   elif [ "$2" -lt "$3" ]; then
-    say "→ Bajó. Corre ./scripts/check-ui.sh --baseline para fijar el nuevo techo."
+    say "→ Bajó. Corre ./prototipo/scripts/check-ui.sh --baseline para fijar el nuevo techo."
   fi
 }
 

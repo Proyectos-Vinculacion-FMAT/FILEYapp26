@@ -104,6 +104,7 @@ convención de equipo normal, no aquí.
 | [0006](<0006-la-liga-entre-convocatoria-y-modulo.md>) | Una convocatoria se liga a su módulo por `RegistroConvocatoria` y un registro de módulos | Aceptado | 2026-08-27 |
 | [0007](<0007-los-archivos-empiezan-en-disco.md>) | Los archivos que sube la gente empiezan en disco, con la puerta de salida puesta | Aceptado | 2026-08-27 |
 | [0008](<0008-el-mapa-corre-en-el-navegador.md>) | El showfloor lo dibuja Godot en el navegador, y con eso se retira la regla del «sin JavaScript» | Aceptado | 2026-08-29 |
+| [0009](<0009-las-ocho-actividades-de-evt.md>) | Las ocho actividades de `EVT` se representan con herencia multitabla, y se capturan con el tipo en la URL | Aceptado | 2026-09-01 |
 
 
 ## Estructura de la carpeta

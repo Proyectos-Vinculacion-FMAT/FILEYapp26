@@ -82,3 +82,22 @@ class EstaticosFiley(CompressedManifestStaticFilesStorage):
         # y nadie notaría si un día dejaran de copiarse.
         for nombre in intocables:
             yield nombre, nombre, False
+
+
+# > [!warning] `runserver` sirve los estáticos con `Last-Modified` y sin
+# > ninguna directiva de caché
+#
+# Sin directiva, el navegador aplica caché heurística: se guarda el
+# archivo un rato por su cuenta, sin preguntar, y sigue ejecutando la
+# versión anterior aunque ya haya cambiado en disco. El síntoma hace
+# perder una tarde —se corrige algo en el JS, se recarga, y la pantalla
+# sigue haciendo lo de antes—.
+#
+# **Un middleware no puede arreglarlo**: `StaticFilesHandler.__call__`
+# sirve las rutas bajo `STATIC_URL` antes de entrar a la cadena, así que
+# ninguna respuesta de estático pasa por ella. Se intentó y se retiró.
+#
+# Mientras se trabaja, lo que funciona es tener abiertas las herramientas
+# del navegador con «Disable cache» marcado, o recargar con Ctrl+F5. En
+# producción no existe el problema: los estáticos van con hash en el
+# nombre y cachearlos para siempre es justo lo que se quiere.

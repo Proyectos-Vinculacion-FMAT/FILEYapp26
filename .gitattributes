@@ -1,0 +1,5 @@
+# Los scripts de shell se ejecutan con bash (Git Bash en Windows): siempre LF.
+# Con core.autocrlf=true, sin esto el checkout los deja en CRLF y bash falla
+# con "$'\r': command not found".
+*.sh text eol=lf
+prototipo/scripts/.ui-baseline text eol=lf

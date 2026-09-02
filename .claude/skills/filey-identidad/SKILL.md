@@ -1,14 +1,15 @@
 ---
 name: filey-identidad
-description: Decisiones de identidad visual y de UX de FILEY/UADY — qué color, tipografía, radio, sombra o espaciado corresponde; qué significa cada color de estado; el acento visual de cada dominio (REG, EVT, VIS, STD, TAL); y las leyes de UX que fijan cuántos pasos, campos u opciones lleva una pantalla. Úsalo antes de elegir cualquier valor visual o de estructurar un flujo, en cualquier stack (HTML estático, plantillas Django, Angular). No dice dónde vive el CSS ni cómo se renderiza.
+description: Identidad visual de FILEY/UADY — qué color, tipografía, radio, sombra o espaciado corresponde; qué significa cada color de estado; el acento visual de cada dominio (REG, EVT, VIS, STD, TAL); y el contraste mínimo. Úsalo antes de elegir cualquier valor visual, en cualquier stack (HTML estático, plantillas Django, Angular). No dice cómo se comporta la pantalla ni dónde vive el CSS.
 ---
 
-# FILEY — identidad visual y UX
+# FILEY — identidad visual
 
-Este skill responde **¿qué se ve y por qué?**. Los otros dos:
+Este skill responde **¿qué se ve y por qué?**. Los otros tres:
 
 | Necesitas | Skill |
 | --- | --- |
+| Cuántos pasos, campos u opciones; cuándo se revela cada cosa; cómo se redacta | `filey-ux` |
 | Saber si una clase ya existe, en qué capa va el CSS, cómo no duplicar | `filey-ui-componentes` |
 | Convertir eso en una plantilla servida (Django) o en un HTML del prototipo | `filey-render` |
 
@@ -28,7 +29,7 @@ El azul y el dorado de FILEY están **verificados contra la marca real** (ver [r
 | Acento institucional | `--color-dorado-encabezado` `#C99213` | Realce, no acción. Un solo elemento dorado por pantalla |
 | Texto/fondo neutro | `--tinta`, `--gris-700/500/300/200/100/050`, `--color-blanco` | Todo lo demás |
 
-**Prohibido:** hex suelto en una regla. Si el color no existe como token, se añade el token primero. Lo verifica `./scripts/check-ui.sh` (E3).
+**Prohibido:** hex suelto en una regla. Si el color no existe como token, se añade el token primero. Lo verifica `./prototipo/scripts/check-ui.sh` (E3).
 
 ### Acento por dominio
 
@@ -86,42 +87,19 @@ Combinación a evitar: `--color-dorado-encabezado` como **texto** sobre blanco (
 
 ---
 
-## 6. Leyes de UX aplicadas
+## 6. Lo que ya no vive aquí
 
-Formato: **ley → regla operativa FILEY → dónde se implementa → cómo se verifica.** El detalle y las leyes secundarias están en [references/leyes-ux.md](references/leyes-ux.md).
+Las **leyes de UX** —cuántas opciones, cuántos campos, qué tamaño tiene una acción primaria— y
+el **tono de los textos de UI** se mudaron a `filey-ux` el 2026-09-02. No es un movimiento de
+orden: este skill se carga cuando alguien pregunta «¿qué color va aquí?», y esas reglas hacen
+falta antes, al decidir qué se enseña.
 
-Las cinco que más cortan decisiones en este proyecto:
-
-| Ley | Regla FILEY | Verificación |
-| --- | --- | --- |
-| **Hick** — el tiempo de decisión crece con el número de opciones | Máx. ~7 opciones visibles a la vez. Un formulario de propuesta no se presenta como una lista de 25 campos: se parte en secciones numeradas. | Contar opciones por pantalla y campos por sección |
-| **Miller** — ~7±2 elementos en memoria de trabajo | Agrupar en bloques con encabezado numerado; los datos largos (folios, fechas, cupos) van formateados, no crudos | Ninguna sección con más de 9 campos |
-| **Fitts** — el tiempo de alcance depende de tamaño y distancia | Acción primaria grande y al final del flujo de lectura; destructivas (rechazar, eliminar) **separadas** de las confirmatorias | Altura mínima 40px en acciones primarias; nunca adyacentes primaria y destructiva |
-| **Doherty** — bajo 400 ms se siente instantáneo | Toda acción confirma en <400 ms o muestra indicador. Nunca un click sin respuesta visible | Estados de carga presentes en formularios y filtros |
-| **Postel** — sé liberal al recibir, estricto al emitir | Aceptar teléfonos/CURP/correos con espacios, guiones y mayúsculas variables; normalizar al guardar. Validar al salir del campo, no en cada tecla | Formularios normalizan en vez de rechazar |
-
----
-
-## 7. Tono de los textos de UI
-
-Español de México, formal pero directo. Trato de **tú** al aplicante (ya establecido en el prototipo); **usted** nunca.
-
-| Situación | Sí | No |
-| --- | --- | --- |
-| Error de validación | "Falta el correo de contacto." | "Error: campo inválido" |
-| Estado vacío | "Aún no has enviado propuestas." + acción para crear una | "Sin resultados" |
-| Confirmación | "Tu propuesta quedó registrada con folio EVT-024." | "Operación exitosa" |
-| Acción destructiva | "Quitar el taller del itinerario" + qué consecuencia tiene | "¿Estás seguro?" |
-
-Nunca terminología interna en pantalla ("dictaminar" sí, es del dominio; "CU-EVT-009" no).
-
----
-
-## 8. Antes de dar por buena una decisión visual
+## 7. Antes de dar por buena una decisión visual
 
 - [ ] El valor sale de un token existente; si es nuevo, tiene nombre semántico (no `--azul-2`)
 - [ ] El estado se comunica con color **y** texto
 - [ ] El contraste cumple AA
 - [ ] El acento corresponde al dominio de la pantalla
-- [ ] El número de opciones/campos visibles respeta Hick y Miller
-- [ ] `./scripts/check-ui.sh` en verde
+- [ ] `./prototipo/scripts/check-ui.sh` en verde
+
+Lo de cuántas opciones y campos caben lo comprueba el checklist de `filey-ux` §7.

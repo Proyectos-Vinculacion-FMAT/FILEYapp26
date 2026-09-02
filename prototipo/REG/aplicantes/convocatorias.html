@@ -17,8 +17,8 @@
     </a>
     <nav class="topnav">
       <a href="convocatorias.html">Convocatorias</a>
-      <a href="../../EVT/aplicantes/mis-propuestas.html">Mis propuestas</a>
-      <div class="user-chip"><span class="avatar">LR</span> Lectora R.</div>
+      <a href="../../EVT/aplicantes/mis-propuestas.html" data-mis-propuestas hidden>Mis propuestas</a>
+      <div class="user-chip"><span class="avatar" id="chip-iniciales">LR</span> <span id="chip-nombre">Lectora R.</span></div>
     </nav>
   </div>
 </header>
@@ -36,7 +36,7 @@
 
 <main class="page">
   <div class="page-head">
-    <h1>Bienvenida, Lectora 👋</h1>
+    <h1 id="saludo">Bienvenida, Lectora 👋</h1>
     <p>Estas son las convocatorias de FILEY 2027. Puedes participar en todas las que estén abiertas.</p>
   </div>
 
@@ -71,7 +71,7 @@
       </div>
       <div class="conv-foot">
         <a class="btn btn-ghost btn-block" href="#"
-           style="background:var(--azul-050);border-color:var(--azul-300);color:var(--azul-600);pointer-events:none;cursor:default"
+           style="background:var(--azul-050);border-color:var(--azul-100);color:var(--azul-600);pointer-events:none;cursor:default"
            aria-disabled="true" tabindex="-1">Próximamente</a>
       </div>
     </article>
@@ -83,13 +83,13 @@
         <h3>Actividades FILEY (Eventos)</h3>
       </div>
       <div class="conv-body">
-        <span class="badge badge-open">Abierta</span>
+        <span class="badge badge-open" data-evt-estado>Abierta</span>
         <p>Conversatorios, conferencias, charlas, mesas redondas, presentaciones de libro/revista y más.</p>
-        <div class="conv-dates">📅 Cierra el 31 de agosto de 2027</div>
+        <div class="conv-dates" data-evt-cierre>📅 Cierra el 2 de octubre de 2026</div>
       </div>
-      <div class="conv-foot" style="display:flex;flex-direction:column;gap:8px">
+      <div class="conv-foot conv-foot-apilado">
         <a class="btn btn-primary btn-block" href="../../EVT/aplicantes/convocatoria-eventos.html">Ver convocatoria</a>
-        <a class="btn btn-ghost btn-block" href="../../EVT/aplicantes/mis-propuestas.html">Ver mis propuestas →</a>
+        <a class="btn btn-ghost btn-block" href="../../EVT/aplicantes/mis-propuestas.html" data-mis-propuestas hidden>Ver mis propuestas →</a>
       </div>
     </article>
 
@@ -104,7 +104,7 @@
         <p>Registra tu institución educativa, reserva talleres del programa VIDA y recibe tu carta de confirmación.</p>
         <div class="conv-dates">📅 Cierra el 31 de agosto de 2027</div>
       </div>
-      <div class="conv-foot" style="display:flex;flex-direction:column;gap:8px">
+      <div class="conv-foot conv-foot-apilado">
         <a class="btn btn-primary btn-block" href="../../VIS/aplicantes/convocatoria-vis.html" data-vis-conv-toggle>Ver convocatoria</a>
       </div>
     </article>
@@ -124,9 +124,72 @@
 </div></footer>
 
 <script src="../../common/db.js"></script>
+<script src="../../common/db-evt.js"></script>
+<script src="../../common/demo-reset.js"></script>
 <script>
-  // Tarjeta de Visitas Escolares: antes del primer registro guardado, "Ver convocatoria";
-  // en cuanto existe el registro del aplicante, cambia a "Revisar mi registro".
+(function () {
+  'use strict';
+
+  /* -- Quién entró --------------------------------------------------
+     Si la cuenta se acaba de crear en registro.html, el chip y el saludo salen
+     de esos datos. En Django no se guardan aparte: Persona.iniciales,
+     .nombre_completo y .primer_nombre se derivan de los tres campos del
+     nombre. Sin cuenta creada, la demo entra con la cuenta sembrada y la
+     pantalla se queda tal cual viene en el HTML. */
+  var persona = null;
+  try { persona = JSON.parse(localStorage.getItem('filey_reg_persona')); } catch (e) {}
+
+  if (persona && persona.nombre) {
+    var primerNombre = persona.nombre.split(' ')[0];
+    var apellido = persona.primer_apellido || '';
+    document.getElementById('saludo').textContent = 'Hola, ' + primerNombre + ' 👋';
+    document.getElementById('chip-iniciales').textContent =
+      [persona.nombre, apellido].filter(Boolean)
+        .map(function (t) { return t.charAt(0).toUpperCase(); }).join('');
+    document.getElementById('chip-nombre').textContent =
+      primerNombre + (apellido ? ' ' + apellido.charAt(0).toUpperCase() + '.' : '');
+  }
+
+  /* -- EVT ----------------------------------------------------------
+     "Ver mis propuestas" --en la tarjeta y en la barra-- no existe hasta que
+     hay una primera solicitud: al empezar la demo la única acción posible es
+     ver la convocatoria. El estado del guión lo escribe EVT/demo.js en esta
+     clave; se lee directa, y no cargando demo.js, para no traer aquí su botón
+     de reinicio, que solo limpia EVT: esta pantalla es la entrada de la demo y
+     necesita el de common/demo-reset.js, que limpia los tres módulos. */
+  function hayPropuestaEVT() {
+    try {
+      return !!(JSON.parse(localStorage.getItem('filey_evt_demo_v1')) || {}).emqnhEnviada;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  if (hayPropuestaEVT()) {
+    Array.prototype.forEach.call(
+      document.querySelectorAll('[data-mis-propuestas]'),
+      function (el) { el.hidden = false; }
+    );
+  }
+
+  /* La tarjeta de EVT no repite la fecha de cierre a mano: sale de la misma
+     configuración que lee la convocatoria, para que no puedan discrepar. */
+  if (window.FileyEVT) {
+    FileyEVT.ready().then(function () {
+      var c = FileyEVT.getConfig();
+      var cierre = document.querySelector('[data-evt-cierre]');
+      var estado = document.querySelector('[data-evt-estado]');
+      if (cierre) cierre.textContent = '""" + CAL + """ Cierra el ' + FileyEVT.fechaLarga(c.recepcion.cierre);
+      if (estado && c.estado === 'cerrada') {
+        estado.className = 'badge badge-closed';
+        estado.textContent = 'Convocatoria cerrada';
+      }
+    });
+  }
+
+  /* -- VIS ----------------------------------------------------------
+     Mismo criterio, un paso más adelante: antes del primer registro guardado,
+     "Ver convocatoria"; en cuanto existe, "Revisar mi registro". */
   if (window.FileyDB) {
     FileyDB.ready().then(function () {
       var btn = document.querySelector('[data-vis-conv-toggle]');
@@ -138,6 +201,7 @@
       }
     });
   }
+})();
 </script>
 </body>
 </html>

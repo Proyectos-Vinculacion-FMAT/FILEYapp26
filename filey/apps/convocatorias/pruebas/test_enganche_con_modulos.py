@@ -75,9 +75,15 @@ def _convocatoria(
 
 
 def test_un_tipo_sin_modulo_no_es_un_error():
-    """Sigue siendo el estado de `EVT` y de `VIS`."""
+    """Sigue siendo el estado de `VIS`.
+
+    Era también el de `EVT` hasta que `apps.eventos` se inscribió
+    (`CU-EVT-002`). Que la lista mengüe conforme se construyen los
+    módulos es lo esperado; lo que esta prueba sostiene es que un tipo
+    sin módulo **no rompe el catálogo**, y para eso basta con que quede
+    uno.
+    """
     assert modulos.modulo_de(TipoConvocatoria.VIS) is None
-    assert modulos.modulo_de(TipoConvocatoria.EVT) is None
 
 
 def test_un_tipo_mal_escrito_no_se_inscribe():

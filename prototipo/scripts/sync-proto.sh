@@ -2,8 +2,8 @@
 # sync-proto.sh — sincroniza prototipo/ entre main-isaac y main sin tocar STD
 #
 # Uso (desde cualquier rama):
-#   ./scripts/sync-proto.sh push   # main-isaac → main  (y dispara deploy gh-pages)
-#   ./scripts/sync-proto.sh pull   # main → main-isaac
+#   ./prototipo/scripts/sync-proto.sh push   # main-isaac → main  (y dispara deploy gh-pages)
+#   ./prototipo/scripts/sync-proto.sh pull   # main → main-isaac
 
 set -e
 

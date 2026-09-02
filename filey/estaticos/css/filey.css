@@ -585,6 +585,13 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .section-card > .section-head p { margin: 2px 0 0; font-size: 13px; color: var(--gris-500); }
 .section-card > .section-body { padding: 22px 24px; }
 
+/* La barra superior es fija, así que traer una sección «al principio de
+   la vista» la deja **debajo** de ella y su encabezado no se ve.
+   `scroll-margin-top` reserva ese hueco: lo respetan tanto
+   `scrollIntoView` como una navegación por ancla, y no hay que calcular
+   nada en JavaScript. */
+#campos-tipo { scroll-margin-top: calc(var(--alto-topbar) + 16px); }
+
 /* .table · prototipo/common/styles-base.css */
 .table { width: 100%; border-collapse: collapse; background: var(--color-blanco); }
 .table th, .table td { text-align: left; padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--gris-200); }
@@ -707,6 +714,46 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .field input[type="file"]::file-selector-button:hover {
   border-color: var(--azul-600); background: var(--azul-050);
 }
+
+/* ── …salvo en EVT, donde el rótulo tiene que estar en español ──
+   Lo de arriba deja el botón del control nativo, y su texto —«Examinar…»,
+   «Choose File»— lo pone el navegador en **su** idioma, no en el de la
+   página: no hay CSS que lo cambie. En una convocatoria que se llena en
+   español eso desentona, y además el control nativo no dice si el
+   archivo entró.
+
+   Así que aquí el input se esconde **dentro de su rótulo** —no se quita
+   de la página—: sigue recibiendo el foco, el teclado lo alcanza y el
+   lector de pantalla lo anuncia, porque el `<label>` lo envuelve. Lo que
+   se ve es el mismo bloque del prototipo, y al elegir un archivo se
+   queda en verde con su nombre. Permanente: es la única confirmación
+   que hay de que el adjunto se cargó, hasta que se envía. */
+.file-mock {
+  display: flex; align-items: center; gap: 12px;
+  border: 1.5px dashed var(--gris-300); border-radius: var(--radio-sm);
+  padding: 12px 14px; background: var(--gris-050); cursor: pointer;
+  position: relative;
+}
+.file-mock:hover { border-color: var(--azul-600); background: var(--azul-050); }
+.file-mock:focus-within { border-color: var(--azul-600); background: var(--azul-050); }
+.file-mock .ico {
+  width: 34px; height: 34px; border-radius: 8px; flex: 0 0 34px;
+  background: var(--azul-100); color: var(--azul-600);
+  display: grid; place-items: center; font-size: 17px;
+}
+.file-mock .txt strong { display: block; font-size: 13.5px; color: var(--gris-700); word-break: break-all; }
+.file-mock .txt small { color: var(--gris-500); font-size: 12px; }
+/* Gana al `.field input[type="file"]` de arriba por especificidad, no por
+   orden: si algún día se reordena el archivo, esto sigue en pie. */
+.field .file-mock input[type="file"] {
+  position: absolute; width: 1px; height: 1px; padding: 0; border: none;
+  opacity: 0; overflow: hidden; clip-path: inset(50%);
+}
+.file-mock.is-cargado {
+  border-style: solid; border-color: var(--ok-600); background: var(--ok-050);
+}
+.file-mock.is-cargado .ico { background: var(--ok-600); color: var(--color-blanco); }
+.file-mock.is-cargado .txt strong { color: var(--ok-600); }
 
 /* ── Un aviso que se puede marcar ──────────────────────────────
    La aceptación de las bases. El aviso entero es la etiqueta de la
@@ -1574,3 +1621,135 @@ a.stat-card:focus-visible { outline: 2px solid var(--color-dorado-encabezado); o
 .proyeccion .progreso-barra { display: flex; }
 .progreso-suma { display: block; height: 100%; background: var(--warn-600); }
 .proyeccion-efecto { margin: 10px 0 0; font-size: 13.5px; color: var(--gris-700); }
+
+
+/* ===================== EVT · captura de propuesta =====================
+   Portado de `prototipo/EVT/aplicantes/formulario.html` y de
+   `prototipo/EVT/styles.css` con los mismos nombres de clase, que es lo
+   que mantiene reconciliables las dos hojas.
+
+   Tres referencias del prototipo se corrigieron al copiar, porque allá
+   son tokens rotos que `check-ui.sh` ya marca (E1): `--blanco`,
+   `--azul-900`, `--azul-400` y `--oro-600` no existen. Aquí van con su
+   nombre bueno; copiar el error lo habría hecho crecer. */
+
+.breadcrumb { font-size: 13px; color: var(--gris-500); margin-bottom: 14px; }
+.breadcrumb a { color: var(--gris-500); }
+.breadcrumb span { color: var(--gris-300); margin: 0 6px; }
+
+
+/* Datos que vienen de la cuenta y no se capturan aquí. */
+.field-prefill { position: relative; }
+.field-prefill .tag-auto {
+  position: absolute; right: 10px; top: 34px; font-size: 11px;
+  background: var(--azul-100); color: var(--azul-600);
+  padding: 2px 8px; border-radius: 999px; font-weight: 600;
+}
+
+/* Selector de tipo de actividad. Son botones de un formulario GET: elegir
+   uno recarga la pantalla con sus campos, y con htmx cambia solo esa
+   sección. Ver `apps/eventos/views.py`. */
+.tipo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.tipo-opt {
+  border: 1.5px solid var(--gris-300); background: var(--color-blanco);
+  border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;
+  text-align: center; font-family: inherit; font-size: 14px; font-weight: 600;
+  color: var(--gris-700); transition: all .15s ease;
+}
+.tipo-opt .em { display: block; font-size: 24px; margin-bottom: 8px; }
+.tipo-opt:hover { border-color: var(--azul-600); background: var(--azul-050); }
+.tipo-opt.is-active {
+  border-color: var(--color-dorado-encabezado); background: var(--oro-050);
+  color: var(--color-azul-institucional-enfoque); box-shadow: 0 0 0 3px var(--oro-050);
+}
+@media (max-width: 720px) { .tipo-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Selección múltiple de público. */
+.check-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.check-chip { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.check-chip input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+.check-chip .chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1.5px solid var(--gris-300); border-radius: 999px;
+  padding: 6px 14px; font-size: 14px; font-weight: 500;
+  color: var(--gris-700); background: var(--color-blanco);
+  transition: all .15s ease; cursor: pointer; user-select: none;
+}
+.check-chip input:checked + .chip {
+  border-color: var(--azul-600); background: var(--azul-050);
+  color: var(--color-azul-institucional-enfoque); font-weight: 600;
+}
+.check-chip input:focus-visible + .chip { outline: 2px solid var(--azul-600); outline-offset: 2px; }
+.check-chip .chip:hover { border-color: var(--azul-600); background: var(--azul-050); }
+
+/* Cada persona de la actividad: su nombre y su semblanza juntos. */
+.evt-persona {
+  border: 1px solid var(--gris-200); border-radius: var(--radio-sm);
+  background: var(--gris-050); padding: 14px 16px; margin-bottom: 12px;
+}
+.evt-persona__head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.evt-persona__n {
+  font-size: 11.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--color-azul-institucional);
+}
+.evt-persona .field:last-child { margin-bottom: 0; }
+.evt-persona[hidden] { display: none; }
+.evt-persona__quitar {
+  margin-left: auto; border: none; background: none; padding: 0; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--err-600);
+  /* Ley de Fitts: el texto mide 13 px de alto y es un objetivo minúsculo, sobre
+     todo en táctil. El pseudo-elemento agranda el área pulsable sin meter un
+     nodo más ni mover nada de sitio. */
+  position: relative;
+}
+.evt-persona__quitar::after { content: ''; position: absolute; inset: -12px; }
+
+/* Botón de revelar la siguiente persona. Desaparece al llegar al máximo. */
+.evt-agregar {
+  width: 100%; padding: 10px 16px; cursor: pointer; font-family: inherit;
+  border: 1.5px dashed var(--gris-300); border-radius: var(--radio-sm);
+  background: var(--color-blanco); font-size: 13.5px; font-weight: 600; color: var(--azul-600);
+}
+.evt-agregar:hover { border-color: var(--azul-600); background: var(--azul-050); }
+.evt-agregar[hidden] { display: none; }
+
+/* Un control que todavía no toca usar se apaga —no se esconde, para que
+   se vea que existe— y siempre va acompañado del aviso que dice qué
+   falta: el gris por sí solo se lee como una avería. */
+.evt-persona textarea:disabled {
+  background: var(--gris-100); border-color: var(--gris-200); color: var(--gris-500);
+}
+.evt-agregar:disabled,
+.evt-agregar:disabled:hover {
+  background: var(--gris-050); border-color: var(--gris-200); color: var(--gris-500);
+}
+.evt-bloqueo { margin: 6px 0 0; font-size: 12.5px; color: var(--gris-500); }
+.evt-contador { margin: 6px 0 0; font-size: 12px; color: var(--gris-500); text-align: right; }
+.evt-contador.is-tope { color: var(--warn-600); font-weight: 700; }
+
+/* Casilla suelta: «es de la UADY» y «participará». Va como
+   `label.evt-check` porque dentro de un `.field` compite con
+   `.field > label`, que la volvería un bloque en negritas. */
+label.evt-check {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  font-size: 13.5px; font-weight: 500; color: var(--gris-700);
+}
+.evt-check input {
+  width: 16px; height: 16px; margin: 0; cursor: pointer;
+  accent-color: var(--color-azul-institucional);
+}
+.evt-institucion { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+/* `> input` y no `input` a secas: la casilla de la UADY vive dentro
+   del label, y con el selector amplio heredaba el `flex: 1` del campo
+   de texto — se estiraba y empujaba su propia etiqueta lejos. */
+.evt-institucion > input { flex: 1; min-width: 12rem; }
+
+/* Aceptación expresa de las bases. */
+.acepta { display: flex; gap: 14px; align-items: flex-start; cursor: pointer; }
+.acepta input[type="checkbox"] {
+  flex: 0 0 20px; width: 20px; height: 20px; margin: 1px 0 0;
+  accent-color: var(--color-azul-institucional); cursor: pointer;
+}
+.acepta-txt { font-size: 14px; color: var(--gris-700); line-height: 1.55; }
+.acepta-txt strong { color: var(--color-azul-institucional-enfoque); }
+.acepta-txt small { display: block; margin-top: 6px; font-size: 12.5px; color: var(--gris-500); }
