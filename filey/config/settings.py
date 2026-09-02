@@ -387,7 +387,16 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "FILEY <noreply@filey.org>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
-if not RESEND_API_KEY and "runserver" in sys.argv:
+# El aviso es sobre Resend, así que solo aplica si Resend es quien
+# entrega. En desarrollo se suele apuntar `EMAIL_BACKEND` a la
+# consola para leer el OTP sin clave: ahí el correo sale bien y el
+# banner solo confundía —decía que el envío iba a fallar mientras
+# el código aparecía en la terminal—.
+if (
+    not RESEND_API_KEY
+    and "runserver" in sys.argv
+    and "resend" in EMAIL_BACKEND.lower()
+):
     print(
         "\n"
         "  ┌─────────────────────────────────────────────────────────────┐\n"
