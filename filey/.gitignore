@@ -40,3 +40,6 @@ htmlcov/
 # Celery (if used)
 celerybeat-schedule
 celerybeat.pid
+
+# Override de Compose propio de cada máquina (puertos que ya están ocupados).
+docker-compose.override.yml

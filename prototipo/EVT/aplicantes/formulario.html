@@ -252,9 +252,16 @@
     poner("ciudad", persona.ciudad);
 
     /* Estado y ciudad son de México y de nadie más: fuera de México REG ni
-       los pide, así que la fila entera desaparece en vez de salir vacía. */
+       los pide, así que la fila entera desaparece en vez de salir vacía.
+
+       La condición mira `entidad` y no `pais` —igual que la plantilla de
+       Django— porque cubre un caso más con la misma línea: una cuenta
+       mexicana sin entidad, que el alta no deja crear pero sí el panel
+       (`blank=True`) y `createsuperuser`. Preguntando por el país, esa
+       cuenta enseñaba un «Estado *» vacío marcado como obligatorio, que
+       nadie puede llenar desde aquí: la sección es de solo lectura. */
     var fila = document.querySelector("[data-solo-mexico]");
-    if (fila && persona.pais && persona.pais !== "MX") fila.hidden = true;
+    if (fila && !persona.entidad) fila.hidden = true;
     /* Se guarda solo con dígitos; aquí se agrupa para leerlo. */
     poner("telefono", String(persona.telefono || "").replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3"));
 
