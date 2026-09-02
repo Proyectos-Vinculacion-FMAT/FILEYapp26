@@ -403,7 +403,7 @@ en la etapa 2 (§3).
 | publico_objetivo | Público al que va dirigida. Lista de valores separados sobre el conjunto cerrado `publico_general`, `academico`, `estudiantil`, `infantil`, `familias`; al menos uno. Al no estar normalizado, filtrar por público exige recorrer el texto. |
 | sinopsis | Sinopsis de la actividad, capturada como texto. Antes era un PDF adjunto marcado por `tiene_sinopsis`; ahora el aplicante escribe el contenido directamente y no hay archivo que administrar. |
 | es_uady | Indica si el aplicante se declara parte de la UADY. Es la autodeclaración en la captura; el administrador la valida (o la corrige) en `DetallesAdminSolicitud.is_participante_uady` (§3.1), que es el valor que cuenta para el conteo por categoría de `DetallesConvocatoria` (§3.6). |
-| requiere_constancia | Indica si el aplicante solicita constancia de participación. Precondición de CU-EVT-005 (descargar constancia); antes no existía en el modelo (§5). |
+| requiere_constancia | Indica si el aplicante solicita constancia de participación. Se captura como **casilla**: sin marcar ya es una respuesta —no la necesita— y es la inofensiva, así que no hay nada obligatorio que contestar. Precondición de CU-EVT-005 (descargar constancia).
 | comentarios | Observaciones libres del aplicante. Opcional. |
 | fecha_de_solicitud | Marca de tiempo del momento en que la solicitud se envía y se guarda. |
 
@@ -440,6 +440,32 @@ solicitud.
 | tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.5); su campo `nombre` determina a qué tabla `Actividad_*` apunta `detalle_id`. |
 | detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda (§1). |
 
+> [!note] Cómo se llama cada cosa en el código
+> La etapa 1 está construida (`filey/apps/eventos/`, 2026-09-01). Los nombres del código son
+> más cortos que los del diagrama, porque ahí el prefijo `_EVT` ya lo da la app:
+>
+> | En el diagrama | En el código |
+> | --- | --- |
+> | `Solicitudes_EVT` | `Solicitud` |
+> | `RouterActividades` | `Actividad` — es la tabla padre, ver abajo |
+> | `Actividad_Conversatorio`… | `ActividadConversatorio`… |
+> | `RouterDocumentos` | `Documento` |
+> | `DetallesConvocatoria` (la parte que usa la captura) | `ConfiguracionConvocatoria` |
+> | `RouterSolicitudes` | `RegistroConvocatoria`, de `apps/convocatorias` (`ADR-0006`) |
+
+> [!note] Cómo quedó en el monolito — herencia multitabla
+> `RouterActividades` **no tiene tabla propia** en `apps/eventos`: es la tabla padre
+> `Actividad`, de la que heredan las ocho de `Actividad_*`. Lleva lo mismo que describe este
+> apartado —el discriminador (`tipo`) y la liga con la solicitud— y además el enlace hacia la
+> fila hija, que Django mantiene con **clave foránea de verdad**.
+>
+> Es lo único que un `detalle_id` entero no puede dar: con él, una actividad puede apuntar a
+> una fila que no existe y la base lo acepta sin protestar. Por lo mismo, `RouterDocumentos`
+> es un `Documento` con una clave foránea normal hacia `Actividad`.
+>
+> La decisión no cambia nada de lo que este documento describe —qué tablas hay, qué columnas
+> lleva cada una, qué enruta hacia qué—; cambia con qué garantía se sostiene.
+
 ### 2.7 Tablas `Actividad_*`
 
 Ocho tablas, una por tipo de actividad. Contienen únicamente lo que distingue a ese tipo: los
@@ -453,6 +479,16 @@ evolucione sin arrastrar a los demás; agruparlos por coincidencia actual cerrar
 Cada nombre de participante va acompañado de su propia `semblanza_*`: un campo de texto libre,
 capturado por el aplicante junto con el nombre. Ya no hay un booleano `tiene_semblanza` a nivel
 de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo—.
+
+**Topes de captura** (fijados al construir `CU-EVT-002`): la semblanza admite 2000 caracteres y
+la sinopsis otros 2000, salvo la de una publicación —libro o revista—, que admite 4000. Los
+aplica el formulario y no la columna: PostgreSQL guarda texto sin tope, así que subirlos no
+lleva migración.
+
+**La semblanza es obligatoria en cuanto su nombre tiene algo escrito.** Media persona no se
+puede imprimir en un programa ni mandar a un comité, y las columnas `nombre_*_N` tienen que
+significar «las personas, en orden»: sin esta regla, un envío podría dejar `nombre_autor_3` con
+`nombre_autor_2` vacío.
 
 #### Actividad_Conversatorio · Actividad_MesaRedonda
 
@@ -479,7 +515,7 @@ de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo
 | tipo_presentador | Rol del proponente respecto a la publicación: `autor`, `editor`, `antologador`, `compilador` o `coordinador`. |
 | nombre_autor_1 … 5 | Nombres tal como aparecen en la portada. Obligatorio el primero; hasta cinco. |
 | semblanza_autor_1 … 5 | Semblanza de cada autor, en el mismo orden. |
-| autor_1_participa … 5 | Si ese autor estará presente en la actividad. Uno por autor, en el mismo orden que su nombre. |
+| autor_1_participa … 5 | Si ese autor estará presente en la actividad. Uno por autor, en el mismo orden que su nombre. **Nace en falso**: estar en la feria es una afirmación que hay que hacer, no algo que se dé por supuesto y haya que desmarcar. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial. Obligatorio; si la publicación es independiente, se anota así. |
@@ -493,6 +529,16 @@ de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo
 > semblanza. Un solo lugar dice quién asiste, no se puede nombrar a alguien que no esté
 > en la lista de autores, y saber cuántos asisten no obliga a leer texto libre.
 > `Actividad_PresentacionRevista` sigue el mismo patrón con `editor_1_participa … 2`.
+
+> [!note] `RN-EVT-01` · La actividad no se queda sin nadie delante
+> Quien sostiene una presentación es **un autor —o editor— que asista, o un presentador**;
+> basta con uno de los dos. Si ninguno de los autores capturados está marcado como que asiste,
+> hace falta al menos un presentador. Solo cuenta la marca, no el nombre: escribir a alguien no
+> lo trae a la feria.
+>
+> Es una regla del formulario, no una restricción de la base: depende de columnas de dos listas
+> distintas y de cuáles se llenaron. Vive en `formularios.py::exigir_presentador`, y la pantalla
+> la adelanta en vivo (`ADR-0009`).
 
 `ejemplar_fisico_entregado` ya no vive en esta tabla: al ser un dato que **solo el
 administrador escribe**, se movió a `DetallesAdminSolicitud` (§3.1), con nota de que aplica
