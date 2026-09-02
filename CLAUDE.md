@@ -16,7 +16,8 @@ los skills, no aquí.
 
 | Vas a… | Skill |
 | --- | --- |
-| Elegir color, tipografía, radio, tono, o cuántos pasos/campos lleva una pantalla | `filey-identidad` |
+| Elegir color, tipografía, radio, sombra | `filey-identidad` |
+| Decidir cuántos pasos/campos/opciones lleva una pantalla, qué se revela y cuándo, o escribir un texto que alguien va a leer | `filey-ux` |
 | Escribir o editar CSS/markup, buscar si una clase ya existe | `filey-ui-componentes` |
 | Tocar plantillas, vistas, URLs, estáticos, o portar del prototipo a Django | `filey-render` |
 
@@ -289,7 +290,14 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   **Falta solo la pantalla A9 de CU-STD-033** (corregir un espacio del mapa), que hoy se hace
   desde `/f/<slug>/django-admin/`. Con ella entraría también la décima acción de la bitácora:
   `importar` no recibe hoy quién lo hace, y firmar la entrada como «el sistema» sería mentira.
-- **Solo documentado:** `EVT`, `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
+- **Construido a medias:** `EVT` (Eventos) — `apps/eventos/` tiene la **captura de una
+  propuesta** (`CU-EVT-002`): los modelos de la etapa 1 completos, el formulario de los ocho
+  tipos, la pantalla y el acuse por correo. Las ocho tablas de tipo cuelgan de una tabla padre
+  con herencia multitabla, no de un `detalle_id` suelto (`ADR-0009`). **Falta todo lo demás**:
+  consultar las propuestas propias (`CU-EVT-003`), editarlas tras una petición de cambios, y el
+  panel del administrador entero —listado, dictamen, notificación en lote—, así que el módulo
+  se inscribe en `ADR-0006` **sin `url_panel`**.
+- **Solo documentado:** `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel
   (`docs/soporte/documentos proporcionados por FILEY/Material para Registro de Actividades

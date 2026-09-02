@@ -91,6 +91,27 @@
           </div>
         </div>
 
+        <!-- Estado y ciudad son de México y de nadie más: un catálogo de 32
+             entidades mexicanas no describe una dirección en Bogotá. La fila
+             entera desaparece si el país no es México, que es lo mismo que
+             hace `RegistroForm.clean()` con los valores que lleguen. -->
+        <div id="bloque-mexico">
+          <div class="field">
+            <label for="id_entidad">Estado <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="id_entidad" name="entidad" autocomplete="address-level1">
+                <option value="YUC" selected>Yucatán</option>
+              </select>
+            </div>
+            <p class="msg-error" data-error-de="id_entidad" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="id_ciudad">Ciudad <span class="opt">(opcional)</span></label>
+            <input type="text" id="id_ciudad" name="ciudad" placeholder="Mérida" autocomplete="address-level2" maxlength="120">
+          </div>
+        </div>
+
         <button class="btn btn-primary btn-block btn-lg" id="btn-crear" type="submit" disabled>Crear cuenta y continuar</button>
       </form>
 
@@ -108,14 +129,17 @@
   var FLUJO_KEY   = "filey_reg_flujo";
   var PERSONA_KEY = "filey_reg_persona";
   var PAISES_URL  = "../../common/db/REG/semillas/paises.json";
+  var ESTADOS_URL = "../../common/db/REG/semillas/estados.json";
 
   var flujo = {};
   try { flujo = JSON.parse(localStorage.getItem(FLUJO_KEY)) || {}; } catch(e){}
   var correo = flujo.correo || "escritor@ejemplo.com"; /* respaldo si se entra directo desde la proto-bar */
 
-  var form    = document.getElementById("form-registro");
-  var boton   = document.getElementById("btn-crear");
-  var selPais = document.getElementById("id_pais");
+  var form      = document.getElementById("form-registro");
+  var boton     = document.getElementById("btn-crear");
+  var selPais   = document.getElementById("id_pais");
+  var selEstado = document.getElementById("id_entidad");
+  var bloqueMx  = document.getElementById("bloque-mexico");
   document.getElementById("id_correo").value = correo;
 
   /* ── Catálogo de países (pseudo-backend JSON) ─────────────────
@@ -132,6 +156,27 @@
       }).join("");
     })
     .catch(function(){ /* sin catálogo: se queda México */ });
+
+  /* Las 32 entidades, del mismo `estados_mx.py` que usa Django: Yucatán
+     primero —de ahí viene la mayoría— y el resto alfabético. */
+  fetch(ESTADOS_URL, { cache: "no-store" })
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(estados){
+      var elegido = selEstado.value || "YUC";
+      selEstado.innerHTML = estados.map(function(e){
+        return '<option value="' + e.codigo + '"' +
+               (e.codigo === elegido ? " selected" : "") + ">" + e.nombre + "</option>";
+      }).join("");
+    })
+    .catch(function(){ /* sin catálogo: se queda Yucatán */ });
+
+  /* Fuera de México no se piden, y no se piden **de verdad**: la fila
+     desaparece en vez de quedarse vacía, y al enviar se descartan. */
+  function soloMexico(){
+    bloqueMx.hidden = selPais.value !== "MX";
+  }
+  selPais.addEventListener("change", soloMexico);
+  soloMexico();
 
   /* Caret del select: .is-open lo gira (ver .select-wrap en common/styles-base.css). */
   var wrap = selPais.parentNode;
@@ -221,7 +266,16 @@
       /* Solo dígitos, como RegistroForm.clean_telefono: así "999 000 0000"
          y "9990000000" son el mismo teléfono al comparar duplicados. */
       telefono: document.getElementById("id_telefono").value.replace(/\D/g, ""),
-      pais: selPais.value
+      pais: selPais.value,
+      /* Igual que `RegistroForm.clean()`: fuera de México se descartan,
+         aunque el POST los traiga. Sin esto, quien se registra desde
+         Bogotá acabaría con «Yucatán» guardado y una consulta por
+         entidad contaría gente que no vive ahí. */
+      entidad: selPais.value === "MX" ? selEstado.value : "",
+      entidad_nombre: selPais.value === "MX"
+        ? selEstado.options[selEstado.selectedIndex].text : "",
+      ciudad: selPais.value === "MX"
+        ? document.getElementById("id_ciudad").value.trim() : ""
     }));
 
     localStorage.setItem(FLUJO_KEY, JSON.stringify({ correo: correo, origen: "registro" }));

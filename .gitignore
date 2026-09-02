@@ -19,3 +19,7 @@ sona_pruebas_FILEY/
 
 # Notas personales de handoff entre mis propias máquinas — no son para el equipo.
 HANDOFF_OTRA_PC.md
+
+# Entorno de Python del monolito. Se regenera con
+# `py -3.13 -m venv .venv` + `pip install -r filey/requirements-dev.txt`.
+.venv/

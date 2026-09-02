@@ -18,25 +18,25 @@
     display: inline-flex; align-items: center; gap: 6px;
     border: 1.5px solid var(--gris-300); border-radius: 999px;
     padding: 6px 14px; font-size: 14px; font-weight: 500;
-    color: var(--gris-700); background: var(--blanco);
+    color: var(--gris-700); background: var(--color-blanco);
     transition: all .15s ease; cursor: pointer; user-select: none;
   }
   .check-chip input:checked + .chip {
     border-color: var(--azul-600); background: var(--azul-050);
-    color: var(--azul-900); font-weight: 600;
+    color: var(--color-azul-texto); font-weight: 600;
   }
   .check-chip input:checked + .chip::before { content: "✓ "; font-size: 12px; }
-  .check-chip .chip:hover { border-color: var(--azul-400); background: var(--azul-050); }
+  .check-chip .chip:hover { border-color: var(--azul-600); background: var(--azul-050); }
 
   .tipo-opt {
-    border: 1.5px solid var(--gris-300); background: var(--blanco);
+    border: 1.5px solid var(--gris-300); background: var(--color-blanco);
     border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;
     text-align: center; font-family: inherit; font-size: 14px; font-weight: 600;
     color: var(--gris-700); transition: all .15s ease;
   }
   .tipo-opt .em { display: block; font-size: 24px; margin-bottom: 8px; }
   .tipo-opt:hover { border-color: var(--azul-600); background: var(--azul-050); }
-  .tipo-opt.is-active { border-color: var(--oro-600); background: var(--oro-050); color: var(--azul-900); box-shadow: 0 0 0 3px var(--oro-050); }
+  .tipo-opt.is-active { border-color: var(--color-dorado-encabezado); background: var(--oro-050); color: var(--color-azul-texto); box-shadow: 0 0 0 3px var(--oro-050); }
   @media (max-width: 720px){ .tipo-grid { grid-template-columns: repeat(2,1fr); } }
 
   /* Aceptación expresa de bases y condiciones */
@@ -125,20 +125,21 @@
             <span class="tag-auto">de tu cuenta</span>
           </div>
         </div>
-        <!-- Estado va aparte del país porque son dos datos, no uno. Hoy sale fijo:
-             REG todavía no lo captura (`Modelo de datos - Eventos` §2.1); cuando
-             suba a REG se precarga igual que el resto y esta pantalla no cambia.
-             Ciudad no aparece: no se va a capturar por ahora, y un campo que
-             nadie llena ni guarda solo estorba. -->
-        <div class="grid-2">
+        <!-- Estado y ciudad van aparte del país porque son tres datos, no uno.
+             En REG se llaman `entidad` y `ciudad`, y solo se piden cuando el país
+             es México: un catálogo de 32 entidades mexicanas no describe una
+             dirección en Bogotá. Por eso aquí también desaparecen si el país no
+             es México, en vez de salir vacíos. -->
+        <div class="grid-2" data-solo-mexico>
           <div class="field field-prefill">
             <label>Estado <span class="req">*</span></label>
-            <input type="text" value="Yucatán" readonly>
+            <input type="text" value="Yucatán" data-de-cuenta="entidad" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
-          <div class="field">
-            <label>Cargo <span class="opt">(opcional)</span></label>
-            <input type="text" name="cargo" value="Coordinadora editorial">
+          <div class="field field-prefill">
+            <label>Ciudad <span class="opt">(opcional)</span></label>
+            <input type="text" value="Mérida" data-de-cuenta="ciudad" readonly>
+            <span class="tag-auto">de tu cuenta</span>
           </div>
         </div>
         <div class="field">
@@ -150,13 +151,16 @@
             </label>
           </div>
         </div>
+        <div class="field">
+          <label>Cargo <span class="opt">(opcional)</span></label>
+          <input type="text" name="cargo" value="Coordinadora editorial">
+        </div>
         <div class="note note-info" style="margin:6px 0 0">
           <div class="ico">ℹ️</div>
           <div>Todo lo de arriba sale de tu cuenta. Lo único que capturas aquí es la
             <strong>institución y el cargo</strong>: una misma persona puede aplicar
             representando a instituciones distintas, así que se piden por solicitud.
-            <strong>En el prototipo</strong>, el estado sale fijo —REG todavía no lo
-            pide.</div>
+            Estado y ciudad solo aparecen si tu país es México.</div>
         </div>
       </div>
     </div>
@@ -244,6 +248,13 @@
       [persona.nombre, persona.primer_apellido, persona.segundo_apellido]
         .filter(Boolean).join(" "));
     poner("correo", persona.correo);
+    poner("entidad", persona.entidad_nombre || persona.entidad);
+    poner("ciudad", persona.ciudad);
+
+    /* Estado y ciudad son de México y de nadie más: fuera de México REG ni
+       los pide, así que la fila entera desaparece en vez de salir vacía. */
+    var fila = document.querySelector("[data-solo-mexico]");
+    if (fila && persona.pais && persona.pais !== "MX") fila.hidden = true;
     /* Se guarda solo con dígitos; aquí se agrupa para leerlo. */
     poner("telefono", String(persona.telefono || "").replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3"));
 

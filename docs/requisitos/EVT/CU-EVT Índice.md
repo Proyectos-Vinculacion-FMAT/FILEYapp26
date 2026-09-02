@@ -16,7 +16,7 @@ Inventario de casos de uso del dominio **Eventos Generales** (`EVT`): la convoca
 ## A. Convocatoria
 
 - [CU-EVT-001 Configurar la convocatoria](<A - Convocatoria/CU-EVT-001 Configurar la convocatoria.md>)
-- [CU-EVT-002 Registro de la propuesta de la actividad](<A - Convocatoria/CU-EVT-002 Registro de la propuesta de la actividad.md>)
+- [CU-EVT-002 Registro de la propuesta de la actividad](<A - Convocatoria/CU-EVT-002 Registro de la propuesta de la actividad.md>) — **construido** (2026-09-01)
 - [CU-EVT-003 Consultar mis propuestas y revisar su estado actual](<A - Convocatoria/CU-EVT-003 Consultar mis propuestas y revisar su estado actual.md>)
 
 ## B. Revisión y Selección

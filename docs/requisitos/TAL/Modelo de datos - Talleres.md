@@ -1,6 +1,6 @@
 ---
 estado: propuesta
-version: "2.0"
+version: "2.1"
 tags:
   - tipo/modelo-de-datos
   - dom/tal
@@ -36,8 +36,9 @@ dato queda en ambos lados.
 > administración—, no solo el mismo ciclo de negocio (dictamen aceptar/cambios/rechazar). Las
 > diferencias reales que quedan (no de esquema, de negocio): sin categorización cruzada
 > (literaria/académica × UADY/externa), sin adjuntos de archivo, sin semblanza de
-> participantes. `requiere_constancia` sí existe como en `EVT` (§2.4 de `EVT`), solo que
-> precargado en `true`. El campo por campo contra el formulario real de la convocatoria vive en
+> participantes, y **con modalidad presencial/virtual**, que `EVT` no contempla. Sí comparte
+> `requiere_constancia` (§2.4 de `EVT`), solo que precargado en `true`. El campo por campo
+> contra el formulario real de la convocatoria vive en
 > [`datos de convocatoria.md`](<datos%20de%20convocatoria.md>).
 
 ---
@@ -69,7 +70,7 @@ de `EVT` si algún día se necesita, pero no se modela aquí sin un requisito re
 
 ---
 
-## 2. Etapa 1 — Captura de propuestas
+## 2. Etapa 1 — Captura de solicitudes
 
 ```mermaid
 erDiagram
@@ -81,6 +82,8 @@ erDiagram
         string correo
         string celular
         string pais
+        string estado_pais
+        string ciudad
     }
 
     CatalogoConvocatorias {
@@ -106,18 +109,21 @@ erDiagram
 
     Solicitudes_TAL {
         bigint id PK
-        string numero_contacto
+        string institucion
+        string cargo
         string titulo_actividad
         string nombre_organizador_organizacion
-        boolean requiere_constancia
-        string procedencia
-        string tema
-        string sinopsis
         string publico_objetivo
-        string dias_disponibilidad
-        string turno
+        string sinopsis
+        boolean requiere_constancia
         string comentarios
         timestamp fecha_de_solicitud
+        string procedencia
+        string tema_actividad
+        string dias_disponibilidad
+        string turno
+        boolean es_presencial "Solo organizadores fuera de Merida pueden ser false"
+        string URL_actividad
     }
 
     CatalogoActividades {
@@ -188,9 +194,22 @@ erDiagram
 Igual que en `EVT` §2.1: entidad del core de Registros (`REG`), no se define aquí. Ver
 [`REG/Modelo de datos - Registros.md`](<../REG/Modelo%20de%20datos%20-%20Registros.md>).
 
-> El número de contacto del responsable puede diferir del registrado en `Persona` — por eso
-> `numero_contacto` se captura por solicitud (§2.5), no se asume el de perfil. Mismo criterio
-> que `institucion`/`cargo` en `EVT`.
+`TAL` **no duplica ningún dato de contacto en la solicitud**: el teléfono del responsable es
+`Persona.celular` y su correo es `Persona.correo`, tal como los pide el bloque "Responsable del
+evento" del formulario real, que ya los marca como precapturados en `REG`. Lo que sí se captura
+por solicitud es la institución y el cargo (§2.5), por el mismo motivo que en `EVT`: una misma
+persona puede aplicar representando a instituciones distintas.
+
+La procedencia geográfica del perfil —`pais` → `estado_pais` → `ciudad`, en ese orden de
+cascada— es además lo que hace verificable la regla de modalidad de §2.5: quién cuenta como "de
+fuera de Mérida" se lee en `ciudad`, no queda solo en la palabra del aplicante.
+
+> [!warning] `estado_pais` y `ciudad` todavía no tienen dueño documentado
+> El diagrama de esta etapa muestra los tres niveles de procedencia en `Persona`, pero hoy
+> `REG` define únicamente `pais`: `estado_pais` y `ciudad` siguen marcados como "sin dueño y sin
+> decidir" en `EVT` §2.1. Este modelo los da por existentes porque los necesita para
+> `es_presencial` (§2.5); **cerrar el hueco es trabajo de `REG`** —el selector país → estado →
+> ciudad, issue #22—, no de `TAL`.
 
 ### 2.2 CatalogoConvocatorias
 
@@ -217,29 +236,47 @@ Los datos que el tallerista captura y que son **comunes a los seis tipos de acti
 que distingue a cada tipo vive en las tablas `Actividad_*` (§2.8); lo que decide el
 administrador vive en la etapa 2 (§3). Equivalente directo de `Solicitudes_EVT`.
 
+**El orden de los campos es significativo y la tabla de abajo lo respeta.** Primero va el
+tronco común con `Solicitudes_EVT` —los mismos atributos, en el mismo orden que allá, menos
+`nombre_moderador` y `es_uady`, que `TAL` no tiene—; después, lo propio de este dominio. Leídas
+en paralelo, las dos tablas se alinean campo a campo hasta donde comparten forma, y lo que
+sigue es exactamente lo que `TAL` añade.
+
+Tronco común con `Solicitudes_EVT`:
+
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único, `bigint`. Como en `EVT`, es la base del folio: **no se almacena**, se compone `{prefijo_folio}-{id}` con el prefijo de `DetallesConvocatoria` (§3.6). |
-| numero_contacto | Teléfono de contacto del responsable. Puede diferir del registrado en `Persona`. |
-| titulo_actividad | Nombre oficial del evento/taller ("saldrá en el programa como se registre"). Obligatorio. |
-| nombre_organizador_organizacion | Institución, dependencia o grupo responsable que organiza. Obligatorio. |
-| requiere_constancia | Indica si la actividad requiere constancia de participación. Booleano, precargado en `true` (en `EVT`, §2.4, el mismo campo no se precarga). Los destinatarios de la constancia no se capturan aparte — se derivan de los nombres ya registrados en `Actividad_*`, ver el final de §2.8. |
-| procedencia | `local` / `nacional` / `internacional`. Obligatorio. Acota la modalidad sin determinarla: quien es de fuera de Mérida (`nacional`/`internacional`) **puede** optar por modalidad virtual, pero también puede presentarse presencial si así lo decide — la convocatoria no lo obliga a ninguna de las dos. Quien es `local` sí queda sin esa opción: solo presencial. Por eso no hay un campo `modalidad`/`enlace_videoconferencia` en el modelo —el formulario real no lo pide (`## Datos del evento` no tiene ningún selector de modalidad)— pero tampoco se puede derivar limpiamente de `procedencia`: qué modalidad usará cada quien no queda capturado en ningún dato (ver §6). |
-| tema | Texto. Obligatorio. Sin equivalente en `EVT`. |
-| sinopsis | Reseña breve de la actividad, para mostrar al público. Obligatorio. |
+| institucion | Dependencia o institución que representa el aplicante. Mismo campo y mismo criterio que `EVT` §2.4: se captura por solicitud, no en el perfil, porque una persona puede aplicar por instituciones distintas. No aparece en el formulario real de la convocatoria —que solo pregunta "Organizado por"—; entra por homologación con `EVT` (ver §6). |
+| cargo | Cargo dentro de esa institución. Opcional, igual que en `EVT`. Tampoco está en el formulario real. |
+| titulo_actividad | Nombre oficial del evento o taller. Obligatorio. La convocatoria advierte que "saldrá en el programa como se registre en este apartado". |
+| nombre_organizador_organizacion | Institución, dependencia o grupo responsable que organiza. Obligatorio. Es además el valor al que cae el programa oficial cuando la lista de constancias supera seis nombres (§2.8). |
 | publico_objetivo | Multivalor: `preescolar` / `primaria_baja` / `primaria_alta` / `secundaria` / `preparatoria` / `adultos_mayores` (mínimo uno). El conjunto de valores es propio de `TAL`, no se homologa con el de `EVT` (escalas distintas: nivel escolar vs. tipo de público). |
+| sinopsis | Reseña breve de la actividad, para mostrar al público participante. Obligatorio. |
+| requiere_constancia | Indica si la actividad requiere constancia de participación. Booleano, precargado en `true` (en `EVT`, §2.4, el mismo campo no se precarga). Los destinatarios de la constancia no se capturan aparte — se derivan de los nombres ya registrados en `Actividad_*`, ver el final de §2.8. |
+| comentarios | Observaciones generales del aplicante. Opcional. |
+| fecha_de_solicitud | Marca de tiempo del envío. |
+
+Propios de `TAL`:
+
+| Atributo | Descripción |
+| --- | --- |
+| procedencia | `local` / `nacional` / `internacional`. Obligatorio. **Acota la modalidad sin determinarla**: es lo que habilita o cierra la opción virtual de `es_presencial`, pero no la elige. |
+| tema_actividad | Qué tema aborda la actividad. Texto, obligatorio. Sin equivalente en `EVT`, que no separa el tema del título ni de la sinopsis. |
 | dias_disponibilidad | Multivalor, sobre los días en que se realiza la feria (13 al 21 de marzo en la edición 2027). Obligatorio, mínimo uno. Sin equivalente en `EVT`, que no le pregunta al aplicante disponibilidad por día. |
 | turno | Multivalor: `matutino` (9:00–13:00) / `vespertino` (15:00–18:00), puede ser ambos. Obligatorio, mínimo uno. |
-| comentarios | Observaciones libres, opcional. |
-| fecha_de_solicitud | Marca de tiempo del envío. |
+| es_presencial | Modalidad de la actividad: `true` presencial, `false` virtual. **Solo quien viene de fuera de Mérida puede ponerlo en `false`** — con `procedencia = local` queda fijo en `true`. La restricción es asimétrica a propósito: la convocatoria abre la modalidad virtual a "talleristas fuera de Mérida", pero no los obliga a usarla, así que alguien `nacional` o `internacional` puede perfectamente presentarse presencial. Por eso la modalidad es un campo aparte y no algo derivado de `procedencia`. |
+| URL_actividad | Enlace de la transmisión, cuando `es_presencial = false`. Nulo en las presenciales. Se registra en la captura y no el día del evento porque la convocatoria compromete a que "un integrante del equipo FILEY estará presente durante la transmisión": el equipo necesita la liga con anticipación. No está en el formulario real mapeado (ver §6). |
 
 No hay `es_uady` ni ningún campo de categorización: confirmado en `CU-TAL-002` que no existe
 paso de categorización en `TAL` ("A diferencia de CU-EVT-002, no existe paso de categorización
 ni carga de archivos adjuntos"). No se modela.
 
-`Tallerista` deja de existir como entidad propia: su único campo adicional (`numero_contacto`)
-se incorpora directo aquí, igual que `EVT` mantiene `institucion`/`cargo` en `Solicitudes_EVT`
-en vez de una entidad `Aplicante` aparte.
+`Tallerista` deja de existir como entidad propia, y con ella desaparece `numero_contacto`: el
+teléfono del responsable es `Persona.celular` (§2.1), no un dato que se repita por solicitud.
+Es el mismo criterio con el que `EVT` mantiene `institucion` y `cargo` en `Solicitudes_EVT` en
+vez de una entidad `Aplicante` aparte — lo que cambia entre solicitudes se captura por
+solicitud; lo que es identidad, vive en el perfil.
 
 ### 2.6 CatalogoActividades
 
@@ -275,8 +312,8 @@ no hay esa confirmación directa.
 > [!warning] `nombre_participante_1` en los otros cinco tipos: arquitectura, no evidencia de
 > formulario
 > Para `Taller`/`Cuentacuentos`/`Plática juvenil`/`Obra teatral`/`Proyección de cine`, el
-> formulario real no tiene ningún campo de "quién presenta" además del responsable del evento
-> (`Persona` + `numero_contacto`, §2.5). El campo `nombre_participante_1` se mantiene aquí por
+> formulario real no tiene ningún campo de "quién presenta" además del responsable del evento,
+> que es la propia `Persona` (§2.1). El campo `nombre_participante_1` se mantiene aquí por
 > instrucción explícita de Isaac —"igual que en EVT los nombres de los participantes van en el
 > detalle de la actividad"—: es una decisión de arquitectura (espejo de `EVT`), no algo que el
 > formulario pida. Se deja señalado para que quede trazable.
@@ -486,9 +523,9 @@ Reemplaza a `ParametrosConvocatoriaTAL`. Mismo patrón que `EVT` §3.6.
 | motivo_archivado | Motivo registrado al archivar. Obligatorio. |
 
 Sin `cupo_*`: confirmado que `TAL` no tiene categorización cruzada, así que no hay nada que
-contar por categoría. Sin `modalidades_admitidas`: configuraba el campo `modalidad`, que se
-retiró de `Solicitudes_TAL` (§2.5) por no ser un campo real del formulario; sin ese campo, este
-parámetro no tiene nada que configurar.
+contar por categoría. Sin `modalidades_admitidas`: la convocatoria admite las dos modalidades de
+principio a fin, y quién puede usar cada una lo decide la `procedencia` de cada propuesta
+(§2.5), no un parámetro que el administrador configure por convocatoria.
 
 Sin `BitacoraTAL`: `EVT` tiene `BitacoraEVT` para auditar acciones excepcionales del
 administrador, pero ningún `CU-TAL` describe esa necesidad. No se modela sin evidencia; se
@@ -543,11 +580,16 @@ agregaría si surge un caso de uso que la requiera.
 - Confirmar si el tipo `presentacion_libro_infantil` necesita una constancia de ejemplar físico
   entregado, como su equivalente en `EVT` (`ejemplar_fisico_entregado`) — no se modeló por
   falta de evidencia en los `CU-TAL` ni en el formulario real.
-- Qué modalidad (presencial/virtual) usará finalmente una propuesta de fuera de Mérida no
-  queda registrada en ningún dato de este modelo (§2.5) — `procedencia` solo descarta la
-  virtual para locales, no resuelve el resto. Operativamente hace falta saberlo con
-  anticipación: la convocatoria promete que "un integrante del equipo FILEY estará presente
-  durante la transmisión" de las actividades virtuales.
+- `institucion`, `cargo` y `URL_actividad` (§2.5) no aparecen en el formulario real mapeado en
+  [`datos de convocatoria.md`](<datos%20de%20convocatoria.md>): los dos primeros entran por
+  homologación con `EVT`, el tercero para que la modalidad virtual sea operable. Si la
+  convocatoria de `TAL` no va a pedirlos, sobran — confirmar con Elvira antes de implementarlos.
+- `procedencia` (§2.5) y los tres niveles geográficos del perfil (`pais` → `estado_pais` →
+  `ciudad`, §2.1) describen lo mismo por dos caminos: `local`/`nacional`/`internacional` es
+  derivable de `pais` + `ciudad`. Se mantiene como campo capturado porque el formulario lo
+  pregunta explícitamente y porque el perfil puede cambiar después de enviada la propuesta
+  —`EVT` §2.1 señala ese mismo efecto para su propia procedencia—. Queda por decidir si conviene
+  derivarlo y quitarlo, o dejarlo como la foto del momento del envío.
 - El texto de elegibilidad ética/legal (RENOA, sanciones por violencia de género, etc.)
   menciona que "las personas postulantes deberán firmar una declaración bajo protesta de decir
   verdad". No está claro si eso es un campo capturado (p. ej. una casilla de aceptación) o solo

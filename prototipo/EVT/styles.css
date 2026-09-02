@@ -270,7 +270,12 @@
 .evt-persona__quitar {
   margin-left: auto; border: none; background: none; padding: 0; cursor: pointer;
   font-family: inherit; font-size: 13px; font-weight: 600; color: var(--err-600);
+  /* Ley de Fitts: el texto mide 13 px de alto y es un objetivo minúsculo, sobre
+     todo en táctil. El pseudo-elemento agranda el área pulsable sin meter un
+     nodo más ni mover nada de sitio. */
+  position: relative;
 }
+.evt-persona__quitar::after { content: ''; position: absolute; inset: -12px; }
 .evt-persona .field:last-child { margin-bottom: 0; }
 
 /* Casilla suelta: «es de la UADY» junto a la institución y «participará» en
@@ -288,7 +293,10 @@ label.evt-check {
 /* La institución ocupa la fila entera para que la casilla quepa a su lado
    —y no debajo—; en pantalla estrecha la casilla baja sola. */
 .evt-institucion { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.evt-institucion input { flex: 1; min-width: 12rem; }
+/* `> input` y no `input` a secas: la casilla de la UADY vive dentro
+   del label, y con el selector amplio heredaba el `flex: 1` del campo
+   de texto — se estiraba y empujaba su propia etiqueta lejos. */
+.evt-institucion > input { flex: 1; min-width: 12rem; }
 
 /* Botón de agregar otra persona. Desaparece al llegar al máximo. */
 .evt-agregar {

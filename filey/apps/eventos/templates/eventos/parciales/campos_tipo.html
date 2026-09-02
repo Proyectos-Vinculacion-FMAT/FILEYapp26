@@ -1,0 +1,213 @@
+{% comment %} ===========================================================
+   Sección 3 · todo lo que pide una propuesta del tipo elegido.
+
+   Contexto que espera:
+
+     tipo_elegido   el nombre del tipo, o "" si todavía no eligió
+     form           el formulario de lo común a los ocho tipos
+     form_tipo      el formulario de ese tipo, o None
+     es_publicacion si es libro o revista (A1 del CU-EVT-002)
+
+   Existe **una sola vez** y sirve para la página completa y para el swap
+   de htmx: elegir un tipo cambia solo esto. Ese es el contrato entre lo
+   visual y el renderizador.
+
+   ── El orden de captura ──────────────────────────────────────
+
+   No lo decide esta plantilla, que solo recorre. Lo común está escrito
+   aquí en su orden, y lo del tipo lo declara `orden` en su formulario,
+   calcado del diagrama del modelo. La secuencia entera es:
+
+     1. Título de la actividad
+     2. Moderador/a
+     3. Organiza
+     4. Público al que va dirigido
+     5. lo del tipo, en el orden del diagrama
+     6. ¿Requiere constancia?
+     7. Sinopsis
+     8. Archivos adjuntos, si el tipo los pide
+     9. El aviso del ejemplar físico, si aplica
+    10. Comentarios u observaciones
+
+   Los adjuntos salen del orden del diagrama **a propósito**: van siempre
+   al final, porque adjuntar archivos es lo último que se hace y porque
+   así su sitio no cambia entre un tipo y otro.
+   =========================================================== {% endcomment %}
+{% comment %} Sin tipo elegido no hay sección que enseñar —igual que en el
+   prototipo—, pero el ancla tiene que existir: es el destino del swap de
+   htmx, y sin ella el primer clic no tendría dónde escribir. {% endcomment %}
+{% if not form_tipo %}
+<div id="campos-tipo" hidden></div>
+{% else %}
+<div class="card section-card" id="campos-tipo">
+  <div class="section-head">
+    <span class="num">3</span>
+    <div>
+      <h3>Detalles de la actividad — {{ tipo }}</h3>
+      <p>Todo lo que pide una propuesta de este tipo</p>
+    </div>
+  </div>
+
+  <div class="section-body">
+    {% comment %} Qué tipo se está capturando viaja aquí dentro, y no en la
+       página: esto es lo que htmx reemplaza, así que es lo único que puede
+       decir la verdad después de cambiar de tipo sin recargar. {% endcomment %}
+    <input type="hidden" name="tipo" value="{{ tipo_elegido }}">
+
+      {% comment %} 1-3 · lo que abre cualquier propuesta. {% endcomment %}
+      {% include "eventos/parciales/campo.html" with campo=form.titulo_actividad %}
+      {% include "eventos/parciales/campo.html" with campo=form.nombre_moderador %}
+      {% include "eventos/parciales/campo.html" with campo=form.nombre_organizador_organizacion %}
+
+      {% comment %} 4 · público objetivo, al menos uno. {% endcomment %}
+      <div class="field">
+        <label>{{ form.publico_objetivo.label }} <span class="req">*</span>
+          <span class="opt">(puedes elegir más de uno)</span></label>
+        <div class="check-chips">
+          {% for opcion in form.publico_objetivo %}
+            <label class="check-chip">{{ opcion.tag }}<span class="chip">{{ opcion.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        {% for error in form.publico_objetivo.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      {% comment %} 5 · lo del tipo, en el orden que declara su formulario.
+
+         Las filas de personas están **todas** en el HTML, siempre: sin
+         JavaScript no habría forma de añadir una, y esconderlas del
+         servidor dejaría campos que existen y nadie puede alcanzar.
+         `filey.js` es el que las revela de una en una y el que bloquea la
+         semblanza hasta que su nombre tiene algo escrito; quien lo hace
+         cumplir de verdad es `validar_personas`. {% endcomment %}
+      {% for bloque in form_tipo.bloques %}
+        {% if bloque.clase == "campo" %}
+          {% include "eventos/parciales/campo.html" with campo=bloque.campo %}
+        {% else %}
+          <div data-personas
+               data-prefijo="{{ bloque.grupo.prefijo }}"
+               data-max="{{ bloque.grupo.maximo }}"
+               data-singular="{{ bloque.grupo.singular }}">
+            {% for persona in bloque.grupo.filas %}
+              <div class="evt-persona" data-persona data-indice="{{ persona.n }}">
+                <div class="evt-persona__head">
+                  <span class="evt-persona__n">{{ persona.etiqueta }}</span>
+                  {% if persona.participa %}
+                    <label class="evt-check">
+                      {{ persona.participa }} Participará en la actividad
+                    </label>
+                  {% endif %}
+                  {% if persona.n > 1 %}
+                    <button type="button" class="evt-persona__quitar" data-quitar hidden>Quitar</button>
+                  {% endif %}
+                </div>
+
+                <div class="field">
+                  <label for="{{ persona.nombre.id_for_label }}">
+                    Nombre
+                    {% if persona.nombre.field.required %}<span class="req">*</span>
+                    {% else %}<span class="opt">(opcional)</span>{% endif %}
+                  </label>
+                  {{ persona.nombre }}
+                  {% for error in persona.nombre.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="field" data-semblanza>
+                  <label for="{{ persona.semblanza.id_for_label }}">
+                    Semblanza
+                    {% if persona.semblanza.field.required %}<span class="req">*</span>
+                    {% else %}<span class="opt">(opcional)</span>{% endif %}
+                    <span class="hint">— máx. {{ persona.semblanza.field.max_length }} caracteres</span>
+                  </label>
+                  {{ persona.semblanza }}
+                  <p class="evt-contador" hidden><span data-cuenta>0</span> / {{ persona.semblanza.field.max_length }}</p>
+                  <p class="evt-bloqueo" data-bloqueo hidden>Escribe primero el nombre.</p>
+                  {% for error in persona.semblanza.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+
+            <button type="button" class="evt-agregar" data-agregar hidden>
+              + Agregar {{ bloque.grupo.singular }}
+            </button>
+            <p class="evt-bloqueo" data-bloqueo-agregar hidden></p>
+            {% comment %} Lo llena `filey.js` cuando esta lista pasa a ser
+               obligatoria porque nadie de la publicación asiste. {% endcomment %}
+            <p class="evt-bloqueo" data-aviso-personas hidden></p>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      {% for error in form_tipo.non_field_errors %}
+        <p class="msg-error">{{ error }}</p>
+      {% endfor %}
+
+      {% comment %} 6 · la constancia. Una casilla y no un sí/no: sin marcar
+         ya es una respuesta —no la necesito—, así que no hay nada
+         obligatorio que contestar ni asterisco que poner. {% endcomment %}
+      <div class="field">
+        <label class="evt-check">
+          {{ form.requiere_constancia }} {{ form.requiere_constancia.label }}
+        </label>
+        {% for error in form.requiere_constancia.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      {% comment %} 7 · la sinopsis. {% endcomment %}
+      {% include "eventos/parciales/campo.html" with campo=form.sinopsis %}
+
+      {% comment %} 8 · los adjuntos, siempre al final.
+
+         El control nativo dice «Examinar…» en el idioma del navegador y
+         no dice qué se está adjuntando. Se esconde dentro del rótulo, y lo
+         que se ve es el mismo bloque del prototipo, en español. Al elegir
+         un archivo, `filey.js` deja el bloque en verde con su nombre: sin
+         eso no hay forma de saber si se cargó. {% endcomment %}
+      {% comment %} Un `<input type="file">` **no se puede repoblar**: ningún
+         navegador deja que una página le ponga un archivo, y con razón —si
+         pudiera, una página cualquiera subiría lo que quisiera de tu disco—.
+         Así que tras un envío rechazado los adjuntos se pierden aunque todo
+         lo demás se conserve, y callarlo dejaría a alguien pulsando enviar
+         sin entender por qué sigue faltando lo mismo. {% endcomment %}
+      {% if enviado and form_tipo.campos_adjuntos %}
+        <div class="note note-warn">
+          <div class="ico">📎</div>
+          <div>Los archivos hay que <strong>volver a adjuntarlos</strong>: por
+            seguridad, el navegador no permite que una página los recuerde
+            entre un envío y el siguiente. Lo demás que escribiste sigue ahí.</div>
+        </div>
+      {% endif %}
+
+      {% for adjunto in form_tipo.campos_adjuntos %}
+        <div class="field">
+          <label for="{{ adjunto.id_for_label }}">
+            {{ adjunto.label }}
+            {% if adjunto.field.required %}<span class="req">*</span>
+            {% else %}<span class="opt">(opcional)</span>{% endif %}
+          </label>
+          <label class="file-mock" data-adjunto>
+            {{ adjunto }}
+            <div class="ico">📎</div>
+            <div class="txt">
+              <strong data-adjunto-nombre>Adjuntar archivo</strong>
+              <small>{{ adjunto.help_text }}</small>
+            </div>
+          </label>
+          {% for error in adjunto.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+
+      {% comment %} 9 · el ejemplar físico, después de los adjuntos. {% endcomment %}
+      {% if es_publicacion %}
+        <div class="note note-warn">
+          <div class="ico">📦</div>
+          <div><strong>Envío de ejemplar físico.</strong> Además de lo de arriba,
+            hay que hacer llegar un ejemplar a las oficinas de la FILEY: Salones 42
+            y 43, UAA «Elvia Carrillo Puerto-UADY», Calle 33A x 20, Tanlum, C.P.
+            97210, Mérida, Yucatán. Atención: Coordinación General de Contenidos.</div>
+        </div>
+      {% endif %}
+
+      {% comment %} 10 · lo último, y opcional. {% endcomment %}
+      {% include "eventos/parciales/campo.html" with campo=form.comentarios %}
+  </div>
+</div>
+{% endif %}

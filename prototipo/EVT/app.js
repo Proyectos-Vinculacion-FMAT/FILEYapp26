@@ -25,25 +25,76 @@ const MAX = {
   sinopsisPub: 4000  // sinopsis de libro o de revista, que piden más espacio
 };
 
+/* ---- Texto de ejemplo — SOLO del prototipo --------------------------------
+   Existe para recorrer el happy path en una demo sin teclear treinta campos,
+   y para que la captura en cascada se vea desbloqueada de entrada en vez de
+   obligar a escribir un nombre antes de poder enseñar la semblanza.
+
+   **No existe en Django**: allá el formulario nace vacío, que es lo que tiene
+   que ver quien de verdad va a proponer una actividad. Si algún día hace falta
+   apagarlo aquí, basta con vaciar este objeto. */
+const MUESTRA = {
+  titulo: "El mar que nos habita",
+  organiza: "Editorial La Nave",
+  moderador: "Ana Pech Uc",
+  editorial: "Editorial La Nave",
+  sinopsis:
+    "Una conversación sobre la memoria del puerto de Progreso y sobre cómo el " +
+    "mar ordena la vida de quienes viven de él. Se leerán fragmentos de la obra " +
+    "y se abrirá una ronda de preguntas con el público.",
+  personas: {
+    participante: [
+      { nombre: "Elena Poniatowska", semblanza: "Escritora y periodista. Premio Cervantes 2013." },
+      { nombre: "Juan Villoro", semblanza: "Narrador y cronista. Autor de «El testigo»." }
+    ],
+    autor: [
+      { nombre: "Elena Poniatowska", semblanza: "Escritora y periodista. Premio Cervantes 2013." }
+    ],
+    editor: [
+      { nombre: "Ana Pech Uc", semblanza: "Editora de Cuadernos del Mayab desde 2019." }
+    ],
+    presentador: [
+      { nombre: "Jorge Cortés Ancona", semblanza: "Crítico literario y ensayista yucateco." }
+    ]
+  }
+};
+
+/* La lista de ejemplo se busca por `muestra` y no por `clave` porque en
+   libro y revista los presentadores son `participante` en el modelo —esas
+   son sus columnas— pero no pueden salir con el nombre del autor. */
+function muestraDe(cfg, indice) {
+  const lista = MUESTRA.personas[cfg.muestra || cfg.clave] || [];
+  return lista[indice - 1] || null;
+}
+
 // ---- Bloques reutilizables -------------------------------------------------
 const F = {
-  text(label, req, hint) {
+  text(label, req, hint, valor) {
     return `<div class="field"><label>${label} ${tag(req)} ${hintHtml(hint)}</label>
-      <input type="text" placeholder=""></div>`;
+      <input type="text" placeholder="" value="${valor || ""}"></div>`;
   },
-  textarea(label, req, max, name) {
+  textarea(label, req, max, name, valor) {
     const tope = max ? ` maxlength="${max}"` : "";
     const pista = max ? `máx. ${max} caracteres` : "";
+    const texto = valor || "";
     const contador = max
-      ? `<p class="evt-contador"><span data-cuenta>0</span> / ${max}</p>`
+      ? `<p class="evt-contador"><span data-cuenta>${texto.length}</span> / ${max}</p>`
       : "";
     return `<div class="field"><label>${label} ${tag(req)} ${hintHtml(pista)}</label>
-      <textarea${tope}${name ? ` name="${name}"` : ""}></textarea>${contador}</div>`;
+      <textarea rows="5"${tope}${name ? ` name="${name}"` : ""}>${texto}</textarea>${contador}</div>`;
   },
   select(label, req, opts) {
     const o = opts.map(v => `<option>${v}</option>`).join("");
     return `<div class="field"><label>${label} ${tag(req)}</label>
       <select><option value="" disabled selected>Selecciona…</option>${o}</select></div>`;
+  },
+  /* Una casilla suelta, para una pregunta cuya respuesta por omisión es
+     la inofensiva: sin marcar ya es «no», así que no hay nada obligatorio
+     que contestar ni asterisco que poner. */
+  check(label, name) {
+    return `<div class="field">
+      <label class="evt-check"><input type="checkbox"${name ? ` name="${name}"` : ""}> ${label}</label>
+    </div>`;
   },
   radioSiNo(label, req) {
     return `<div class="field"><label>${label} ${tag(req)}</label>
@@ -52,12 +103,17 @@ const F = {
         <label><input type="radio" name="r${rid()}"> No</label>
       </div></div>`;
   },
+  /* El control nativo dice «Examinar…» en el idioma del navegador, no en
+     el de la página, y no cuenta qué se adjuntó. Se esconde dentro del
+     rótulo —sigue recibiendo el foco— y lo que se ve es este bloque, que
+     al cargar un archivo se queda en verde con su nombre. */
   file(label, req, hint) {
     return `<div class="field"><label>${label} ${tag(req)} ${hintHtml(hint)}</label>
-      <div class="file-mock">
+      <label class="file-mock" data-adjunto>
+        <input type="file">
         <div class="ico">📎</div>
-        <div class="txt"><strong>Adjuntar archivo</strong><small>${hint || "Formato permitido"}</small></div>
-      </div></div>`;
+        <div class="txt"><strong data-adjunto-nombre>Adjuntar archivo</strong><small>${hint || "Formato permitido"}</small></div>
+      </label></div>`;
   },
   aviso(txt) {
     return `<div class="note note-warn"><div class="ico">📦</div>
@@ -79,6 +135,7 @@ const F = {
         <div data-lista>${personaHtml(cfg, 1)}</div>
         <button type="button" class="evt-agregar" data-agregar disabled>+ Agregar ${cfg.singular.toLowerCase()}</button>
         <p class="evt-bloqueo" data-bloqueo-agregar></p>
+        <p class="evt-bloqueo" data-aviso-personas hidden></p>
       </div>
     </div>`;
   }
@@ -96,9 +153,10 @@ let _rid = 0; function rid() { return ++_rid; }
    en adelante se puede quitar. */
 function personaHtml(cfg, indice) {
   const obligatoria = cfg.req && indice === 1;
+  const ejemplo = muestraDe(cfg, indice);
   const participa = cfg.participa
     ? `<label class="evt-check">
-         <input type="checkbox" name="${cfg.clave}_${indice}_participa" checked>
+         <input type="checkbox" name="${cfg.clave}_${indice}_participa">
          Participará en la actividad
        </label>`
     : "";
@@ -107,11 +165,12 @@ function personaHtml(cfg, indice) {
     : "";
   /* La semblanza no se escribe antes que el nombre: se pinta apagada y con
      un aviso al pie, no solo con el cursor en «prohibido». */
+  const textoSemblanza = ejemplo ? ejemplo.semblanza : "";
   const semblanza = cfg.semblanza
     ? `<div class="field" data-semblanza>
          <label>Semblanza ${tag(obligatoria)} <span class="hint">— máx. ${MAX.semblanza} caracteres</span></label>
-         <textarea maxlength="${MAX.semblanza}" name="semblanza_${cfg.clave}_${indice}" disabled></textarea>
-         <p class="evt-contador"><span data-cuenta>0</span> / ${MAX.semblanza}</p>
+         <textarea rows="5" maxlength="${MAX.semblanza}" name="semblanza_${cfg.clave}_${indice}">${textoSemblanza}</textarea>
+         <p class="evt-contador"><span data-cuenta>${textoSemblanza.length}</span> / ${MAX.semblanza}</p>
          <p class="evt-bloqueo" data-bloqueo>Escribe primero el nombre.</p>
        </div>`
     : "";
@@ -124,7 +183,7 @@ function personaHtml(cfg, indice) {
     </div>
     <div class="field">
       <label>Nombre ${tag(obligatoria)}</label>
-      <input type="text" name="nombre_${cfg.clave}_${indice}">
+      <input type="text" name="nombre_${cfg.clave}_${indice}" value="${ejemplo ? ejemplo.nombre : ""}">
     </div>
     ${semblanza}
   </div>`;
@@ -141,6 +200,20 @@ function cfgDe(caja) {
     semblanza: caja.dataset.semblanza === "1",
     participa: caja.dataset.participa === "1"
   };
+}
+
+/* Pone o quita el asterisco de obligatorio de un campo, en vivo.
+
+   Suelta porque la usan dos reglas: la semblanza que deja de ser opcional
+   en cuanto su nombre tiene algo escrito, y el presentador que hace falta
+   cuando nadie de la publicación asiste. */
+function marcarObligatorio(campo, obligatorio) {
+  if (!campo) return;
+  const contenedor = campo.closest(".field");
+  const marca = contenedor && contenedor.querySelector("label .req, label .opt");
+  if (!marca) return;
+  marca.className = obligatorio ? "req" : "opt";
+  marca.textContent = obligatorio ? "*" : "(opcional)";
 }
 
 /* Tras agregar o quitar, los índices tienen que volver a ser 1..n seguidos:
@@ -185,6 +258,9 @@ function actualizarPuerta(caja) {
     /* No se borra lo ya escrito al vaciar el nombre: se apaga y se conserva. */
     area.disabled = !conNombre;
     bloque.querySelector("[data-bloqueo]").hidden = conNombre;
+    /* Y en cuanto hay nombre, su semblanza deja de ser opcional: media
+       persona no se puede mandar a un comité. */
+    marcarObligatorio(area, conNombre);
     if (area.value.trim() === "") completas = false;
   });
 
@@ -217,16 +293,22 @@ function publicoCheckboxes() {
   </div>`;
 }
 
-// Campos comunes al final de casi todos los tipos
+/* El orden de captura, y es el mismo en Django (`campos_tipo.html`):
+   título, moderador, organiza, público, lo propio del tipo, constancia,
+   sinopsis, adjuntos, ejemplar físico y comentarios.
+
+   Los adjuntos van al final aunque el diagrama del modelo los sitúe
+   antes: adjuntar es lo último que se hace, y así su sitio no cambia de
+   un tipo a otro. */
 function comunesActividad({ etiqueta, singular, max }) {
   return [
-    F.text("Título de la actividad", true),
-    F.personas({ clave: "participante", etiqueta, singular, max, req: true, semblanza: true }),
-    F.text("Moderador/a", false, "uno como máximo"),
-    F.text("Organiza", true),
+    F.text("Título de la actividad", true, null, MUESTRA.titulo),
+    F.text("Moderador/a", false, "uno como máximo", MUESTRA.moderador),
+    F.text("Organiza", true, null, MUESTRA.organiza),
     publicoCheckboxes(),
-    F.radioSiNo("¿Requiere constancia de participación?", true),
-    F.textarea("Sinopsis de la actividad", true, MAX.sinopsis, "sinopsis"),
+    F.personas({ clave: "participante", etiqueta, singular, max, req: true, semblanza: true }),
+    F.check("Necesito constancia de participación"),
+    F.textarea("Sinopsis de la actividad", true, MAX.sinopsis, "sinopsis", MUESTRA.sinopsis),
     F.textarea("Comentarios u observaciones", false)
   ].join("");
 }
@@ -243,9 +325,12 @@ const TIPOS = {
   "Charla":         () => comunesActividad({ etiqueta: "Quién imparte", singular: "Participante", max: 2 }),
 
   "Presentación de libro": () => [
-    F.text("Título de la actividad", true),
-    F.text("Organiza", true),
-    F.text("Título de la publicación", true),
+    F.text("Título de la actividad", true, null, MUESTRA.titulo),
+    F.text("Moderador/a", false, "uno como máximo", MUESTRA.moderador),
+    F.text("Organiza", true, null, MUESTRA.organiza),
+    publicoCheckboxes(),
+    // Lo propio del tipo, en el orden de `Actividad_PresentacionLibro`.
+    F.text("Título de la publicación", true, null, MUESTRA.titulo),
     F.select("El proponente es", true, ["Autor/a", "Editor/a", "Antologador/a", "Compilador/a", "Coordinador/a"]),
     F.personas({
       clave: "autor", etiqueta: "Autores", singular: "Autor/a", max: 5,
@@ -253,14 +338,13 @@ const TIPOS = {
       hint: "nombre igual a la portada del libro; marca quiénes estarán presentes"
     }),
     F.personas({
-      clave: "participante", etiqueta: "Presentadores", singular: "Presentador/a", max: 2,
+      clave: "participante", muestra: "presentador",
+      etiqueta: "Presentadores", singular: "Presentador/a", max: 2,
       req: false, semblanza: true
     }),
-    F.text("Moderador/a", false, "uno como máximo"),
-    F.text("Editorial", true, "si es publicación independiente, anótelo"),
-    publicoCheckboxes(),
-    F.radioSiNo("¿Requiere constancia de participación?", true),
-    F.textarea("Sinopsis del libro", true, MAX.sinopsisPub, "sinopsis"),
+    F.text("Editorial", true, "si es publicación independiente, anótelo", MUESTRA.editorial),
+    F.check("Necesito constancia de participación"),
+    F.textarea("Sinopsis del libro", true, MAX.sinopsisPub, "sinopsis", MUESTRA.sinopsis),
     F.file("Fotografía del autor/a en alta resolución", true, "JPG o PNG"),
     F.file("Portada del libro en alta resolución", true, "JPG o PDF"),
     F.aviso("Enviar un ejemplar de la obra a: Oficinas FILEY (Salones 42 y 43), UAA “Elvia Carrillo Puerto-UADY”, Calle 33A x 20, Tanlum, C.P. 97210, Mérida, Yucatán. Atención: Coordinación General de Contenidos."),
@@ -268,9 +352,12 @@ const TIPOS = {
   ].join(""),
 
   "Presentación de revista": () => [
-    F.text("Título de la actividad", true),
-    F.text("Organiza", true),
-    F.text("Título de la publicación", true),
+    F.text("Título de la actividad", true, null, MUESTRA.titulo),
+    F.text("Moderador/a", false, "uno como máximo", MUESTRA.moderador),
+    F.text("Organiza", true, null, MUESTRA.organiza),
+    publicoCheckboxes(),
+    // Lo propio del tipo, en el orden de `Actividad_PresentacionRevista`.
+    F.text("Título de la publicación", true, null, "Cuadernos del Mayab"),
     F.select("El proponente es", true, ["Autor/a", "Editor/a", "Antologador/a", "Compilador/a", "Coordinador/a"]),
     F.personas({
       clave: "editor", etiqueta: "Editores", singular: "Editor/a", max: 2,
@@ -278,14 +365,13 @@ const TIPOS = {
       hint: "marca quiénes estarán presentes en la actividad"
     }),
     F.personas({
-      clave: "participante", etiqueta: "Presentadores", singular: "Presentador/a", max: 2,
+      clave: "participante", muestra: "presentador",
+      etiqueta: "Presentadores", singular: "Presentador/a", max: 2,
       req: false, semblanza: true
     }),
-    F.text("Moderador/a", false, "uno como máximo"),
-    F.text("Editorial", true, "responsable de la revista"),
-    publicoCheckboxes(),
-    F.radioSiNo("¿Requiere constancia de participación?", true),
-    F.textarea("Sinopsis de la revista", true, MAX.sinopsisPub, "sinopsis"),
+    F.text("Editorial", true, "responsable de la revista", MUESTRA.editorial),
+    F.check("Necesito constancia de participación"),
+    F.textarea("Sinopsis de la revista", true, MAX.sinopsisPub, "sinopsis", MUESTRA.sinopsis),
     F.file("Portada de la revista en alta resolución", true, "JPG o PDF"),
     F.aviso("Enviar un ejemplar de la revista a: Oficinas FILEY (Salones 42 y 43), UAA “Elvia Carrillo Puerto-UADY”, Calle 33A x 20, Tanlum, C.P. 97210, Mérida, Yucatán. Atención: Coordinación General de Contenidos."),
     F.textarea("Comentarios u observaciones", false)
@@ -309,6 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
     _rid = 0;
     container.innerHTML = TIPOS[tipo] ? TIPOS[tipo]() : "";
     container.querySelectorAll("[data-personas]").forEach(renumerar);
+    refrescarPresentadores();
     if (heading) heading.textContent = tipo;
     section.style.display = "block";
     section.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -336,6 +423,67 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  /* El adjunto cargado se ve: el bloque se queda en verde con el nombre
+     del archivo. Es la única confirmación que hay de que entró. */
+  container.addEventListener("change", (e) => {
+    const campo = e.target;
+    if (campo.type !== "file") return;
+    const caja = campo.closest("[data-adjunto]");
+    if (!caja) return;
+    const archivo = campo.files && campo.files[0];
+    caja.classList.toggle("is-cargado", !!archivo);
+    const rotulo = caja.querySelector("[data-adjunto-nombre]");
+    if (rotulo) rotulo.textContent = archivo ? archivo.name : "Adjuntar archivo";
+  });
+
+  /* Quién sostiene una presentación: un autor —o editor— que asista, o un
+     presentador. Basta con uno de los dos, así que mientras nadie de la
+     publicación esté marcado, el primer presentador pasa a ser obligatorio.
+
+     En Django esto vive dos veces —aquí y en `exigir_presentador`— y por
+     el mismo motivo: pedirle al servidor que repinte la sección con cada
+     clic vaciaría los campos de archivo. */
+  function listasDe() {
+    const todas = Array.from(container.querySelectorAll("[data-personas]"));
+    return {
+      publicacion: todas.filter(c => c.querySelector("input[name$=_participa]")),
+      presentadores: todas.filter(c => !c.querySelector("input[name$=_participa]"))[0]
+    };
+  }
+
+  function alguienAsiste(cajas) {
+    return cajas.some(caja =>
+      Array.from(caja.querySelectorAll("[data-persona]")).some(fila => {
+        const casilla = fila.querySelector("input[name$=_participa]");
+        const nombre = fila.querySelector('input[type="text"]');
+        return casilla && casilla.checked && nombre && nombre.value.trim() !== "";
+      })
+    );
+  }
+
+  function refrescarPresentadores() {
+    const listas = listasDe();
+    if (!listas.publicacion.length || !listas.presentadores) return;
+
+    const hacenFalta = !alguienAsiste(listas.publicacion);
+    const primera = listas.presentadores.querySelector("[data-persona]");
+    if (!primera) return;
+
+    marcarObligatorio(primera.querySelector('input[type="text"]'), hacenFalta);
+    marcarObligatorio(primera.querySelector("textarea"), hacenFalta);
+
+    const aviso = listas.presentadores.querySelector("[data-aviso-personas]");
+    if (aviso) {
+      aviso.hidden = !hacenFalta;
+      aviso.textContent =
+        "Nadie de la publicación está marcado como que asiste, así que hace " +
+        "falta al menos un presentador: la actividad no puede quedarse sin " +
+        "nadie delante.";
+    }
+  }
+
+  container.addEventListener("change", refrescarPresentadores);
+
   container.addEventListener("input", (e) => {
     /* Contador de caracteres de semblanzas y sinopsis. */
     const area = e.target;
@@ -347,11 +495,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    /* Y la puerta: escribir el nombre abre su semblanza, y completar las dos
+    /* La puerta: escribir el nombre abre su semblanza, y completar las dos
        habilita el botón de agregar. Se revisa al teclear —no al salir del
        campo— porque no es una validación que reprocha, es un candado que se
        abre: el aviso tiene que irse en cuanto deja de ser cierto. */
     const caja = e.target.closest("[data-personas]");
     if (caja) actualizarPuerta(caja);
+
+    /* Y quién sostiene la presentación, que depende del nombre además de
+       la casilla. */
+    refrescarPresentadores();
   });
 });

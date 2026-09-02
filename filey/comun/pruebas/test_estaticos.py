@@ -35,6 +35,14 @@ def test_lo_demas_si_se_versiona(almacen, tmp_path, settings):
     Sin esta prueba, un prefijo mal escrito —`""` por ejemplo— dejaría
     todo sin versionar y nadie lo notaría: el sistema funcionaría igual y
     los navegadores servirían CSS viejo durante semanas.
+
+    El `clean_name` no es adorno. `HashedFilesMixin.hashed_name` arma el
+    nombre con `os.path.join`, que devuelve el separador del sistema:
+    contrabarra en Windows, diagonal en Linux. Es el **único** punto
+    donde Django deja el nombre sin normalizar —envuelve con
+    `clean_name` a todos sus consumidores: el manifiesto, `stored_name`
+    y `url`—, así que la prueba tiene que hacer lo mismo. Sin eso pasa
+    en CI y falla en la máquina de quien lo escribió.
     """
     from django.core.files.base import ContentFile
 
@@ -42,7 +50,9 @@ def test_lo_demas_si_se_versiona(almacen, tmp_path, settings):
     ruta.write_text("body{color:red}")
     settings.STATIC_ROOT = str(tmp_path)
 
-    hasheado = almacen.hashed_name("css/prueba.css", ContentFile(b"body{color:red}"))
+    hasheado = almacen.clean_name(
+        almacen.hashed_name("css/prueba.css", ContentFile(b"body{color:red}"))
+    )
 
     assert hasheado != "css/prueba.css"
     assert hasheado.startswith("css/prueba.") and hasheado.endswith(".css")

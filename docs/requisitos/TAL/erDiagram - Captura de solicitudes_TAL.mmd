@@ -7,6 +7,8 @@ erDiagram
         string correo
         string celular
         string pais
+        string estado_pais
+        string ciudad
     }
 
     CatalogoConvocatorias {
@@ -32,18 +34,21 @@ erDiagram
 
     Solicitudes_TAL {
         bigint id PK
-        string numero_contacto
+        string institucion
+        string cargo
         string titulo_actividad
         string nombre_organizador_organizacion
-        boolean requiere_constancia
-        string procedencia
-        string tema
-        string sinopsis
         string publico_objetivo
-        string dias_disponibilidad
-        string turno
+        string sinopsis
+        boolean requiere_constancia
         string comentarios
         timestamp fecha_de_solicitud
+        string procedencia
+        string tema_actividad
+        string dias_disponibilidad
+        string turno
+        boolean es_presencial "Solo organizadores fuera de Merida pueden ser false"
+        string URL_actividad
     }
 
     CatalogoActividades {

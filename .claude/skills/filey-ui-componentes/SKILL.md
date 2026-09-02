@@ -9,7 +9,8 @@ Este skill responde **¿con qué se construye y dónde vive?**. Los otros dos:
 
 | Necesitas | Skill |
 | --- | --- |
-| Elegir un color, radio, tamaño, o cuántos pasos lleva un flujo | `filey-identidad` |
+| Elegir un color, radio, tamaño | `filey-identidad` |
+| Cuántos pasos, campos u opciones; qué se revela y cuándo | `filey-ux` |
 | Convertir el markup en plantilla servida o HTML del prototipo | `filey-render` |
 
 **Tesis única de este skill: reusar antes de escribir.** Las tres economías que persigue —
@@ -104,7 +105,58 @@ clase depende de tokens propios de ese dominio.
 - Clases de estado: `.is-active`, `.is-invalid`, `.is-admin`. No inventes sinónimos
   (`.activo`, `.selected`).
 
-## 6. SVGs
+## 6. Dos trampas que ya costaron tiempo
+
+### `[hidden]` no gana contra una clase que fija `display`
+
+El atributo `hidden` vale `display: none` **en la hoja del navegador**, así que cualquier regla
+de autor con `display` lo pisa. Pasa con `.btn` (`inline-flex`), `.grid-2` (`grid`) y cualquier
+componente que declare el suyo: se pone `hidden`, no se esconde nada, y no hay error que lo
+avise.
+
+El proyecto lo resuelve con una regla **acotada al componente**, no con un `!important` global:
+
+```css
+.btn[hidden] { display: none; }
+.grid-2[hidden], .grid-3[hidden] { display: none; }
+```
+
+Antes de esconder algo con `hidden`, mira en el inventario si su clase fija `display`.
+
+### La regla amplia alcanza al hijo que no querías
+
+`.evt-institucion input { flex: 1 }` alcanzaba también a la casilla que vive **dentro** del
+rótulo: se estiraba y empujaba su propia etiqueta lejos. El síntoma se lee como un problema de
+maquetación y es un selector de más.
+
+Con hijo directo cuando el contenedor tiene controles anidados: `.evt-institucion > input`.
+
+## 7. Pseudo-elementos
+
+`::before` y `::after` crean una caja anónima como primer o último hijo, y **no se pintan sin
+`content`** —aunque sea `content: ''`—. Sirven para tres cosas en este proyecto:
+
+1. **Adorno que no es contenido.** El punto del `.badge`, el caret del `.select-wrap` (con
+   `mask-image` y data-URI, ver §6 de este skill). Nada de esto lo lee un lector de pantalla, y
+   está bien: es decoración.
+2. **Agrandar el objetivo sin ensuciar el HTML.** Es la herramienta de Fitts cuando el control
+   es pequeño y no se puede agrandar visualmente —una `×` de cerrar, un «Quitar»—:
+
+   ```css
+   .evt-persona__quitar { position: relative; }
+   .evt-persona__quitar::after {
+     content: ''; position: absolute; inset: -10px;   /* área pulsable, invisible */
+   }
+   ```
+
+3. **Estado sin marcado extra.** `.check-chip input:checked + .chip::before { content: "✓ "; }`.
+
+> [!warning] Nunca metas ahí texto que haga falta leer
+> Lo que va en `content` no está en el DOM, no se puede seleccionar ni copiar, y los lectores
+> de pantalla lo tratan de forma inconsistente. Un mensaje de error, un rótulo o un dato van en
+> el HTML; en `content` solo lo que se pueda quitar sin perder información.
+
+## 8. SVGs
 
 1. Los assets viven en `prototipo/common/assets/`. Solo van a `{DOM}/assets/` si tienen
    variante visual exclusiva que `currentColor` no resuelve.
@@ -128,7 +180,7 @@ clase depende de tokens propios de ese dominio.
 4. Para `mask-image` (patrón del caret): embebe el SVG como data-URI en un token de
    `common/styles-base.css`. Un `url()` a un `.svg` externo falla en `file://`.
 
-## 7. Responsive
+## 9. Responsive
 
 Un solo breakpoint: `@media (max-width: 920px)`. Ahí el hero de login se oculta y los grids
 colapsan a una columna. No introduzcas breakpoints nuevos sin una razón que no se resuelva
@@ -136,7 +188,7 @@ con `flex-wrap` o `minmax()`.
 
 ---
 
-## 8. Añadir un dominio nuevo
+## 10. Añadir un dominio nuevo
 
 1. `prototipo/{DOM}/` con subcarpetas `aplicantes/` y `administradores/` (ver `filey-render`).
 2. `{DOM}/styles.css` con una sola línea: `@import '../common/styles-base.css';`
@@ -148,7 +200,7 @@ con `flex-wrap` o `minmax()`.
 
 ---
 
-## 9. Checklist — ejecutable, no de memoria
+## 11. Checklist — ejecutable, no de memoria
 
 ```bash
 ./prototipo/scripts/gen-inventario.sh   # reindexa tras tocar cualquier styles.css
@@ -164,3 +216,4 @@ A mano solo queda lo que un script no puede juzgar:
 - [ ] La clase que usaste salió del inventario, no de la memoria
 - [ ] El componente nuevo está en la capa correcta según la sección 3
 - [ ] La pantalla se derivó de una existente parecida
+- [ ] Nada que se esconda con `hidden` lleva una clase que fije `display` (§6)

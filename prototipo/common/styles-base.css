@@ -262,6 +262,9 @@ textarea { resize: vertical; min-height: 80px; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; }
+/* Ambas fijan display, así que el atributo hidden no basta por sí solo
+   (mismo motivo que `.btn[hidden]`). */
+.grid-2[hidden], .grid-3[hidden] { display: none; }
 
 .radio-row { display: flex; gap: 22px; padding-top: 4px; flex-wrap: wrap; }
 .radio-row label { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14.5px; color: var(--gris-700); }
@@ -276,6 +279,20 @@ textarea { resize: vertical; min-height: 80px; }
 .file-mock .ico { width: 34px; height: 34px; border-radius: 8px; background: var(--azul-100); color: var(--azul-600); display: grid; place-items: center; font-size: 17px; }
 .file-mock .txt strong { display: block; font-size: 13.5px; color: var(--gris-700); }
 .file-mock .txt small { color: var(--gris-500); font-size: 12px; }
+/* El input real vive escondido dentro del rótulo: sigue recibiendo el
+   foco y el lector de pantalla lo anuncia. Al elegir un archivo el bloque
+   se queda en verde con su nombre — permanente, porque es la única señal
+   de que el adjunto entró. */
+.file-mock input[type="file"] {
+  position: absolute; width: 1px; height: 1px;
+  opacity: 0; overflow: hidden; clip-path: inset(50%);
+}
+.file-mock:focus-within { border-color: var(--azul-600); background: var(--azul-050); }
+.file-mock.is-cargado {
+  border-style: solid; border-color: var(--ok-600); background: var(--ok-050);
+}
+.file-mock.is-cargado .ico { background: var(--ok-600); color: var(--color-blanco); }
+.file-mock.is-cargado .txt strong { color: var(--ok-600); }
 
 /* Multi-input list (varios nombres) */
 .multi-input { display: flex; flex-direction: column; gap: 8px; }
@@ -301,6 +318,11 @@ textarea { resize: vertical; min-height: 80px; }
 .section-card > .section-head h3 { margin: 0; font-size: 16.5px; color: var(--color-azul-institucional-enfoque); }
 .section-card > .section-head p { margin: 2px 0 0; font-size: 13px; color: var(--gris-500); }
 .section-card > .section-body { padding: 22px 24px; }
+
+/* La barra superior es fija (67 px), así que traer una sección «al
+   principio de la vista» la deja debajo de ella y su encabezado no se
+   ve. `scroll-margin-top` reserva ese hueco. */
+#section-campos { scroll-margin-top: 83px; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;

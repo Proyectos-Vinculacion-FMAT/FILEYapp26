@@ -4,7 +4,7 @@
 Regenerar con `./prototipo/scripts/gen-inventario.sh` tras cualquier cambio en un `styles.css`.
 Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 
-**78 tokens · 405 definiciones de clase · 39 sin uso detectado en HTML/JS.**
+**78 tokens · 406 definiciones de clase · 39 sin uso detectado en HTML/JS.**
 
 ## Cómo usar este archivo
 
@@ -138,77 +138,78 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.tag-auto` | common | 257 | EVT, VIS |
 | `.grid-2` | common | 263 | EVT, VIS |
 | `.grid-3` | common | 264 | VIS |
-| `.radio-row` | common | 266 | EVT, REG |
-| `.file-mock` | common | 270 | EVT, REG |
-| `.ico` | common | 276 | EVT, REG, VIS |
-| `.txt` | common | 277 | EVT, REG, VIS |
-| `.multi-input` | common | 281 | EVT, REG |
-| `.card` | common | 284 | EVT, VIS |
-| `.card-pad` | common | 288 | EVT, VIS |
-| `.section-card` | common | 290 | EVT, VIS |
-| `.section-head` | common | 291 | EVT, VIS |
-| `.num` | common | 296 | EVT, VIS |
-| `.section-body` | common | 303 | EVT, VIS |
-| `.btn` | common | 305 | EVT, REG, VIS |
-| `.btn-primary` | common | 312 | EVT, REG, VIS |
-| `.btn-gold` | common | 314 | EVT, REG, VIS |
-| `.btn-green` | common | 316 | VIS |
-| `.btn-ghost` | common | 318 | EVT, REG, VIS |
-| `.btn-special` | common | 322 | EVT, VIS |
-| `.btn-block` | common | 324 | EVT, REG |
-| `.btn-lg` | common | 328 | EVT, REG, VIS |
-| `.form-actions` | common | 330 | EVT, VIS |
-| `.spacer` | common | 334 | EVT, VIS |
-| `.conv-grid` | common | 337 | EVT, REG |
-| `.conv-card` | common | 338 | EVT, REG |
-| `.is-closed` | common | 344 | REG |
-| `.conv-banner` | common | 345 | EVT, REG |
-| `.banner-stand` | common | 351 | EVT, REG |
-| `.banner-infantil` | common | 352 | EVT, REG |
-| `.banner-eventos` | common | 353 | EVT, REG |
-| `.banner-visitas` | common | 354 | EVT, REG |
-| `.conv-body` | common | 355 | EVT, REG |
-| `.conv-dates` | common | 357 | EVT, REG |
-| `.conv-foot` | common | 358 | EVT, REG |
-| `.conv-foot-apilado` | common | 361 | REG |
-| `.badge` | common | 363 | EVT, REG |
-| `.badge-open` | common | 369 | EVT, REG |
-| `.badge-closed` | common | 370 | REG |
-| `.badge-soon` | common | 371 | REG |
-| `.badge-pending` | common | 372 | EVT |
-| `.badge-accepted` | common | 373 | EVT |
-| `.badge-rejected` | common | 374 | EVT |
-| `.badge-changes` | common | 375 | EVT |
-| `.info-hero` | common | 378 | EVT |
-| `.info-grid` | common | 388 | EVT, VIS |
-| `.dl-dates` | common | 390 | EVT |
-| `.row` | common | 391 | EVT |
-| `.dot` | common | 398 | EVT, REG, VIS, common |
-| `.cupos` | common | 400 | EVT |
-| `.cupo` | common | 401 | EVT |
-| `.top` | common | 404 | EVT |
-| `.bar` | common | 407 | EVT, VIS |
-| `.full` | common | 409 | EVT |
-| `.req-list` | common | 411 | EVT |
-| `.ck` | common | 413 | EVT |
-| `.types-row` | common | 415 | EVT |
-| `.type-pill` | common | 416 | EVT |
-| `.cta-bar` | common | 418 | EVT, VIS |
-| `.table` | common | 427 | EVT |
-| `.folio` | common | 431 | EVT, VIS |
-| `.confirm-card` | common | 434 | EVT, VIS |
-| `.check` | common | 435 | EVT, VIS |
-| `.folio-box` | common | 441 | EVT, VIS |
-| `.note` | common | 450 | EVT, REG, VIS |
-| `.note-info` | common | 455 | EVT, REG, VIS |
-| `.note-warn` | common | 456 | EVT, REG, VIS |
-| `.note-gold` | common | 457 | EVT, REG |
-| `.closed-overlay` | common | 459 | REG |
-| `.proto-bar` | common | 466 | EVT, REG, VIS |
-| `.proto-bar-inner` | common | 470 | EVT, REG, VIS |
-| `.sep` | common | 473 | EVT, REG, VIS |
-| `.footer` | common | 477 | EVT, REG, VIS |
-| `.footer-inner` | common | 481 | EVT, REG, VIS |
+| `.radio-row` | common | 269 | EVT, REG |
+| `.file-mock` | common | 273 | EVT, REG |
+| `.ico` | common | 279 | EVT, REG, VIS |
+| `.txt` | common | 280 | EVT, REG, VIS |
+| `.is-cargado` | common | 291 | EVT |
+| `.multi-input` | common | 298 | EVT, REG |
+| `.card` | common | 301 | EVT, VIS |
+| `.card-pad` | common | 305 | EVT, VIS |
+| `.section-card` | common | 307 | EVT, VIS |
+| `.section-head` | common | 308 | EVT, VIS |
+| `.num` | common | 313 | EVT, VIS |
+| `.section-body` | common | 320 | EVT, VIS |
+| `.btn` | common | 327 | EVT, REG, VIS |
+| `.btn-primary` | common | 334 | EVT, REG, VIS |
+| `.btn-gold` | common | 336 | EVT, REG, VIS |
+| `.btn-green` | common | 338 | VIS |
+| `.btn-ghost` | common | 340 | EVT, REG, VIS |
+| `.btn-special` | common | 344 | EVT, VIS |
+| `.btn-block` | common | 346 | EVT, REG |
+| `.btn-lg` | common | 350 | EVT, REG, VIS |
+| `.form-actions` | common | 352 | EVT, VIS |
+| `.spacer` | common | 356 | EVT, VIS |
+| `.conv-grid` | common | 359 | EVT, REG |
+| `.conv-card` | common | 360 | EVT, REG |
+| `.is-closed` | common | 366 | REG |
+| `.conv-banner` | common | 367 | EVT, REG |
+| `.banner-stand` | common | 373 | EVT, REG |
+| `.banner-infantil` | common | 374 | EVT, REG |
+| `.banner-eventos` | common | 375 | EVT, REG |
+| `.banner-visitas` | common | 376 | EVT, REG |
+| `.conv-body` | common | 377 | EVT, REG |
+| `.conv-dates` | common | 379 | EVT, REG |
+| `.conv-foot` | common | 380 | EVT, REG |
+| `.conv-foot-apilado` | common | 383 | REG |
+| `.badge` | common | 385 | EVT, REG |
+| `.badge-open` | common | 391 | EVT, REG |
+| `.badge-closed` | common | 392 | REG |
+| `.badge-soon` | common | 393 | REG |
+| `.badge-pending` | common | 394 | EVT |
+| `.badge-accepted` | common | 395 | EVT |
+| `.badge-rejected` | common | 396 | EVT |
+| `.badge-changes` | common | 397 | EVT |
+| `.info-hero` | common | 400 | EVT |
+| `.info-grid` | common | 410 | EVT, VIS |
+| `.dl-dates` | common | 412 | EVT |
+| `.row` | common | 413 | EVT |
+| `.dot` | common | 420 | EVT, REG, VIS, common |
+| `.cupos` | common | 422 | EVT |
+| `.cupo` | common | 423 | EVT |
+| `.top` | common | 426 | EVT |
+| `.bar` | common | 429 | EVT, VIS |
+| `.full` | common | 431 | EVT |
+| `.req-list` | common | 433 | EVT |
+| `.ck` | common | 435 | EVT |
+| `.types-row` | common | 437 | EVT |
+| `.type-pill` | common | 438 | EVT |
+| `.cta-bar` | common | 440 | EVT, VIS |
+| `.table` | common | 449 | EVT |
+| `.folio` | common | 453 | EVT, VIS |
+| `.confirm-card` | common | 456 | EVT, VIS |
+| `.check` | common | 457 | EVT, VIS |
+| `.folio-box` | common | 463 | EVT, VIS |
+| `.note` | common | 472 | EVT, REG, VIS |
+| `.note-info` | common | 477 | EVT, REG, VIS |
+| `.note-warn` | common | 478 | EVT, REG, VIS |
+| `.note-gold` | common | 479 | EVT, REG |
+| `.closed-overlay` | common | 481 | REG |
+| `.proto-bar` | common | 488 | EVT, REG, VIS |
+| `.proto-bar-inner` | common | 492 | EVT, REG, VIS |
+| `.sep` | common | 495 | EVT, REG, VIS |
+| `.footer` | common | 499 | EVT, REG, VIS |
+| `.footer-inner` | common | 503 | EVT, REG, VIS |
 | `.auth-hero` | REG | 8 | EVT, REG |
 | `.logo-lg` | REG | 8 | EVT, REG |
 | `.is-admin` | REG | 14 | REG, VIS |
@@ -331,13 +332,13 @@ Fuente: `prototipo/common/styles-base.css` + `prototipo/{DOM}/styles.css`.
 | `.evt-persona__head` | EVT | 265 | EVT |
 | `.evt-persona__n` | EVT | 266 | EVT |
 | `.evt-persona__quitar` | EVT | 270 | EVT |
-| `.field` | EVT | 274 | EVT, REG, VIS |
-| `.evt-check` | EVT | 280 | EVT |
-| `.evt-institucion` | EVT | 290 | EVT |
-| `.evt-agregar` | EVT | 294 | EVT |
-| `.evt-contador` | EVT | 303 | EVT |
-| `.is-tope` | EVT | 304 | EVT |
-| `.evt-bloqueo` | EVT | 318 | EVT |
+| `.field` | EVT | 279 | EVT, REG, VIS |
+| `.evt-check` | EVT | 285 | EVT |
+| `.evt-institucion` | EVT | 295 | EVT |
+| `.evt-agregar` | EVT | 302 | EVT |
+| `.evt-contador` | EVT | 311 | EVT |
+| `.is-tope` | EVT | 312 | EVT |
+| `.evt-bloqueo` | EVT | 326 | EVT |
 | `.banner-infantil` | VIS | 43 | EVT, REG |
 | `.btn-green` | VIS | 46 | VIS |
 | `.auth-hero` | VIS | 50 | EVT, REG |
