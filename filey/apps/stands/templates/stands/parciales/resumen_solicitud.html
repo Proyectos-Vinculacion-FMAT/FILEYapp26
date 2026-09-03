@@ -1,0 +1,97 @@
+{% comment %} ===========================================================
+   La fotografía de una solicitud, en solo lectura (RN-22).
+
+   Contexto que espera:
+
+     datos    el dict `Solicitud.datos_editorial`
+     sellos   `servicios/solicitudes.py::sellos_con_carta` — cada nombre
+              de la fotografía con su carta de representación al lado
+
+   Lo pintan U1 (cuando el aplicante ya no puede editar) y A2 (cuando el
+   administrador dictamina), y las dos tienen que enseñar **lo mismo**:
+   lo que se envió. Por eso lee del dict de la fotografía y nunca del
+   objeto `Editorial`, que pudo cambiar después.
+
+   Un `{{ datos.campo }}` que no exista sale vacío en vez de reventar, y
+   aquí eso es lo correcto: una fotografía vieja no tiene por qué traer
+   una columna que se añadió más tarde.
+   =========================================================== {% endcomment %}
+
+<div class="section-card card">
+  <div class="section-head"><h3>Datos de la editorial</h3>
+    <p>La información tal como se envió.</p></div>
+  <div class="section-body">
+    <div class="grid-2">
+      <div class="field"><label>Nombre</label>{{ datos.nombre|default:"—" }}</div>
+      <div class="field"><label>Giro</label>{{ datos.giro|default:"—"|capfirst }}</div>
+      <div class="field"><label>Responsable del stand</label>{{ datos.responsable_stand|default:"—" }}</div>
+      <div class="field"><label>Nombre en el antepecho</label>{{ datos.nombre_antepecho|default:"—" }}</div>
+      <div class="field"><label>Correo de contacto</label>{{ datos.correo_electronico|default:"—" }}</div>
+      <div class="field"><label>Teléfonos</label>
+        {{ datos.telefono_celular|default:"—" }}{% if datos.telefono_oficina %} · {{ datos.telefono_oficina }}{% endif %}
+      </div>
+      <div class="field"><label>Domicilio</label>
+        {{ datos.domicilio_calle }} {{ datos.domicilio_numero }},
+        {{ datos.domicilio_colonia }}, {{ datos.cp }}
+        {{ datos.municipio }}, {{ datos.estado }}
+      </div>
+      <div class="field"><label>Personas que atienden</label>{{ datos.num_personas_atienden|default:"—" }}</div>
+      <div class="field"><label>Libros (aproximado)</label>{{ datos.cantidad_libros_aprox|default:"—" }}</div>
+      <div class="field"><label>Títulos (aproximado)</label>{{ datos.cantidad_titulos_aprox|default:"—" }}</div>
+    </div>
+    <div class="field"><label>Materiales</label>{{ datos.materiales|join:" · "|default:"—" }}</div>
+    <div class="field"><label>Temáticas</label>{{ datos.tematicas|join:" · "|default:"—" }}</div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head"><h3>Contactos</h3></div>
+  <div class="section-body">
+    <div class="grid-2">
+      <div class="field"><label>Director general</label>
+        {{ datos.director_general_nombre|default:"—" }}<br>{{ datos.director_general_email }}</div>
+      <div class="field"><label>Director comercial</label>
+        {{ datos.director_comercial_nombre|default:"—" }}<br>{{ datos.director_comercial_email }}</div>
+      <div class="field"><label>Director editorial</label>
+        {{ datos.director_editorial_nombre|default:"—" }}<br>{{ datos.director_editorial_email }}</div>
+      <div class="field"><label>Director de promoción</label>
+        {{ datos.director_promocion_nombre|default:"—" }}<br>{{ datos.director_promocion_email }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-card card">
+  <div class="section-head"><h3>Sellos editoriales</h3>
+    <p>
+      {{ sellos|length }} declarado{{ sellos|length|pluralize }}.
+      {% if sellos %}Cada uno con la carta que autoriza a representarlo.{% endif %}
+    </p></div>
+  <div class="section-body">
+    {% comment %} La carta va **pegada a su sello**, y no en la lista de
+       documentos de al lado: allí todas se llaman «Carta de
+       representación» y no hay forma de saber cuál autoriza cuál, que es
+       justo lo que hay que comprobar al dictaminar (RN-17).
+
+       Sin carta se dice, en vez de dejar el renglón a medias: es lo que
+       hay que reclamar, y quien revisa tiene que verlo de un vistazo. {% endcomment %}
+    {% if sellos %}
+      <ul class="lista-sellos">
+        {% for sello in sellos %}
+          <li>
+            <span class="sello-nombre">{{ sello.nombre }}</span>
+            {% if sello.carta %}
+              <a href="{% url 'stands:documento' documento_id=sello.carta.pk %}"
+                 target="_blank" rel="noopener">
+                {{ sello.carta.nombre_original|default:"Ver la carta" }}
+              </a>
+            {% else %}
+              <span class="badge badge-changes">Sin carta</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No declaró sellos editoriales.</p>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,145 @@
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Solicitudes · Detalle{% endblock %}
+
+{% comment %} ===========================================================
+   A2 · Revisar y resolver una solicitud (CU-STD-005, 006, 007).
+
+   Lo que se enseña es la **fotografía**, no la ficha viva de la
+   editorial: es lo que la persona envió y lo que se dictamina (RN-22).
+   Si corrigió su ficha después, aquí no se ve, y es lo correcto.
+
+   Las tres acciones salen del mismo formulario porque comparten el
+   motivo. Cuál se ejecuta lo dice el `name="accion"` del botón pulsado —
+   así funciona sin JavaScript y sin un `<select>` de más.
+   =========================================================== {% endcomment %}
+
+{% comment %} El nombre sale de la fotografía, no de `solicitud.editorial`:
+   si la editorial corrigió su ficha después de enviar, el encabezado diría
+   una cosa y el cuerpo otra en la misma pantalla. Lo que se dictamina es lo
+   que se envió (RN-22). {% endcomment %}
+{% block titulo %}{{ datos.nombre }} — Solicitud{% endblock %}
+
+{% block encabezado_titulo %}{{ datos.nombre }}{% endblock %}
+{% block encabezado_texto %}
+  {{ convocatoria.nombre }} · Solicitud #{{ solicitud.pk }} · enviada el
+  {{ solicitud.fecha_envio|date:"j \d\e F \d\e Y" }}
+{% endblock %}
+
+{% block contenido %}
+
+<div class="toolbar-row">
+  <a class="btn btn-ghost" href="{% url 'stands:solicitudes' convocatoria_id=convocatoria.pk %}">
+    ← Todas las solicitudes
+  </a>
+  {% include "stands/parciales/badge_estado.html" %}
+</div>
+
+<div class="info-grid">
+  <div>
+    {% include "stands/parciales/resumen_solicitud.html" %}
+
+    <div class="section-card card">
+      <div class="section-head"><h3>Documentos de la ficha</h3>
+        <p>
+          Constancia de situación fiscal y lista de títulos, en su versión
+          vigente. Las cartas de representación van con su sello.
+        </p></div>
+      <div class="section-body">
+        {% if documentos %}
+          <ul class="multi-input">
+            {% for doc in documentos %}
+              <li>
+                <strong>{{ doc.get_tipo_display }}</strong> —
+                <a href="{% url 'stands:documento' documento_id=doc.pk %}" target="_blank" rel="noopener">
+                  {{ doc.nombre_original|default:"archivo" }}
+                </a>
+                <span class="hint">{{ doc.fecha_carga|date:"j M Y" }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          {% comment %} El enlace no va a MEDIA_URL —no está montada en ningún
+             urlconf (ADR-0007)— sino a una vista que comprueba quién pregunta.
+             `target="_blank"` porque quien revisa abre cuatro seguidos y
+             perder la pantalla del dictamen en cada uno es peor. {% endcomment %}
+        {% else %}
+          <p>La editorial no adjuntó documentos.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    {% if solicitud.se_puede_dictaminar %}
+      <div class="section-card card">
+        <div class="section-head"><h3>Resolver la solicitud</h3>
+          <p>La editorial recibe un correo con el resultado.</p></div>
+        <div class="section-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="field">
+              <label for="{{ form.motivo.id_for_label }}">{{ form.motivo.label }}</label>
+              {{ form.motivo }}
+              <span class="hint">
+                Obligatorio al solicitar cambios: es el texto que recibe la
+                editorial.
+              </span>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary btn-block" type="submit" name="accion" value="aceptar">
+                Aceptar la solicitud
+              </button>
+              <button class="btn btn-ghost btn-block" type="submit" name="accion" value="cambios">
+                Solicitar cambios
+              </button>
+              <button class="btn btn-danger btn-block" type="submit" name="accion" value="rechazar">
+                Rechazar la solicitud
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      {% comment %} A1 de CU-STD-005: ya resuelta, en modo consulta. {% endcomment %}
+      <div class="section-card card">
+        <div class="section-head"><h3>Resolución</h3></div>
+        <div class="section-body">
+          <div class="field"><label>Resultado</label>
+            {% include "stands/parciales/badge_estado.html" %}</div>
+          <div class="field"><label>Fecha de revisión</label>
+            {{ solicitud.fecha_revision|date:"j \d\e F \d\e Y, H:i" }}</div>
+          <div class="field"><label>Revisada por</label>
+            {{ solicitud.revisado_por|default:"—" }}</div>
+          {% if solicitud.motivo_peticion %}
+            <div class="field"><label>Motivo registrado</label>
+              {{ solicitud.motivo_peticion }}</div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="section-card card">
+      <div class="section-head"><h3>Avisos enviados</h3></div>
+      <div class="section-body">
+        {% if notificaciones %}
+          <ul class="multi-input">
+            {% for aviso in notificaciones %}
+              <li>
+                {{ aviso.get_tipo_display }} ·
+                {{ aviso.fecha_envio|date:"j M Y, H:i" }}
+                {% if aviso.estado == 'fallida' %}
+                  <span class="badge badge-rejected">No se envió</span>
+                  <span class="hint">{{ aviso.detalle_error }}</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="hint">Aún no se ha enviado ningún correo.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   El acuse de la propuesta enviada (CU-EVT-002, pasos 13 y 14).
+
+   Contexto: `propuesta`, `convocatoria`, `anteriores`.
+
+   Las dos acciones del paso 14 —"crear una nueva solicitud" y "cerrar"—
+   están las dos, y la primera es la primaria: en EVT se proponen varias
+   actividades, y quien acaba de enviar una suele traer otra.
+
+   Lo que ya se envió se enseña **aquí mismo**, con su folio y su estado.
+   No es el listado de CU-EVT-003 —ése filtra, ordena y lleva al detalle
+   de cada una— sino la respuesta a «¿qué llevo mandado?» en el único
+   momento en que alguien se lo pregunta: justo después de enviar.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}{{ convocatoria.nombre }} — Propuesta enviada{% endblock %}
+
+{% block clases_pagina %}page-narrow{% endblock %}
+
+{% block encabezado_titulo %}Tu propuesta quedó registrada{% endblock %}
+{% block encabezado_texto %}
+  Te enviamos el acuse a <strong>{{ user.correo }}</strong> con este mismo folio.
+{% endblock %}
+
+{% block contenido %}
+
+<div class="card card-pad">
+  <div class="note note-ok">
+    <div class="ico">✅</div>
+    <div>
+      <strong>Folio {{ propuesta.folio }}</strong> — «{{ propuesta.titulo_actividad }}»,
+      {{ propuesta.actividad.tipo }}. Queda <strong>pendiente de revisión</strong>:
+      el comité dictamina cada solicitud y te avisaremos del resultado.
+    </div>
+  </div>
+
+  <div class="note note-info">
+    <div class="ico">ℹ️</div>
+    <div>Enviar una propuesta <strong>no garantiza su aceptación</strong>, y la
+      sala, el día y el horario los asigna la Coordinación. Guarda tu folio: es
+      con lo que se identifica tu solicitud en cualquier trámite.</div>
+  </div>
+</div>
+
+{% if anteriores %}
+  <div class="card section-card">
+    <div class="section-head">
+      <div>
+        <h3>Tus otras propuestas en esta convocatoria</h3>
+        <p>{{ anteriores|length }} además de la que acabas de enviar</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="table">
+        <thead>
+          <tr><th>Folio</th><th>Tipo</th><th>Título</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          {% for otra in anteriores %}
+            <tr>
+              <td>{{ otra.folio }}</td>
+              <td>{{ otra.actividad.tipo }}</td>
+              <td>{{ otra.titulo_actividad }}</td>
+              <td>{{ otra.get_estado_display }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+<div class="card card-pad">
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{% url 'convocatorias:catalogo' %}">Cerrar</a>
+    <a class="btn btn-primary btn-lg"
+       href="{% url 'eventos:propuesta' convocatoria_id=convocatoria.pk %}">
+      Enviar otra propuesta
+    </a>
+  </div>
+</div>
+
+{% endblock %}

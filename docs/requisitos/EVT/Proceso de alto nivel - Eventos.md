@@ -12,6 +12,20 @@ Diagrama del flujo de punta a punta: desde que **abre la convocatoria** hasta qu
 
 El color de cada nodo indica quién interviene: Proponente, Administrador (Hipólito), Sistema y estados finales.
 
+> [!note] Qué está construido, a 2026-09-01
+> Del diagrama de abajo solo el primer tramo existe en el monolito: **enviar una propuesta**
+> (`CU-EVT-002`, la caja `C` y su acuse). Todo lo que va de la revisión en adelante está
+> documentado y no construido. Ver la columna `Estado` de [`CU-EVT.csv`](<CU-EVT.csv>).
+>
+> Dos precisiones que el código ya corrigió:
+>
+> - **La convocatoria no la cierra una fecha, la cierra su `estado`** (`CU-FER-008`). El
+>   diagrama dibuja el vencimiento como el disparador; en el sistema, adelantar la fecha de
+>   cierre no cierra nada — alguien la cierra.
+> - **La entidad se llama `Solicitud`**, no `Propuesta`, y su detalle por tipo vive en una de
+>   ocho tablas `Actividad_*` (`ADR-0009`). Los nodos conservan la palabra «propuesta» porque
+>   es la del dominio y la que usa la Coordinación al hablar.
+
 ```mermaid
 %% Proceso de alto nivel: Eventos Generales (EVE) — FILEY
 flowchart TD
@@ -21,7 +35,7 @@ flowchart TD
     D --> E{¿Convocatoria\naún abierta?}
     E -->|Sí| C2([Proponente puede enviar\nmás propuestas])
     C2 --> D
-    E -->|No, venció la fecha| F[Sistema cierra convocatoria]
+    E -->|No, el admin la cerró| F[Convocatoria en estado CERRADA]
 
     F --> G[Hipólito revisa propuestas\nde forma continua, semana a semana]
     G --> H{Decisión por propuesta}

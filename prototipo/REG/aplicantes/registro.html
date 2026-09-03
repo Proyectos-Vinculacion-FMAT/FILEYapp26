@@ -37,19 +37,81 @@
       <h3>Crear cuenta</h3>
       <p class="sub">No encontramos una cuenta con ese correo. Completa tus datos para registrarte.</p>
 
+      <!-- Mismos campos, nombres, etiquetas y validaciones que `RegistroForm`
+           (filey/apps/registros/forms.py) y la tarjeta que los pinta
+           (registros/parciales/tarjeta_registro.html). Los `name` e `id`
+           coinciden a propósito con los de Django: portar la pantalla es
+           cambiar el guion de abajo por el POST del formulario. -->
       <form id="form-registro" novalidate>
+        <!-- El correo se muestra pero no se captura: el que vale es el que quedó
+             guardado al identificarse (en Django, en la sesión del servidor). -->
         <div class="field">
-          <label for="correo">Correo electrónico <span class="req">*</span></label>
-          <input type="email" id="correo" value="" readonly>
+          <label for="id_correo">Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="id_correo" value="" readonly>
         </div>
+
         <div class="field">
-          <label for="nombre">Nombre completo <span class="req">*</span></label>
-          <input type="text" id="nombre" placeholder="Nombre(s) y apellidos" autocomplete="name">
+          <label for="id_nombre">Nombre(s) <span class="req">*</span></label>
+          <input type="text" id="id_nombre" name="nombre" placeholder="María del Carmen" autocomplete="given-name" maxlength="80">
+          <p class="msg-error" data-error-de="id_nombre" hidden></p>
         </div>
+
         <div class="field">
-          <label for="telefono">Número telefónico <span class="req">*</span></label>
-          <input type="tel" id="telefono" placeholder="999 000 0000" autocomplete="tel">
+          <label for="id_primer_apellido">Primer apellido <span class="req">*</span></label>
+          <input type="text" id="id_primer_apellido" name="primer_apellido" placeholder="Pech" autocomplete="family-name" maxlength="80">
+          <p class="msg-error" data-error-de="id_primer_apellido" hidden></p>
         </div>
+
+        <!-- Sin asterisco y rotulado "opcional" a la vista: hay personas que no
+             tienen segundo apellido, y la mayoría de los participantes
+             extranjeros usan uno solo (CU-REG-001, E1). -->
+        <div class="field">
+          <label for="id_segundo_apellido">Segundo apellido <span class="opt">(opcional)</span></label>
+          <input type="text" id="id_segundo_apellido" name="segundo_apellido" placeholder="Uc" autocomplete="additional-name" maxlength="80">
+        </div>
+
+        <div class="field">
+          <label for="id_telefono">Número telefónico <span class="req">*</span></label>
+          <input type="tel" id="id_telefono" name="telefono" placeholder="999 000 0000" autocomplete="tel" maxlength="20">
+          <p class="msg-error" data-error-de="id_telefono" hidden></p>
+        </div>
+
+        <!-- Desplegable y no texto libre: lo que se guarda es el código ISO de
+             dos letras, así que "Mexico", "México" y "MX" no acaban siendo tres
+             países distintos en el mismo informe. El catálogo completo lo trae
+             common/db/REG/semillas/paises.json (generado de registros/paises.py);
+             México va sembrado en el HTML para que el campo tenga un valor
+             válido aunque el JSON no cargue. -->
+        <div class="field">
+          <label for="id_pais">País <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select id="id_pais" name="pais" autocomplete="country">
+              <option value="MX" selected>México</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Estado y ciudad son de México y de nadie más: un catálogo de 32
+             entidades mexicanas no describe una dirección en Bogotá. La fila
+             entera desaparece si el país no es México, que es lo mismo que
+             hace `RegistroForm.clean()` con los valores que lleguen. -->
+        <div id="bloque-mexico">
+          <div class="field">
+            <label for="id_entidad">Estado <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="id_entidad" name="entidad" autocomplete="address-level1">
+                <option value="YUC" selected>Yucatán</option>
+              </select>
+            </div>
+            <p class="msg-error" data-error-de="id_entidad" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="id_ciudad">Ciudad <span class="opt">(opcional)</span></label>
+            <input type="text" id="id_ciudad" name="ciudad" placeholder="Mérida" autocomplete="address-level2" maxlength="120">
+          </div>
+        </div>
+
         <button class="btn btn-primary btn-block btn-lg" id="btn-crear" type="submit" disabled>Crear cuenta y continuar</button>
       </form>
 
@@ -65,41 +127,156 @@
   "use strict";
   var CUENTAS_KEY = "filey_reg_cuentas";
   var FLUJO_KEY   = "filey_reg_flujo";
+  var PERSONA_KEY = "filey_reg_persona";
+  var PAISES_URL  = "../../common/db/REG/semillas/paises.json";
+  var ESTADOS_URL = "../../common/db/REG/semillas/estados.json";
 
   var flujo = {};
   try { flujo = JSON.parse(localStorage.getItem(FLUJO_KEY)) || {}; } catch(e){}
   var correo = flujo.correo || "escritor@ejemplo.com"; /* respaldo si se entra directo desde la proto-bar */
 
-  var inCorreo   = document.getElementById("correo");
-  var inNombre   = document.getElementById("nombre");
-  var inTelefono = document.getElementById("telefono");
-  var boton      = document.getElementById("btn-crear");
-  inCorreo.value = correo;
+  var form      = document.getElementById("form-registro");
+  var boton     = document.getElementById("btn-crear");
+  var selPais   = document.getElementById("id_pais");
+  var selEstado = document.getElementById("id_entidad");
+  var bloqueMx  = document.getElementById("bloque-mexico");
+  document.getElementById("id_correo").value = correo;
 
-  function nombreValido(){ return inNombre.value.trim().length >= 3; }
-  function telefonoValido(){ return inTelefono.value.replace(/\D/g, "").length >= 10; }
-  function refrescar(){ boton.disabled = !(nombreValido() && telefonoValido()); }
+  /* ── Catálogo de países (pseudo-backend JSON) ─────────────────
+     Mismo orden que registros/paises.py: México primero y el resto
+     alfabético. Si el fetch falla —abrir por file://, por ejemplo—
+     queda la opción sembrada en el HTML, que es el valor por defecto. */
+  fetch(PAISES_URL, { cache: "no-store" })
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(paises){
+      var elegido = selPais.value || "MX";
+      selPais.innerHTML = paises.map(function(p){
+        return '<option value="' + p.codigo + '"' +
+               (p.codigo === elegido ? " selected" : "") + ">" + p.nombre + "</option>";
+      }).join("");
+    })
+    .catch(function(){ /* sin catálogo: se queda México */ });
 
-  [[inNombre, nombreValido], [inTelefono, telefonoValido]].forEach(function(par){
-    var input = par[0], valida = par[1];
-    input.addEventListener("input", function(){
-      input.classList.remove("is-invalid");
-      refrescar();
+  /* Las 32 entidades, del mismo `estados_mx.py` que usa Django: Yucatán
+     primero —de ahí viene la mayoría— y el resto alfabético. */
+  fetch(ESTADOS_URL, { cache: "no-store" })
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(estados){
+      var elegido = selEstado.value || "YUC";
+      selEstado.innerHTML = estados.map(function(e){
+        return '<option value="' + e.codigo + '"' +
+               (e.codigo === elegido ? " selected" : "") + ">" + e.nombre + "</option>";
+      }).join("");
+    })
+    .catch(function(){ /* sin catálogo: se queda Yucatán */ });
+
+  /* Fuera de México no se piden, y no se piden **de verdad**: la fila
+     desaparece en vez de quedarse vacía, y al enviar se descartan. */
+  function soloMexico(){
+    bloqueMx.hidden = selPais.value !== "MX";
+  }
+  selPais.addEventListener("change", soloMexico);
+  soloMexico();
+
+  /* Caret del select: .is-open lo gira (ver .select-wrap en common/styles-base.css). */
+  var wrap = selPais.parentNode;
+  selPais.addEventListener("focus",  function(){ wrap.classList.add("is-open"); });
+  selPais.addEventListener("change", function(){ wrap.classList.remove("is-open"); selPais.blur(); });
+  selPais.addEventListener("blur",   function(){ wrap.classList.remove("is-open"); });
+
+  /* ── Validación ───────────────────────────────────────────────
+     Los mismos criterios y los mismos textos que RegistroForm. En el
+     monolito quien decide es el servidor y esto solo enciende el botón
+     antes de tiempo; aquí no hay servidor, así que se comprueba al
+     enviar. El segundo apellido y el país no validan: uno es opcional y
+     el otro es un <select> que siempre trae un valor válido. */
+  var CAMPOS = [
+    {
+      id: "id_nombre",
+      vacio: "Escribe tu nombre.",
+      corto: "El nombre debe tener al menos 2 caracteres.",
+      valida: function(v){ return v.trim().length >= 2; }
+    },
+    {
+      id: "id_primer_apellido",
+      vacio: "Escribe tu primer apellido.",
+      corto: "El apellido debe tener al menos 2 caracteres.",
+      valida: function(v){ return v.trim().length >= 2; }
+    },
+    {
+      id: "id_telefono",
+      vacio: "Escribe tu número telefónico.",
+      corto: "El teléfono debe tener al menos 10 dígitos.",
+      valida: function(v){ return v.replace(/\D/g, "").length >= 10; }
+    }
+  ];
+
+  CAMPOS.forEach(function(campo){
+    campo.input = document.getElementById(campo.id);
+    campo.error = document.querySelector("[data-error-de=" + campo.id + "]");
+  });
+
+  function completo(){
+    return CAMPOS.every(function(c){ return c.valida(c.input.value); });
+  }
+
+  function limpiarError(campo){
+    campo.input.classList.remove("is-invalid");
+    campo.error.hidden = true;
+    campo.error.textContent = "";
+  }
+
+  function mostrarError(campo){
+    if (campo.valida(campo.input.value)) { limpiarError(campo); return; }
+    campo.input.classList.add("is-invalid");
+    campo.error.textContent = campo.input.value.trim() === "" ? campo.vacio : campo.corto;
+    campo.error.hidden = false;
+  }
+
+  CAMPOS.forEach(function(campo){
+    campo.input.addEventListener("input", function(){
+      limpiarError(campo);
+      boton.disabled = !completo();
     });
-    input.addEventListener("blur", function(){
-      input.classList.toggle("is-invalid", input.value.trim() !== "" && !valida());
+    campo.input.addEventListener("blur", function(){
+      if (campo.input.value.trim() !== "") mostrarError(campo);
     });
   });
 
-  document.getElementById("form-registro").addEventListener("submit", function(ev){
+  form.addEventListener("submit", function(ev){
     ev.preventDefault();
-    if (boton.disabled) return;
+    CAMPOS.forEach(mostrarError);
+    if (!completo()) return;
 
     var cuentas;
     try { cuentas = JSON.parse(localStorage.getItem(CUENTAS_KEY)) || []; } catch(e){ cuentas = []; }
     if (cuentas.indexOf("lectora@ejemplo.com") === -1) cuentas.push("lectora@ejemplo.com");
     if (cuentas.indexOf(correo) === -1) cuentas.push(correo);
     localStorage.setItem(CUENTAS_KEY, JSON.stringify(cuentas));
+
+    /* Los datos de la cuenta quedan guardados para que las pantallas
+       siguientes saluden con el nombre real. En Django no se guardan tres
+       veces: Persona.primer_nombre, .iniciales y .nombre_completo son
+       propiedades derivadas de estos mismos campos. */
+    localStorage.setItem(PERSONA_KEY, JSON.stringify({
+      correo: correo,
+      nombre: document.getElementById("id_nombre").value.trim(),
+      primer_apellido: document.getElementById("id_primer_apellido").value.trim(),
+      segundo_apellido: document.getElementById("id_segundo_apellido").value.trim(),
+      /* Solo dígitos, como RegistroForm.clean_telefono: así "999 000 0000"
+         y "9990000000" son el mismo teléfono al comparar duplicados. */
+      telefono: document.getElementById("id_telefono").value.replace(/\D/g, ""),
+      pais: selPais.value,
+      /* Igual que `RegistroForm.clean()`: fuera de México se descartan,
+         aunque el POST los traiga. Sin esto, quien se registra desde
+         Bogotá acabaría con «Yucatán» guardado y una consulta por
+         entidad contaría gente que no vive ahí. */
+      entidad: selPais.value === "MX" ? selEstado.value : "",
+      entidad_nombre: selPais.value === "MX"
+        ? selEstado.options[selEstado.selectedIndex].text : "",
+      ciudad: selPais.value === "MX"
+        ? document.getElementById("id_ciudad").value.trim() : ""
+    }));
 
     localStorage.setItem(FLUJO_KEY, JSON.stringify({ correo: correo, origen: "registro" }));
     window.location.href = "otp.html";

@@ -18,25 +18,25 @@
     display: inline-flex; align-items: center; gap: 6px;
     border: 1.5px solid var(--gris-300); border-radius: 999px;
     padding: 6px 14px; font-size: 14px; font-weight: 500;
-    color: var(--gris-700); background: var(--blanco);
+    color: var(--gris-700); background: var(--color-blanco);
     transition: all .15s ease; cursor: pointer; user-select: none;
   }
   .check-chip input:checked + .chip {
     border-color: var(--azul-600); background: var(--azul-050);
-    color: var(--azul-900); font-weight: 600;
+    color: var(--color-azul-texto); font-weight: 600;
   }
   .check-chip input:checked + .chip::before { content: "✓ "; font-size: 12px; }
-  .check-chip .chip:hover { border-color: var(--azul-400); background: var(--azul-050); }
+  .check-chip .chip:hover { border-color: var(--azul-600); background: var(--azul-050); }
 
   .tipo-opt {
-    border: 1.5px solid var(--gris-300); background: var(--blanco);
+    border: 1.5px solid var(--gris-300); background: var(--color-blanco);
     border-radius: var(--radio-sm); padding: 16px 12px; cursor: pointer;
     text-align: center; font-family: inherit; font-size: 14px; font-weight: 600;
     color: var(--gris-700); transition: all .15s ease;
   }
   .tipo-opt .em { display: block; font-size: 24px; margin-bottom: 8px; }
   .tipo-opt:hover { border-color: var(--azul-600); background: var(--azul-050); }
-  .tipo-opt.is-active { border-color: var(--oro-600); background: var(--oro-050); color: var(--azul-900); box-shadow: 0 0 0 3px var(--oro-050); }
+  .tipo-opt.is-active { border-color: var(--color-dorado-encabezado); background: var(--oro-050); color: var(--color-azul-texto); box-shadow: 0 0 0 3px var(--oro-050); }
   @media (max-width: 720px){ .tipo-grid { grid-template-columns: repeat(2,1fr); } }
 
   /* Aceptación expresa de bases y condiciones */
@@ -98,46 +98,69 @@
     <div class="card section-card">
       <div class="section-head">
         <span class="num">1</span>
-        <div><h3>Datos de participación</h3><p>Comunes a cualquier tipo de actividad</p></div>
+        <div><h3>Datos de participación</h3><p>Se precargan de tu cuenta; solo capturas institución y cargo</p></div>
       </div>
       <div class="section-body">
         <div class="grid-2">
           <div class="field field-prefill">
             <label>Nombre completo <span class="req">*</span></label>
-            <input type="text" value="Laura Peniche Uc" readonly>
+            <input type="text" value="Laura Peniche Uc" data-de-cuenta="nombre_completo" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
           <div class="field field-prefill">
             <label>Correo electrónico <span class="req">*</span></label>
-            <input type="email" value="contacto@editoriallanave.mx" readonly>
+            <input type="email" value="contacto@editoriallanave.mx" data-de-cuenta="correo" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
         </div>
         <div class="grid-2">
           <div class="field field-prefill">
             <label>Número telefónico <span class="req">*</span></label>
-            <input type="tel" value="999 456 7890" readonly>
+            <input type="tel" value="999 456 7890" data-de-cuenta="telefono" readonly>
             <span class="tag-auto">de tu cuenta</span>
           </div>
-          <div class="field">
-            <label>Dependencia o institución <span class="req">*</span></label>
-            <input type="text" value="Editorial La Nave">
+          <div class="field field-prefill">
+            <label>País <span class="req">*</span></label>
+            <input type="text" value="México" data-de-cuenta="pais" readonly>
+            <span class="tag-auto">de tu cuenta</span>
           </div>
         </div>
-        <div class="grid-2">
-          <div class="field">
-            <label>Cargo <span class="opt">(opcional)</span></label>
-            <input type="text" value="Coordinadora editorial">
+        <!-- Estado y ciudad van aparte del país porque son tres datos, no uno.
+             En REG se llaman `entidad` y `ciudad`, y solo se piden cuando el país
+             es México: un catálogo de 32 entidades mexicanas no describe una
+             dirección en Bogotá. Por eso aquí también desaparecen si el país no
+             es México, en vez de salir vacíos. -->
+        <div class="grid-2" data-solo-mexico>
+          <div class="field field-prefill">
+            <label>Estado <span class="req">*</span></label>
+            <input type="text" value="Yucatán" data-de-cuenta="entidad" readonly>
+            <span class="tag-auto">de tu cuenta</span>
           </div>
-          <div class="field">
-            <label>Ciudad / Estado <span class="req">*</span></label>
-            <input type="text" value="Mérida, Yucatán">
+          <div class="field field-prefill">
+            <label>Ciudad <span class="opt">(opcional)</span></label>
+            <input type="text" value="Mérida" data-de-cuenta="ciudad" readonly>
+            <span class="tag-auto">de tu cuenta</span>
           </div>
+        </div>
+        <div class="field">
+          <label>Dependencia o institución <span class="req">*</span></label>
+          <div class="evt-institucion">
+            <input type="text" name="institucion" value="Editorial La Nave">
+            <label class="evt-check">
+              <input type="checkbox" name="es_uady"> Es de la UADY
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Cargo <span class="opt">(opcional)</span></label>
+          <input type="text" name="cargo" value="Coordinadora editorial">
         </div>
         <div class="note note-info" style="margin:6px 0 0">
           <div class="ico">ℹ️</div>
-          <div>Tu nombre, correo y teléfono se toman de tu cuenta. Solo completa los datos
-            de la institución y ubicación.</div>
+          <div>Todo lo de arriba sale de tu cuenta. Lo único que capturas aquí es la
+            <strong>institución y el cargo</strong>: una misma persona puede aplicar
+            representando a instituciones distintas, así que se piden por solicitud.
+            Estado y ciudad solo aparecen si tu país es México.</div>
         </div>
       </div>
     </div>
@@ -205,6 +228,56 @@
 <script src="../demo.js"></script>
 <script src="../app.js"></script>
 <script>
+  /* Precarga desde la cuenta. El registro de REG guarda estos datos en
+     `filey_reg_persona`; sin cuenta creada quedan los del guion (Laura P.).
+     En Django no hay que guardarlos aparte: la vista pasa `request.user` y la
+     plantilla lee `usuario.nombre_completo`, `.correo`, `.telefono` y
+     `.get_pais_display`. Estado y ciudad no están aquí porque REG todavía no
+     los captura (`Modelo de datos - Eventos` 2.1). */
+  (function () {
+    var persona = null;
+    try { persona = JSON.parse(localStorage.getItem("filey_reg_persona")); } catch (e) {}
+    if (!persona || !persona.nombre) return;
+
+    function poner(clave, valor) {
+      var campo = document.querySelector('[data-de-cuenta="' + clave + '"]');
+      if (campo && valor) campo.value = valor;
+    }
+
+    poner("nombre_completo",
+      [persona.nombre, persona.primer_apellido, persona.segundo_apellido]
+        .filter(Boolean).join(" "));
+    poner("correo", persona.correo);
+    poner("entidad", persona.entidad_nombre || persona.entidad);
+    poner("ciudad", persona.ciudad);
+
+    /* Estado y ciudad son de México y de nadie más: fuera de México REG ni
+       los pide, así que la fila entera desaparece en vez de salir vacía.
+
+       La condición mira `entidad` y no `pais` —igual que la plantilla de
+       Django— porque cubre un caso más con la misma línea: una cuenta
+       mexicana sin entidad, que el alta no deja crear pero sí el panel
+       (`blank=True`) y `createsuperuser`. Preguntando por el país, esa
+       cuenta enseñaba un «Estado *» vacío marcado como obligatorio, que
+       nadie puede llenar desde aquí: la sección es de solo lectura. */
+    var fila = document.querySelector("[data-solo-mexico]");
+    if (fila && !persona.entidad) fila.hidden = true;
+    /* Se guarda solo con dígitos; aquí se agrupa para leerlo. */
+    poner("telefono", String(persona.telefono || "").replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3"));
+
+    /* El país se guarda como código ISO: el nombre sale del mismo catálogo
+       que usa el registro, para no tener dos listas que puedan divergir. */
+    if (persona.pais) {
+      fetch("../../common/db/REG/semillas/paises.json", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (paises) {
+          var p = paises.find(function (x) { return x.codigo === persona.pais; });
+          poner("pais", p ? p.nombre : persona.pais);
+        })
+        .catch(function () { poner("pais", persona.pais); });
+    }
+  })();
+
   // Envío real (demo): registra la propuesta y sigue a la confirmación.
   document.getElementById("btn-enviar").addEventListener("click", function () {
     var grid = document.getElementById("tipo-grid");

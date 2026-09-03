@@ -34,14 +34,14 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 ## Precondiciones
 
 - El aplicante tiene sesión iniciada.
-- El evento está en periodo de convocatoria abierto.
-- La editorial/cuenta no tiene una solicitud previa activa (se permite una sola solicitud en proceso por editorial/cuenta; si la previa tiene cambios solicitados, se reedita la misma; si fue rechazada definitivamente, se permite crear una nueva).
+- La convocatoria de stands a la que aplica está `abierta`.
+- La persona no tiene una solicitud **en juego** en **esta** convocatoria (RN-22): se admite como mucho una en `pendiente`, `cambios_solicitados` o `aceptada`. Si la previa tiene cambios solicitados, se reedita la misma (CU-STD-002); si fue rechazada, se crea una nueva con la misma editorial; si ya fue aceptada, no hay nada que volver a enviar y el siguiente paso es elegir espacios (CU-STD-009).
 
 ## Postcondiciones
 
 ### En éxito
 
-- Se crea una solicitud en estado `pendiente`, asociada a la editorial y al evento, con su fecha de envío.
+- Se crea una solicitud en estado `pendiente`, asociada a la editorial y al registro de la persona en esta convocatoria, con su fecha de envío y con la **fotografía** de los datos enviados (RN-22).
 - Los datos de la editorial, sus sellos y los documentos adjuntos quedan almacenados.
 - La solicitud queda en la cola de revisión del administrador.
 
@@ -51,13 +51,31 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 
 ## Flujo principal
 
-1. El aplicante abre el formulario de solicitud.
+1. El aplicante abre el formulario de solicitud. El sistema **propone** lo que la cuenta ya sabe —responsable del stand, correo de contacto, teléfono celular y, si la cuenta es de México, estado y municipio— y dice en pantalla qué campos vienen propuestos.
 2. El aplicante captura los datos de la editorial: domicilio, contactos (director general, comercial, editorial y de promoción), giro, responsable y nombre del antepecho del stand, materiales, temáticas y sellos editoriales que representa.
 3. El aplicante adjunta los documentos requeridos: constancia de situación fiscal y lista de títulos.
 4. El aplicante envía la solicitud.
 5. El sistema valida que los campos obligatorios y los documentos requeridos estén completos.
-6. El sistema registra la solicitud en estado `pendiente`, con su fecha de envío, asociándola a la editorial y al evento.
+6. El sistema crea el registro de la persona en esta convocatoria si aún no existe, y registra la solicitud en estado `pendiente` con su fecha de envío, asociándola a la editorial y a ese registro.
 7. El sistema confirma al aplicante que su solicitud fue enviada y se encuentra en revisión.
+
+> [!note] Lo de la cuenta se propone, no se impone
+> El domicilio fiscal de una editorial no es el de la persona, pero empieza igual de menudo:
+> quien tramita desde Mérida registra una editorial yucateca. Por eso el estado y el municipio
+> llegan propuestos desde `Persona.entidad` y `Persona.ciudad` (`CU-REG-001`) — y se pueden
+> cambiar, como el resto de lo propuesto.
+>
+> Tres condiciones, y las tres importan:
+> - **Solo en la ficha en blanco.** Con una ficha guardada la fuente es la ficha: si se
+>   repropusiera lo de la cuenta, quien cambiara su ciudad personal se encontraría cambiado el
+>   domicilio de la editorial sin haberlo tocado.
+> - **Una cuenta de fuera de México no propone nada**, porque ahí esos dos campos nunca se
+>   preguntaron.
+> - Lo que se copia al domicilio es el **nombre** de la entidad («Yucatán»), no su código
+>   (`YUC`): `Editorial.estado` es texto libre porque sale de un documento en papel.
+>
+> La pantalla lo dice. Un campo que aparece lleno sin explicación se lee como un dato que el
+> sistema sabe de ti y no te contó de dónde.
 
 ## Flujos alternos
 
@@ -80,9 +98,13 @@ El aplicante decide participar en la feria y abre el formulario de solicitud.
 
 ### E2. Ya existe una solicitud para la editorial/cuenta
 
-1. En el paso 6 el sistema detecta que la editorial/cuenta ya tiene una solicitud registrada.
+1. En el paso 6 el sistema detecta que la persona ya tiene una solicitud **en juego** en esta convocatoria.
 2. El sistema impide crear una nueva y avisa al aplicante.
-3. Si la solicitud previa tiene cambios solicitados, el sistema lo dirige a editarla y reenviarla (CU-STD-002). Si la solicitud previa fue rechazada, el sistema permite continuar con la creación de la nueva solicitud.
+3. Si la solicitud previa tiene cambios solicitados, el sistema lo dirige a editarla y reenviarla (CU-STD-002). Si ya fue **aceptada**, se lo dice y lo manda a elegir espacios: no está bloqueado, está un paso más adelante. Si fue rechazada, **no bloquea**: permite crear la nueva (RN-22).
+
+> [!note] Una solicitud en juego **por convocatoria**, no por editorial
+> Hasta el 2026-08-27 esto decía "una solicitud por editorial/cuenta". Con varias convocatorias
+> de stands en la misma feria, la misma editorial puede tener una solicitud viva en cada una.
 
 ## Datos relevantes
 

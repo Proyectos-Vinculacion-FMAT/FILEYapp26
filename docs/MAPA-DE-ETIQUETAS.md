@@ -49,6 +49,7 @@ panel de tags y en el grafo.
 | `tipo/analisis` | Análisis/contraste de fuentes | `extraido/Analisis de archivos proporcionados.md` |
 | `tipo/nota` | Nota de trabajo o documento fuente suelto | `soporte/notas/*`, `documentos proporcionados.../*` |
 | `tipo/adr` | Registro de decisión de arquitectura (*Architecture Decision Record*) | `adr/*` |
+| `tipo/plan` | Plan de construcción de un dominio: fases, dependencias y riesgos | `planes/*` |
 
 ## Faceta `dom/` — dominio del sistema (0 o más)
 

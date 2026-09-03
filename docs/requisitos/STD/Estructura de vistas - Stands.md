@@ -54,6 +54,9 @@ flowchart LR
     U4 --> U5[U5 · Mi reserva]
     U5 --> U6[U6 · Pagos]
 
+    U1 -.->|reserva viva, RN-23| U5
+    E0 -.->|aceptada, RN-23| U2
+
     ROL -->|Administrador| A1[A1 · Solicitudes]
     A1 --> A2[A2 · Detalle de solicitud]
     A1 -.-> A3[A3 · Reservas]
@@ -132,6 +135,21 @@ flowchart LR
 - **Entidades:** Reserva, ReservaStand, Movimiento, DescuentoAplicado, Notificacion.
 
 ### U6 · Pagos
+> [!note] En la implementación, U5 y U6 son **una pantalla con tres pestañas**
+> Django las sirve juntas en `/f/<slug>/stands/<id>/mi-reserva/` («Resumen», «Pagos» y
+> «Ver en el mapa»), siguiendo al prototipo de Angular (`u5-mi-reserva`): el estado de la
+> reserva y su pago son la misma pregunta —«¿cómo voy?»— y partirlos en dos URLs obliga a ir
+> y volver para comparar el saldo con lo que se acaba de abonar. Los CU y las entidades de
+> cada bloque no cambian.
+>
+> La tercera pestaña es el «en mapa» de U5 paso 2: el plano en **modo consulta**, sin carrito
+> y sin «agregar», con los espacios propios distinguibles. Es también la respuesta a A1 de
+> `CU-STD-037` —el mapa sigue teniendo sentido para quien ya reservó— ahora que entrar al
+> módulo con una reserva viva lleva directo aquí (`RN-23`).
+>
+> Las pestañas van por `?ver=` y no por JavaScript: el canvas pesa 39 MB, y con pestañas de
+> cliente se descargaría en cada visita a la cuenta aunque nadie abriera el mapa.
+
 - **Objetivo:** pagar la reserva por abonos y dar seguimiento.
 - **Contenido (tres bloques):**
   1. **Instrucciones de pago** (transferencia / depósito / cheque; sin efectivo, RN-08).
@@ -168,6 +186,30 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Reserva, Editorial.
 
 ### A4 · Detalle de reserva *(vista-contenedor)*
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/reserva/<id>/`
+> Desde el 2026-08-30 enseña además los **avisos que salieron** por esta reserva, por lo mismo
+> que A2: `avisos.py` se traga el fallo del transporte para no deshacer un cobro que sí
+> ocurrió, y sin esa lista nadie se entera de que la editorial no recibió nada.
+>
+> Y **está completa**: el bloque «Plazos y estado» cierra CU-STD-035 y CU-STD-036 —prorrogar,
+> mover el corte y cancelar—. Tres decisiones de las que solo cancelar es irreversible, así que
+> es la única detrás de un interruptor y de una casilla: un botón rojo suelto entre otros tres
+> se pulsa por inercia. En una reserva cancelada la pantalla no ofrece nada — enseña quién la
+> cerró, cuándo y por qué, y se aparta.
+> Con tres de las cinco acciones: validar un abono (018), asentar uno manual (019) y aplicar o
+> retirar el especial (020). **Cancelar/prorrogar (035) y mover la fecha de corte (036) no se
+> pintan**, porque no existen: un botón que no hace nada se pulsa igual.
+>
+> Tres decisiones de la pantalla:
+>
+> - **El abono se valida en el mismo modal que en A5**, con `?desde=reserva` para que la
+>   decisión devuelva aquí. Es una de dos palabras conocidas y no una URL de vuelta: una URL en
+>   un parámetro sería un redirector abierto en una pantalla con sesión de administración.
+> - **El abono manual nace `validado`** (CU-STD-019 paso 6) y lo dice el encabezado del
+>   formulario, porque no se puede deducir de los campos.
+> - **Aplicar y retirar el especial nunca se ofrecen a la vez.** RN-05 deja uno por reserva, así
+>   que con uno puesto el formulario de aplicar solo podría contestar que ya existe.
+
 - **Objetivo:** gestionar una reserva concreta y todas sus acciones.
 - **Contenido:** datos de la reserva, contacto, stands, abonos y descuentos; concentra las
   siguientes acciones sin salir de la vista:
@@ -181,6 +223,19 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Reserva, ReservaStand, Movimiento, Documento, DescuentoAplicado, Bitacora.
 
 ### A5 · Pagos por validar (cola transversal)
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/<id>/pagos/`
+> **Entrar ya es filtrar**: la cola son los `pendiente_validacion` y los chips sirven para
+> mirar lo ya resuelto, al revés que en las otras dos listas. El detalle de cada abono se abre
+> en un modal que trae htmx y que es **la misma vista** que la pantalla suelta —la que sale sin
+> JavaScript—, para que las dos no puedan decir cifras distintas del mismo abono.
+>
+> El modal enseña el saldo de la reserva junto al monto: validar es lo que puede cruzar el 50%
+> (RN-13) o el 100% (RN-14), y esa decisión no se toma sin ver contra qué.
+>
+> **El motivo del rechazo se pide pero no se exige**, siguiendo A1 paso 3 de CU-STD-018. El
+> prototipo de Angular sí lo bloquea; se eligió el caso de uso, porque el motivo es una cortesía
+> con la editorial (CU-STD-017) y no una condición de la operación.
+
 - **Objetivo:** validar abonos de forma centralizada, sin entrar reserva por reserva.
 - **Contenido:** cola de **todos** los movimientos en `pendiente_validacion`; validar uno
   ejecuta la **misma acción** que en A4.
@@ -188,12 +243,41 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Movimiento, Documento, Reserva.
 
 ### A6 · Expositores (lista)
+> [!note] Construida el 2026-08-30, en `/f/<slug>/stands/<id>/expositores/`
+> **Sin chips de estado**, al revés que las otras tres listas del panel: aquí solo hay un
+> estado por definición —expositor es quien tiene la solicitud aceptada (RN-16)— y una barra
+> con un filtro que no filtra nada es un adorno. La barra compartida sabe salir solo con el
+> buscador.
+>
+> La lista vacía **manda a la bandeja de solicitudes** (E1) y no dice «no hay editoriales»:
+> si no hay ninguna, lo que falta es dictaminar.
+>
+> Se busca por nombre y por correo, **no por RFC**: no existe como columna. Ver la nota de A7.
+
 - **Objetivo:** ver quién está habilitado para reservar.
 - **Contenido:** lista de expositores con **solicitud aceptada**.
 - **CU involucrados:** CU-STD-030.
 - **Entidades:** Editorial, Solicitud.
 
 ### A7 · Detalle de expositor
+> [!note] Construida el 2026-08-30, en `/f/<slug>/stands/expositor/<id>/`
+> **Enseña la ficha viva, no la fotografía.** A2 juzga lo que se envió (RN-22); A7 atiende a
+> un cliente hoy. Si la editorial corrigió su correo después del dictamen, el bueno aquí es el
+> de ahora y el de A2 sigue siendo el que se juzgó: las dos tienen razón, no son la misma
+> pregunta.
+>
+> **El alcance es la feria, no la convocatoria** (RN-19, RN-21), y por eso la URL no lleva
+> convocatoria: la misma editorial puede haber aplicado a la general y a la de un pabellón, y
+> quien atiende una llamada necesita ver las dos.
+
+> [!warning] El RFC no es una columna, y el paso 2 lo da por hecho
+> `CU-STD-031` paso 2 pide «Razón social, RFC, y enlace para descargar la Constancia». Lo que
+> el modelo tiene es `Editorial.nombre` y la constancia como `Documento`: **la ficha en papel
+> no pide el RFC como dato, lo pide como archivo**. La pantalla enlaza la constancia y lo dice;
+> inventar un campo que nadie llenó nunca habría sido peor. Si se quiere buscar por RFC o
+> facturar sin abrir el PDF, hay que añadirlo a la ficha de U1 — y eso lo manda el documento
+> oficial, no este archivo.
+
 - **Objetivo:** consultar el perfil completo de un expositor.
 - **Contenido:** datos de empresa y contacto, documentos, sellos y sus reservas.
 - **CU involucrados:** CU-STD-031.
@@ -214,11 +298,23 @@ Cinco secciones de navegación (más Configuración), con patrón **lista → de
 - **Entidades:** Stand, Bitacora.
 
 ### A10 · Configuración
-- **Objetivo:** administrar los parámetros globales del sistema.
-- **Contenido:** costo por m², porcentaje de anticipo, descuento por pronto pago,
-  fechas límite (pronto pago, corte) e instrucciones/datos bancarios de pago.
+- **Objetivo:** administrar los parámetros de **esta convocatoria** (no del sistema: desde el
+  2026-08-25 una feria puede tener varias convocatorias de stands, cada una con su precio).
+- **Contenido:** costo por m², porcentaje de anticipo, plazo de la reserva, descuento por pronto
+  pago y su fecha límite, los **seis campos de la cuenta bancaria** (titular, banco, cuenta,
+  CLABE, sucursal, referencia) y las instrucciones adicionales.
 - **CU involucrados:** CU-STD-034.
 - **Entidades:** ConfiguracionSistema.
+
+> [!note] Construida el 2026-08-29, en `/f/<slug>/stands/<id>/configuracion/`
+> Dos tarjetas —lo que cuesta y dónde se paga— y un solo botón, como el A10 del prototipo de
+> Angular: son las dos mitades de «abrir la venta» y guardar por separado invita a dejarse una.
+> Lo que añade al prototipo es decir lo que un cambio **no** hace: con reservas en curso avisa
+> de cuántas conservan su precio (RN-01), que es la duda con la que se entra a subir una tarifa.
+>
+> **Importar el mapa no está aquí.** Reemplaza el showfloor entero y es del operador de la
+> plataforma (ADR-0005): sigue en `/f/<slug>/django-admin/`. Esta pantalla lo enseña sin
+> dejar tocarlo.
 
 ---
 

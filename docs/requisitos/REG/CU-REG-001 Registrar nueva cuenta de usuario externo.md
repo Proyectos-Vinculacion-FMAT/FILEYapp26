@@ -19,7 +19,7 @@ trazabilidad:
 
 ## Objetivo
 
-Permitir que una persona que nunca ha usado el sistema FILEY cree su cuenta con datos mínimos (correo, teléfono, nombre y apellidos, país), quedando lista para autenticarse con OTP y acceder al módulo correspondiente.
+Permitir que una persona que nunca ha usado el sistema FILEY cree su cuenta con datos mínimos (correo, teléfono, nombre y apellidos, país y —dentro de México— estado y ciudad), quedando lista para autenticarse con OTP y acceder al módulo correspondiente.
 
 > [!success] Implementado el 2026-08-25
 > El formulario de alta pide ya los cinco campos (`nombre`, `primer_apellido`,
@@ -27,6 +27,30 @@ Permitir que una persona que nunca ha usado el sistema FILEY cree su cuenta con 
 > con el catálogo ISO 3166-1 (`filey/apps/registros/paises.py`) renderizado en el servidor, así
 > que la pantalla sigue funcionando sin JavaScript. Lo único de este CU que **no** está
 > implementado es la segunda precondición — ver el aviso más abajo.
+
+> [!success] Estado y ciudad, añadidos el 2026-08-31
+> Dos campos más, **condicionados al país**: solo se piden si es México. Un catálogo de 32
+> entidades mexicanas no describe una dirección en Bogotá, y una ciudad sin estado que la
+> sitúe tampoco. El estado es un `<select>` con las entidades federativas
+> (`filey/apps/registros/estados_mx.py`), **Yucatán por omisión**; la ciudad es texto libre y
+> **opcional**.
+>
+> Los esconde Alpine al cambiar el país, pero la regla no vive ahí: `RegistroForm.clean` los
+> descarta si el país no es México, porque un POST fabricado a mano no pasa por la pantalla.
+> Sin JavaScript se ven siempre — se pintan de más, no de menos, y el servidor decide igual.
+
+> [!warning] En el código el campo se llama `entidad`, no `estado`
+> `Persona.estado` ya existe y es **el estado de la cuenta** (`activa`/`suspendida`). El nuevo
+> se llama `entidad` —el término oficial es «entidad federativa»— y su etiqueta en pantalla y
+> en este documento sigue siendo «Estado». Por lo mismo, `Persona.estado` pasó a rotularse
+> «estado de la cuenta» en el admin.
+
+> [!note] Se guarda el código, no el nombre
+> `YUC`, no «Yucatán» — igual que el país guarda `MX` (ISO 3166-2:MX sin el prefijo). El
+> nombre de una entidad se escribe de varias formas —«Ciudad de México», «CDMX», «Distrito
+> Federal»— y un catálogo libre acaba con cuatro filas para la misma entidad en el mismo
+> informe. `Persona.estado_nombre` devuelve el nombre para las fichas que lo guardan como
+> texto, como el domicilio fiscal de `STD`.
 
 ## Alcance
 
@@ -69,14 +93,25 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 
 1. El usuario ingresa su correo electrónico en la pantalla de acceso.
 2. El sistema verifica que el correo no existe en `Persona`.
-3. El sistema presenta el formulario de registro con los campos: nombre, primer apellido, segundo apellido, teléfono y país (el correo ya está precargado del paso 1).
-4. El usuario completa esos campos y confirma. **El segundo apellido es opcional**; el resto es obligatorio.
+3. El sistema presenta el formulario de registro con los campos: nombre, primer apellido, segundo apellido, teléfono y país (el correo ya está precargado del paso 1). Con **México** seleccionado —que es el valor por omisión— muestra además estado y ciudad.
+4. El usuario completa esos campos y confirma. **El segundo apellido y la ciudad son opcionales**; el resto es obligatorio. Si cambia el país a uno distinto de México, estado y ciudad desaparecen y no se piden (A2).
 5. El sistema valida formato de correo y teléfono.
 6. El sistema verifica que el teléfono no esté ya asociado a otra cuenta.
 7. El sistema crea el registro en `Persona` (`estado = activa`, `fecha_registro = ahora`).
 8. El sistema continúa automáticamente en CU-REG-002 (envío de OTP para autenticar la sesión).
 
 ## Flujos alternos
+
+### A2. País distinto de México
+
+En el paso 4 el usuario elige un país que no es México.
+
+1. El sistema oculta estado y ciudad.
+2. La cuenta se crea con los dos campos **vacíos**, que es información correcta y no un hueco:
+   nunca se le preguntaron.
+3. Si los valores llegan de todos modos —un POST que no pasó por la pantalla— el sistema los
+   descarta en vez de guardarlos. Guardar «Yucatán» en la ficha de alguien que vive en Madrid
+   haría que una consulta por entidad contara personas que no viven ahí.
 
 ### A1. Correo ya registrado
 
@@ -100,6 +135,8 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 | Primer apellido | Mínimo 2 caracteres. Obligatorio. |
 | Segundo apellido | **Opcional.** No puede exigirse: hay personas que no lo tienen y la mayoría de los participantes extranjeros usan un solo apellido. |
 | País | Obligatorio. Dato de perfil, se reutiliza en cualquier convocatoria de cualquier feria. |
+| Estado | Obligatorio **solo si el país es México**; fuera de México no se pide y se guarda vacío. Desplegable de las 32 entidades federativas, con Yucatán por omisión. Se guarda el código de tres letras (`YUC`). |
+| Ciudad | **Opcional**, y solo si el país es México. Texto libre: no hay catálogo de municipios que valga la pena mantener para esto, y exigirla dejaría fuera a quien escribe desde una localidad cuyo nombre oficial no conoce. Lo que sitúa a la persona es el estado. |
 | Teléfono | Al menos 10 dígitos; se guardan solo los dígitos, descartando espacios, guiones y paréntesis. |
 
 > [!note] Correo y teléfono son **ambos** obligatorios
@@ -121,11 +158,12 @@ El usuario ingresa su correo en la pantalla de acceso y el sistema no lo reconoc
 - Correo electrónico
 - Nombre, primer apellido y segundo apellido (este último opcional)
 - País
+- Estado y ciudad, **solo si el país es México** (la ciudad, opcional)
 - Teléfono
 
 ### Salidas
 
-- Registro `Persona` creado (id, correo, teléfono, nombre, primer_apellido, segundo_apellido, pais, fecha_registro, estado)
+- Registro `Persona` creado (id, correo, teléfono, nombre, primer_apellido, segundo_apellido, pais, entidad, ciudad, fecha_registro, estado)
 - Disparo de CU-REG-002
 
 > [!note] No existe un campo `tipo` en la cuenta

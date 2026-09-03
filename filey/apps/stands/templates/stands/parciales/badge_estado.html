@@ -1,0 +1,22 @@
+{% comment %} ===========================================================
+   El estado de una solicitud, como distintivo.
+
+   Contexto que espera:
+
+     solicitud   la Solicitud
+
+   Las cuatro clases `.badge-*` ya existían en `filey.css`: son las
+   mismas que usa el dictamen de EVT, y el vocabulario coincide porque la
+   figura coincide. Que la traducción de estado a clase viva en una
+   plantilla y no en la vista es el contrato del proyecto: una vista
+   expone `estado`, nunca `clase_css`.
+   =========================================================== {% endcomment %}
+{% if solicitud.estado == 'pendiente' %}
+  <span class="badge badge-pending">Pendiente</span>
+{% elif solicitud.estado == 'aceptada' %}
+  <span class="badge badge-accepted">Aceptada</span>
+{% elif solicitud.estado == 'rechazada' %}
+  <span class="badge badge-rejected">Rechazada</span>
+{% else %}
+  <span class="badge badge-changes">Cambios pedidos</span>
+{% endif %}

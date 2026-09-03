@@ -37,7 +37,7 @@ Selección de un expositor en el listado para ver su detalle (vista A7).
 2. El sistema despliega la información fiscal: Razón social, RFC, y enlace para descargar el `Documento` de Constancia de Situación Fiscal.
 3. El sistema muestra los datos comerciales y sellos (`SelloEditorial`).
 4. El sistema despliega la información de contacto operativo y legal.
-5. El sistema muestra una sección con la `Reserva` vinculada a este expositor para el evento actual (estado, total y stands).
+5. El sistema muestra una sección con las `Reserva` de este expositor en esta feria —**una por convocatoria** a la que haya aplicado— con su estado, total y stands.
 6. Si la editorial tiene una reserva, el administrador puede seleccionarla para ser redirigido a la gestión de esa reserva en particular (CU-STD-029).
 7. El administrador finaliza su consulta y regresa a la lista.
 
@@ -50,7 +50,10 @@ Selección de un expositor en el listado para ver su detalle (vista A7).
 
 ### E1. Expositor inexistente
 1. El enlace o ID buscado es inválido.
-2. El sistema muestra un error y regresa al aplicante a la lista de expositores.
+2. El sistema responde **404**, con la navegación del panel intacta para volver a la lista.
+
+> [!note] Igual que `CU-STD-029` E1
+> Un 404 y no una redirección con aviso, por la misma razón: ver la nota de aquel caso de uso.
 
 ## Postcondiciones
 

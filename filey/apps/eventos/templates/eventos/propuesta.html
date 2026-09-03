@@ -1,0 +1,202 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   U1 · Registro de propuesta (CU-EVT-002).
+
+   Una sola pantalla para los catorce pasos del CU: elegir el tipo,
+   llenar lo que ese tipo pide, y enviar. Tres secciones numeradas, las
+   mismas del prototipo —que es la especificación visual—: llenar esto
+   **sí es una secuencia**, y el número dice cuánto queda.
+
+   Funciona sin JavaScript. Elegir el tipo es enviar el formulario por
+   GET: el navegador arrastra lo ya escrito y la pantalla vuelve con los
+   campos del tipo. htmx solo evita la recarga — cambia la sección 3 y
+   nada más. Ver la nota de `views.py`.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}{{ convocatoria.nombre }} — Enviar propuesta{% endblock %}
+
+{% block clases_pagina %}page-narrow{% endblock %}
+
+{% block encabezado_titulo %}Registro de propuesta{% endblock %}
+{% block encabezado_texto %}
+  Convocatoria <strong>{{ convocatoria.nombre }}</strong> · Duración máxima por
+  actividad: 50 minutos.
+{% endblock %}
+
+{% block contenido %}
+
+<div class="breadcrumb">
+  <a href="{% url 'convocatorias:catalogo' %}">Convocatorias</a>
+  <span>›</span> {{ convocatoria.nombre }}
+</div>
+
+{% if not abierta %}
+  {% comment %} E1: la convocatoria no admite envíos. La pantalla se sigue
+     pudiendo leer —el CU no la esconde— pero no ofrece enviar, que es lo
+     que el servicio rechazaría de todas formas. {% endcomment %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div><strong>Esta convocatoria no está recibiendo propuestas.</strong>
+      Puedes consultar lo que pide, pero no enviar.</div>
+  </div>
+{% endif %}
+
+{% for error in form.non_field_errors %}
+  <div class="note note-err"><div class="ico">⚠️</div><div>{{ error }}</div></div>
+{% endfor %}
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+
+  {% comment %} El tipo elegido **no viaja desde aquí**: lo lleva la sección 3,
+     que es lo que htmx reemplaza. Puesto en este nivel se quedaba con el
+     valor que tuviera al cargar la página —vacío— porque el swap no lo
+     alcanza, y al enviar el servidor creía que nadie había elegido nada:
+     la sección desaparecía y con ella todo lo capturado. {% endcomment %}
+
+  {% comment %} ── 1 · quién propone ───────────────────────────
+     Todo lo de la cuenta se enseña y no se captura: lo que manda es
+     `request.user`, así que un POST fabricado no puede cambiar de quién
+     es la propuesta (paso 2 del CU). {% endcomment %}
+  <div class="card section-card">
+    <div class="section-head">
+      <span class="num">1</span>
+      <div>
+        <h3>Datos de participación</h3>
+        <p>Se precargan de tu cuenta; solo capturas institución y cargo</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="grid-2">
+        <div class="field field-prefill">
+          <label>Nombre completo <span class="req">*</span></label>
+          <input type="text" value="{{ user.nombre_completo }}" readonly>
+          <span class="tag-auto">de tu cuenta</span>
+        </div>
+        <div class="field field-prefill">
+          <label>Correo electrónico <span class="req">*</span></label>
+          <input type="email" value="{{ user.correo }}" readonly>
+          <span class="tag-auto">de tu cuenta</span>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field field-prefill">
+          <label>Número telefónico <span class="req">*</span></label>
+          <input type="tel" value="{{ user.telefono }}" readonly>
+          <span class="tag-auto">de tu cuenta</span>
+        </div>
+        <div class="field field-prefill">
+          <label>País <span class="req">*</span></label>
+          <input type="text" value="{{ user.get_pais_display }}" readonly>
+          <span class="tag-auto">de tu cuenta</span>
+        </div>
+      </div>
+
+      {% comment %} Estado y ciudad son de México y de nadie más: fuera de
+         México ni se piden al darse de alta (REG), así que aquí tampoco
+         se enseñan vacíos. {% endcomment %}
+      {% if user.entidad %}
+        <div class="grid-2">
+          <div class="field field-prefill">
+            <label>Estado <span class="req">*</span></label>
+            <input type="text" value="{{ user.get_entidad_display }}" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+          <div class="field field-prefill">
+            <label>Ciudad <span class="opt">(opcional)</span></label>
+            <input type="text" value="{{ user.ciudad }}" readonly>
+            <span class="tag-auto">de tu cuenta</span>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="field">
+        <label for="{{ form.institucion.id_for_label }}">
+          Dependencia o institución <span class="req">*</span>
+        </label>
+        <div class="evt-institucion">
+          {{ form.institucion }}
+          <label class="evt-check">{{ form.es_uady }} Es de la UADY</label>
+        </div>
+        {% for error in form.institucion.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.cargo.id_for_label }}">Cargo <span class="opt">(opcional)</span></label>
+        {{ form.cargo }}
+        {% for error in form.cargo.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="note note-info">
+        <div class="ico">ℹ️</div>
+        <div>Todo lo de arriba sale de tu cuenta. Lo único que capturas aquí es la
+          <strong>institución y el cargo</strong>: una misma persona puede proponer
+          representando a instituciones distintas, así que se piden por solicitud.</div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %} ── 2 · el tipo ─────────────────────────────────
+     Los ocho botones son `submit` con `formmethod="get"`: sin
+     JavaScript, elegir uno recarga arrastrando lo ya escrito. Con htmx,
+     cambia solo la sección 3. {% endcomment %}
+  <div class="card section-card">
+    <div class="section-head">
+      <span class="num">2</span>
+      <div>
+        <h3>Tipo de actividad</h3>
+        <p>Selecciona uno. El formulario se adaptará a lo que elijas.</p>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="tipo-grid">
+        {% for opcion in tipos %}
+          <button type="submit"
+                  formmethod="get"
+                  formnovalidate
+                  name="tipo"
+                  value="{{ opcion.nombre }}"
+                  data-tipo-opt
+                  class="tipo-opt {% if opcion.nombre == tipo_elegido %}is-active{% endif %}"
+                  hx-get="?tipo={{ opcion.nombre }}"
+                  hx-target="#campos-tipo"
+                  hx-swap="outerHTML"
+                  hx-include="closest form">
+            {{ opcion }}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% comment %} ── 3 · lo del tipo ─────────────────────────── {% endcomment %}
+  {% include "eventos/parciales/campos_tipo.html" %}
+
+  {% comment %} Aceptación expresa. Se guarda con la propuesta porque se
+     aceptan las bases **de esta convocatoria**, en el momento de
+     enviar. {% endcomment %}
+  <div class="card card-pad">
+    <label class="acepta">
+      {{ form.bases_aceptadas }}
+      <span class="acepta-txt">
+        He leído y <strong>acepto las bases y condiciones</strong> de
+        {{ convocatoria.nombre }}: lo que la feria cubre y lo que no, y las
+        condiciones de participación.
+        <small>Se guardará la fecha y hora de tu aceptación junto con la propuesta.</small>
+      </span>
+    </label>
+    {% for error in form.bases_aceptadas.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+  </div>
+
+  <div class="card card-pad">
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{% url 'convocatorias:catalogo' %}">Cerrar</a>
+      <button class="btn btn-primary btn-lg" type="submit" {% if not abierta %}disabled{% endif %}>
+        Enviar solicitud
+      </button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}

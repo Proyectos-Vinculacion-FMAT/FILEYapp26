@@ -1,0 +1,18 @@
+{% comment %} ===========================================================
+   El estado de un abono, como distintivo.
+
+   Contexto que espera:
+
+     movimiento   el Movimiento
+
+   Mismo vocabulario de clases que los otros dos distintivos del dominio
+   —solicitud y reserva—: la figura coincide y el color tiene que
+   significar lo mismo en toda la aplicación (`filey-identidad` §4).
+   =========================================================== {% endcomment %}
+{% if movimiento.estado == 'validado' %}
+  <span class="badge badge-accepted">Validado</span>
+{% elif movimiento.estado == 'rechazado' %}
+  <span class="badge badge-rejected">Rechazado</span>
+{% else %}
+  <span class="badge badge-pending">Por validar</span>
+{% endif %}

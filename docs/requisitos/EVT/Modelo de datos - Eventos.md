@@ -248,16 +248,19 @@ erDiagram
         string tipo_presentador
         string nombre_autor_1
         string semblanza_autor_1
+        boolean autor_1_participa
         string nombre_autor_2
         string semblanza_autor_2
+        boolean autor_2_participa
         string nombre_autor_3
         string semblanza_autor_3
+        boolean autor_3_participa
         string nombre_autor_4
         string semblanza_autor_4
+        boolean autor_4_participa
         string nombre_autor_5
         string semblanza_autor_5
-        boolean autor_participa
-        string nombres_de_autores_presentes
+        boolean autor_5_participa
         string nombre_participante_1
         string semblanza_participante_1
         string nombre_participante_2
@@ -271,10 +274,10 @@ erDiagram
         string tipo_presentador
         string nombre_editor_1
         string semblanza_editor_1
+        boolean editor_1_participa
         string nombre_editor_2
         string semblanza_editor_2
-        boolean editor_participa
-        string nombres_de_editores_presentes
+        boolean editor_2_participa
         string nombre_participante_1
         string semblanza_participante_1
         string nombre_participante_2
@@ -399,8 +402,8 @@ en la etapa 2 (§3).
 | nombre_organizador_organizacion | Persona u organización que organiza. Obligatorio. |
 | publico_objetivo | Público al que va dirigida. Lista de valores separados sobre el conjunto cerrado `publico_general`, `academico`, `estudiantil`, `infantil`, `familias`; al menos uno. Al no estar normalizado, filtrar por público exige recorrer el texto. |
 | sinopsis | Sinopsis de la actividad, capturada como texto. Antes era un PDF adjunto marcado por `tiene_sinopsis`; ahora el aplicante escribe el contenido directamente y no hay archivo que administrar. |
-| es_uady | Indica si el aplicante se declara parte de la UADY. Es la autodeclaración en la captura; el administrador la valida (o la corrige) en `DetallesAdminSolicitud.is_participante_uady` (§3.1), que es el valor que consume el cupo. |
-| requiere_constancia | Indica si el aplicante solicita constancia de participación. Precondición de CU-EVT-005 (descargar constancia); antes no existía en el modelo (§5). |
+| es_uady | Indica si el aplicante se declara parte de la UADY. Es la autodeclaración en la captura; el administrador la valida (o la corrige) en `DetallesAdminSolicitud.is_participante_uady` (§3.1), que es el valor que cuenta para el conteo por categoría de `DetallesConvocatoria` (§3.6). |
+| requiere_constancia | Indica si el aplicante solicita constancia de participación. Se captura como **casilla**: sin marcar ya es una respuesta —no la necesita— y es la inofensiva, así que no hay nada obligatorio que contestar. Precondición de CU-EVT-005 (descargar constancia).
 | comentarios | Observaciones libres del aplicante. Opcional. |
 | fecha_de_solicitud | Marca de tiempo del momento en que la solicitud se envía y se guarda. |
 
@@ -437,6 +440,32 @@ solicitud.
 | tipo_actividad_id | Discriminador. FK → CatalogoActividades (§2.5); su campo `nombre` determina a qué tabla `Actividad_*` apunta `detalle_id`. |
 | detalle_id | Referencia polimórfica a la fila de la tabla `Actividad_*` que corresponda (§1). |
 
+> [!note] Cómo se llama cada cosa en el código
+> La etapa 1 está construida (`filey/apps/eventos/`, 2026-09-01). Los nombres del código son
+> más cortos que los del diagrama, porque ahí el prefijo `_EVT` ya lo da la app:
+>
+> | En el diagrama | En el código |
+> | --- | --- |
+> | `Solicitudes_EVT` | `Solicitud` |
+> | `RouterActividades` | `Actividad` — es la tabla padre, ver abajo |
+> | `Actividad_Conversatorio`… | `ActividadConversatorio`… |
+> | `RouterDocumentos` | `Documento` |
+> | `DetallesConvocatoria` (la parte que usa la captura) | `ConfiguracionConvocatoria` |
+> | `RouterSolicitudes` | `RegistroConvocatoria`, de `apps/convocatorias` (`ADR-0006`) |
+
+> [!note] Cómo quedó en el monolito — herencia multitabla
+> `RouterActividades` **no tiene tabla propia** en `apps/eventos`: es la tabla padre
+> `Actividad`, de la que heredan las ocho de `Actividad_*`. Lleva lo mismo que describe este
+> apartado —el discriminador (`tipo`) y la liga con la solicitud— y además el enlace hacia la
+> fila hija, que Django mantiene con **clave foránea de verdad**.
+>
+> Es lo único que un `detalle_id` entero no puede dar: con él, una actividad puede apuntar a
+> una fila que no existe y la base lo acepta sin protestar. Por lo mismo, `RouterDocumentos`
+> es un `Documento` con una clave foránea normal hacia `Actividad`.
+>
+> La decisión no cambia nada de lo que este documento describe —qué tablas hay, qué columnas
+> lleva cada una, qué enruta hacia qué—; cambia con qué garantía se sostiene.
+
 ### 2.7 Tablas `Actividad_*`
 
 Ocho tablas, una por tipo de actividad. Contienen únicamente lo que distingue a ese tipo: los
@@ -450,6 +479,16 @@ evolucione sin arrastrar a los demás; agruparlos por coincidencia actual cerrar
 Cada nombre de participante va acompañado de su propia `semblanza_*`: un campo de texto libre,
 capturado por el aplicante junto con el nombre. Ya no hay un booleano `tiene_semblanza` a nivel
 de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo—.
+
+**Topes de captura** (fijados al construir `CU-EVT-002`): la semblanza admite 2000 caracteres y
+la sinopsis otros 2000, salvo la de una publicación —libro o revista—, que admite 4000. Los
+aplica el formulario y no la columna: PostgreSQL guarda texto sin tope, así que subirlos no
+lleva migración.
+
+**La semblanza es obligatoria en cuanto su nombre tiene algo escrito.** Media persona no se
+puede imprimir en un programa ni mandar a un comité, y las columnas `nombre_*_N` tienen que
+significar «las personas, en orden»: sin esta regla, un envío podría dejar `nombre_autor_3` con
+`nombre_autor_2` vacío.
 
 #### Actividad_Conversatorio · Actividad_MesaRedonda
 
@@ -476,11 +515,30 @@ de solicitud ni un archivo PDF adjunto —la semblanza es contenido, no un anexo
 | tipo_presentador | Rol del proponente respecto a la publicación: `autor`, `editor`, `antologador`, `compilador` o `coordinador`. |
 | nombre_autor_1 … 5 | Nombres tal como aparecen en la portada. Obligatorio el primero; hasta cinco. |
 | semblanza_autor_1 … 5 | Semblanza de cada autor, en el mismo orden. |
-| autor_participa | Indica si el autor estará presente en la actividad. |
-| nombres_de_autores_presentes | Nombres de quienes sí asistirán, cuando no todos los autores participan. |
+| autor_1_participa … 5 | Si ese autor estará presente en la actividad. Uno por autor, en el mismo orden que su nombre. **Nace en falso**: estar en la feria es una afirmación que hay que hacer, no algo que se dé por supuesto y haya que desmarcar. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial. Obligatorio; si la publicación es independiente, se anota así. |
+
+> [!warning] Cambio 2026-08-30 — quién participa se marca por autor
+> Antes eran dos campos: `autor_participa`, un sí/no sobre «el autor» que es ambiguo en
+> cuanto hay más de uno, y `nombres_de_autores_presentes`, una lista escrita a mano que
+> repetía nombres ya capturados y podía contradecirlos.
+>
+> Ahora es una casilla por autor —`autor_1_participa … 5`—, junto a su nombre y su
+> semblanza. Un solo lugar dice quién asiste, no se puede nombrar a alguien que no esté
+> en la lista de autores, y saber cuántos asisten no obliga a leer texto libre.
+> `Actividad_PresentacionRevista` sigue el mismo patrón con `editor_1_participa … 2`.
+
+> [!note] `RN-EVT-01` · La actividad no se queda sin nadie delante
+> Quien sostiene una presentación es **un autor —o editor— que asista, o un presentador**;
+> basta con uno de los dos. Si ninguno de los autores capturados está marcado como que asiste,
+> hace falta al menos un presentador. Solo cuenta la marca, no el nombre: escribir a alguien no
+> lo trae a la feria.
+>
+> Es una regla del formulario, no una restricción de la base: depende de columnas de dos listas
+> distintas y de cuáles se llenaron. Vive en `formularios.py::exigir_presentador`, y la pantalla
+> la adelanta en vivo (`ADR-0009`).
 
 `ejemplar_fisico_entregado` ya no vive en esta tabla: al ser un dato que **solo el
 administrador escribe**, se movió a `DetallesAdminSolicitud` (§3.1), con nota de que aplica
@@ -498,8 +556,7 @@ tabla: hoy se consultan directamente en `RouterDocumentos` (§2.8), anclado a es
 | tipo_presentador | Rol del proponente respecto a la publicación. Mismo conjunto de valores que en `Actividad_PresentacionLibro`. |
 | nombre_editor_1 … 2 | Nombres de los editores. Obligatorio el primero; hasta dos. |
 | semblanza_editor_1 … 2 | Semblanza de cada editor, en el mismo orden. |
-| editor_participa | Indica si el editor estará presente en la actividad. |
-| nombres_de_editores_presentes | Nombres de quienes sí asistirán, cuando no todos los editores participan. |
+| editor_1_participa … 2 | Si ese editor estará presente en la actividad. Uno por editor, en el mismo orden que su nombre. |
 | nombre_participante_1 … 2 | Presentadores. Opcional, hasta dos. |
 | semblanza_participante_1 … 2 | Semblanza de cada presentador, en el mismo orden. |
 | nombre_editorial | Editorial responsable de la revista. |
@@ -605,7 +662,7 @@ inicio permite consultar las solicitudes pendientes sin interpretar la ausencia 
 | solicitud_id | FK → Solicitudes_EVT. |
 | estado | `pendiente`, `cambios_solicitados`, `aceptada`, `rechazada` o `cancelada`. `cancelada` solo aplica después de `aceptada`. |
 | categoria | `literaria` o `academica`. La asigna el administrador durante el dictamen. |
-| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que decide junto con `categoria` qué cupo consume (§3.6); el administrador puede confirmarlo o corregirlo. |
+| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que se usa junto con `categoria` para el conteo por categoría de `DetallesConvocatoria` (§3.6); el administrador puede confirmarlo o corregirlo. |
 | titulo_final | Título definitivo de la actividad si el administrador lo modifica; nulo significa que vale `Solicitudes_EVT.titulo_actividad`. |
 | organizador_final | Organizador definitivo; nulo significa que vale `Solicitudes_EVT.nombre_organizador_organizacion`. |
 | es_apta_juvenil | Marca la actividad como apta para el catálogo escolar y juvenil de `VIS`. |
@@ -626,8 +683,10 @@ Los estados de avance que esa entidad habría guardado son **derivados** y no se
 - Programada: hay al menos una.
 - Confirmada: sus programaciones tienen confirmación del aplicante (§3.4).
 
-`PRG` y `TAL` sí modelan una entidad `Actividad` propia; queda pendiente homologar cómo
-referencian desde ahí lo que en `EVT` es una solicitud aprobada.
+`PRG` sí modela una entidad `Actividad` propia; queda pendiente homologar cómo referencia
+desde ahí lo que en `EVT` es una solicitud aprobada. `TAL` ya no —se homologó con este mismo
+patrón el 2026-08-28: ver
+[`TAL/Modelo de datos - Talleres.md`](<../TAL/Modelo%20de%20datos%20-%20Talleres.md>) §3.
 
 ### 3.2 SolicitudesAprobadas
 
@@ -724,20 +783,23 @@ de asumida.
 | fecha_cierre_ajustes_aplicante | Fecha límite para que el aplicante solicite cambios de horario. |
 | fecha_asignacion_horario | Fecha a partir de la cual los aplicantes ven su sala y hora asignadas. |
 | fecha_constancias | Fecha a partir de la cual pueden descargarse las constancias. |
-| cupo_literario_uady | Número máximo de actividades literarias de la UADY. |
-| cupo_literario_externo | Número máximo de actividades literarias externas. |
-| cupo_academico_uady | Número máximo de actividades académicas de la UADY. |
-| cupo_academico_externo | Número máximo de actividades académicas externas. |
+| cupo_literario_uady | Meta de actividades literarias de la UADY para esta convocatoria. Es una referencia de planeación, no un tope que la aplicación haga cumplir. |
+| cupo_literario_externo | Meta de actividades literarias externas. Misma naturaleza que `cupo_literario_uady`. |
+| cupo_academico_uady | Meta de actividades académicas de la UADY. Misma naturaleza que `cupo_literario_uady`. |
+| cupo_academico_externo | Meta de actividades académicas externas. Misma naturaleza que `cupo_literario_uady`. |
 | programa_archivado | Indica si el programa se cerró definitivamente. |
 | fecha_archivado | Fecha y hora del cierre definitivo. |
 | archivado_por | FK → Persona (administrador que ejecutó el cierre). |
 | motivo_archivado | Motivo registrado al archivar. Obligatorio. |
 
-Los cuatro cupos se consumen **al aceptar una solicitud**, en la etapa de administración. El
-administrador asigna `categoria` e `is_participante_uady` (§3.1) y la combinación de ambos
-determina cuál de los cuatro contadores se decrementa: una solicitud literaria marcada como
-UADY resta uno a `cupo_literario_uady`, una académica no marcada resta uno a
-`cupo_academico_externo`, y así con el resto.
+Los cuatro `cupo_*` **no se consumen ni se hacen cumplir**: cuántas solicitudes de cada
+categoría se aceptan es una decisión 100% del administrador, sin límite impuesto por el sistema.
+Son la meta que se fijó al planear la convocatoria, y sirven de referencia frente a un **conteo
+derivado** —no una columna, se calcula agrupando `DetallesAdminSolicitud` (§3.1) con
+`estado = aceptada` por `categoria` × `is_participante_uady`— que la pantalla de revisión le
+muestra al administrador para que sepa, en cualquier momento del dictamen, cuántas lleva
+aceptadas de cada tipo frente a la meta. La decisión de seguir aceptando por encima o por debajo
+de esa meta es suya.
 
 ### 3.7 BitacoraEVT
 

@@ -100,6 +100,11 @@ convención de equipo normal, no aquí.
 | [0002](<0002-migracion-de-registro-al-monolito.md>) | Migrar el Core Registros al monolito y sustituir el JWT por sesión de Django | Aceptado | 2026-08-11 |
 | [0003](<0003-una-feria-por-schema.md>) | Aislar cada feria en su propio schema de PostgreSQL | Aceptado | 2026-08-21 |
 | [0004](<0004-acceso-administrativo-por-feria.md>) | El acceso administrativo se otorga por feria, con un dueño por feria | Aceptado | 2026-08-21 |
+| [0005](<0005-el-operador-alcanza-cualquier-feria.md>) | El operador de la plataforma alcanza cualquier feria, sin fila en `AdminFeria` | Aceptado | 2026-08-27 |
+| [0006](<0006-la-liga-entre-convocatoria-y-modulo.md>) | Una convocatoria se liga a su módulo por `RegistroConvocatoria` y un registro de módulos | Aceptado | 2026-08-27 |
+| [0007](<0007-los-archivos-empiezan-en-disco.md>) | Los archivos que sube la gente empiezan en disco, con la puerta de salida puesta | Aceptado | 2026-08-27 |
+| [0008](<0008-el-mapa-corre-en-el-navegador.md>) | El showfloor lo dibuja Godot en el navegador, y con eso se retira la regla del «sin JavaScript» | Aceptado | 2026-08-29 |
+| [0009](<0009-las-ocho-actividades-de-evt.md>) | Las ocho actividades de `EVT` se representan con herencia multitabla, y se capturan con el tipo en la URL | Aceptado | 2026-09-01 |
 
 
 ## Estructura de la carpeta
@@ -112,6 +117,10 @@ adr/
 ├── 0002-migracion-de-registro-al-monolito.md
 ├── 0003-una-feria-por-schema.md
 ├── 0004-acceso-administrativo-por-feria.md
+├── 0005-el-operador-alcanza-cualquier-feria.md
+├── 0006-la-liga-entre-convocatoria-y-modulo.md
+├── 0007-los-archivos-empiezan-en-disco.md
+├── 0008-el-mapa-corre-en-el-navegador.md
 └── 000N-....md
 ```
 

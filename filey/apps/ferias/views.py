@@ -15,9 +15,14 @@ convocatorias lo sirve `apps/convocatorias`.
 """
 
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 from apps.registros.permisos import requiere_admin, requiere_participante
+from apps.registros.services import sesion
 
+from comun.urls import url_publica
+
+from .models import Feria
 from .servicios import seleccion
 
 
@@ -72,4 +77,42 @@ def mis_ferias(peticion):
             # decírselo: no hay `tenant` contra el que comprobarlo.
             "zona_admin": True,
         },
+    )
+
+
+@require_POST
+@requiere_participante
+def cambiar_modo(peticion):
+    """Mirar el sistema como participante, o volver a administrarlo.
+
+    Una misma cuenta puede coordinar una feria **y** tener su propia
+    editorial dentro de ella. Hasta ahora no había forma de ser lo
+    segundo: el catálogo detectaba la autoridad y devolvía el panel, y la
+    única salida era cerrar sesión y entrar por la otra puerta.
+
+    Esto no toca permisos ni sesión: cambia **desde qué lado se mira**
+    (`permisos.ve_como_admin`). Quien no administra nada no gana nada
+    llamándola, y por eso le basta con `requiere_participante`.
+
+    Es POST y no un enlace por lo mismo que cerrar sesión: un GET que
+    cambia el estado de la sesión lo dispara cualquier precarga.
+
+    A dónde se vuelve: a la portada de la cara nueva. Dentro de una feria
+    es su catálogo —que ya se pinta distinto según el modo—; fuera, la
+    lista que corresponda. El destino se arma aquí y **no se recibe**:
+    una URL de vuelta en el POST es una redirección abierta esperando a
+    que alguien se olvide de validarla.
+    """
+    a_administracion = peticion.POST.get("modo") == sesion.CONTEXTO_ADMIN
+    sesion.cambiar_contexto(
+        peticion,
+        sesion.CONTEXTO_ADMIN if a_administracion else sesion.CONTEXTO_PUBLICO,
+    )
+
+    slug = (peticion.POST.get("feria") or "").strip()
+    feria = Feria.reales.filter(slug=slug).first() if slug else None
+    if feria is not None:
+        return redirect(feria.url)
+    return redirect(
+        url_publica("ferias:mis_ferias" if a_administracion else "ferias:elegir")
     )

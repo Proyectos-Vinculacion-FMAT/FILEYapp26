@@ -1,16 +1,24 @@
 {% comment %} ===========================================================
-   Pie de página. No espera contexto: se incluye tal cual con
-   `{% include "componentes/pie.html" %}`.
+   Pie de página. **No se incluye a mano**: lo dibuja `{% pie %}`
+   (`apps/ferias/templatetags/chasis.py`), que decide si el contenido es
+   el de la edición en la que estamos o el de la plataforma.
 
-   Está separado del layout por la misma razón que la barra: en cuanto
-   una pantalla nueva no extiende `layouts/panel.html` —el catálogo de
-   una feria vista sin sesión, por ejemplo— sigue necesitando el mismo
-   pie, y volverlo a maquetar es como se acaba con dos direcciones
+   Sigue siendo una plantilla aparte por la misma razón que la barra: en
+   cuanto una pantalla nueva no extiende `layouts/panel.html` —el
+   catálogo de una feria visto sin sesión, por ejemplo— necesita el
+   mismo pie, y volverlo a maquetar es como se acaba con dos direcciones
    distintas de la Coordinación en el mismo sistema.
+
+   Contexto que espera (los tres siempre vienen resueltos, nunca vacíos
+   por descuido: el tag los cae a `settings.PIE_*`):
+
+     entidad       el nombre en negritas
+     dependencia   quién organiza
+     contacto      dirección y correo, en el segundo renglón
    =========================================================== {% endcomment %}
 <footer class="footer">
   <div class="footer-inner">
-    <div><strong>FILEY</strong> — Coordinación General de Contenidos · UADY</div>
-    <div>Calle 33A x 20, Tanlum · Mérida, Yucatán · contenidos&#64;filey.org</div>
+    <div><strong>{{ entidad }}</strong> — {{ dependencia }}</div>
+    {% if contacto %}<div>{{ contacto }}</div>{% endif %}
   </div>
 </footer>

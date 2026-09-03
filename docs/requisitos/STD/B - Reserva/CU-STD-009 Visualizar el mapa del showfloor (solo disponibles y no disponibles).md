@@ -36,13 +36,13 @@ El aplicante, ya habilitado para reservar, abre el mapa del showfloor.
 
 - El aplicante tiene sesión iniciada.
 - La editorial tiene una solicitud `aceptada` (habilitada para reservar, RN-16).
-- El evento tiene un mapa de stands configurado.
+- La convocatoria tiene un mapa configurado (RN-19). Los datos los sirve CU-STD-037.
 
 ## Postcondiciones
 
 ### En éxito
 
-- Se muestra el mapa del evento con cada stand marcado como **disponible** o **no disponible**.
+- Se muestra el mapa de esta convocatoria con cada stand marcado como **disponible** u **ocupado**.
 
 ### En fallo
 
@@ -51,7 +51,7 @@ El aplicante, ya habilitado para reservar, abre el mapa del showfloor.
 ## Flujo principal
 
 1. El aplicante abre el mapa del showfloor.
-2. El sistema muestra los stands del evento, indicando para cada uno si está **disponible** o **no disponible** (los estados Reservado y Ocupado se presentan como "no disponible", RN-09).
+2. El sistema muestra los stands de esta convocatoria, indicando para cada uno si está **disponible** u **ocupado** (los estados `Reservado` y `Ocupado` llegan colapsados en `ocupado` desde el servidor, RN-09; ver CU-STD-037).
 3. El aplicante navega el mapa (desplazamiento/zoom) para explorar los espacios.
 4. El aplicante selecciona un stand disponible para consultar su detalle (CU-STD-010).
 
@@ -69,14 +69,14 @@ El aplicante, ya habilitado para reservar, abre el mapa del showfloor.
 
 ### E2. El evento no tiene mapa configurado
 
-1. En el paso 2 el evento aún no tiene stands configurados en el mapa.
+1. En el paso 2 la convocatoria aún no tiene stands configurados en el mapa.
 2. El sistema informa que el mapa no está disponible por el momento.
 
 ## Datos relevantes
 
 ### Entradas
 
-- Evento vigente.
+- La convocatoria en curso.
 
 ### Salidas
 

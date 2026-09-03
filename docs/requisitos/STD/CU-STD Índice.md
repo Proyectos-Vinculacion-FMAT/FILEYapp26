@@ -1,16 +1,28 @@
 ---
 estado: propuesta
-version: 0.1
+version: "0.2"
 tags:
   - tipo/indice
   - dom/std
 fecha: 2026-06-18
+fecha_actualizacion: 2026-08-27
 ---
 # CU-STD — Índice de casos de uso (Stands)
 
-Inventario preliminar de casos de uso del dominio **Stands** (`STD`): proceso de
-**reserva, pago y confirmación** de stands. Solo títulos; la redacción detallada
-(actores, flujo principal y alternos) se hará tras la revisión con el equipo.
+Inventario de casos de uso del dominio **Stands** (`STD`): proceso de **reserva, pago y
+confirmación** de stands.
+
+> [!important] Actualización 2026-08-27 — dos casos de uso nuevos y un documento de reglas
+> - **CU-STD-037 y CU-STD-038** cubren *servir los datos del mapa*, uno por público. Son dos y no
+>   uno porque devuelven cosas distintas —el aplicante no ve quién reservó qué (RN-09), el
+>   administrador sí (RN-18)— y equivocarse ahí filtra información sin dar ningún síntoma.
+> - Las reglas de negocio ya no viven sueltas dentro de cada caso de uso: están en
+>   [`Reglas de negocio - Stands`](<Reglas de negocio - Stands.md>). Un caso de uso las **cita**;
+>   no las redefine.
+> - **`RN-08` estaba duplicado** —métodos de pago y transparencia administrativa— y la segunda
+>   pasó a ser **`RN-18`**.
+> - **CU-STD-039** cubre cómo entra un mapa al sistema: se importa un JSON externo, y solo lo
+>   hace el superusuario. Dibujar el mapa dentro del sistema queda fuera de alcance por ahora.
 
 **Actores:** Aplicante (editorial/entidad expositora) · Administrador (coordinador del
 showfloor, con acceso a esta feria) · Sistema (procesos automáticos y temporizados).
@@ -73,6 +85,7 @@ showfloor, con acceso a esta feria) · Sistema (procesos automáticos y temporiz
 - CU-STD-012 Realizar la reserva de los stands seleccionados — *Aplicante*
 - CU-STD-013 Consultar el estado de mi reserva (mapa, total, abonado, pendiente, descuento) — *Aplicante*
 - CU-STD-014 Atender la notificación de posible cancelación de mi reserva — *Aplicante*
+- CU-STD-037 Servir los datos del mapa al aplicante — *Aplicante · Sistema*
 
 ## C. Pago
 
@@ -109,11 +122,14 @@ showfloor, con acceso a esta feria) · Sistema (procesos automáticos y temporiz
 - CU-STD-034 Configurar los parámetros del sistema (costo m², %s, fechas límite, datos bancarios) — *Administrador*
 - CU-STD-035 Resolver una reserva vencida: cancelar o prorrogar (nueva fecha) — *Administrador*
 - CU-STD-036 Modificar la fecha de corte/bloqueo de una reserva — *Administrador*
+- CU-STD-038 Servir los datos del mapa al administrador — *Administrador · Sistema*
+- CU-STD-039 Importar el mapa de una convocatoria desde un JSON externo — *Operador de la plataforma*
 
 ---
 
 ## Artefactos relacionados
 
+- `Reglas de negocio - Stands.md` — **las reglas `RN-01` a `RN-22`. Fuente única.**
 - `Modelo de datos - Stands.md` — entidades y datos que el sistema almacena.
 - `Proceso de alto nivel - Stands.md` — diagrama del flujo de punta a punta.
 - `Estructura de vistas - Stands.md` — arquitectura de ventanas (aplicante y administrador).

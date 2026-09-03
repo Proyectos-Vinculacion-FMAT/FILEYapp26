@@ -230,19 +230,27 @@ catálogo es ahora la portada de `/f/<slug>/` y sale de la base.
 | Pieza | Dónde |
 | --- | --- |
 | El filtro por público | `filey/apps/convocatorias/servicios/catalogo.py` |
+| Qué ofrece cada tarjeta | `filey/apps/convocatorias/servicios/catalogo.py::entradas_visibles` |
+| Qué módulo sirve cada tipo | `filey/apps/convocatorias/modulos.py` |
 | La pantalla | `filey/apps/convocatorias/views.py::catalogo_de_la_feria` |
 | Quién administra ésta | `filey/apps/ferias/permisos.py::acceso_a` |
-| Las pruebas | `filey/apps/convocatorias/pruebas/test_catalogo.py` |
+| Las pruebas | `filey/apps/convocatorias/pruebas/test_catalogo.py` y `test_enganche_con_modulos.py` |
 
 **Lo que ve el participante está completo**: abiertas y cerradas, nunca los borradores, y el
-aviso de A2/A4 cuando no hay nada. Lo que **falta** de este caso de uso:
+aviso de A2/A4 cuando no hay nada.
 
-- El **conteo de registros** por convocatoria, que necesita `RegistroConvocatoria` — todavía no
-  existe como modelo.
+El **enganche con los módulos** se construyó el 2026-08-27 ([ADR-0006](<../../adr/0006-la-liga-entre-convocatoria-y-modulo.md>)).
+Con él, el botón del pie de la tarjeta ya no avisa: navega. Lo que muestra sale de preguntarle
+al registro de módulos quién sirve ese tipo, y degrada a **"Próximamente"** —desactivado, sin
+error— cuando no lo sirve nadie, que es el estado de los tres tipos hoy. El **conteo de
+registros** también está, y solo lo ve quien administra.
+
+Lo que **falta** de este caso de uso:
+
 - Las **acciones del dueño** (Nueva · Editar · Abrir/Cerrar · Eliminar), que son CU-FER-005,
   007, 008 y 009.
-- El botón **"Registrarme"**, que lleva al formulario del módulo (CU-EVT-002, CU-STD-001,
-  CU-VIS-001). Ninguno de los tres módulos está construido, así que hoy avisa y no navega.
+- Que algún módulo se inscriba de verdad. El mecanismo está y probado; ninguna app vertical
+  existe todavía, así que las tres tarjetas dicen "próximamente".
 - `TAL` sigue sin decidirse (`Convocatoria.tipo` admite tres tipos) — ver el índice de `FER`.
 
 > [!warning] Falta la vista que cruza ferias, y no es esta

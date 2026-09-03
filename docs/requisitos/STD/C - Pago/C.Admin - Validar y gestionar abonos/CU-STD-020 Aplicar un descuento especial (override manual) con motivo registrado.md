@@ -42,8 +42,8 @@ El administrador detecta que procede aplicar un descuento fuera de los estándar
 3. El administrador ingresa el porcentaje y redacta la justificación.
 4. El administrador confirma la acción.
 5. El sistema valida que el motivo haya sido proporcionado.
-6. El sistema crea un registro en la entidad `DescuentoAplicado` con tipo `especial`.
-7. El sistema recalcula inmediatamente el `monto_total` de la reserva y, en consecuencia, el `monto_pendiente`.
+6. El sistema crea un registro en `DescuentoAplicado` con tipo `especial`. Si la reserva **ya tenía** un especial, la escritura falla y se muestra el error (RN-05): para cambiar el porcentaje se modifica el que existe o se retira, no se acumula otro encima.
+7. El sistema recalcula inmediatamente el `monto_total` y, en consecuencia, el `monto_pendiente`. Si la reserva tiene además un pronto pago, **los dos se aplican en secuencia** (RN-06): el especial se calcula sobre el subtotal ya descontado, así que 10% y 15% dan un 23.5% efectivo, no un 25%.
 8. El sistema evalúa si con el nuevo monto total reducido, el saldo que el aplicante ya había abonado (`monto_abonado`) es suficiente para alcanzar el 50% o el 100%, disparando, si aplica, los procesos automáticos de confirmación (CU-STD-026) o liquidación (CU-STD-027).
 9. El caso de uso termina.
 
@@ -66,4 +66,6 @@ El administrador detecta que procede aplicar un descuento fuera de los estándar
 
 ## Reglas de negocio relacionadas
 
-- **RN-07:** El descuento especial es un "override manual" del administrador, independiente de otros descuentos, y exige un motivo obligatorio que refleje los acuerdos externos al sistema.
+- **RN-07:** el administrador fija el porcentaje caso por caso y el motivo es obligatorio.
+- **RN-05:** como mucho un especial por reserva; el segundo intento es un error visible.
+- **RN-06:** se acumula con el pronto pago, aplicándose en secuencia.

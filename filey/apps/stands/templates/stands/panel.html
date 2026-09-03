@@ -1,0 +1,198 @@
+{% extends "layouts/admin.html" %}
+{% load dinero %}
+
+{% block migaja %}Stands · Resumen{% endblock %}
+
+{% comment %} ===========================================================
+   El panel del módulo de stands dentro de una convocatoria.
+
+   Responde a una sola pregunta: **¿qué necesita de mí hoy?** Si no hay
+   nada, lo dice y se aparta. Todo lo demás es contexto para leer esa
+   respuesta.
+
+   Por eso hay dos zonas y no una fila de seis cifras iguales:
+
+   1. **Lo que te espera** — solo lo accionable, y cada número es un
+      enlace a donde se actúa. Con todo al día la zona no enseña ceros:
+      dice que no hay nada.
+   2. **Cómo va el recinto** — estado, sin enlaces.
+
+   La barra mide **metros cuadrados, no espacios**. Vender treinta
+   espacios chicos no es vender tres grandes, y lo que sigue el dinero es
+   la superficie; contar cajas daría una barra que avanza mientras la
+   recaudación no se mueve. Usa los tres colores de la leyenda del mapa
+   para que el panel y el plano hablen igual.
+
+   **No lista las pantallas del módulo**: eso lo hace la barra lateral,
+   que está en todas ellas. Repetirlas aquí daría dos menús del mismo
+   sistema, y el día que se añada una sección habría que acordarse de los
+   dos.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Stands — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Venta de stands{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% if falta_precio or falta_mapa %}
+  {% comment %} Va antes que nada: sin esto el módulo se ve entero y no se
+     puede operar. Las solicitudes entran, nadie puede reservar y todos
+     los precios salen en cero. {% endcomment %}
+  <div class="note note-warn">
+    <div class="ico">⚙️</div>
+    <div>
+      <strong>Falta configurar los stands antes de abrir la venta.</strong>
+      <ul>
+        {% if falta_precio %}
+          <li>
+            <strong>El costo por m² está en cero.</strong> Todos los espacios
+            saldrían gratis.
+          </li>
+        {% endif %}
+        {% if falta_mapa %}
+          <li>
+            <strong>No hay mapa del salón.</strong> Sin él nadie puede
+            reservar.
+          </li>
+        {% endif %}
+      </ul>
+      {% comment %} El aviso enlaza a donde se arregla: dejarlo en «se
+         ajusta en algún sitio» obliga a buscar el menú. El mapa no —lo
+         carga el equipo técnico (ADR-0005)— y la pantalla de ajustes lo
+         dice. {% endcomment %}
+      <a class="btn btn-primary btn-row"
+         href="{% url 'stands:configuracion' convocatoria_id=convocatoria.pk %}">
+        Ir a la configuración
+      </a>
+    </div>
+  </div>
+{% endif %}
+
+{% comment %} ── Lo que te espera ── {% endcomment %}
+<h2 class="panel-titulo">Lo que te espera</h2>
+
+{% if pendientes or por_validar or vencidas %}
+  <div class="stat-grid">
+    {% if pendientes %}
+      <a class="stat-card accent-blue" href="{% url 'stands:solicitudes' convocatoria_id=convocatoria.pk %}?estado=pendiente">
+        <span class="k">Solicitudes por revisar</span>
+        <span class="v">{{ pendientes }}</span>
+        <span class="foot">Nadie puede reservar hasta que las revises</span>
+      </a>
+    {% endif %}
+    {% if por_validar %}
+      {% comment %} Enlaza a su cola desde el 2026-08-29: antes llevaba a
+         las reservas, que era lo más cerca que había. {% endcomment %}
+      <a class="stat-card accent-gold" href="{% url 'stands:pagos' convocatoria_id=convocatoria.pk %}">
+        <span class="k">Abonos por validar</span>
+        <span class="v">{{ por_validar }}</span>
+        <span class="foot">No bajan el saldo hasta que los valides</span>
+      </a>
+    {% endif %}
+    {% if vencidas %}
+      {% comment %} En rojo y con la salida puesta: es lo único de la
+         pantalla que caduca. Vencer no cancela (RN-12), así que se queda
+         ahí hasta que una persona decida. {% endcomment %}
+      <a class="stat-card accent-err" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}?estado=vencidas">
+        <span class="k">Reservas vencidas</span>
+        <span class="v">{{ vencidas }}</span>
+        <span class="foot">Siguen ocupando sus espacios</span>
+      </a>
+    {% endif %}
+  </div>
+{% else %}
+  {% comment %} Sin ceros: tres tarjetas diciendo «0» se leen como trabajo
+     pendiente durante el medio segundo que se tarda en leer el número. {% endcomment %}
+  <div class="note note-ok">
+    <div class="ico">✅</div>
+    <div>
+      <strong>Nada pendiente.</strong>
+      No hay solicitudes por revisar, abonos por validar ni reservas vencidas.
+    </div>
+  </div>
+{% endif %}
+
+{% comment %} ── Cómo va el recinto ── {% endcomment %}
+<h2 class="panel-titulo">Cómo va el recinto</h2>
+
+{% if hay_ocupacion %}
+  <div class="section-card card">
+    <div class="section-body">
+      <div class="ocupacion-cabecera">
+        <div>
+          <strong class="ocupacion-cifra">{{ m2_libres|floatformat:0 }} m²</strong>
+          <span class="hint">libres de {{ m2_total|floatformat:0 }} en {{ mapa.salon }}</span>
+        </div>
+        <ul class="mapa-leyenda">
+          {% for clave, etiqueta, metros in tramos %}
+            <li>
+              <span class="mapa-muestra es-{{ clave }}"></span>
+              {{ etiqueta }} · {{ metros|floatformat:0 }} m²
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      {% comment %} Una sola barra, no tres: lo que se lee de un vistazo es
+         la proporción entre los tres, y tres barras sueltas obligan a
+         compararlas. `aria-hidden` porque las cifras ya están escritas
+         arriba — anunciarlas dos veces es ruido. {% endcomment %}
+      <div class="ocupacion-barra" aria-hidden="true">
+        {% for clave, etiqueta, metros in tramos %}
+          {% if metros %}
+            <span class="es-{{ clave }}" style="flex: {{ metros|floatformat:0 }}"
+                  title="{{ etiqueta }}: {{ metros|floatformat:0 }} m²"></span>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="info-grid">
+        <div>
+          <span class="hint">Reservas activas</span>
+          <strong>{{ reservas_vivas }}</strong>
+        </div>
+        <div>
+          <span class="hint">Expositores aceptados</span>
+          <strong>{{ aceptadas }}</strong>
+        </div>
+        <div>
+          <span class="hint">Comprometido</span>
+          <strong>{{ comprometido|pesos }}</strong>
+          <span class="hint">suma de las reservas activas</span>
+        </div>
+        <div>
+          <span class="hint">Cobrado</span>
+          <strong>{{ cobrado|pesos }}</strong>
+          <span class="hint">solo abonos validados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="note note-info">
+    <div class="ico">🗺️</div>
+    <div>
+      <strong>Todavía no hay ningún mapa cargado.</strong>
+      En cuanto se cargue, aquí se ve cuánta superficie queda libre.
+    </div>
+  </div>
+{% endif %}
+
+{% comment %} Los ajustes al pie y en voz baja: son parámetros, no estado.
+   Arriba competían por atención con las cifras que sí piden algo. {% endcomment %}
+<p class="hint panel-ajustes">
+  ${{ configuracion.costo_m2|floatformat:0 }} el m² ·
+  {{ configuracion.porcentaje_anticipo }}% de anticipo a
+  {{ configuracion.plazo_reserva_dias }} días ·
+  {% if configuracion.fecha_limite_pronto_pago %}
+    pronto pago del {{ configuracion.descuento_pronto_pago }}% hasta el
+    {{ configuracion.fecha_limite_pronto_pago|date:"j \d\e F" }}
+  {% else %}
+    sin campaña de pronto pago
+  {% endif %}
+  · <a href="{% url 'stands:configuracion' convocatoria_id=convocatoria.pk %}">ajustar</a>.
+</p>
+
+{% endblock %}

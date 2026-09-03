@@ -126,6 +126,24 @@ def test_administrar_otra_feria_no_descubre_los_borradores_de_esta(
     assert "Visitas en borrador" not in cuerpo
 
 
+def test_el_operador_de_la_plataforma_tambien_ve_los_borradores(client, con_catalogo):
+    """`ADR-0005`: alcanza cualquier feria sin fila en `AdminFeria`.
+
+    Va aquí y no con las pruebas del operador porque lo que se vigila es
+    de esta pantalla: que quien decide qué se enseña sea la misma
+    función que usa el decorador. Si el catálogo preguntara por su
+    cuenta, el operador vería el escaparate del participante sobre una
+    feria que sí puede administrar.
+    """
+    client.force_login(
+        Persona.objects.create_superuser(correo="raiz@filey.org", password="x")
+    )
+
+    cuerpo = client.get(con_catalogo.url).content.decode()
+
+    assert "Visitas en borrador" in cuerpo
+
+
 # ── Sin sesión, y el aislamiento ──────────────────────────────
 
 

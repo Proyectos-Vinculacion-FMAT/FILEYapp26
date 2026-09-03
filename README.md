@@ -4,6 +4,89 @@ El sistema de CI/CD del proyecto FILEY sigue un flujo estructurado con tres ento
 
 ## Diagrama del Flujo de Trabajo
 
+Los tres casos que se dan en la práctica, y al final la regla completa.
+
+### Caso 1 · La feature pasa a la primera
+
+```mermaid
+gitGraph
+    commit id: "release anterior"
+    branch develop
+    branch rama-personal
+    checkout develop
+    branch QA
+
+    checkout rama-personal
+    commit id: "CU completo"
+    checkout develop
+    merge rama-personal tag: "Render dev - pasa"
+    checkout QA
+    merge develop tag: "Render qa - pasa"
+    checkout main
+    merge QA tag: "Render prod"
+```
+
+La rama personal solo levanta el PR cuando la feature está **completa en su totalidad**: no hay
+PR de avance parcial, porque `develop` ya despliega y las pruebas de integración asumen que lo
+que llegó ahí funciona de punta a punta.
+
+### Caso 2 · No pasa las pruebas de integración
+
+```mermaid
+gitGraph
+    commit id: "release anterior"
+    branch develop
+    branch rama-personal
+
+    commit id: "CU completo"
+    checkout develop
+    merge rama-personal tag: "Render dev - falla"
+
+    checkout rama-personal
+    commit id: "corrige integración" type: HIGHLIGHT
+    checkout develop
+    merge rama-personal tag: "Render dev - pasa"
+```
+
+El código defectuoso **se queda en `develop`**; no se revierte ni se parchea ahí. La corrección
+nace en la rama personal y vuelve a entrar por un PR. De aquí sigue como el caso 1.
+
+### Caso 3 · No pasa las pruebas de aceptación
+
+```mermaid
+gitGraph
+    commit id: "release anterior"
+    branch develop
+    branch rama-personal
+    checkout develop
+    branch QA
+
+    checkout rama-personal
+    commit id: "CU completo"
+    checkout develop
+    merge rama-personal tag: "Render dev - pasa"
+    checkout QA
+    merge develop tag: "Render qa - falla"
+
+    checkout rama-personal
+    commit id: "corrige aceptación" type: HIGHLIGHT
+    checkout develop
+    merge rama-personal tag: "Render dev - pasa"
+    checkout QA
+    merge develop tag: "Render qa - pasa"
+
+    checkout main
+    merge QA tag: "Render prod"
+```
+
+Lo que este caso enseña y los otros dos no: **la corrección no entra directo a `QA`**. Vuelve a
+recorrer `develop` entera, con su propio despliegue y su propia revisión. Un arreglo que se
+colara por un lado se saltaría las pruebas de integración del arreglo mismo.
+
+### La regla completa
+
+Los tres casos anteriores son recorridos; esto es la política de la que salen.
+
 ```mermaid
 flowchart TD
     %% Nodos principales

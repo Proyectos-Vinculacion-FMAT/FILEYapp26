@@ -29,3 +29,40 @@ def url_publica(nombre, *args, **kwargs) -> str:
     return reverse(
         nombre, urlconf=settings.PUBLIC_SCHEMA_URLCONF, args=args, kwargs=kwargs or None
     )
+
+
+def url_absoluta(ruta: str) -> str:
+    """La misma ruta con el dominio delante, para meterla en un correo.
+
+    Un `/f/2027/...` suelto no es una dirección dentro de un cliente de
+    correo: no hay página desde la que resolverlo. `URL_BASE` es el
+    ajuste que existe justo para esto.
+    """
+    return f"{settings.URL_BASE}{ruta}"
+
+
+def url_de_esta_feria(nombre, *args, **kwargs) -> str:
+    """La dirección completa de una pantalla **de la edición actual**.
+
+    Tres piezas, y ninguna sola basta: el dominio (`URL_BASE`), el
+    prefijo de la edición —que no vive en ninguna columna, porque la
+    feria es el schema (`ADR-0003`)— y la ruta dentro del urlconf de
+    feria.
+
+    Es para los correos. Dentro de una plantilla servida basta
+    ``{% url %}``, que ya sale prefijado.
+
+    :raises RuntimeError: llamada desde `public`, donde no hay edición
+        que prefijar y el enlace saldría mudo.
+    """
+    from apps.ferias.models import Feria
+
+    feria = Feria.de_la_conexion()
+    if feria is None:
+        raise RuntimeError(
+            f"«{nombre}» es una pantalla de una feria y no estamos en ninguna."
+        )
+    ruta = reverse(
+        nombre, urlconf=settings.ROOT_URLCONF, args=args, kwargs=kwargs or None
+    )
+    return url_absoluta(f"{feria.url.rstrip('/')}{ruta}")

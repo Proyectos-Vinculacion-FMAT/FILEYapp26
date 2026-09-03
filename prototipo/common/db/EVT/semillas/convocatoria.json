@@ -1,0 +1,13 @@
+{
+  "estado": "abierta",
+
+  "recepcion": { "apertura": "2026-08-07", "cierre": "2026-10-02" },
+  "notificacion": "2026-11-13",
+  "ajustes_limite": "2026-12-04",
+  "asignacion": "2027-01-22",
+  "constancias": "2027-04-26",
+
+  "feria": { "inicio": "2027-03-13", "fin": "2027-03-21" },
+
+  "solicitudes": { "uady": 48, "externo": 59 }
+}

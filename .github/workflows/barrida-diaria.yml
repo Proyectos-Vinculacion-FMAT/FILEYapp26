@@ -1,0 +1,77 @@
+# La barrida diaria de STD (CU-STD-022, 023 A1, 024, 025).
+#
+# Es el reloj del dominio, y **es uno solo**: los umbrales del 50% y del
+# 100% se disparan dentro de la petición que cambia el saldo, y el pronto
+# pago se aplica al reservar. Lo único que hay que mirar con un
+# calendario delante es qué plazos se agotaron.
+#
+# Corre aquí y no en un cron de Render porque el plan `starter` no tiene
+# tareas programadas y este workflow no cuesta nada: es un contenedor de
+# un minuto al día que abre una conexión a la base y manda unos correos.
+#
+# > [!warning] Toca datos de producción
+# > No es un despliegue: `barrida_diaria` **retira descuentos** y **manda
+# > correos a editoriales reales**. Por eso el `workflow_dispatch` de
+# > abajo ofrece `--seco`, que dice lo que haría sin tocar nada, y por eso
+# > el `schedule` es la única entrada automática.
+
+name: Barrida diaria (STD)
+
+on:
+  schedule:
+    # 09:00 en Mérida (UTC-6, sin horario de verano desde 2022). Por la
+    # mañana y no de madrugada a propósito: de aquí salen correos a
+    # editoriales, y llegar a las 3 a. m. hace que se lean como spam.
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      seco:
+        description: "Solo decir qué haría, sin tocar nada"
+        type: boolean
+        default: true
+
+jobs:
+  barrer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./filey
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # Las de ejecución bastan: aquí no se prueba nada.
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # `--todas` recorre los schemas, que es la única forma de ver las
+      # reservas: viven en el de cada feria y ninguna consulta lleva
+      # filtro de edición (ADR-0003). El comando ya se salta las
+      # ediciones archivadas.
+      - name: Barrer
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DJANGO_SECRET_KEY: "dummy-key-for-the-sweep"
+          DJANGO_DEBUG: "false"
+          # Sin esto no sale ningún correo: el backend de Resend falla al
+          # entregar y cada aviso queda `fallida`. La barrida no revienta
+          # —`avisos.py` se traga el fallo a propósito— así que el síntoma
+          # sería silencioso: reservas marcadas como avisadas que nadie
+          # recibió. Se reintentarían al día siguiente, pero conviene que
+          # el secreto esté.
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          # Los enlaces de los correos llevan dominio o no llevan a
+          # ninguna parte: dentro de un cliente de correo no hay página
+          # desde la que resolver un `/f/2027/...`.
+          URL_BASE: ${{ secrets.URL_BASE }}
+        run: |
+          python manage.py barrida_diaria --todas ${{ inputs.seco && '--seco' || '' }}

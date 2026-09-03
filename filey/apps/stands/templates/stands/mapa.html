@@ -1,0 +1,130 @@
+{% extends plantilla_base %}
+{% load flujo %}
+
+{% block migaja %}Stands · Mapa del salón{% endblock %}
+
+{% comment %} ===========================================================
+   El mapa del showfloor — CU-STD-009 (aplicante) y CU-STD-032 (admin).
+
+   **El lienzo es el mismo para los dos** y vive en
+   `parciales/lienzo_mapa.html`. Aquí solo queda lo que de verdad cambia:
+   quien aplica lleva el carrito al lado, quien administra no.
+
+   Estaba todo escrito en línea, y así cualquier arreglo se hacía en una
+   vista y se olvidaba en la otra — el velo que no se quitaba se arregló
+   primero solo para el aplicante. Con el parcial eso ya no puede pasar.
+
+   Contexto que espera:
+
+     plantilla_base  el layout (panel para el aplicante, admin para A8)
+     mapa            el MapaShowfloor, o None si aún no se ha importado
+     url_datos       de dónde baja el JSON el puente de `filey.js`
+     habilitada      si quien mira puede ver el mapa (RN-16)
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mapa del salón — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Mapa del salón{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+{% if not zona_admin %}{% barra_de_pasos paso %}{% endif %}
+
+{% if not habilitada %}
+  {% comment %} E1 de CU-STD-009. No se dice *por qué* no está habilitada
+     —nunca aplicó, sigue en revisión, se la rechazaron—: eso lo cuenta su
+     solicitud, que es la pantalla donde además puede hacer algo. {% endcomment %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div>
+      <strong>Todavía no puedes elegir espacios.</strong>
+      El mapa se abre en cuanto aceptemos tu solicitud de expositor.
+      <a href="{% url 'stands:solicitud' convocatoria_id=convocatoria.pk %}">Ver mi solicitud</a>.
+    </div>
+  </div>
+
+{% elif not mapa %}
+  {% comment %} E2. Una convocatoria recién creada no tiene mapa: es su
+     estado normal, no una avería, y se dice como tal. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico">🗺️</div>
+    <div>
+      <strong>El mapa todavía no está listo.</strong>
+      {% if zona_admin %}
+        Cárgalo desde la configuración de esta edición.
+      {% else %}
+        Te avisamos en cuanto se publique el plano de esta edición.
+      {% endif %}
+    </div>
+  </div>
+
+{% else %}
+  {% comment %} CU-STD-037 A1: con la convocatoria cerrada el mapa se
+     sigue enseñando —consultarlo tiene sentido para quien ya reservó—
+     pero no se ofrece agregar nada. Se dice arriba, en vez de dejar que
+     lo descubra al pulsar un espacio. {% endcomment %}
+  {% if not zona_admin and not puede_reservar %}
+    <div class="note note-warn">
+      <div class="ico">🔒</div>
+      <div>
+        <strong>Ya no se pueden apartar espacios.</strong>
+        Esta convocatoria cerró. Puedes seguir consultando el plano.
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="mapa-cabecera">
+    <div>
+      <h3>{{ mapa.salon }}</h3>
+      <p class="hint">
+        {% if zona_admin %}
+          Aquí ves los tres estados: disponible, reservado y ocupado.
+        {% elif not puede_reservar %}
+          Pulsa un espacio para ver sus medidas y su precio.
+        {% else %}
+          Elige un espacio disponible para ver sus medidas y su precio.
+        {% endif %}
+      </p>
+    </div>
+    <ul class="mapa-leyenda">
+      <li><span class="mapa-muestra es-disponible"></span> Disponible</li>
+      {% if zona_admin %}
+        <li><span class="mapa-muestra es-reservado"></span> Reservado</li>
+      {% endif %}
+      <li><span class="mapa-muestra es-ocupado"></span> Ocupado</li>
+    </ul>
+  </div>
+
+  {% if zona_admin %}
+    {% comment %} Sin carrito, así que el lienzo va a todo el ancho: la
+       rejilla de dos columnas dejaría un 30 % vacío al lado. {% endcomment %}
+    <div class="mapa-solo">
+      {% include "stands/parciales/lienzo_mapa.html" %}
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{% url 'stands:reservas' convocatoria_id=convocatoria.pk %}">
+        Ver las reservas
+      </a>
+    </div>
+  {% else %}
+    {% comment %} Mapa a la izquierda y selección a la derecha, como el
+       prototipo. El carrito se intercambia por htmx al agregar o quitar,
+       así que agregar un espacio **no saca de aquí**: recargar costaría
+       volver a bajar los 39 MB del canvas y perder el zoom. {% endcomment %}
+    {% comment %} Sin carrito cuando ya no se puede reservar: una columna
+       que solo sabe decir «elige un espacio» al lado de un mapa donde no
+       se puede elegir nada. {% endcomment %}
+    <div class="{% if puede_reservar %}mapa-con-carrito{% else %}mapa-solo{% endif %}">
+      {% include "stands/parciales/lienzo_mapa.html" %}
+      {% if puede_reservar %}
+        {% include "stands/parciales/carrito_lateral.html" %}
+      {% endif %}
+    </div>
+    <p class="hint">
+      Cada espacio cuesta ${{ costo_m2|floatformat:0 }} por metro cuadrado.
+    </p>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

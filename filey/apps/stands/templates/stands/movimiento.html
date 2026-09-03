@@ -1,0 +1,30 @@
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Stands · Pagos · Abono{% endblock %}
+
+{% comment %} ===========================================================
+   El detalle de un abono, suelto (CU-STD-018).
+
+   Es lo que sale al abrir el enlace sin JavaScript, y lo que se puede
+   pegar en un correo: el modal de la cola pide **este mismo cuerpo** por
+   htmx, así que las dos no pueden decir cifras distintas.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Abono de {{ movimiento.reserva.editorial.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Revisar un abono{% endblock %}
+{% block encabezado_texto %}{{ convocatoria.nombre }}{% endblock %}
+
+{% block contenido %}
+
+<div class="toolbar-row">
+  <a class="btn btn-ghost" href="{% url 'stands:pagos' convocatoria_id=convocatoria.pk %}">
+    ← Pagos por validar
+  </a>
+</div>
+
+<div class="modal-suelto">
+  {% include "stands/parciales/movimiento.html" %}
+</div>
+
+{% endblock %}

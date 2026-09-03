@@ -20,14 +20,20 @@ services:
       - .:/app
       - /app/.venv
       - /app/estaticos_recolectados
+      # Lo que sube la gente, fuera del bind del código: así `docker
+      # compose down` no se lleva los archivos de las pruebas manuales
+      # (ADR-0007).
+      - medios:/var/data/medios
     ports:
       - "8000:8000"
     environment:
       - DJANGO_DEBUG=true
       - DATABASE_URL=postgres://filey_user:filey_password@db:5432/filey_db
       - DJANGO_SECRET_KEY=django-insecure-solo-para-desarrollo-filey-local
+      - MEDIA_ROOT=/var/data/medios
     depends_on:
       - db
 
 volumes:
   postgres_data:
+  medios:

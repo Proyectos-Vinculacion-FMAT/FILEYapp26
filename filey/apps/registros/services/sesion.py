@@ -33,6 +33,10 @@ CLAVE_FLUJO = "flujo_acceso"
 CONTEXTO_PUBLICO = "publico"
 CONTEXTO_ADMIN = "admin"
 
+#: Por qué puerta entró la sesión viva. Sobrevive al `login()` porque se
+#: escribe después de él.
+CLAVE_CONTEXTO = "registros:contexto"
+
 
 @dataclass
 class FlujoAcceso:
@@ -92,12 +96,22 @@ def actualizar_otp(peticion, meta: dict) -> None:
 # ── Sesión autenticada ────────────────────────────────────────
 
 
-def iniciar(peticion, persona: Persona) -> None:
+def iniciar(peticion, persona: Persona, *, contexto: str = CONTEXTO_ADMIN) -> None:
     """Abre la sesión tras validar el OTP (paso 10-12).
 
     ``login()`` rota el identificador de sesión, así que el que tuviera
     el navegador antes de autenticarse deja de servir — la defensa
     estándar contra fijación de sesión.
+
+    :param contexto: **por qué puerta entró**. Se guarda porque una
+        misma cuenta puede administrar una feria y participar en ella, y
+        entrar por el acceso de participante significa querer usar el
+        sistema como participante. Quién lo lee es
+        `apps/ferias/permisos.py::ve_como_admin`; aquí solo se anota,
+        porque `registros` no sabe qué es administrar una feria.
+
+    Se escribe **después** de ``login()`` a la fuerza: rotar la sesión
+    vacía lo que hubiera antes.
     """
     login(peticion, persona, backend=BACKEND)
 
@@ -105,8 +119,56 @@ def iniciar(peticion, persona: Persona) -> None:
     # intermedio de un acceso que ya terminó.
     limpiar_flujo(peticion)
 
+    peticion.session[CLAVE_CONTEXTO] = contexto
+
     persona.ultimo_acceso = timezone.now()
     persona.save(update_fields=["ultimo_acceso"])
+
+
+def contexto_de_la_sesion(peticion) -> str:
+    """Por qué puerta entró quien tiene esta sesión.
+
+    ``CONTEXTO_ADMIN`` cuando no consta, y es deliberado: una sesión
+    abierta antes de que esto existiera —o por un camino que no pase por
+    `iniciar`, como ``force_login`` en una prueba— se comporta como
+    siempre. El valor por omisión nunca **quita** administración a quien
+    la tiene; solo la puerta de participante lo hace, y esa sí lo
+    escribe.
+
+    Tolera que no haya sesión en absoluto. La preguntan los permisos, y
+    a los permisos se les llama también con peticiones armadas a mano
+    —``RequestFactory``, un comando— que no pasan por el middleware de
+    sesión: reventar ahí convertiría una pregunta de presentación en un
+    error de sistema.
+    """
+    sesion = getattr(peticion, "session", None)
+    if sesion is None:
+        return CONTEXTO_ADMIN
+    return sesion.get(CLAVE_CONTEXTO, CONTEXTO_ADMIN)
+
+
+def asegurar_contexto_admin(peticion) -> None:
+    """Devuelve la sesión a la cara administrativa, si hay cuál tocar.
+
+    La llaman los decoradores de administración: abrir una pantalla de
+    administración **es** elegir esa cara. Sin sesión no hace nada, por
+    lo mismo que `contexto_de_la_sesion`.
+    """
+    sesion = getattr(peticion, "session", None)
+    if sesion is None or sesion.get(CLAVE_CONTEXTO) == CONTEXTO_ADMIN:
+        return
+    sesion[CLAVE_CONTEXTO] = CONTEXTO_ADMIN
+
+
+def cambiar_contexto(peticion, contexto: str) -> None:
+    """Cambia de cara sin volver a identificarse.
+
+    No toca la sesión ni los permisos: solo dice desde qué lado se está
+    mirando. Quien no administra nada no gana nada con llamarla.
+    """
+    if contexto not in (CONTEXTO_PUBLICO, CONTEXTO_ADMIN):
+        raise ValueError(f"«{contexto}» no es un contexto de acceso.")
+    peticion.session[CLAVE_CONTEXTO] = contexto
 
 
 def cerrar(peticion) -> None:

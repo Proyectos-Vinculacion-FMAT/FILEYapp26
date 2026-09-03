@@ -16,9 +16,14 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import PermissionsMixin
+from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils import timezone
 
+from comun.validadores import telefono as validar_telefono
+
+from . import estados_mx
+from .estados_mx import ESTADOS_MX
 from .paises import PAISES
 
 
@@ -89,20 +94,56 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     # `REG/Modelo de datos - Registros` §2.1): sin separarlo no se puede
     # ordenar por apellido, saludar por el nombre de pila en un correo,
     # ni imprimir una constancia con el formato que pida cada documento.
-    nombre = models.CharField(max_length=80)
-    primer_apellido = models.CharField(max_length=80)
+    # El mínimo de dos caracteres estaba **solo en el formulario**, así
+    # que una cuenta creada desde el admin o desde un comando podía
+    # llamarse "X". La regla vive ahora en el campo, que es por donde
+    # pasan los tres caminos.
+    nombre = models.CharField(max_length=80, validators=[MinLengthValidator(2)])
+    primer_apellido = models.CharField(
+        max_length=80, validators=[MinLengthValidator(2)]
+    )
     # Opcional a propósito, y no por descuido: hay personas que no tienen
     # segundo apellido y la mayoría de los participantes extranjeros usan
     # uno solo. Ninguna validación puede exigirlo (CU-REG-001, E1).
     segundo_apellido = models.CharField(max_length=80, blank=True)
-    telefono = models.CharField(max_length=20, blank=True)
+    # `CU-REG-001` pide al menos 10 dígitos, y esa regla vivía **solo en
+    # `RegistroForm.clean_telefono`**: `create_user`, el admin y
+    # cualquier comando escribían lo que fuera. Con `blank=True` los
+    # validadores no corren sobre el vacío, así que las cuentas técnicas
+    # sin teléfono siguen pudiendo crearse.
+    telefono = models.CharField(
+        max_length=20, blank=True, validators=[validar_telefono]
+    )
     # Se guarda el código ISO de dos letras, no el nombre — ver
     # `paises.py`. `blank` porque las cuentas administrativas se dan de
     # alta por comando sin pedirlo; el formulario de CU-REG-001 sí lo
     # exige.
     pais = models.CharField(max_length=2, choices=PAISES, blank=True)
+    # ── Dónde, dentro de México ───────────────────────────────
+    #
+    # Las dos **solo se piden si `pais` es «MX»** (`CU-REG-001`): un
+    # catálogo de 32 entidades mexicanas no describe una dirección en
+    # Bogotá, y una ciudad sin estado que la sitúe tampoco. Fuera de
+    # México quedan en blanco, que es información correcta y no un
+    # hueco — por eso ninguna de las dos es obligatoria en la base.
+    #
+    # Se llama `entidad` y no `estado` porque **`estado` ya está
+    # tomado**: es el estado de la cuenta, ahí abajo. «Entidad
+    # federativa» es además el término oficial; la etiqueta que ve la
+    # gente sigue siendo «Estado».
+    entidad = models.CharField(
+        "estado", max_length=3, choices=ESTADOS_MX, blank=True
+    )
+    # Texto libre y opcional a propósito: no hay catálogo de municipios
+    # que valga la pena mantener para esto, y exigirla dejaría fuera a
+    # quien escribe desde una localidad que no sabe cómo se llama
+    # oficialmente. Lo que sitúa a la persona es la entidad.
+    ciudad = models.CharField("ciudad", max_length=120, blank=True)
     estado = models.CharField(
-        max_length=10, choices=Estado.choices, default=Estado.ACTIVA
+        "estado de la cuenta",
+        max_length=10,
+        choices=Estado.choices,
+        default=Estado.ACTIVA,
     )
     fecha_registro = models.DateTimeField(default=timezone.now)
     ultimo_acceso = models.DateTimeField(null=True, blank=True)
@@ -130,6 +171,17 @@ class Persona(AbstractBaseUser, PermissionsMixin):
     # de la barra superior quieren exactamente lo mismo. Al ser
     # propiedades, cualquier plantilla de EVT/TAL/STD/VIS las tiene
     # disponibles sin `{% load %}`.
+
+    @property
+    def estado_nombre(self) -> str:
+        """La entidad escrita como se lee, no su código.
+
+        Existe para proponerla en fichas que guardan el estado como texto
+        —el domicilio fiscal de una editorial en `STD`, que sale de un
+        documento en papel—. La cuenta guarda `YUC` porque el código no
+        cambia; lo que se copia a un domicilio es «Yucatán».
+        """
+        return estados_mx.nombre_de(self.entidad) if self.entidad else ""
 
     @property
     def nombre_completo(self) -> str:
@@ -177,8 +229,16 @@ class Persona(AbstractBaseUser, PermissionsMixin):
         importando ``AdminFeria``: ``registros`` es la base de identidad
         y no puede depender de ``ferias``, que depende de ella (regla 4
         de CLAUDE.md).
+
+        El operador de la plataforma cuenta **sin tener fila**, que es la
+        excepción de `ADR-0005`. Sin esto se daba la contradicción de que
+        alcanzaba cualquier feria por su URL pero la puerta que lleva a
+        ellas —"mis ferias", tras ``requiere_admin``— le respondía 403; y
+        la barra superior, que pregunta por ``administra()``, le pintaba
+        de todos modos el enlace. Se lee ``is_superuser`` del propio
+        modelo, así que no hace falta importar ``ferias`` para saberlo.
         """
-        return self.ferias_admin.exists()
+        return self.is_superuser or self.ferias_admin.exists()
 
 
 class SesionOTPQuerySet(models.QuerySet):

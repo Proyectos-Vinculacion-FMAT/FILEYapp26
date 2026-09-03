@@ -15,7 +15,7 @@ dependencias: []
 
 ## Descripción
 
-El administrador ajusta las propiedades físicas y económicas de un stand en el mapa (como sus dimensiones, precio base o lo que incluye), comúnmente necesario cuando dos stands físicos se fusionan o se reacomodan muros divisorios a petición de un cliente, sin afectar el resto del diseño del evento.
+El administrador ajusta las propiedades físicas y económicas de un stand en el mapa (como sus dimensiones, precio base o lo que incluye), comúnmente necesario cuando dos stands físicos se fusionan o se reacomodan muros divisorios a petición de un cliente, sin afectar el resto del diseño del mapa.
 
 ## Actores
 

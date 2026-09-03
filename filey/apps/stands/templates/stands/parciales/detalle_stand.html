@@ -1,0 +1,159 @@
+{% load dinero %}
+{% comment %} ===========================================================
+   El detalle de un espacio (`CU-STD-010`), sin chasis.
+
+   Lo usan dos sitios y por eso está aquí: la pantalla propia —que es la
+   que funciona pegando la URL, y sin JavaScript— y el modal del mapa,
+   que lo pide por htmx al pulsar un espacio.
+
+   Antes el modal traía una copia recortada de estos datos, armada en
+   JavaScript con lo que el canvas manda en `openStand`. Eso dejaba fuera
+   la zona y el «qué incluye» —que el canvas no conoce— y ponía las
+   mismas cifras en dos sitios. Ahora el modal **es** este detalle.
+
+   Contexto que espera:
+
+     stand, metros_cuadrados, precio, costo_m2, libre, convocatoria
+     en_modal        para no ofrecer «volver al mapa» cuando ya se está en él
+     puede_reservar  si la convocatoria admite reservas hoy
+     es_mio          si el espacio es de la reserva de quien mira
+   =========================================================== {% endcomment %}
+{% if es_mio %}
+  {% comment %} El suyo no es "un espacio tomado". Se abre desde el mapa de
+     su propia reserva, y decirle ahí que está ocupado se lee como que lo
+     perdió. {% endcomment %}
+  <div class="note note-ok">
+    <div class="ico">📍</div>
+    <div>
+      <strong>Este espacio es tuyo.</strong>
+      Entra en tu reserva de esta convocatoria.
+    </div>
+  </div>
+{% elif not libre and not zona_admin %}
+  {% comment %} A quien aplica se le dice que está tomado y nada más:
+     `RN-09` no le deja saber ni quién ni desde cuándo. {% endcomment %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div>
+      <strong>Este espacio ya está tomado.</strong>
+      {% if not en_modal %}Vuelve al mapa para elegir otro.{% endif %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="info-grid">
+  <div>
+    <span class="hint">Superficie</span>
+    <strong>{{ metros_cuadrados|floatformat:0 }} m²</strong>
+  </div>
+  <div>
+    <span class="hint">Medidas</span>
+    <strong>
+      {% if stand.ancho_celdas %}
+        {{ stand.ancho_celdas }} × {{ stand.alto_celdas }} m
+      {% else %}
+        Forma irregular
+      {% endif %}
+    </strong>
+  </div>
+  <div>
+    <span class="hint">Precio</span>
+    <strong>${{ precio|floatformat:0 }}</strong>
+  </div>
+  {% if stand.zona %}
+    <div>
+      <span class="hint">Zona</span>
+      <strong>{{ stand.zona }}</strong>
+    </div>
+  {% endif %}
+</div>
+
+<p class="hint">
+  {{ metros_cuadrados|floatformat:0 }} m² a ${{ costo_m2|floatformat:0 }} el metro
+  cuadrado. Los descuentos, si los hay, se aplican al total de tu reserva.
+</p>
+
+{% if stand.incluye %}
+  <div class="field">
+    <label>Qué incluye</label>
+    <p>{{ stand.incluye|linebreaksbr }}</p>
+  </div>
+{% endif %}
+
+{% comment %} `CU-STD-032` · `RN-18`: quien administra ve quién reservó y
+   cuánto debe. La vista solo trae `reserva` si administra, así que aquí
+   no hay ninguna decisión de permiso que equivocar. {% endcomment %}
+{% if zona_admin %}
+  {% if reserva %}
+    <div class="section-head">
+      <div>
+        <h3>Quién lo tiene</h3>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div>
+        <span class="hint">Editorial</span>
+        <strong>{{ reserva.editorial.nombre }}</strong>
+        <span class="hint">{{ reserva.registro.persona.correo }}</span>
+      </div>
+      <div>
+        <span class="hint">Estado de la reserva</span>
+        <strong>{{ reserva.get_estado_display }}</strong>
+      </div>
+      <div>
+        <span class="hint">Pendiente</span>
+        <strong>{{ reserva.monto_pendiente|pesos }}</strong>
+        <span class="hint">de {{ reserva.monto_total|pesos }}</span>
+      </div>
+      <div>
+        <span class="hint">Vence el anticipo</span>
+        <strong>{{ reserva.fecha_vencimiento_anticipo|date:"j M Y" }}</strong>
+      </div>
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-ghost btn-row"
+         href="{% url 'stands:detalle_reserva' reserva_id=reserva.pk %}">
+        Ver la reserva
+      </a>
+    </div>
+  {% else %}
+    <p class="hint">Nadie lo tiene apartado.</p>
+  {% endif %}
+{% endif %}
+
+<div class="form-actions">
+  {% if not en_modal %}
+    <a class="btn btn-ghost" href="{% url 'stands:mapa' convocatoria_id=convocatoria.pk %}">
+      Volver al mapa
+    </a>
+  {% endif %}
+  {% comment %} Agregar va por POST aunque solo toque la sesión: un GET que
+     la modifica lo dispara cualquier precarga del navegador.
+
+     En el modal va por htmx contra el carrito de al lado, y al terminar
+     el modal se cierra solo —lo hace `filey.js` al ver `htmx:afterRequest`
+     sobre este formulario—: quedarse abierto tras agregar obliga a
+     cerrarlo a mano para seguir eligiendo. {% endcomment %}
+  {% comment %} Sin `puede_reservar` no se ofrece agregar: con la
+     convocatoria cerrada el detalle se sigue leyendo, pero el botón solo
+     podría fallar (`CU-STD-037` A1 paso 3). {% endcomment %}
+  {% if libre and not zona_admin and puede_reservar %}
+    <form method="post" data-campo="agregar"
+          hx-post="{% url 'stands:carrito_lateral' convocatoria_id=convocatoria.pk %}"
+          hx-target="#carrito-lateral"
+          hx-swap="outerHTML"
+          action="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="accion" value="agregar">
+      <input type="hidden" name="clave" value="{{ stand.clave }}">
+      <button class="btn btn-primary btn-lg" type="submit">
+        Agregar a mi selección
+      </button>
+    </form>
+  {% endif %}
+  {% if not en_modal and not zona_admin and puede_reservar %}
+    <a class="btn btn-ghost" href="{% url 'stands:carrito' convocatoria_id=convocatoria.pk %}">
+      Ver mi selección
+    </a>
+  {% endif %}
+</div>
