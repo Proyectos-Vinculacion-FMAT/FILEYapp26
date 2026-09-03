@@ -40,6 +40,7 @@ panel de tags y en el grafo.
 | `tipo/plantilla` | Plantilla base para crear documentos | `CU-XX-NN Template.md` |
 | `tipo/modelo-de-datos` | Modelo de datos de un dominio | `STD/Modelo de datos - Stands.md` |
 | `tipo/proceso` | Proceso de alto nivel / flujo | `STD/Proceso de alto nivel - Stands.md` |
+| `tipo/plan-de-pruebas` | Plan o matriz de pruebas (usabilidad, aceptación) | `pruebas/**` |
 | `tipo/referencia` | Documento de referencia/alcance transversal | `requisitos/README.md`, este mapa |
 | `tipo/junta-resumen` | Resumen (minuta) de una junta | `meetings/resumenes/RSM - *` |
 | `tipo/junta-transcripcion` | Transcripción literal de una junta | `meetings/transcripciones/**/TRS - *` |
@@ -94,6 +95,7 @@ Temas que cruzan varios dominios. **Lista cerrada**: para añadir uno nuevo, ed�
 | `tema/formularios` | Formularios/convocatorias de captura |
 | `tema/trazabilidad` | Bitácora, deslinde, registro de envíos |
 | `tema/usuarios` | Tipos de usuario/participante |
+| `tema/usabilidad` | Usabilidad, accesibilidad y pruebas con personas usuarias |
 
 ## Cómo navegar
 

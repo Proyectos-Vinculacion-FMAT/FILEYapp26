@@ -1,0 +1,71 @@
+Ronda,ID,Perfil,Tarea que se pide al participante,CU cubiertos,Criterio de exito,Tiempo objetivo,Tasa exito objetivo,Ley/heuristica,Prioridad,Soporte
+1,PU-REG-01,P1/P3,"Entra por primera vez: crea tu cuenta y llega al catalogo de convocatorias","CU-REG-001, CU-REG-002",Llega al catalogo sin ayuda y sin volver atras mas de una vez,180 s,90%,Jakob; Zeigarnik,Critica,Django
+1,PU-REG-02,P1,"Vuelve a entrar meses despues con el correo que ya usaste",CU-REG-002,No intenta buscar contrasena ni boton de registro,90 s,95%,Jakob,Critica,Django
+1,PU-REG-03,P3,"No te llego el codigo: consiguelo de nuevo",CU-REG-002 A1,Encuentra Reenviar y entiende por que esta deshabilitado 60 s,60 s,85%,Doherty; tono,Alta,Django
+1,PU-REG-04,P1,"Teclea mal el codigo dos veces y luego entra",CU-REG-002 E1,Entiende cuantos intentos le quedan y que pasa al agotarlos,120 s,85%,Postel; tono,Alta,Django
+1,PU-REG-05,P5,"Entra como administrador de tu modulo",CU-REG-003,Distingue el acceso admin del de participante sin preguntarlo,120 s,90%,Hick,Critica,Django
+1,PU-REG-06,P5,"Cierra tu sesion y verifica que quedo cerrada",CU-REG-004,Encuentra Salir en la barra superior a la primera,45 s,95%,Jakob,Media,Django
+1,PU-FER-01,P1/P3,"Elige la edicion de la feria en la que vas a participar",CU-FER-010,Reconoce que esta eligiendo edicion y no modulo,60 s,90%,Hick,Alta,Django
+1,PU-FER-02,P5,"Entra a la feria 2027 teniendo acceso a dos ediciones",CU-FER-002,No confunde edicion con modulo; sabe en cual quedo,60 s,90%,Miller; acento por dominio,Alta,Django
+1,PU-FER-03,P1/P3,"Di cuales convocatorias estan abiertas hoy y cual te toca",CU-FER-006,Identifica estado abierta/cerrada por texto y no solo por color,90 s,90%,Estado color+texto; Hick,Critica,Django
+1,PU-FER-04,P6,"Da acceso de administrador a una persona de tu equipo",CU-FER-003,Alta correcta a la primera; entiende que el acceso es por feria,150 s,90%,Jakob,Alta,Django
+1,PU-FER-05,P6,"Retira el acceso de un administrador que ya no colabora",CU-FER-004,No retira al equivocado; la confirmacion dice a quien y con que efecto,120 s,95%,Fitts (destructiva separada),Critica,Django
+1,PU-FER-06,P6,"Da de alta la convocatoria de Eventos con sus fechas",CU-FER-005,Distingue fechas anunciadas de estado de la convocatoria,240 s,85%,Miller,Alta,Pendiente
+1,PU-FER-07,P6,"Cierra hoy la convocatoria de Eventos, antes de su fecha",CU-FER-008 y CU-FER-007,"Usa el control de estado, NO la fecha de cierre",120 s,90%,Comprension: fecha != estado,Critica,Pendiente
+1,PU-FER-08,P6,"Elimina una convocatoria que se creo por error",CU-FER-009,Entiende el alcance del borrado antes de confirmar,90 s,95%,Fitts; tono,Alta,Pendiente
+1,PU-FER-09,P7,"Crea la feria 2028 y designa a su dueno; deja que la vean los participantes",CU-FER-001 y CU-FER-010,Descubre que nace en_preparacion y la activa sin ayuda,300 s,80%,Visibilidad del estado del sistema,Alta,Django (django-admin/CLI)
+2,PU-EVT-01,P1,"Averigua si tu actividad cabe en esta convocatoria y cuando cierra",CU-EVT-001 (lado aplicante),Encuentra tipo de actividad admitido y fecha limite sin abrir el PDF,120 s,85%,Hick,Alta,Prototipo
+2,PU-EVT-02,P1,"Registra una charla con un ponente y un adjunto",CU-EVT-002,Termina el formulario sin abandonar ni perder datos,12 min,85%,Hick; Miller; Zeigarnik,Critica,Prototipo
+2,PU-EVT-03,P1,"Registra una presentacion de libro (campos extra + ejemplar fisico)",CU-EVT-002 A1,Nota que debe enviar el ejemplar fisico y lo dice sin que se le pregunte,15 min,80%,Divulgacion progresiva,Critica,Prototipo
+2,PU-EVT-04,P1,"Envia el formulario con un campo obligatorio vacio y corrige",CU-EVT-002 E,No pierde lo capturado; encuentra el campo senalado a la primera,120 s,90%,Postel; tono,Critica,Prototipo
+2,PU-EVT-05,P1,"Dinos en que va tu propuesta y cual es su folio",CU-EVT-003,Lee el estado y el folio sin interpretarlos mal,60 s,95%,Peak-end; Miller,Alta,Prototipo
+2,PU-EVT-06,P1,"Te pidieron cambios: averigua cuales y reenvía",CU-EVT-004,Encuentra el comentario del administrador antes de editar,6 min,85%,Zeigarnik,Critica,Prototipo
+2,PU-EVT-07,P1,"Descarga tu constancia de participacion",CU-EVT-005,La localiza sin recorrer todo el panel,90 s,90%,Jakob,Media,Pendiente
+2,PU-EVT-08,P5,"Encuentra las propuestas pendientes de literatura de esta semana",CU-EVT-007 y CU-EVT-011,Usa filtros en vez de recorrer la lista,120 s,90%,Hick (3 filtros visibles),Alta,Prototipo
+2,PU-EVT-09,P5,"Revisa esta propuesta y aceptala con su categoria",CU-EVT-008 y CU-EVT-009,Dictamina la propuesta correcta; entiende que se crea la Actividad,5 min,90%,Fitts,Critica,Prototipo
+2,PU-EVT-10,P5,"Pide cambios a una propuesta y rechaza otra",CU-EVT-009,No confunde rechazar con pedir cambios; la destructiva no es adyacente,5 min,90%,Fitts; tono,Critica,Prototipo
+2,PU-EVT-11,P5,"Notifica el resultado a las 40 propuestas dictaminadas",CU-EVT-010,Entiende a quienes va antes de enviar; ve progreso al enviar,4 min,85%,Doherty; confirmacion,Critica,Prototipo
+2,PU-EVT-12,P5,"Marca que ya llego el ejemplar fisico de una propuesta",CU-EVT-012,Encuentra el toggle en lista o detalle,60 s,90%,Fitts,Media,Prototipo
+2,PU-EVT-13,P5,"Configura fechas y cupos de la convocatoria del proximo ano",CU-EVT-001,Termina sin dejar campos ambiguos ni pedir ayuda,8 min,80%,Miller,Alta,Prototipo
+2,PU-EVT-14,P5,"Genera la ficha PDF de una actividad para el programa",CU-EVT-006,Obtiene el PDF y sabe que contiene,90 s,90%,Doherty,Media,Pendiente
+2,PU-VIS-01,P3,"Registra tu escuela con tres grupos de secundaria",CU-VIS-001,Completa escuela + contacto + 3 grupos sin abandonar,15 min,85%,Hick; Miller; Zeigarnik,Critica,Prototipo
+2,PU-VIS-02,P3,"Tu escuela lleva 130 alumnos de primaria y secundaria: registrala",CU-VIS-001 E1,Descubre el tope de 105 y que va una propuesta por nivel,8 min,75%,Comprension de regla dura; tono,Critica,Prototipo
+2,PU-VIS-03,P3,"Cambiaron los numeros: corrige tu propuesta ya enviada",CU-VIS-002,Encuentra la edicion y sabe si sigue dentro de la ventana,4 min,85%,Zeigarnik,Alta,Prototipo
+2,PU-VIS-04,P3,"Dinos si tu visita ya fue aceptada y que sigue",CU-VIS-003,Lee estado y siguiente paso sin ayuda,60 s,95%,Peak-end,Alta,Prototipo
+2,PU-VIS-05,P3,"Arma el itinerario: tres talleres para tu nivel el 14 de marzo","CU-VIS-010, CU-VIS-011 y CU-VIS-012",Filtra por nivel/dia/turno y entiende el cupo restante,10 min,80%,Hick; Miller (38/40 lugares),Critica,Prototipo
+2,PU-VIS-06,P3,"Elimina un taller del itinerario y confirma que libero el cupo",CU-VIS-013 y CU-VIS-014,Entiende que liberar cupo es irreversible en la practica,3 min,90%,Fitts; tono,Alta,Prototipo
+2,PU-VIS-07,P5,"Revisa las propuestas del dia y dictamina tres",CU-VIS-004 a CU-VIS-008,Dictamen inline sin perder el lugar en la lista,8 min,85%,Hick; Fitts,Critica,Prototipo
+2,PU-VIS-08,P5,"Una escuela llamo por telefono: dala de alta y reserva por ella","CU-VIS-016, CU-VIS-010 a CU-VIS-012",Completa alta manual + reserva en una sola sesion,12 min,80%,Jakob,Alta,Prototipo
+2,PU-VIS-09,P5,"Quita a esta escuela de un taller sobrevendido","CU-VIS-015, CU-VIS-016 y CU-VIS-017",No quita a la escuela equivocada; ve el efecto en el cupo,3 min,90%,Fitts,Alta,Prototipo
+3,PU-STD-01,P4,"Aplica como expositor con tus documentos de empresa",CU-STD-001,Sube todos los documentos requeridos sin abandonar,15 min,85%,Hick; Miller,Critica,Pendiente
+3,PU-STD-02,P4,"Te pidieron cambios en tu solicitud: corrigela y reenvia",CU-STD-002 y CU-STD-003,Encuentra que le pidieron y reenvia,6 min,85%,Zeigarnik,Alta,Pendiente
+3,PU-STD-03,P4,"Encuentra en el mapa un stand de esquina disponible",CU-STD-009 y CU-STD-010,Distingue disponible de no disponible sin depender del color,5 min,85%,Estado color+texto; accesibilidad,Critica,Pendiente
+3,PU-STD-04,P4,"Aparta dos stands contiguos y reservalos",CU-STD-011 y CU-STD-012,Entiende que el carrito no es una reserva hasta confirmar,5 min,85%,Zeigarnik; Peak-end,Critica,Pendiente
+3,PU-STD-05,P4,"Dinos cuanto debes y para cuando",CU-STD-013 y CU-STD-017,Lee total/abonado/pendiente/descuento sin equivocarse,120 s,90%,Miller (datos formateados),Critica,Pendiente
+3,PU-STD-06,P4,"Paga el 50% y registra tu comprobante",CU-STD-015 y CU-STD-016,Encuentra los datos bancarios y sube el comprobante,6 min,85%,Jakob; Doherty,Critica,Pendiente
+3,PU-STD-07,P4,"Recibiste un aviso de posible cancelacion: resuelvelo",CU-STD-014 y CU-STD-025,Entiende el plazo y la accion que evita la cancelacion,4 min,85%,Zeigarnik; tono,Critica,Pendiente
+3,PU-STD-12,P5,"Revisa las solicitudes del dia: acepta una, pide cambios a otra, rechaza una tercera",CU-STD-004 a CU-STD-008,No confunde rechazar con pedir cambios; el aplicante recibe el motivo,8 min,90%,Fitts; tono,Critica,Pendiente
+3,PU-STD-08,P5,"Valida un pago, registra un abono manual y aplica un descuento","CU-STD-018, CU-STD-019 y CU-STD-020",Registra motivo del descuento; no confunde validar con registrar,8 min,85%,Hick; trazabilidad,Alta,Pendiente
+3,PU-STD-09,P5,"Resuelve dos reservas vencidas: prorroga una y cancela otra",CU-STD-035 y CU-STD-036,No cancela la equivocada; la fecha nueva queda clara,6 min,90%,Fitts,Critica,Pendiente
+3,PU-STD-10,P5,"Configura precio por m2, plazos y descuento de pronto pago",CU-STD-034,Termina sin ambiguedad sobre que parametro afecta a que,10 min,80%,Miller,Alta,Pendiente
+3,PU-STD-11,P5,"Dinos quien reservo el stand B-14 y cuanto debe",CU-STD-032 y CU-STD-028 a CU-STD-031,Llega del mapa al expediente del expositor,3 min,85%,Jakob,Alta,Pendiente
+3,PU-TAL-01,P2,"Registra tu taller infantil con su publico meta y modalidad",CU-TAL-002,Completa el formulario sin adjuntos y entiende el cupo,10 min,85%,Hick; Miller,Critica,Pendiente
+3,PU-TAL-02,P2,"Revisa el estado de tu propuesta y corrigela si te pidieron cambios",CU-TAL-003 y CU-TAL-004,Encuentra el comentario y reenvia,5 min,85%,Zeigarnik,Alta,Pendiente
+3,PU-TAL-03,P5,"Dictamina las propuestas de talleres del dia",CU-TAL-007 a CU-TAL-009,Usa contadores por estado para priorizar,8 min,85%,Hick,Alta,Pendiente
+3,PU-TAL-04,P2,"Descarga tu constancia (obligatoria en talleres)",CU-TAL-005,La localiza y entiende que es obligatoria,90 s,90%,Peak-end,Media,Pendiente
+3,PU-PRG-01,P5,"Programa esta actividad aceptada en sala y horario",CU-PRG-002,Ve el choque de horario antes de guardar,5 min,85%,Fitts; Doherty,Critica,Prototipo
+3,PU-PRG-02,P5,"Mueve una actividad de sala y elimina otra programacion",CU-PRG-003 y CU-PRG-004,No elimina la actividad al eliminar su programacion,4 min,90%,Fitts; tono,Critica,Prototipo
+3,PU-PRG-03,P5,"Programa un taller que se repite 4 veces en la semana",CU-PRG-002 A1 (vista TAL),Entiende bloque de 1:00 y el selector de repeticion,6 min,80%,Miller,Alta,Pendiente
+3,PU-PRG-04,P1/P2,"Confirma que asistiras al horario que te asignaron",CU-PRG-008 y CU-PRG-009,Encuentra la confirmacion desde el correo y la completa,3 min,90%,Zeigarnik; Peak-end,Critica,Pendiente
+3,PU-PRG-05,Publico,"Encuentra a que hora es la actividad X (desde el telefono)",CU-PRG-010,La encuentra en movil sin zoom ni scroll horizontal,120 s,90%,Jakob; responsive,Alta,Prototipo
+3,PU-PRG-06,P5,"Exporta el programa para revisarlo con el equipo",CU-PRG-011,Obtiene el archivo y sabe que trae,90 s,90%,Doherty,Media,Pendiente
+3,PU-SAL-01,P5,"Da de alta el salon Uxmal con sus cuatro salas","CU-SAL-001, CU-SAL-004 y CU-SAL-007",Entiende que el salon nace con una sala automatica,6 min,85%,Hick (CRUD inline),Alta,Pendiente
+3,PU-SAL-02,P5,"Corrige el aforo de una sala a 80 personas y el nombre del salon",CU-SAL-002 y CU-SAL-005,Edita la sala correcta sin salir de la pantalla,120 s,90%,Fitts,Alta,Pendiente
+3,PU-SAL-03,P5,"Elimina un salon que ya tiene actividades programadas",CU-SAL-003 y CU-SAL-006,Entiende por que el sistema no lo deja y que hacer,3 min,90%,Prevencion de error; tono,Critica,Pendiente
+T,PU-TRV-01,Todos,"Completa la tarea critica de tu perfil con JavaScript desactivado","Regla 6 de CLAUDE.md; transversal",Completa la tarea; ninguna accion queda muerta,mismo objetivo,90%,Degradacion elegante,Critica,Django
+T,PU-TRV-02,P5,"Imprime en blanco y negro el listado y dinos que estado tiene cada fila","CU-EVT-007, CU-VIS-004, CU-STD-028",Lee el estado sin color,120 s,95%,Estado color+texto,Critica,Prototipo
+T,PU-TRV-03,P3,"Registra tu escuela desde el telefono",CU-VIS-001,Sin scroll horizontal ni objetivos de toque menores a 40px,18 min,80%,Fitts; responsive,Critica,Prototipo
+T,PU-TRV-04,Todos,"Recorre el formulario solo con teclado (y con lector de pantalla)","CU-REG-001, CU-EVT-002, CU-VIS-001","Foco visible, orden logico, errores anunciados",mismo objetivo,90%,WCAG AA,Critica,Django
+T,PU-TRV-05,Todos,"Sin leer el titulo, dinos en que modulo y edicion estas",Transversal,Acierta modulo y edicion por acento y barra superior,15 s,85%,Acento por dominio; Jakob,Alta,Django
+T,PU-TRV-06,Todos,"Observacion: toda accion responde en menos de 400 ms o muestra indicador",Transversal,Ninguna accion queda sin respuesta visible; sin doble envio,n/a,100%,Doherty,Critica,Django
+T,PU-TRV-07,Todos,"Lee este mensaje de error y dinos que harias",Transversal,Explica la accion correctiva con sus palabras,30 s,90%,Tono de UI,Alta,Django

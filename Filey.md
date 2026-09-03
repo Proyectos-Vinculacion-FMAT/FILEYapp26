@@ -12,6 +12,7 @@ Portada del repositorio de requisitos de **FILEY**. Empieza aquí.
 - [Requisitos — Dominios y alcance (README)](<docs/requisitos/README.md>) — qué hace el sistema y cómo se divide en dominios.
 - [ADR — Decisiones de arquitectura](<docs/adr/README.md>) — cómo se construye el sistema: stack, monolito vs. separado, y por qué.
 - [Mapa de etiquetas](<docs/MAPA-DE-ETIQUETAS.md>) — taxonomía `tipo/` · `dom/` · `tema/` para navegar por temas (humanos e IA).
+- [Matriz de pruebas de usabilidad](<docs/pruebas/Matriz de pruebas de usabilidad.md>) — qué se prueba con personas, con quién y con qué criterio de aprobación.
 
 ### Índices de casos de uso por dominio
 
