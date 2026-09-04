@@ -194,6 +194,34 @@ class Solicitud(models.Model):
         ACEPTADA = "aceptada", "Aceptada"
         RECHAZADA = "rechazada", "Rechazada"
         CAMBIOS_SOLICITADOS = "cambios_solicitados", "Cambios solicitados"
+        #: Solo se llega aquí **desde `aceptada`** (§3.1): es retirar algo
+        #: que ya estaba dentro, y no es lo mismo que rechazarlo. Un
+        #: rechazo dice que nunca entró; una cancelación deja constancia
+        #: de que llegó a estar aceptada y algo pasó después.
+        CANCELADA = "cancelada", "Cancelada"
+
+    #: Los dos estados en los que la propuesta **espera algo del comité**.
+    #: Es lo que cuenta la cola de `CU-EVT-007` como "por revisar".
+    PENDIENTES_DE_RESOLVER = (Estado.PENDIENTE, Estado.CAMBIOS_SOLICITADOS)
+    #: Los que son un dictamen ya emitido. Volver sobre uno de éstos es
+    #: el A3 de `CU-EVT-009`, y no la misma acción que dictaminar.
+    YA_DICTAMINADOS = (Estado.ACEPTADA, Estado.RECHAZADA, Estado.CANCELADA)
+
+    class Categoria(models.TextChoices):
+        """El prefijo que el administrador asigna al aceptar (§3.1).
+
+        Es **la mitad** de lo que el documento llama `categoria`: la otra
+        es si quien propone es de la UADY, que es una columna aparte
+        (`es_uady_confirmado`). `CU-EVT-009` paso 4 lo describe como un
+        solo valor compuesto —`literaria_uady`—, pero el modelo de datos
+        cuenta "agrupando por `categoria` × `is_participante_uady`"
+        (§3.6), que son dos. Compuesto no se puede agrupar por una mitad
+        sin partir la cadena, así que se guardan separados y se componen
+        al pintar.
+        """
+
+        LITERARIA = "literaria", "Literaria"
+        ACADEMICA = "academica", "Académica"
 
     registro = models.ForeignKey(
         RegistroConvocatoria,
@@ -240,6 +268,62 @@ class Solicitud(models.Model):
     )
     fecha_de_solicitud = models.DateTimeField(auto_now_add=True)
 
+    # ── El dictamen (`CU-EVT-009`) ───────────────────────────
+    #
+    # El modelo de datos §3.1 los pone en una tabla aparte,
+    # `DetallesAdminSolicitud`, para separar lo que escribe el aplicante
+    # de lo que escribe el administrador. Aquí son columnas, y la razón
+    # es que esa tabla sería **uno a uno obligatoria y creada al enviar**
+    # —lo dice el propio §3.1—, que es la definición de una columna con
+    # un join de más. `estado` ya vivía aquí desde `CU-EVT-002`, así que
+    # partirlas habría dejado el estado del dictamen separado de su
+    # motivo. Es el mismo trato que `STD` le da a su `Solicitud`.
+
+    #: Vacío mientras nadie la haya aceptado: solo se asigna al aceptar.
+    categoria = models.CharField(max_length=10, choices=Categoria.choices, blank=True)
+    #: Lo que el administrador **confirma** sobre la autodeclaración de
+    #: `es_uady`. Es este valor —y no aquél— el que cuenta para el conteo
+    #: por categoría (§3.1). `None` significa "todavía nadie lo revisó",
+    #: que es distinto de "se revisó y no es de la UADY": por eso admite
+    #: nulo y no arranca en falso.
+    #:
+    #: Se llama así y no `is_participante_uady` como el documento porque
+    #: los nombres de este proyecto van en español (regla 7 de
+    #: `CLAUDE.md`), y porque lo que lo distingue de `es_uady` es
+    #: exactamente que está confirmado.
+    es_uady_confirmado = models.BooleanField(
+        "la UADY, confirmado por quien revisa", null=True, blank=True
+    )
+    fecha_revision = models.DateTimeField(null=True, blank=True)
+    revisado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="propuestas_revisadas",
+    )
+    #: Obligatorio al rechazar (`A2`), y también al pasar de `aceptada` a
+    #: `rechazada` en un re-dictamen (`A3` paso 4). Lo exige el servicio y
+    #: no la columna: una cadena vacía es válida en las otras cuatro
+    #: transiciones, y `blank=False` las rompería todas.
+    motivo_rechazo = models.TextField("motivo del rechazo", blank=True)
+    #: Obligatorio al solicitar cambios (`A1`). Es literalmente lo que
+    #: recibe por correo quien propuso, así que sin él no sabe qué
+    #: corregir.
+    mensaje_cambios_solicitados = models.TextField(
+        "qué debe corregir", blank=True
+    )
+    #: Si el resultado **vigente** ya salió en un lote (`CU-EVT-010`).
+    #: Todavía no hay quien lo ponga en verdadero: lo que sí hace ya el
+    #: dictamen es devolverlo a falso cada vez que cambia el desenlace,
+    #: que es la postcondición que `CU-EVT-009` pide en sus tres flujos.
+    resultado_notificado = models.BooleanField(default=False)
+    #: Nulo si nunca se ha notificado. Es lo que distingue "aún no le
+    #: hemos dicho nada" de "le dijimos otra cosa y hay que corregirla",
+    #: que es la diferencia que `A3` paso 6 necesita para mandar el
+    #: cambio como **actualización** y no como resultado nuevo.
+    fecha_resultado_notificado = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         verbose_name = "solicitud"
         verbose_name_plural = "solicitudes"
@@ -266,6 +350,61 @@ class Solicitud(models.Model):
     def persona(self):
         """Quién propuso. Se llega por el registro, nunca por una FK propia."""
         return self.registro.persona
+
+    @property
+    def publicos_legibles(self) -> list[str]:
+        """«Público en general», y no ``publico_general``.
+
+        La columna guarda los valores del conjunto cerrado, que es lo
+        correcto para filtrar; lo que hay que leer en pantalla son sus
+        rótulos. Django solo trae `get_..._display` para los campos con
+        `choices`, y éste es un `JSONField` con una lista dentro, así que
+        la traducción hay que hacerla aquí.
+
+        Un valor que no esté en el conjunto se enseña tal cual en vez de
+        desaparecer: si alguna vez queda uno viejo en la base, es mejor
+        verlo raro que no verlo.
+        """
+        rotulos = dict(PublicoObjetivo.choices)
+        return [rotulos.get(valor, valor) for valor in self.publico_objetivo or []]
+
+    @property
+    def esta_dictaminada(self) -> bool:
+        """¿Ya hay un desenlace emitido sobre ella?
+
+        `cambios_solicitados` **no cuenta**: pedir correcciones es dejarla
+        abierta, no resolverla. Es la distinción que separa dictaminar de
+        re-dictaminar (`CU-EVT-009` A3), y por eso no se pregunta con un
+        `!= pendiente`.
+        """
+        return self.estado in self.YA_DICTAMINADOS
+
+    @property
+    def categoria_completa(self) -> str:
+        """«Literaria · UADY». Vacío mientras no esté clasificada.
+
+        Se compone al leer y no se almacena, por lo mismo que el folio: un
+        valor compuesto guardado no se puede agrupar por una de sus dos
+        mitades sin partir la cadena, y el conteo de §3.6 agrupa
+        justamente por las dos por separado.
+        """
+        if not self.categoria:
+            return ""
+        if self.es_uady_confirmado is None:
+            return self.get_categoria_display()
+        procedencia = "UADY" if self.es_uady_confirmado else "Externo"
+        return f"{self.get_categoria_display()} · {procedencia}"
+
+    @property
+    def uady_sugerido(self) -> bool:
+        """Qué proponerle a quien revisa, mientras no haya confirmado nada.
+
+        Lo que dijo quien propuso (`es_uady`). No es lo mismo que el valor
+        que cuenta —ése es `es_uady_confirmado`—, pero es el mejor punto
+        de partida y evita que quien revisa tenga que teclear de cero algo
+        que ya venía contestado.
+        """
+        return self.es_uady if self.es_uady_confirmado is None else self.es_uady_confirmado
 
 
 class Actividad(models.Model):

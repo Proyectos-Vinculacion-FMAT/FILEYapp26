@@ -33,11 +33,11 @@ Inventario de casos de uso del dominio **Eventos Generales** (`EVT`): la convoca
 
 ## E. Herramientas de Administración
 
-- [CU-EVT-007 Consultar la lista de propuestas, filtrable](<E - Herramientas de Administración/CU-EVT-007 Consultar la lista de propuestas, filtrable.md>)
-- [CU-EVT-008 Revisar el detalle de una propuesta](<E - Herramientas de Administración/CU-EVT-008 Revisar el detalle de una propuesta.md>)
-- [CU-EVT-009 Dictaminar una propuesta](<E - Herramientas de Administración/CU-EVT-009 Dictaminar una propuesta.md>)
+- [CU-EVT-007 Consultar la lista de propuestas, filtrable](<E - Herramientas de Administración/CU-EVT-007 Consultar la lista de propuestas, filtrable.md>) — **construido** (2026-09-03)
+- [CU-EVT-008 Revisar el detalle de una propuesta](<E - Herramientas de Administración/CU-EVT-008 Revisar el detalle de una propuesta.md>) — **construido** (2026-09-03)
+- [CU-EVT-009 Dictaminar una propuesta](<E - Herramientas de Administración/CU-EVT-009 Dictaminar una propuesta.md>) — **construido** (2026-09-03)
 - [CU-EVT-010 Enviar notificaciones de resultado en lote](<E - Herramientas de Administración/CU-EVT-010 Enviar notificaciones de resultado en lote.md>)
-- [CU-EVT-011 Visualizar el número de propuestas por estado](<E - Herramientas de Administración/CU-EVT-011 Visualizar el número de propuestas por estado.md>)
+- [CU-EVT-011 Visualizar el número de propuestas por estado](<E - Herramientas de Administración/CU-EVT-011 Visualizar el número de propuestas por estado.md>) — **construido** (2026-09-03)
 - [CU-EVT-012 Marcar la recepción del ejemplar físico enviado por el aplicante](<E - Herramientas de Administración/CU-EVT-012 Marcar la recepción del ejemplar físico enviado por el aplicante.md>)
 
 ---

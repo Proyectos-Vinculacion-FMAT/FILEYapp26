@@ -18,7 +18,7 @@
 
 {% block contenido %}
 
-{% include "stands/parciales/filtros.html" with nombre="reserva" plural="reservas" url_limpia=url_limpia %}
+{% include "componentes/filtros.html" with nombre="reserva" plural="reservas" url_limpia=url_limpia etiqueta_busqueda="Buscar por nombre de la editorial" placeholder="Buscar editorial" %}
 
 {% if reservas %}
   <table class="table">

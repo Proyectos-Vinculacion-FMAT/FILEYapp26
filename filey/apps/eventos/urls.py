@@ -32,4 +32,29 @@ urlpatterns = [
         views.confirmacion,
         name="confirmacion",
     ),
+    # A1 · la cola de revisión y el panel del módulo (`CU-EVT-007`,
+    # `CU-EVT-011`). Es a donde apunta `url_panel` del registro de
+    # módulos: `EVT` no tiene una portada aparte de su cola, porque la
+    # pregunta que trae a quien administra —«¿qué necesita de mí hoy?»— la
+    # contesta la propia lista con sus conteos arriba.
+    path(
+        "eventos/<int:convocatoria_id>/propuestas/",
+        views.propuestas,
+        name="propuestas",
+    ),
+    # A2 · el expediente de una propuesta y su dictamen (`CU-EVT-008`,
+    # `CU-EVT-009`). Sin la convocatoria en la ruta: la propuesta ya sabe
+    # de cuál cuelga, y repetirla daría dos fuentes para lo mismo.
+    path(
+        "eventos/propuesta/<int:solicitud_id>/",
+        views.detalle_propuesta,
+        name="detalle_propuesta",
+    ),
+    # La entrega de adjuntos. Es la única forma de alcanzar un archivo:
+    # `MEDIA_URL` no está montada en ningún urlconf (`ADR-0007`).
+    path(
+        "eventos/documento/<int:documento_id>/",
+        views.documento,
+        name="documento",
+    ),
 ]

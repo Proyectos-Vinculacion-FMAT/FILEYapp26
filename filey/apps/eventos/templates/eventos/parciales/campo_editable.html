@@ -1,0 +1,35 @@
+{% comment %} ===========================================================
+   Un texto largo de la propuesta que quien revisa puede corregir
+   (`CU-EVT-008`, `servicios/edicion.py`).
+
+   Contexto que espera:
+
+     nombre     la columna: `sinopsis`, `semblanza_autor_2`
+     etiqueta   cómo se llama en pantalla
+     valor      lo que hay escrito
+     tope       cuántos caracteres admite
+     editando   si el modo de edición está activo
+     renglones  opcional, alto de la caja
+
+   **Es el mismo recuadro en los dos modos**, con `readonly` puesto o
+   quitado, y no un párrafo que se sustituye por un campo. Así el texto
+   se lee siempre dentro de su propia caja —que es lo que el prototipo
+   dibuja— y no cambia de sitio ni de tamaño al empezar a corregir: quien
+   edita sigue mirando el mismo renglón que estaba leyendo.
+
+   `readonly` y no `disabled`: un campo deshabilitado no viaja en el POST
+   y se lee gris apagado, como si estuviera roto. Éste se puede
+   seleccionar y copiar, que es lo que hace falta la mayor parte del
+   tiempo.
+   =========================================================== {% endcomment %}
+<div class="field campo-editable">
+  <label for="ed-{{ nombre }}">{{ etiqueta }}</label>
+  <textarea id="ed-{{ nombre }}" name="{{ nombre }}"
+            rows="{{ renglones|default:6 }}" maxlength="{{ tope }}"
+            {% if not editando %}readonly{% endif %}
+            :readonly="!editando">{{ valor }}</textarea>
+  <span class="hint campo-editable__tope"
+        {% if not editando %}hidden{% endif %} :hidden="!editando">
+    Hasta {{ tope }} caracteres.
+  </span>
+</div>

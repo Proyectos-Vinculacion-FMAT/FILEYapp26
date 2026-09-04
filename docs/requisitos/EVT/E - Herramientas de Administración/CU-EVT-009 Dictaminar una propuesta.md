@@ -39,7 +39,7 @@ Desde el detalle de una propuesta (CU-EVT-008), el administrador decide emitir s
 ### En éxito
 
 - La propuesta queda en estado `aceptada`, `cambios_solicitados` o `rechazada`, con su fecha de revisión y el administrador que la revisó (`revisado_por`).
-- Si fue **aceptada**: el sistema asigna el prefijo de `categoria` (`literaria` / `academica`), crea una `Actividad` en estado `sin_horario` vinculada a la propuesta y la deja pendiente de notificación en lote (`resultado_notificado = false`).
+- Si fue **aceptada**: el sistema registra su `categoria` (`literaria` / `academica`) y la procedencia confirmada, y la deja pendiente de notificación en lote (`resultado_notificado = false`). Queda **sin horario**, que no es un estado almacenado sino la ausencia de filas en `ProgramacionActividad` — ver la corrección del flujo principal.
 - Si fue **cambios solicitados**: se registra el `mensaje_cambios_solicitados` y el sistema notifica de inmediato al proponente por correo.
 - Si fue **rechazada**: se registra el `motivo_rechazo` y la propuesta queda pendiente de notificación en lote (`resultado_notificado = false`).
 
@@ -52,11 +52,26 @@ Desde el detalle de una propuesta (CU-EVT-008), el administrador decide emitir s
 1. En el detalle de la propuesta, el administrador elige "Aceptar".
 2. El sistema presenta una segunda pantalla de confirmación que solicita clasificar la propuesta como `literaria` o `academica`, sugiriendo una opción a partir de la dependencia o institución del proponente.
 3. El administrador confirma la clasificación y la aceptación.
-4. El sistema compone el valor final de `categoria` combinando el prefijo elegido (`literaria` / `academica`) con el sufijo ya derivado en el envío (`_uady` / `_externo`).
+4. El sistema registra la clasificación elegida (`literaria` / `academica`) **y** la procedencia que el administrador confirma o corrige (`is_participante_uady`). Son dos datos, no un valor compuesto: el conteo por categoría de `DetallesConvocatoria` agrupa por los dos por separado (`Modelo de datos - Eventos` §3.6), y una cadena `literaria_uady` no se puede agrupar por una de sus mitades sin partirla. La etiqueta que se lee en pantalla —«Literaria · UADY»— se compone al mostrar y no se almacena, igual que el folio.
 5. El sistema cambia la propuesta a `aceptada`, registra la fecha de revisión y el revisor.
-6. El sistema crea una `Actividad` en estado `sin_horario`, copiando nombre, organiza, tipo de actividad y edición desde la propuesta.
-7. El sistema marca la propuesta como pendiente de notificación (`resultado_notificado = false`) para incluirla en el siguiente lote (CU-EVT-010).
-8. El sistema confirma al administrador que la propuesta fue aceptada.
+6. El sistema marca la propuesta como pendiente de notificación (`resultado_notificado = false`) para incluirla en el siguiente lote (CU-EVT-010).
+7. El sistema confirma al administrador que la propuesta fue aceptada.
+
+> [!warning] Corrección del 2026-09-03 — aceptar **no crea ninguna `Actividad`**
+> Este flujo decía en su paso 6 que aceptar «crea una `Actividad` en estado `sin_horario`».
+> Está escrito contra un modelo que `Modelo de datos - Eventos` §3.1 ya descartó: **no existe
+> tal entidad**, porque duplicaría el estado de la solicitud y obligaría a mantener los dos
+> sincronizados. «Sin horario» es un estado **derivado** — no hay filas en
+> `ProgramacionActividad` (§3.3)—, no una columna.
+>
+> El nombre además ya está tomado y significa otra cosa: en `apps/eventos/models.py`,
+> `Actividad` es el enrutador polimórfico que se crea al **enviar** la propuesta, uno por cada
+> uno de los ocho tipos (`ADR-0009`).
+>
+> Lo que §3.2 sí pide crear al aceptar es `SolicitudesAprobadas`, cuya razón de ser es darle a
+> `ProgramacionActividad` una clave foránea real hacia lo aprobado. Como `PRG` no está
+> construido, hoy sería una tabla sin ningún consumidor cuyas dos columnas repiten
+> `fecha_revision` y `revisado_por`: se crea cuando llegue quien la necesita.
 
 ## Flujos alternos
 
@@ -77,15 +92,24 @@ Desde el detalle de una propuesta (CU-EVT-008), el administrador decide emitir s
 4. El sistema cambia la propuesta a `rechazada`, registra la fecha de revisión y el revisor.
 5. El sistema marca la propuesta como pendiente de notificación (`resultado_notificado = false`) para incluirla en el siguiente lote.
 
+> [!note] Cómo «el sistema solicita el texto», resuelto el 2026-09-03
+> El paso 2 de A1 y de A2 es una **ventana** que se abre al elegir la acción, como en el prototipo (`prototipo/EVT/administradores/admin-evt-detalle-propuesta.html`), y no un recuadro permanentemente abierto en el panel del dictamen.
+>
+> La razón es la frecuencia: el desenlace normal es aceptar, y un campo «qué debe corregir, o por qué se rechaza» siempre a la vista pone el caso excepcional delante del habitual y obliga a un solo texto a servir para dos cosas que no se escriben igual. Cada acción pregunta lo suyo, y solo cuando se eligió.
+>
+> **Se abre por dos caminos.** Con JavaScript la abre Alpine al pulsar el botón. Sin él, el botón envía el dictamen sin texto, el servicio lo rechaza por `E3` y la vista devuelve la pantalla con la ventana ya abierta y el aviso dentro. Se implementa en `apps/eventos/templates/eventos/parciales/modal_dictamen.html`, que lo explica.
+>
+> La clasificación de **aceptar** (paso 2 del flujo principal) no va en ventana: son dos opciones excluyentes que caben a la vista en el propio panel, y esconderlas detrás de un clic no confirma nada que no confirme ya el botón.
+
 ### A3. Cambiar un dictamen ya emitido (re-dictamen)
 
 1. El administrador abre una propuesta cuyo dictamen ya fue emitido (`aceptada` o `rechazada`) y elige cambiarlo.
-2. El sistema verifica que el administrador tiene permiso para re-dictaminar; si no lo tiene, deniega la acción (ver E2).
+2. El sistema verifica que quien lo intenta es el **operador de la plataforma** —el superusuario, `ADR-0005`—; si no lo es, deniega la acción (ver E2).
 3. El sistema solicita doble verificación de la acción.
 4. Si el cambio pasa de `aceptada` a `rechazada`, el sistema exige obligatoriamente el `motivo_rechazo`.
 5. El administrador confirma.
 6. El sistema aplica el nuevo dictamen y, si la propuesta ya había sido notificada antes (`fecha_resultado_notificado` no nula), restablece `resultado_notificado = false` para que el cambio se comunique como **actualización** en el siguiente lote.
-7. Si el cambio implica pasar de `aceptada` a otro estado, el sistema marca la `Actividad` asociada como `cancelada`.
+7. Si el cambio implica pasar de `aceptada` a otro estado, la propuesta deja de estar aprobada y por tanto deja de ser programable. No hay ninguna `Actividad` que marcar: ver la corrección del flujo principal. Cuando exista `PRG`, es aquí donde se liberan sus `ProgramacionActividad` (`Modelo de datos - Eventos` §3.2).
 
 ## Flujos de excepción
 
@@ -95,10 +119,29 @@ Desde el detalle de una propuesta (CU-EVT-008), el administrador decide emitir s
 2. El sistema advierte al administrador del cupo alcanzado, pero **no bloquea** la aceptación (permite mantener propuestas en reserva ante posibles bajas).
 3. El administrador decide confirmar o cancelar la aceptación.
 
+> [!note] Todavía no construido (2026-09-03)
+> El aviso necesita los cuatro `cupo_*` de `DetallesConvocatoria` (`Modelo de datos - Eventos`
+> §3.6), y esos son de **CU-EVT-001** —configurar la convocatoria—, que no está construido: hoy
+> `ConfiguracionConvocatoria` solo lleva el prefijo del folio. Se dejó fuera a sabiendas y no se
+> pierde nada mientras tanto: el propio §3.6 dice que los cupos **no se consumen ni se hacen
+> cumplir**, son una meta de planeación, y esta excepción explícitamente no bloquea la
+> aceptación. Entra con `CU-EVT-001`.
+
 ### E2. Sin permiso para re-dictaminar
 
-1. En el paso 2 de A3, el sistema detecta que el administrador no tiene permiso para cambiar un dictamen ya emitido.
-2. El sistema deniega la acción y muestra el dictamen vigente sin alterarlo.
+1. En el paso 2 de A3, el sistema detecta que quien lo intenta administra la feria pero **no es el operador de la plataforma**.
+2. El sistema deniega la acción y muestra el dictamen vigente sin alterarlo, diciendo a quién corresponde pedírselo.
+
+> [!note] Quién puede re-dictaminar, resuelto el 2026-09-03
+> Este CU pedía «un permiso para re-dictaminar» sin decir cuál, y `ADR-0004` no define ningún
+> nivel entre administrar una feria y ser su dueño. Se resolvió con el escalón que sí existe por
+> encima de los dos: el **operador de la plataforma** (`ADR-0005`), que es el superusuario de
+> Django. La razón es que un dictamen emitido pudo salir ya por correo, y corregirlo obliga a
+> comunicar una rectificación a alguien que quizá ya organizó su viaje — no es la misma acción
+> que emitirlo, y no debe estar al alcance del mismo reflejo.
+>
+> La comprobación vive en `servicios/dictamen.py` y no en la vista, para que un comando de
+> `manage.py` se tope con ella igual que un POST.
 
 ### E3. Motivo o mensaje obligatorio faltante
 

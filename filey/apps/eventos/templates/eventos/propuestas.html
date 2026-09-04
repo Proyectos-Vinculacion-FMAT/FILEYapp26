@@ -1,0 +1,152 @@
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}Eventos · Propuestas{% endblock %}
+
+{% comment %} ===========================================================
+   A1 · La cola de propuestas (CU-EVT-007) con sus conteos (CU-EVT-011).
+
+   Es la portada del módulo y no una pantalla más: `url_panel` apunta
+   aquí. `STD` sí tiene un resumen aparte de sus colas porque resume tres
+   distintas; aquí solo hay una, así que una portada intermedia sería una
+   pantalla de paso.
+
+   La pantalla son **tres bloques y en este orden**: cómo va la
+   convocatoria (las cuatro cifras), con qué se recorta (los filtros, los
+   tres controles juntos y no repartidos por la página) y qué salió (la
+   tabla dentro de su tarjeta). Antes los filtros iban en dos renglones
+   que se veían como dos formularios distintos y la tabla flotaba sin
+   marco, que es lo que hacía que la pantalla se leyera desordenada.
+
+   Las cuatro cifras de arriba **no enlazan a ninguna parte**, al revés
+   que las del panel de `STD`. Ahí cada tarjeta es la puerta a otra
+   pantalla; aquí la lista que filtrarían ya está debajo, y los chips
+   hacen ese trabajo diciendo además cuántas hay. Dos formas de aplicar
+   el mismo filtro en la misma pantalla es una de más.
+
+   Todos los filtros van por GET, para que una cola filtrada se pueda
+   pegar en un correo y volver atrás no reenvíe nada.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Propuestas — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Propuestas{% endblock %}
+{% block encabezado_texto %}
+  Revisa, dictamina y da seguimiento a lo que ha llegado a
+  {{ convocatoria.nombre }}.
+{% endblock %}
+
+{% block contenido %}
+
+{% comment %} ── CU-EVT-011 · cómo va la convocatoria ────────────────
+   Cuatro números y no cinco, porque «pendiente» y «cambios solicitados»
+   contestan lo mismo: siguen esperando algo del comité. El desglose fino
+   está en los chips, que es donde sirve. {% endcomment %}
+<div class="stat-grid">
+  <div class="stat-card accent-blue">
+    <span class="k">Recibidas</span>
+    <span class="v">{{ resumen.recibidas }}</span>
+    <span class="foot">En esta convocatoria</span>
+  </div>
+  <div class="stat-card accent-warn">
+    <span class="k">Por revisar</span>
+    <span class="v">{{ resumen.por_revisar }}</span>
+    <span class="foot">Pendientes o con cambios pedidos</span>
+  </div>
+  <div class="stat-card accent-ok">
+    <span class="k">Aceptadas</span>
+    <span class="v">{{ resumen.aceptadas }}</span>
+    <span class="foot">Listas para programar</span>
+  </div>
+  <div class="stat-card accent-err">
+    <span class="k">Rechazadas</span>
+    <span class="v">{{ resumen.rechazadas }}</span>
+    <span class="foot">Con motivo registrado</span>
+  </div>
+</div>
+
+{% comment %} Los cuatro filtros del caso de uso, en un solo bloque: los
+   chips y el buscador vienen del componente común y los dos desplegables
+   propios de `EVT` entran por `filtros_avanzados`, que el componente
+   pinta entre la barra y la cuenta. Ver `componentes/filtros.html`.
+   {% endcomment %}
+<div class="filtros-panel">
+  {% include "componentes/filtros.html" with nombre="propuesta" plural="propuestas" url_limpia=url_limpia etiqueta_busqueda="Buscar por folio, proponente o título" placeholder="Folio, proponente o título…" filtros_avanzados="eventos/parciales/filtros_avanzados.html" %}
+</div>
+
+{% if propuestas %}
+  {% comment %} La tabla dentro de una tarjeta, como en el prototipo: sin
+     marco se lee como texto suelto sobre el fondo gris del panel. El
+     `.tabla-envoltura` es lo que la deja desplazarse a lo ancho en
+     pantalla chica en vez de empujar la página entera. {% endcomment %}
+  <div class="card tabla-envoltura">
+    <table class="table tabla-propuestas">
+      <thead>
+        <tr>
+          <th scope="col">Folio</th>
+          <th scope="col">Actividad</th>
+          <th scope="col">Proponente</th>
+          <th scope="col">Categoría</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Recibida</th>
+          {% comment %} Sin rótulo, pero con nombre para quien navega a
+             oídas: una columna de acciones sin encabezado accesible es
+             una celda muda al final de cada fila. {% endcomment %}
+          <th scope="col"><span class="visualmente-oculto">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in propuestas %}
+          <tr>
+            <td class="folio">{{ p.folio }}</td>
+            <td>
+              {% comment %} El tipo va **debajo** del título y no en su
+                 propia columna: es un atributo de la actividad, no otro
+                 dato de la fila, y como columna sumaba una séptima de
+                 texto que era lo que dejaba la tabla apretada. {% endcomment %}
+              <strong class="celda-titulo">{{ p.titulo_actividad }}</strong>
+              <span class="celda-apoyo">{{ p.actividad.tipo }}</span>
+            </td>
+            <td>
+              {% comment %} La persona y la institución que representa: la
+                 misma persona propone una vez por su universidad y otra
+                 por su editorial (§2.1), así que el nombre solo no dice
+                 de parte de quién viene. {% endcomment %}
+              <strong class="celda-titulo">{{ p.persona.nombre_completo }}</strong>
+              <span class="celda-apoyo">{{ p.institucion }}</span>
+            </td>
+            {% comment %} Vacía mientras nadie la haya aceptado: la categoría
+               la asigna el dictamen, no el envío. Un guion y no una celda en
+               blanco, para que se lea como «todavía nada» y no como un fallo
+               de la tabla. {% endcomment %}
+            <td class="celda-categoria">{{ p.categoria_completa|default:"—" }}</td>
+            <td>{% include "eventos/parciales/badge_estado.html" with propuesta=p %}</td>
+            <td class="celda-fecha">{{ p.fecha_de_solicitud|date:"j M Y" }}</td>
+            <td class="celda-accion">
+              <a class="btn btn-ghost btn-row"
+                 href="{% url 'eventos:detalle_propuesta' solicitud_id=p.pk %}">
+                Revisar
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  {% comment %} E1 · la lista vacía conserva los filtros para poder
+     ajustarlos, y se distingue de «todavía no llega ninguna», que es otra
+     cosa y no se arregla tocando los filtros. {% endcomment %}
+  <div class="note note-info">
+    <div class="ico" aria-hidden="true">📭</div>
+    <div>
+      {% if hay_filtros %}
+        Ninguna propuesta cumple estos filtros. Ajústalos o quítalos para
+        ver todas.
+      {% else %}
+        Esta convocatoria todavía no ha recibido propuestas.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

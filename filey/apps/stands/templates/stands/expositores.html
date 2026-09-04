@@ -23,7 +23,7 @@
 
 {% block contenido %}
 
-{% include "stands/parciales/filtros.html" with nombre="expositor" plural="expositores" url_limpia=url_limpia etiqueta_busqueda="Buscar por nombre de la editorial o por correo" placeholder="Buscar editorial o correo" %}
+{% include "componentes/filtros.html" with nombre="expositor" plural="expositores" url_limpia=url_limpia etiqueta_busqueda="Buscar por nombre de la editorial o por correo" placeholder="Buscar editorial o correo" %}
 
 {% if expositores %}
   <table class="table">

@@ -688,6 +688,25 @@ desde ahí lo que en `EVT` es una solicitud aprobada. `TAL` ya no —se homolog�
 patrón el 2026-08-28: ver
 [`TAL/Modelo de datos - Talleres.md`](<../TAL/Modelo%20de%20datos%20-%20Talleres.md>) §3.
 
+> [!note] En Django estos atributos son **columnas de `Solicitudes_EVT`**, no una tabla aparte
+> Decisión del 2026-09-03, al construir `CU-EVT-007` a `009`. Esta sección describe una relación
+> **uno a uno obligatoria, con la fila creada al enviarse la solicitud** — y eso es exactamente
+> la definición de una columna, con un `JOIN` de más. `estado` además ya vivía en `Solicitud`
+> desde `CU-EVT-002`, así que separar el resto habría dejado el estado del dictamen lejos de su
+> propio motivo.
+>
+> Lo que la separación compraba —distinguir lo que escribe el aplicante de lo que escribe el
+> administrador— se conserva en el código con una cabecera de sección y no con dos tablas. Es el
+> mismo trato que `STD` le da a su `Solicitud`.
+>
+> Tres nombres cambian, y por regla del repositorio y no por gusto:
+>
+> | Aquí | En `apps/eventos/models.py` | Por qué |
+> | --- | --- | --- |
+> | `is_participante_uady` | `es_uady_confirmado` | Los identificadores van en español (regla 7 de `CLAUDE.md`), y lo que lo distingue de `es_uady` es que está confirmado. |
+> | `ejemplar_fisico_entregado` | — | No construido: es `CU-EVT-012`, fuera del alcance de esta entrega. |
+> | `titulo_final`, `organizador_final`, `es_apta_juvenil`, `en_cartelera_informal` | — | No construidos: ninguno tiene todavía pantalla que los escriba, y una columna que nadie llena miente sobre lo que el sistema hace. |
+
 ### 3.2 SolicitudesAprobadas
 
 Registro de las solicitudes que pasaron el dictamen. **Existir aquí equivale a estar

@@ -1,0 +1,29 @@
+{% comment %} ===========================================================
+   El estado de una propuesta, como distintivo.
+
+   Contexto que espera:
+
+     propuesta   la Solicitud
+
+   Las cinco clases `.badge-*` ya existen en `filey.css` y vienen del
+   prototipo de EVT, que es donde nacieron. Que la traducción de estado a
+   clase viva en una plantilla y no en la vista es el contrato del
+   proyecto: una vista expone `estado`, nunca `clase_css`.
+
+   Es gemelo de `stands/parciales/badge_estado.html` y no el mismo
+   archivo, a propósito: `EVT` tiene un quinto estado —`cancelada`— que
+   `STD` no, y un vertical no incluye la plantilla de otro (regla 4 de
+   `CLAUDE.md`). Lo que sí comparten es el CSS, que es donde estaba la
+   duplicación que importaba.
+   =========================================================== {% endcomment %}
+{% if propuesta.estado == 'pendiente' %}
+  <span class="badge badge-pending">Pendiente</span>
+{% elif propuesta.estado == 'aceptada' %}
+  <span class="badge badge-accepted">Aceptada</span>
+{% elif propuesta.estado == 'rechazada' %}
+  <span class="badge badge-rejected">Rechazada</span>
+{% elif propuesta.estado == 'cancelada' %}
+  <span class="badge badge-closed">Cancelada</span>
+{% else %}
+  <span class="badge badge-changes">Cambios solicitados</span>
+{% endif %}

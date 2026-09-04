@@ -99,6 +99,18 @@ a:hover { text-decoration: underline; }
    estar oculto al cargar aparece y desaparece de un parpadeo. */
 [x-cloak] { display: none !important; }
 
+/* `hidden` tiene que esconder **siempre**, y por eso lleva `!important`:
+   el navegador lo aplica con `display: none` de su hoja de estilos, que
+   pierde contra cualquier `display` nuestro —`.btn` es `inline-flex`, y
+   un botón escondido se seguía viendo—.
+
+   Es lo que sostiene el patrón de esconder con el servidor y descubrir
+   con Alpine: la plantilla pinta `hidden` según el estado inicial y
+   Alpine quita el atributo con `:hidden`. `x-cloak` no sirve para eso —
+   sin JavaScript esconde para siempre— y `x-show` tampoco — sin
+   JavaScript no esconde nada—. */
+[hidden] { display: none !important; }
+
 /* ===================== Top bar ===================== */
 .topbar {
   background: var(--color-azul-institucional);
@@ -597,6 +609,12 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .table th, .table td { text-align: left; padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--gris-200); }
 .table th { background: var(--gris-050); color: var(--gris-700); font-size: 12.5px; text-transform: uppercase; letter-spacing: .5px; }
 .table tr:hover td { background: var(--azul-050); }
+/* El folio, destacado dentro de la tabla. Se trae de
+   `prototipo/common/styles-base.css` con el mismo nombre y los mismos
+   valores al portar la cola de propuestas de EVT, que es la primera
+   pantalla servida que lo enseña: es la columna con la que se nombra una
+   propuesta en voz alta y en cualquier trámite posterior. */
+.table .folio { font-weight: 700; color: var(--color-azul-institucional); }
 
 /* .form-actions · prototipo/common/styles-base.css */
 .form-actions {
@@ -1753,3 +1771,268 @@ label.evt-check {
 .acepta-txt { font-size: 14px; color: var(--gris-700); line-height: 1.55; }
 .acepta-txt strong { color: var(--color-azul-institucional-enfoque); }
 .acepta-txt small { display: block; margin-top: 6px; font-size: 12.5px; color: var(--gris-500); }
+
+
+/* =========================================================
+   EVT · el panel de propuestas del administrador (A1 y A2)
+   =========================================================
+   Portado de `prototipo/EVT/administradores/`. Lo que se añade sobre el
+   prototipo son las tres cosas que allá no existían: los filtros
+   avanzados, el modo de edición de los textos y la ficha de datos en
+   solo lectura, que en la maqueta eran `<input readonly>` y aquí no
+   tienen por qué ser campos —nadie los va a escribir—.
+   =========================================================  */
+
+/* ── A1 · La cola ──────────────────────────────────────────── */
+
+/* Los cuatro controles del filtro se leen como **un** bloque: chips y
+   buscador arriba, los dos desplegables debajo, y la cuenta al pie. Antes
+   los dos desplegables iban en un `.toolbar-row` suelto —el mismo que usa
+   una barra de acciones— y se leían como otro formulario que no tenía que
+   ver con el de arriba. */
+.filtros-panel { margin-bottom: 22px; }
+.filtros-panel .filtros-cuenta { margin-bottom: 0; }
+
+/* Alineados por la **caja** y no por la etiqueta: las dos etiquetas y el
+   botón tienen alturas distintas, y alinear por arriba dejaba el botón
+   flotando a media altura del primer desplegable. `--alto-etiqueta` es la
+   misma medida con la que `.multi-fila` resuelve lo mismo. */
+.filtros-avanzados {
+  display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.filtros-avanzados .field { margin-bottom: 0; flex: 0 1 260px; min-width: 190px; }
+.filtros-avanzados > .btn { flex: 0 0 auto; margin-top: var(--alto-etiqueta, 27px); }
+
+@media (max-width: 620px) {
+  .filtros-avanzados .field { flex: 1 1 100%; }
+  .filtros-avanzados > .btn { margin-top: 0; width: 100%; }
+}
+
+/* La tabla dentro de su tarjeta. `overflow-x` es lo que la deja
+   desplazarse a lo ancho en una pantalla estrecha en vez de estirar la
+   página entera y sacar la barra lateral de sitio; el `border-radius` de
+   `.card` la recorta sola. */
+.tabla-envoltura { overflow-x: auto; }
+.tabla-envoltura .table { min-width: 720px; }
+/* Sin borde en la última fila: el marco de la tarjeta ya lo pone, y los
+   dos juntos se ven como una línea doble. */
+.tabla-envoltura .table tbody tr:last-child td { border-bottom: none; }
+
+/* Una celda de dos renglones: el dato y lo que lo acompaña. Se usa igual
+   en «Actividad» (título + tipo) y en «Proponente» (persona +
+   institución), que es lo que permitió bajar de ocho columnas a siete sin
+   quitar ningún dato. */
+.celda-titulo { display: block; color: var(--tinta); font-weight: 600; line-height: 1.35; }
+.celda-apoyo { display: block; margin-top: 2px; font-size: 12.5px; color: var(--gris-500); }
+.celda-categoria { color: var(--gris-700); }
+/* La fecha nunca parte en dos renglones: «3 sep» y «2026» separados no se
+   leen como una fecha. */
+.celda-fecha { white-space: nowrap; color: var(--gris-500); font-size: 13px; }
+.celda-accion { text-align: right; white-space: nowrap; }
+.tabla-propuestas th:last-child { text-align: right; }
+/* El título de la actividad es lo que se busca al recorrer la tabla, así
+   que se le da el ancho y a las columnas cortas se les quita. */
+.tabla-propuestas th:nth-child(2) { width: 26%; }
+.tabla-propuestas th:nth-child(3) { width: 22%; }
+
+/* Un rótulo que solo existe para quien navega a oídas. */
+.visualmente-oculto {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ── A2 · El expediente ────────────────────────────────────── */
+
+/* El encabezado del detalle lleva tres cosas en el mismo renglón: el
+   título, el estado y la vuelta a la lista. En pantalla chica el lado
+   derecho baja entero y se alinea a la izquierda con el título. */
+.page-head-detalle {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px 24px; flex-wrap: wrap;
+}
+.page-head-detalle__texto { min-width: 0; flex: 1 1 320px; }
+.page-head-detalle__lado {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  /* Baja a la altura de la línea del folio, no a la del título: así el
+     distintivo queda a la altura del dato que califica. */
+  padding-top: 4px;
+}
+
+/* La columna izquierda es el formulario de la corrección, así que hay que
+   deshacerle el margen que Django no pone pero el navegador sí. */
+.expediente { margin: 0; min-width: 0; }
+
+/* La barra que abre el modo de edición. Va **encima** de las secciones y
+   no dentro del panel del dictamen —que es donde la pone el prototipo—
+   porque lo que hace es sobre esta columna: un botón que desbloquea
+   recuadros tiene que estar donde están los recuadros. */
+.barra-edicion {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px 18px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.barra-edicion__que { margin: 0; font-size: 13.5px; color: var(--gris-700); flex: 1 1 300px; }
+.barra-edicion__que .hint { display: block; margin-top: 3px; }
+.barra-edicion__acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Un texto de la propuesta, en su recuadro. En solo lectura es una caja
+   quieta —fondo gris, sin cursor de escritura— y al editar recupera el
+   aspecto de un campo de verdad. La diferencia tiene que ser visible de
+   un vistazo: es lo único que dice si lo que se teclee se va a guardar. */
+.campo-editable textarea[readonly] {
+  background: var(--gris-050); border-color: var(--gris-200);
+  color: var(--gris-700); cursor: default; resize: none;
+}
+.campo-editable textarea[readonly]:focus {
+  outline: 2px solid var(--gris-300); outline-offset: 2px; box-shadow: none;
+}
+.campo-editable textarea:not([readonly]) {
+  background: var(--color-blanco); border-color: var(--azul-600);
+  box-shadow: 0 0 0 3px var(--azul-100);
+}
+.campo-editable__tope { text-align: right; }
+
+/* El dato que solo se lee, en la misma caja que el que se corrige. Es lo
+   que dibuja el prototipo (`admin-evt-detalle-propuesta.html`) y lo que
+   hace legible el expediente de un vistazo: rótulo arriba, valor dentro
+   de su recuadro, dos por renglón. Antes eran parejas `<dt>/<dd>` sin
+   caja y las tres secciones se leían como un párrafo corrido.
+
+   Lo que **no** se hereda de `input[readonly]` es el gris apagado de un
+   control bloqueado: aquí el valor es el contenido de la pantalla, no un
+   campo deshabilitado, y tiene que ir con tinta de texto. Tampoco el
+   `cursor: not-allowed`, que anuncia una avería donde no la hay —el
+   texto se selecciona y se copia, que es justo lo que se hace con un
+   correo o un teléfono—. */
+.campo-lectura input[readonly],
+.campo-lectura textarea[readonly] {
+  background: var(--gris-050); border-color: var(--gris-200);
+  color: var(--tinta); cursor: default; resize: none;
+}
+.campo-lectura input[readonly]:focus,
+.campo-lectura textarea[readonly]:focus {
+  outline: 2px solid var(--gris-300); outline-offset: 2px;
+  border-color: var(--gris-200); box-shadow: none;
+}
+/* El correo lleva debajo su propio enlace para escribir: dentro de una
+   caja de solo lectura el valor deja de ser pulsable, y avisar a quien
+   propone es lo que más se hace desde esta pantalla. */
+.campo-lectura .hint a { color: var(--azul-600); }
+
+/* Parejas rótulo/valor apretadas, para el **resumen** de un dictamen ya
+   emitido —resultado, categoría, quién y cuándo—: ahí no hay campos que
+   corregir y la caja de `.campo-lectura` sería un recuadro por cada dato
+   en una columna angosta. El expediente de la izquierda ya no la usa. */
+.ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; margin: 0 0 16px; }
+.ficha:last-child { margin-bottom: 0; }
+.ficha > div { min-width: 0; }
+.ficha dt {
+  font-weight: 600; font-size: 12.5px; color: var(--gris-500);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px;
+}
+.ficha dd { margin: 0; font-size: 14.5px; color: var(--tinta); overflow-wrap: anywhere; }
+.ficha dd .hint { display: block; }
+.ficha-apilada { grid-template-columns: 1fr; gap: 12px; }
+
+@media (max-width: 620px) { .ficha { grid-template-columns: 1fr; } }
+
+/* Un texto largo que solo se lee —los comentarios de quien propone, el
+   motivo de un rechazo ya emitido—. No es un recuadro editable, así que
+   no se le da forma de campo; lo que necesita es respirar y una guarda a
+   la izquierda que lo separe del resto. */
+.texto-leido {
+  font-size: 14px; color: var(--gris-700); line-height: 1.6;
+  border-left: 3px solid var(--gris-200); padding-left: 14px;
+}
+.texto-leido p:last-child { margin-bottom: 0; }
+
+/* Cada persona de la ficha, con su semblanza dentro. El recuadro las
+   separa: sin él, cinco autores seguidos son diez recuadros de texto en
+   fila y no se ve dónde acaba uno. */
+.persona-ficha {
+  border: 1px solid var(--gris-200); border-radius: var(--radio-sm);
+  background: var(--gris-050); padding: 14px 16px; margin-bottom: 14px;
+}
+.persona-ficha:last-child { margin-bottom: 0; }
+.persona-ficha__head {
+  display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.persona-ficha__rol {
+  font-size: 11.5px; font-weight: 800; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--color-azul-institucional);
+}
+.persona-ficha__nombre { font-size: 15px; color: var(--tinta); }
+.persona-ficha .field { margin-bottom: 0; }
+/* Sobre el fondo gris de la tarjeta, la caja en solo lectura tiene que
+   ser blanca para seguir leyéndose como una caja. */
+.persona-ficha .campo-editable textarea[readonly] { background: var(--color-blanco); }
+
+/* Los adjuntos, uno debajo de otro y con el mismo hueco entre ellos que
+   el prototipo pone a mano en cada uno. */
+.lista-adjuntos { display: flex; flex-direction: column; gap: 10px; }
+/* El adjunto entero es el enlace, no el nombre del archivo: se abre una
+   vez por cada documento de cada propuesta, y un blanco de 14 px de alto
+   dentro de un recuadro de 60 es trabajo de puntería (ley de Fitts). */
+a.file-mock { color: inherit; }
+a.file-mock:hover { text-decoration: none; }
+a.file-mock:focus-visible { outline: 2px solid var(--color-dorado-encabezado); outline-offset: 2px; }
+.file-mock__flecha { margin-left: auto; color: var(--azul-600); font-size: 15px; }
+
+.sin-nada { margin: 0; color: var(--gris-500); font-size: 14px; }
+
+/* ── A2 · El panel del dictamen ────────────────────────────── */
+
+.columna-dictamen { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* Pegado al desplazar, como en el prototipo. La decisión se toma al final
+   de una lectura larga, y sin esto hay que volver arriba —o bajar hasta
+   el pie— en cada propuesta.
+
+   `--alto-topbar` + 15 px: la barra superior es fija y sin ese hueco el
+   panel se le mete debajo. */
+.panel-dictamen { position: sticky; top: calc(var(--alto-topbar) + 15px); }
+.panel-dictamen__titulo { margin: 0 0 4px; font-size: 17px; color: var(--color-azul-institucional-enfoque); }
+.panel-dictamen__sub { margin: 0 0 18px; font-size: 13.5px; color: var(--gris-500); }
+
+/* En pantalla chica las dos columnas se apilan (`.info-grid`), y entonces
+   un panel pegado tapa el expediente que hay que leer. */
+@media (max-width: 920px) {
+  .panel-dictamen { position: static; }
+}
+
+/* Lo ya resuelto, separado del formulario por una línea: son dos cosas
+   —lo que se decidió y lo que se puede decidir— y sin la separación se
+   leen como una sola. */
+.resuelto { padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--gris-200); }
+
+.form-dictamen fieldset { border: none; margin: 0 0 16px; padding: 0; }
+.form-dictamen legend {
+  padding: 0; font-weight: 600; font-size: 14px; color: var(--gris-700);
+  margin-bottom: 6px;
+}
+.form-dictamen .radio-row { gap: 18px; }
+
+/* La autodeclaración de quien propone, delante de la casilla que la
+   confirma. Son dos datos distintos —lo que dijo y lo que se comprobó— y
+   el diseño tiene que dejar claro cuál es cuál: por eso lo declarado va
+   en su propia línea, con su rótulo, y no dentro del texto de la casilla.
+   Ver `Solicitud.es_uady` frente a `es_uady_confirmado`. */
+.declaracion {
+  border: 1px solid var(--gris-200); border-radius: var(--radio-sm);
+  background: var(--gris-050); padding: 12px 14px;
+}
+.declaracion__dicho { margin: 0 0 10px; font-size: 14px; color: var(--tinta); }
+.declaracion__k {
+  display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--gris-500); margin-bottom: 2px;
+}
+.declaracion .acepta { padding-top: 10px; border-top: 1px solid var(--gris-200); }
+.declaracion .acepta-txt { font-weight: 600; }
+.declaracion .acepta-txt .hint { display: block; margin-top: 4px; font-weight: 400; }
+
+/* Los tres desenlaces, del mismo ancho y del mismo alto. Que ninguno sea
+   más grande que otro es deliberado: los tres son decisiones del mismo
+   peso, y el tamaño es lo primero que se lee como «éste es el que hay que
+   pulsar». Lo que los distingue es el color. */
+.acciones-dictamen { display: flex; flex-direction: column; gap: 10px; }
