@@ -1,9 +1,15 @@
 {% comment %} ===========================================================
-   La barra de filtros de una cola del panel (A1, A3).
+   La barra de filtros de una cola del panel, para **cualquier** módulo.
+
+   Vivía en `stands/parciales/` hasta que `EVT` necesitó la misma cola:
+   una app vertical no puede incluir la plantilla de otra (regla 4 de
+   `CLAUDE.md`), y copiarla habría dejado dos barras que se separan a la
+   primera corrección. Nada de aquí sabe de qué dominio es la cola — lo
+   que cambia entre una y otra llega por contexto.
 
    Contexto que espera:
 
-     chips        `views.py::_chips_de_estado` — cada estado con su conteo
+     chips        `comun.filtros.chips_de_estado` — cada estado con su conteo
      busqueda     lo que hay escrito en el buscador
      cuantas      cuántas filas se están viendo
      total        cuántas hay en la convocatoria
@@ -11,12 +17,24 @@
      url_limpia   a dónde vuelve «Quitar filtros»
      nombre       cómo se llama una fila: «solicitud», «reserva»
      plural       y cómo se llaman varias
-     etiqueta_busqueda, placeholder   opcionales, si se busca por más que
-                  el nombre (A6 busca también por correo)
+     filtros_extra  opcional — otros filtros puestos, como [{nombre, valor}],
+                  para que buscar no los borre. Su gemelo en los chips es
+                  el `otros=` de `chips_de_estado`.
+     filtros_avanzados  opcional — la ruta de una plantilla con los
+                  controles que solo tiene esa cola (`EVT` filtra además
+                  por tipo de actividad y por categoría). Se pinta en su
+                  propio renglón, **entre** la barra y la cuenta, que es
+                  donde se lee como «más filtros de los mismos» y no como
+                  un formulario suelto. Una cola que no pase nada no
+                  pinta nada y queda exactamente igual que antes.
+     etiqueta_busqueda, placeholder   cómo se nombra lo que se busca.
+                  Los dos tienen omisión genérica: una cola que busca por
+                  algo concreto los pasa, y así el componente no nombra a
+                  ningún dominio.
 
-   `chips` puede venir vacío: A6 no filtra por estado porque solo tiene
-   uno —expositor es quien tiene la solicitud aceptada— y entonces la
-   barra es solo el buscador.
+   `chips` puede venir vacío: una cola con un solo estado no tiene nada
+   que filtrar —la de expositores de `STD` es así— y entonces la barra
+   es solo el buscador.
 
    **Los estados son chips y no un `<select>`.** Son pocos, excluyentes y
    conocidos: desplegados se ve el vocabulario entero sin abrir nada (ley
@@ -59,6 +77,17 @@
     {% if estado_activo %}
       <input type="hidden" name="estado" value="{{ estado_activo }}">
     {% endif %}
+    {% comment %} Y con él cualquier otro filtro que la cola tenga puesto —
+       `EVT` filtra además por tipo de actividad y por categoría—. Sin
+       esto, buscar por texto borraba en silencio los otros dos, que es
+       exactamente lo que el estado ya tenía resuelto. Llega como pares
+       {nombre, valor}; una cola sin filtros extra no pasa nada y aquí no
+       se pinta nada. {% endcomment %}
+    {% for extra in filtros_extra %}
+      {% if extra.valor %}
+        <input type="hidden" name="{{ extra.nombre }}" value="{{ extra.valor }}">
+      {% endif %}
+    {% endfor %}
     {% comment %} El icono es decorativo y la etiqueta la lleva el propio
        control: un `aria-label` en el `<input>` en vez de un `<label>`
        visible, porque el marcador de posición ya dice lo mismo y dos
@@ -66,11 +95,13 @@
        es el nombre accesible. {% endcomment %}
     <span class="ico" aria-hidden="true">🔍</span>
     <input id="filtro-q" type="search" name="q" value="{{ busqueda }}"
-           aria-label="{{ etiqueta_busqueda|default:'Buscar por nombre de la editorial' }}"
-           placeholder="{{ placeholder|default:'Buscar editorial' }}">
+           aria-label="{{ etiqueta_busqueda|default:'Buscar en esta lista' }}"
+           placeholder="{{ placeholder|default:'Buscar…' }}">
     <button class="btn btn-primary btn-row" type="submit">Buscar</button>
   </form>
 </div>
+
+{% if filtros_avanzados %}{% include filtros_avanzados %}{% endif %}
 
 {% comment %} Cuántas se están viendo, y de cuántas. Es la respuesta que un
    filtro tiene que dar y que antes solo daba contando la tabla. {% endcomment %}

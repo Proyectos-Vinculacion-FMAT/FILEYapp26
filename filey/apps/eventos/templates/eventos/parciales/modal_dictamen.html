@@ -1,0 +1,85 @@
+{% comment %} ===========================================================
+   La ventana del desenlace que hay que explicar: pedir cambios y
+   rechazar (`CU-EVT-009` `A1` y `A2`).
+
+   Por qué una modal y no un recuadro fijo en el panel: de cada diez
+   propuestas, en nueve no se escribe nada — el desenlace normal es
+   aceptar—. Un campo «qué debe corregir, o por qué se rechaza» siempre
+   abierto pone el peor caso delante del habitual, y además obliga a un
+   solo texto a servir para dos cosas que no se escriben igual. Aquí cada
+   acción pregunta lo suyo, y solo cuando se eligió.
+
+   Contexto que espera:
+
+     clave          `cambios` o `rechazar` — identifica la ventana
+     titulo, subtitulo, etiqueta, marcador, boton, clase_boton
+     modal_abierto  cuál sale abierta desde el servidor
+     motivo_tecleado  lo que se estaba escribiendo, si el envío rebotó
+     propuesta, form
+
+   **Se abre por dos caminos y los dos acaban aquí.** Con Alpine, el
+   botón del panel pone `modal` y `:hidden` la descubre. Sin JavaScript
+   el botón envía el dictamen sin motivo, el servicio lo rechaza y la
+   vista devuelve la pantalla con `modal_abierto` puesto: entonces el
+   atributo `hidden` no se pinta y la ventana ya viene abierta. Por eso
+   el estado inicial va en `hidden` y no en `x-show` — `x-show` sin
+   Alpine no esconde nada, y `x-cloak` sin Alpine no enseña nada.
+   =========================================================== {% endcomment %}
+<div class="modal-back"
+     {% if modal_abierto != clave %}hidden{% endif %}
+     :hidden="modal !== '{{ clave }}'"
+     @click.self="modal = ''"
+     @keydown.escape.window="modal = ''">
+  {% comment %} El papel de diálogo es del recuadro y no del velo: el velo
+     es el fondo que se pulsa para cerrar. {% endcomment %}
+  <form class="modal" method="post"
+        role="dialog" aria-modal="true"
+        aria-labelledby="modal-{{ clave }}-titulo">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="{{ clave }}">
+
+    <div class="modal-head">
+      <h3 id="modal-{{ clave }}-titulo">{{ titulo }}</h3>
+      <p>{{ subtitulo }}</p>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label for="motivo-{{ clave }}">
+          {{ etiqueta }} <span class="req" aria-hidden="true">*</span>
+        </label>
+        {% comment %} Se pinta a mano y no con el widget del formulario
+           porque las dos ventanas comparten el mismo campo `motivo`: con
+           el widget saldrían dos controles con el mismo `id`, y entonces
+           la etiqueta de una apuntaría al recuadro de la otra. {% endcomment %}
+        <textarea id="motivo-{{ clave }}" name="motivo" rows="6" required
+                  placeholder="{{ marcador }}">{% if modal_abierto == clave %}{{ motivo_tecleado }}{% endif %}</textarea>
+        <span class="hint">Se le manda tal cual. Sé concreto.</span>
+      </div>
+
+      {% if propuesta.esta_dictaminada %}
+        {% comment %} La doble verificación de `A3` paso 3, aquí y no en
+           el panel: es en esta ventana donde se confirma el cambio, y una
+           casilla en la otra punta de la pantalla no protege de nada.
+           {% endcomment %}
+        <div class="field">
+          <label class="acepta" for="confirmar-{{ clave }}">
+            <input type="checkbox" name="confirmar" value="on" id="confirmar-{{ clave }}">
+            <span class="acepta-txt">{{ form.confirmar.label }}</span>
+          </label>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="modal-foot">
+      {% comment %} Un enlace y no un `<button type="button">`: con Alpine
+         cierra sin salir de la pantalla, y sin él vuelve al expediente
+         limpio, que es lo que «cancelar» significa en los dos casos.
+         {% endcomment %}
+      <a class="btn btn-ghost" href="{{ url_detalle }}" @click.prevent="modal = ''">
+        Cancelar
+      </a>
+      <button class="btn {{ clase_boton }}" type="submit">{{ boton }}</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,516 @@
+{% extends "layouts/admin.html" %}
+
+{% block migaja %}
+  <a href="{% url 'eventos:propuestas' convocatoria_id=convocatoria.pk %}">Propuestas</a>
+  › {{ propuesta.folio }}
+{% endblock %}
+
+{% comment %} ===========================================================
+   A2 · El expediente de una propuesta (CU-EVT-008) y su dictamen
+   (CU-EVT-009).
+
+   Una sola pantalla para las dos cosas porque el caso de uso del detalle
+   **es** la antesala del dictamen (paso 6): quien revisa lee y decide sin
+   cambiar de dirección.
+
+   Dos columnas, como el prototipo. A la izquierda el expediente, que se
+   lee de arriba abajo; a la derecha el dictamen, **pegado** al desplazar
+   (`.panel-dictamen`), porque la decisión se toma al final de una
+   lectura larga y bajar hasta el pie para encontrar los botones era
+   trabajo de más en cada propuesta.
+
+   Tres cosas cambiaron respecto de la primera versión, y las tres vienen
+   del prototipo:
+
+   1. **El motivo ya no vive en el panel.** Se pide dentro de la ventana
+      de la acción que lo necesita — ver `parciales/modal_dictamen.html`,
+      que explica cómo se abre con y sin JavaScript.
+   2. **La autodeclaración de la UADY se enseña como declaración.** Lo que
+      dijo quien propone se pinta aparte y con todas sus letras; la
+      casilla de al lado es la confirmación de quien revisa, que es el
+      dato que cuenta (§3.1).
+   3. **La sinopsis y las semblanzas se pueden corregir** sin devolver la
+      propuesta (`servicios/edicion.py`). La columna izquierda entera es
+      el formulario de esa corrección.
+
+   El estado de la pantalla —qué ventana está abierta, si se está
+   editando— vive en un solo `x-data` que envuelve las dos columnas y las
+   ventanas: son las tres cosas que se miran entre sí.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}{{ propuesta.titulo_actividad }} — {{ propuesta.folio }}{% endblock %}
+
+{% comment %} El encabezado se reescribe entero en vez de usar los dos
+   bloques de texto del layout: aquí lleva el distintivo de estado y el
+   botón de volver, y los tres tienen que compartir renglón. {% endcomment %}
+{% block encabezado %}
+<div class="page-head page-head-detalle">
+  <div class="page-head-detalle__texto">
+    <h1>{{ propuesta.titulo_actividad }}</h1>
+    <p>
+      Folio <strong>{{ propuesta.folio }}</strong> ·
+      {{ actividad.tipo }} ·
+      recibida el {{ propuesta.fecha_de_solicitud|date:"j \d\e F \d\e Y" }}
+    </p>
+  </div>
+  <div class="page-head-detalle__lado">
+    {% include "eventos/parciales/badge_estado.html" %}
+    <a class="btn btn-ghost btn-row"
+       href="{% url 'eventos:propuestas' convocatoria_id=convocatoria.pk %}">
+      ← Todas las propuestas
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block contenido %}
+
+{% url 'eventos:detalle_propuesta' solicitud_id=propuesta.pk as url_detalle %}
+
+<div x-data="{ editando: {{ editando|yesno:'true,false' }}, modal: '{{ modal_abierto }}' }">
+<div class="info-grid">
+
+  {% comment %} ── El expediente, que es también el formulario de la
+     corrección. Una sola columna y un solo `<form>`: los dos textos que
+     se pueden corregir están en secciones distintas y guardarlos por
+     separado dejaría media corrección hecha. {% endcomment %}
+  <form method="post" class="expediente">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="corregir">
+
+    <div class="barra-edicion">
+      <p class="barra-edicion__que">
+        <strong>Lo que capturó quien propone.</strong>
+        <span class="hint">
+          La sinopsis y las semblanzas se pueden corregir aquí mismo sin
+          devolver la propuesta; el resto se cambia pidiendo cambios.
+        </span>
+      </p>
+      {% comment %} Con Alpine desbloquea los recuadros en el acto; sin él
+         es un enlace a la misma pantalla en modo edición. Las dos rutas
+         llegan al mismo sitio. {% endcomment %}
+      <a class="btn btn-ghost btn-row" href="?editar=1"
+         {% if editando %}hidden{% endif %} :hidden="editando"
+         @click.prevent="editando = true">✎ Corregir textos</a>
+      <div class="barra-edicion__acciones"
+           {% if not editando %}hidden{% endif %} :hidden="!editando">
+        <a class="btn btn-ghost btn-row" href="{{ url_detalle }}"
+           @click.prevent="editando = false">Cancelar</a>
+        <button class="btn btn-primary btn-row" type="submit">
+          💾 Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    {% comment %} ── 1 · Quién propone (paso 2) ────────────────────
+       El teléfono y la ciudad salen de la cuenta; la institución y el
+       cargo, de **esta** propuesta: la misma persona propone una vez por
+       su universidad y otra por su editorial (§2.1). {% endcomment %}
+    <div class="section-card card">
+      <div class="section-head">
+        <span class="num">1</span>
+        <div>
+          <h3>Datos del proponente</h3>
+          <p>Contacto de quien envía la propuesta</p>
+        </div>
+      </div>
+      {% comment %} Cada dato en su propia caja y dos por renglón, como el
+         prototipo: los seis se leen de un golpe de vista en vez de como un
+         párrafo de parejas. Ninguno lleva `name`, así que no viajan en el
+         POST de la corrección —lo único que se guarda desde esta columna
+         son la sinopsis y las semblanzas (`servicios/edicion.py`)—. {% endcomment %}
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field campo-lectura">
+            <label for="dp-nombre">Nombre completo</label>
+            <input id="dp-nombre" type="text" readonly value="{{ persona.nombre_completo }}">
+          </div>
+          <div class="field campo-lectura">
+            <label for="dp-correo">Correo</label>
+            <input id="dp-correo" type="text" readonly value="{{ persona.correo }}">
+            <span class="hint"><a href="mailto:{{ persona.correo }}">Escribir a quien propone ↗</a></span>
+          </div>
+          <div class="field campo-lectura">
+            <label for="dp-tel">Teléfono</label>
+            <input id="dp-tel" type="text" readonly value="{{ persona.telefono|default:'—' }}">
+          </div>
+          <div class="field campo-lectura">
+            <label for="dp-inst">Dependencia o institución</label>
+            <input id="dp-inst" type="text" readonly value="{{ propuesta.institucion }}">
+          </div>
+          <div class="field campo-lectura">
+            <label for="dp-cargo">Cargo</label>
+            <input id="dp-cargo" type="text" readonly value="{{ propuesta.cargo|default:'—' }}">
+          </div>
+          <div class="field campo-lectura">
+            <label for="dp-lugar">Ciudad y estado</label>
+            <input id="dp-lugar" type="text" readonly value="{% if persona.ciudad or persona.entidad %}{{ persona.ciudad }}{% if persona.ciudad and persona.entidad %}, {% endif %}{{ persona.estado_nombre }}{% else %}—{% endif %}">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% comment %} ── 2 · La actividad (paso 3) ─────────────────────── {% endcomment %}
+    <div class="section-card card">
+      <div class="section-head">
+        <span class="num">2</span>
+        <div>
+          <h3>Datos de la actividad</h3>
+          <p>Lo que se propone hacer</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field campo-lectura">
+            <label for="da-tipo">Tipo de actividad</label>
+            <input id="da-tipo" type="text" readonly value="{{ actividad.tipo }}">
+          </div>
+          <div class="field campo-lectura">
+            <label for="da-organiza">Organiza</label>
+            <input id="da-organiza" type="text" readonly value="{{ propuesta.nombre_organizador_organizacion }}">
+          </div>
+          <div class="field campo-lectura">
+            <label for="da-moderador">Moderador</label>
+            <input id="da-moderador" type="text" readonly value="{{ propuesta.nombre_moderador|default:'—' }}">
+          </div>
+          {% comment %} Sí o No escrito con todas sus letras, y no un par de
+             botones de radio deshabilitados como en el prototipo: un control
+             apagado se lee como una avería, y aquí no hay nada que elegir. {% endcomment %}
+          <div class="field campo-lectura">
+            <label for="da-constancia">Solicita constancia</label>
+            <input id="da-constancia" type="text" readonly
+                   value="{% if propuesta.requiere_constancia %}Sí{% else %}No{% endif %}">
+          </div>
+        </div>
+        {% comment %} A todo lo ancho y fuera de la rejilla —igual que el
+           prototipo—: son varios rótulos seguidos y en media columna se
+           parten en tres renglones. {% endcomment %}
+        <div class="field campo-lectura">
+          <label for="da-publico">Público al que va dirigida</label>
+          <input id="da-publico" type="text" readonly
+                 value="{{ propuesta.publicos_legibles|join:' · '|default:'—' }}">
+        </div>
+
+        {% comment %} La sinopsis es el primero de los dos textos
+           corregibles. Su rótulo depende del tipo: en una presentación es
+           la de la publicación —la que admite el doble de caracteres— y
+           en los otros seis la de la actividad. {% endcomment %}
+        {% include "eventos/parciales/campo_editable.html" with nombre="sinopsis" etiqueta=etiqueta_sinopsis valor=propuesta.sinopsis tope=tope_sinopsis renglones=8 %}
+
+        {% comment %} En su recuadro, como la sinopsis de arriba: los dos son
+           textos de la propuesta y leerlos con formas distintas hacía dudar
+           de cuál se podía corregir. Éste no se corrige —no está en la lista
+           blanca de `edicion.py`— y por eso va en gris quieto y sin `name`. {% endcomment %}
+        {% if propuesta.comentarios %}
+          <div class="field campo-lectura">
+            <label for="da-comentarios">Comentarios de quien propone</label>
+            <textarea id="da-comentarios" rows="4" readonly>{{ propuesta.comentarios }}</textarea>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% comment %} ── 3 · Las personas de la ficha ──────────────────
+       Un solo bloque para los ocho tipos: lo que cambia entre ellos son
+       los rótulos —participante, autor, presentador, editor—, y ésos
+       vienen ya resueltos desde `revision.personas_de`. {% endcomment %}
+    <div class="section-card card">
+      <div class="section-head">
+        <span class="num">3</span>
+        <div>
+          <h3>Participantes</h3>
+          <p>Quiénes intervienen, con su semblanza</p>
+        </div>
+      </div>
+      <div class="section-body">
+        {% for quien in personas %}
+          <div class="persona-ficha">
+            <div class="persona-ficha__head">
+              <span class="persona-ficha__rol">{{ quien.rol }}</span>
+              <strong class="persona-ficha__nombre">{{ quien.nombre }}</strong>
+              {% comment %} Solo los dos tipos de publicación preguntan si
+                 la persona estará presente, así que `None` no se pinta:
+                 «no se preguntó» no es «dijo que no». {% endcomment %}
+              {% if quien.participa is not None %}
+                {% if quien.participa %}
+                  <span class="badge badge-accepted">Asistirá</span>
+                {% else %}
+                  <span class="badge badge-closed">No asistirá</span>
+                {% endif %}
+              {% endif %}
+            </div>
+            {% include "eventos/parciales/campo_editable.html" with nombre=quien.campo_semblanza etiqueta="Semblanza" valor=quien.semblanza tope=tope_semblanza renglones=5 %}
+          </div>
+        {% empty %}
+          <p class="sin-nada">No se capturó ninguna persona.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% comment %} ── 4 · La publicación (A1) ───────────────────────
+       Solo para presentación de libro y de revista. La sinopsis extendida
+       no se repite aquí: es la de la sección 2, que en estos dos tipos
+       admite el doble de caracteres. {% endcomment %}
+    {% if es_publicacion %}
+      <div class="section-card card">
+        <div class="section-head">
+          <span class="num">4</span>
+          <div>
+            <h3>Datos de la publicación</h3>
+            <p>Solo para presentaciones de libro o de revista</p>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="field campo-lectura">
+              <label for="dpu-titulo">Título de la publicación</label>
+              <input id="dpu-titulo" type="text" readonly value="{{ detalle.titulo_publicacion }}">
+            </div>
+            <div class="field campo-lectura">
+              <label for="dpu-rol">El proponente es</label>
+              <input id="dpu-rol" type="text" readonly value="{{ detalle.get_tipo_presentador_display }}">
+            </div>
+            <div class="field campo-lectura">
+              <label for="dpu-editorial">Editorial</label>
+              <input id="dpu-editorial" type="text" readonly value="{{ detalle.nombre_editorial }}">
+            </div>
+          </div>
+          <p class="hint">
+            La sinopsis de la publicación es la de la sección 2, que en
+            estos dos tipos admite {{ tope_sinopsis }} caracteres.
+          </p>
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} ── 5 · Adjuntos (paso 4) ─────────────────────────── {% endcomment %}
+    <div class="section-card card">
+      <div class="section-head">
+        <span class="num">{% if es_publicacion %}5{% else %}4{% endif %}</span>
+        <div>
+          <h3>Adjuntos</h3>
+          <p>Archivos enviados con la propuesta</p>
+        </div>
+      </div>
+      <div class="section-body">
+        {% if documentos %}
+          <div class="lista-adjuntos">
+            {% for doc in documentos %}
+              {% comment %} El enlace no va a MEDIA_URL —no está montada en
+                 ningún urlconf (ADR-0007)— sino a una vista que comprueba
+                 quién pregunta. `target="_blank"` porque quien revisa abre
+                 varios seguidos y perder la pantalla del dictamen en cada
+                 uno es peor. {% endcomment %}
+              <a class="file-mock"
+                 href="{% url 'eventos:documento' documento_id=doc.pk %}"
+                 target="_blank" rel="noopener">
+                <span class="ico" aria-hidden="true">📄</span>
+                <span class="txt">
+                  <strong>{{ doc.get_tipo_documento_display }}</strong>
+                  <small>
+                    {{ doc.nombre_original|default:"Abrir archivo" }} ·
+                    {{ doc.subido_en|date:"j M Y" }}
+                  </small>
+                </span>
+                <span class="file-mock__flecha" aria-hidden="true">↗</span>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="sin-nada">Esta propuesta no lleva archivos adjuntos.</p>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  {% comment %} ── El panel del dictamen (CU-EVT-009) ──────────────── {% endcomment %}
+  <div class="columna-dictamen">
+    <div class="card card-pad panel-dictamen">
+      <h3 class="panel-dictamen__titulo">
+        {% if propuesta.esta_dictaminada %}Dictamen emitido{% else %}Dictamen{% endif %}
+      </h3>
+      <p class="panel-dictamen__sub">
+        {% if propuesta.esta_dictaminada %}
+          Lo que se resolvió, y quién.
+        {% else %}
+          Resuelve la propuesta. La decisión queda registrada.
+        {% endif %}
+      </p>
+
+      {% comment %} Lo ya resuelto se enseña **antes** del formulario y no
+         en su lugar: quien vuelve a esta pantalla viene casi siempre a
+         consultar qué se decidió, no a rehacerlo. {% endcomment %}
+      {% if propuesta.estado != 'pendiente' %}
+        <div class="resuelto">
+          <dl class="ficha ficha-apilada">
+            <div><dt>Resultado</dt>
+              <dd>{% include "eventos/parciales/badge_estado.html" %}</dd></div>
+            {% if propuesta.categoria %}
+              <div><dt>Categoría</dt><dd>{{ propuesta.categoria_completa }}</dd></div>
+            {% endif %}
+            {% if propuesta.fecha_revision %}
+              <div><dt>Revisada</dt>
+                <dd>{{ propuesta.fecha_revision|date:"j \d\e F \d\e Y, H:i" }}
+                  {% if propuesta.revisado_por %}
+                    <span class="hint">por {{ propuesta.revisado_por.nombre_completo }}</span>
+                  {% endif %}
+                </dd></div>
+            {% endif %}
+          </dl>
+          {% if propuesta.motivo_rechazo %}
+            <div class="field">
+              <label>Motivo del rechazo</label>
+              <div class="texto-leido">{{ propuesta.motivo_rechazo|linebreaks }}</div>
+            </div>
+          {% endif %}
+          {% if propuesta.mensaje_cambios_solicitados %}
+            <div class="field">
+              <label>Cambios pedidos</label>
+              <div class="texto-leido">{{ propuesta.mensaje_cambios_solicitados|linebreaks }}</div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% comment %} Quién puede escribir aquí, y el porqué de cada caso:
+
+         · sin dictaminar → cualquiera que administre la feria;
+         · ya dictaminada → solo el operador de la plataforma, porque el
+           resultado pudo salir ya por correo (A3 y E2).
+
+         La pantalla pregunta lo mismo que el servicio para no ofrecer un
+         botón que va a rebotar, pero **no sustituye** la comprobación:
+         quien mande el POST a mano se topa igual con ella. {% endcomment %}
+      {% if not propuesta.esta_dictaminada or puede_redictaminar %}
+        {% if propuesta.esta_dictaminada %}
+          <div class="note note-gold">
+            <div class="ico" aria-hidden="true">⚠️</div>
+            <div>
+              Estás a punto de <strong>cambiar un dictamen ya emitido</strong>.
+              Si el resultado anterior ya salió, el nuevo se comunicará como
+              una corrección en el siguiente lote.
+            </div>
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate class="form-dictamen">
+          {% csrf_token %}
+
+          {% comment %} La clasificación es lo que el paso 2 pide antes de
+             aceptar, y llega premarcada con lo que ya tuviera: el caso de
+             uso pide **sugerir**, no dejarlo en blanco. Dos opciones
+             excluyentes se enseñan las dos —como en el prototipo— y no
+             detrás de un desplegable que hay que abrir para saber qué
+             ofrece. {% endcomment %}
+          <fieldset class="field">
+            <legend>{{ form.categoria.label }}</legend>
+            <div class="radio-row">
+              {% for valor, etiqueta in form.categoria.field.choices %}
+                <label>
+                  <input type="radio" name="categoria" value="{{ valor }}"
+                         {% if form.categoria.value == valor %}checked{% endif %}>
+                  {{ etiqueta }}
+                </label>
+              {% endfor %}
+            </div>
+            <span class="hint">Solo se aplica al aceptar.</span>
+          </fieldset>
+
+          {% comment %} La autodeclaración, señalada como tal. Lo que dijo
+             quien propone se lee con todas sus letras y **fuera** de la
+             casilla: la casilla es la respuesta de quien revisa, y
+             mezclarlas hacía imposible saber cuál de los dos datos se está
+             viendo. Lo que cuenta para el conteo por categoría es el
+             confirmado (§3.1). {% endcomment %}
+          <div class="field declaracion">
+            <p class="declaracion__dicho">
+              <span class="declaracion__k">Quien propone declaró</span>
+              <strong>
+                {% if propuesta.es_uady %}
+                  Sí pertenece a la UADY
+                {% else %}
+                  No pertenece a la UADY
+                {% endif %}
+              </strong>
+            </p>
+            <label class="acepta" for="{{ form.es_uady_confirmado.id_for_label }}">
+              {{ form.es_uady_confirmado }}
+              <span class="acepta-txt">
+                {{ form.es_uady_confirmado.label }}
+                <span class="hint">
+                  Confírmalo o corrígelo: es tu respuesta la que cuenta para
+                  el conteo por categoría.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          {% if propuesta.esta_dictaminada %}
+            {% comment %} La doble verificación de A3, paso 3. Solo aparece
+               cuando hay algo que deshacer: pedirla en el dictamen de todos
+               los días la convertiría en un reflejo y dejaría de proteger
+               de nada. Las dos ventanas llevan la suya. {% endcomment %}
+            <div class="field">
+              <label class="acepta" for="{{ form.confirmar.id_for_label }}">
+                {{ form.confirmar }}
+                <span class="acepta-txt">{{ form.confirmar.label }}</span>
+              </label>
+            </div>
+          {% endif %}
+
+          {% comment %} Los tres del mismo tamaño y a todo lo ancho del
+             panel: son tres desenlaces del mismo peso y ninguno se elige
+             por ser el botón más grande. Lo que los distingue es el color,
+             que es lo que ya significa algo en el resto del sistema.
+
+             Los dos que piden un texto abren su ventana con Alpine, y sin
+             él envían el dictamen sin motivo: el servicio lo rechaza y la
+             vista devuelve la pantalla con la ventana abierta. Ver
+             `parciales/modal_dictamen.html`. {% endcomment %}
+          <div class="acciones-dictamen">
+            <button class="btn btn-primary btn-block" type="submit"
+                    name="accion" value="aceptar">✓ Aceptar</button>
+            <button class="btn btn-gold btn-block" type="submit"
+                    name="accion" value="cambios"
+                    @click.prevent="modal = 'cambios'">✎ Solicitar cambios</button>
+            <button class="btn btn-danger btn-block" type="submit"
+                    name="accion" value="rechazar"
+                    @click.prevent="modal = 'rechazar'">✕ Rechazar</button>
+          </div>
+        </form>
+      {% else %}
+        {% comment %} E2 · ya resuelta y quien mira no puede rehacerlo. Se
+           dice a quién pedírselo: un "no puedes" sin salida deja a la
+           persona sin siguiente paso. {% endcomment %}
+        <div class="note note-info">
+          <div class="ico" aria-hidden="true">🔒</div>
+          <div>
+            Esta propuesta ya está dictaminada. Cambiar un resultado emitido
+            está reservado al equipo técnico de la plataforma.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="note note-info">
+      <div class="ico" aria-hidden="true">ℹ️</div>
+      <div>
+        <strong>Solicitar cambios</strong> avisa por correo en el momento, para
+        que dé tiempo a corregir antes del cierre. <strong>Aceptar</strong> y
+        <strong>rechazar</strong> se comunican después, en el lote de
+        resultados.
+      </div>
+    </div>
+  </div>
+</div>
+
+{% comment %} Las dos ventanas del desenlace que hay que explicar. Van
+   fuera del `.info-grid` —son `position: fixed` y no una celda más— pero
+   dentro del `x-data`, que es quien sabe cuál está abierta. {% endcomment %}
+{% if not propuesta.esta_dictaminada or puede_redictaminar %}
+  {% include "eventos/parciales/modal_dictamen.html" with clave="cambios" titulo="Solicitar cambios" subtitulo="Quien propone recibe tu mensaje por correo de inmediato." etiqueta="¿Qué debe corregir?" marcador="Falta la semblanza de un participante y precisar la duración estimada…" boton="Enviar solicitud de cambios" clase_boton="btn-gold" %}
+  {% include "eventos/parciales/modal_dictamen.html" with clave="rechazar" titulo="Rechazar propuesta" subtitulo="Registra el motivo. Se comunica en el próximo lote de resultados." etiqueta="Motivo del rechazo" marcador="La propuesta no corresponde al perfil de la convocatoria…" boton="Confirmar rechazo" clase_boton="btn-danger" %}
+{% endif %}
+</div>
+
+{% endblock %}

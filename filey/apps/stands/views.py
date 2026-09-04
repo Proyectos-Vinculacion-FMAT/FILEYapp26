@@ -20,13 +20,16 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.formats import date_format
-from django.utils.http import urlencode
 
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.convocatorias.servicios import registros
 from apps.ferias import permisos
 from apps.ferias.permisos import requiere_admin_feria
 from apps.registros.permisos import requiere_participante
+# Los chips de una cola son los mismos en los seis módulos: viven en
+# `comun` desde que `EVT` estrenó su propia cola de revisión. El alias
+# conserva el nombre con el que las cuatro colas de aquí ya la llaman.
+from comun.filtros import chips_de_estado as _chips_de_estado
 from comun.formatos import pesos
 
 from .formularios import (
@@ -448,64 +451,6 @@ def ajustes_de_la_convocatoria(peticion, convocatoria_id):
             "zona_admin": True,
         },
     )
-
-
-def _chips_de_estado(
-    conteos: dict,
-    opciones,
-    activo: str,
-    busqueda: str,
-    *,
-    total: int | None = None,
-    etiqueta_vacio: str = "Todas",
-) -> list:
-    """La barra de estados de una cola, con cuántas hay en cada uno.
-
-    Sustituye al `<select>` que había: son cinco opciones excluyentes y
-    conocidas, y con la lista desplegada **se ve el vocabulario entero
-    sin abrir nada** (ley de Hick, tope de siete). Además cada una dice
-    su número, que es lo que quien revisa viene a saber —"¿qué necesita
-    de mí hoy?"— sin tener que filtrar para averiguarlo.
-
-    Elegir un estado **es** filtrar: cada chip es un enlace, no un
-    control que después haya que enviar. Un clic en vez de dos, y el
-    filtro sigue siendo compartible por GET.
-
-    :param conteos: ``{valor_del_estado: cuántas}``. Las que no aparecen
-        salen en cero, y eso es información: "Rechazadas 0" dice algo
-        distinto de que la fila no exista.
-    :param opciones: pares ``(valor, etiqueta)``, incluida cualquier
-        pseudo-columna como las reservas vencidas.
-    :param busqueda: se arrastra en el enlace. Cambiar de estado no debe
-        borrar en silencio lo que alguien tecleó.
-    :param total: cuántas hay en «Todas», si no es la suma de los
-        conteos. Hace falta cuando alguna opción no es un estado sino un
-        recorte de otro —las reservas vencidas son `por_confirmar` con el
-        plazo pasado (`RN-12`)—: sumarla contaría dos veces las mismas.
-    :param etiqueta_vacio: cómo se llama el primer chip, el que no lleva
-        parámetro. Es «Todas» en las colas que no filtran de entrada, y
-        la cola de pagos lo cambia porque **entrar ahí ya es filtrar**:
-        su estado natural es «por validar», que es el trabajo del día.
-    """
-    filtro = {"q": busqueda} if busqueda else {}
-    chips = [
-        {
-            "etiqueta": etiqueta_vacio,
-            "cuantas": sum(conteos.values()) if total is None else total,
-            "activo": not activo,
-            "parametros": urlencode(filtro),
-        }
-    ]
-    for valor, etiqueta in opciones:
-        chips.append(
-            {
-                "etiqueta": etiqueta,
-                "cuantas": conteos.get(valor, 0),
-                "activo": valor == activo,
-                "parametros": urlencode({**filtro, "estado": valor}),
-            }
-        )
-    return chips
 
 
 @requiere_admin_feria

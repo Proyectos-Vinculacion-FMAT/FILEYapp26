@@ -1,0 +1,57 @@
+{% comment %} ===========================================================
+   Los otros dos filtros de la cola de propuestas (`CU-EVT-007` paso 4):
+   tipo de actividad y categoría.
+
+   Van en su propio renglón, debajo de los chips y del buscador, y no
+   dentro de la barra: `.searchbox` mide 320 px fijos y es el ancla
+   derecha de esa fila, así que meterle dos desplegables la desarma.
+
+   Son `<select>` y no chips, al revés que el estado, y la razón es el
+   número: ocho tipos más el «todos» pasan del tope de siete opciones que
+   se recorren de un vistazo (ley de Hick); los cinco estados no. Un
+   desplegable cuesta un clic más y a cambio no parte la barra en tres
+   renglones.
+
+   El estado y la búsqueda viajan escondidos, igual que estos dos viajan
+   escondidos en los otros dos controles: los tres se combinan sin que
+   ninguno borre a los demás, y sin JavaScript.
+   =========================================================== {% endcomment %}
+<form class="filtros-avanzados" method="get">
+  {% if estado_activo %}<input type="hidden" name="estado" value="{{ estado_activo }}">{% endif %}
+  {% if busqueda %}<input type="hidden" name="q" value="{{ busqueda }}">{% endif %}
+
+  <div class="field">
+    <label for="filtro-tipo">Tipo de actividad</label>
+    <div class="select-wrap">
+      <select id="filtro-tipo" name="tipo">
+        <option value="">Todos los tipos</option>
+        {% for t in tipos %}
+          <option value="{{ t.nombre }}" {% if t.nombre == tipo_activo %}selected{% endif %}>
+            {{ t }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="filtro-categoria">Categoría</label>
+    <div class="select-wrap">
+      <select id="filtro-categoria" name="categoria">
+        <option value="">Todas las categorías</option>
+        {% for valor, etiqueta in categorias %}
+          <option value="{{ valor }}" {% if valor == categoria_activa %}selected{% endif %}>
+            {{ etiqueta }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  {% comment %} El botón se alinea con las cajas y no con las etiquetas:
+     lo pone en su sitio `--alto-etiqueta`, la misma medida con la que
+     `.multi-fila` alinea su botón de quitar. Y es `.btn-row` como el
+     «Buscar» de la barra de arriba — los dos hacen lo mismo, así que no
+     pueden tener dos tamaños. {% endcomment %}
+  <button class="btn btn-primary btn-row" type="submit">Filtrar</button>
+</form>

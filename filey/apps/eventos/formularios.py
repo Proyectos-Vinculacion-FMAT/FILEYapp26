@@ -7,7 +7,9 @@ negocio** —si la convocatoria admite envíos, si el registro corresponde
 al tipo— vive en `servicios/`, que es a quien llaman estas clases y
 también un comando de `manage.py`.
 
-Son nueve: uno con lo común a los ocho tipos y uno por tipo. No hay un
+Son diez: uno con lo común a los ocho tipos, uno por tipo, y el del
+dictamen (`CU-EVT-009`), que es el único del lado del administrador y por
+eso vive al final, detrás de su propia cabecera. No hay un
 formulario gigante con todo dentro porque los campos de un tipo son
 obligatorios **solo si es el tipo elegido**, y expresar eso en un único
 `clean()` acaba en una escalera de condicionales que nadie puede leer.
@@ -517,3 +519,66 @@ FORMULARIO_POR_TIPO = {
     CatalogoActividades.Nombre.PRESENTACION_LIBRO: PresentacionLibroForm,
     CatalogoActividades.Nombre.PRESENTACION_REVISTA: PresentacionRevistaForm,
 }
+
+
+# ── El lado del administrador (`CU-EVT-009`) ─────────────────
+
+
+class DictamenForm(forms.Form):
+    """Aceptar, solicitar cambios o rechazar una propuesta.
+
+    Un solo formulario para las tres acciones porque las tres salen del
+    mismo panel del detalle y comparten el campo de texto. Cuál se ejecuta
+    lo decide ``accion``.
+
+    **Lo que este formulario no comprueba** es que el texto esté lleno
+    cuando hace falta, ni que la clasificación venga al aceptar: eso lo
+    decide `servicios/dictamen.py`. Es la `E3` del caso de uso, y vive
+    allí para que un comando de `manage.py` no se la pueda saltar —si la
+    regla estuviera aquí, solo la cumpliría quien pase por HTTP—.
+    """
+
+    accion = forms.ChoiceField(
+        choices=[
+            ("aceptar", "Aceptar"),
+            ("cambios", "Solicitar cambios"),
+            ("rechazar", "Rechazar"),
+        ]
+    )
+    categoria = forms.ChoiceField(
+        choices=Solicitud.Categoria.choices,
+        required=False,
+        label="Clasificación",
+        help_text="Es lo que hace contable la propuesta frente a la meta "
+        "de la convocatoria.",
+    )
+    #: Casilla y no un sí/no explícito: **no marcada ya es una respuesta**
+    #: —no es de la UADY— y es la que corresponde a la mayoría. La
+    #: pantalla la trae premarcada con lo que declaró quien propuso
+    #: (`Solicitud.uady_sugerido`), que es lo que el §3.1 llama validar o
+    #: corregir la autodeclaración.
+    es_uady_confirmado = forms.BooleanField(
+        required=False,
+        label="Pertenece a la UADY",
+    )
+    motivo = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "rows": RENGLONES,
+                "placeholder": "Falta la semblanza de un participante y "
+                "precisar la duración estimada…",
+            }
+        ),
+        label="Qué debe corregir, o por qué se rechaza",
+        help_text="Se le manda tal cual. Sé concreto.",
+    )
+    #: La «doble verificación» que pide `A3` paso 3 al cambiar un dictamen
+    #: ya emitido. Solo la pinta la pantalla cuando la propuesta ya está
+    #: resuelta; en el caso normal ni aparece, porque pedir confirmación
+    #: para el trabajo de todos los días la convierte en un reflejo y deja
+    #: de proteger de nada.
+    confirmar = forms.BooleanField(
+        required=False,
+        label="Entiendo que esto cambia un resultado ya emitido",
+    )

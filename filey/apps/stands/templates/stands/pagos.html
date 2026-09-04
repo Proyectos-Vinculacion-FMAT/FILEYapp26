@@ -26,7 +26,7 @@
 
 {% block contenido %}
 
-{% include "stands/parciales/filtros.html" with nombre="pago" plural="pagos" url_limpia=url_limpia %}
+{% include "componentes/filtros.html" with nombre="pago" plural="pagos" url_limpia=url_limpia etiqueta_busqueda="Buscar por nombre de la editorial" placeholder="Buscar editorial" %}
 
 {% if movimientos %}
   <table class="table">

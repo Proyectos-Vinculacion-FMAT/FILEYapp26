@@ -60,6 +60,21 @@ El administrador selecciona una propuesta desde la lista (CU-EVT-007).
 1. En el paso 3, el sistema muestra adicionalmente los campos de publicación: título de la publicación, rol del proponente, autores/editores, editorial, sinopsis extendida e indicador de recepción del ejemplar físico (`ejemplar_fisico_recibido`).
 2. El flujo continúa en el paso 4.
 
+### A2. El administrador corrige la redacción
+
+1. En cualquier punto del flujo, el administrador activa el modo de edición del expediente.
+2. El sistema desbloquea **únicamente** los textos redactados: la sinopsis —de la actividad, o de la publicación en los dos tipos de A1— y la semblanza de cada persona capturada.
+3. El administrador corrige y guarda.
+4. El sistema valida que ningún texto quede vacío y que respete su tope de caracteres, guarda las dos cosas en la misma transacción y regresa al detalle con el aviso de que el dictamen no cambió.
+5. Si algún texto queda vacío o excede su tope, el sistema no guarda nada, conserva lo escrito y explica cuál es el problema.
+
+> [!note] Por qué existe A2, y por qué se queda en esos dos textos
+> `CU-EVT-004` cubre lo que corrige **quien propuso** tras una petición de cambios. A2 es lo otro: la errata, la semblanza en tercera persona, la sinopsis con la que el programa impreso no se puede componer. Devolver la propuesta por eso cuesta un correo, una espera y un reenvío.
+>
+> No alcanza a los nombres, al título ni a los datos del proponente: son la identidad de la propuesta y de su gente, y cambiarlos desde aquí convierte una corrección de estilo en otra propuesta. La autodeclaración de la UADY tampoco: para corregirla ya está `es_uady_confirmado`, que es del dictamen y deja constancia de quién la revisó.
+>
+> Se implementa en `apps/eventos/servicios/edicion.py`. La invariante que sostiene —una persona capturada nunca se queda sin semblanza— es la misma que `formularios.validar_personas` sostiene en el alta.
+
 ## Flujos de excepción
 
 ### E1. Adjunto no disponible

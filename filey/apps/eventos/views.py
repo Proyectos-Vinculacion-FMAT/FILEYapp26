@@ -1,5 +1,15 @@
 """
-Las pantallas de `EVT` (U1 — captura y envío de una propuesta).
+Las pantallas de `EVT`, las dos caras.
+
+**U1**, lo que ve quien propone: capturar y enviar (`CU-EVT-002`) y su
+acuse. **A1 y A2**, lo que ve quien administra: la cola de propuestas con
+sus filtros y sus conteos (`CU-EVT-007`, `CU-EVT-011`) y el detalle desde
+donde se dictamina (`CU-EVT-008`, `CU-EVT-009`). Entre las dos está la
+entrega de adjuntos, que sirve a los dos públicos y por eso no es de
+ninguno (`ADR-0007`).
+
+No son dos módulos ni dos carpetas de plantillas: el rol lo resuelve el
+decorador, no la ubicación del archivo.
 
 Vistas delgadas: traducen HTTP a una llamada de `servicios/` y de vuelta.
 Ninguna decide si una convocatoria admite envíos ni si el registro
@@ -20,16 +30,23 @@ corresponde al tipo — eso vive en los servicios, donde un comando de
    además obliga a que el POST traiga los ocho.
 """
 
+from dataclasses import replace
+
+from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
+from apps.ferias import permisos
+from apps.ferias.permisos import requiere_admin_feria
 from apps.registros.permisos import requiere_participante
+from comun.filtros import chips_de_estado
 from comun.htmx import es_htmx
 
-from .formularios import FORMULARIO_POR_TIPO, SolicitudForm
-from .models import Solicitud
-from .servicios import catalogo, solicitudes
+from .formularios import FORMULARIO_POR_TIPO, DictamenForm, SolicitudForm
+from .models import MAX_SEMBLANZA, Documento, Solicitud
+from .servicios import archivos, catalogo, dictamen, edicion, revision, solicitudes
 
 
 def _convocatoria_de_eventos(convocatoria_id: int) -> Convocatoria:
@@ -190,3 +207,348 @@ def confirmacion(peticion, solicitud_id):
             "anteriores": anteriores,
         },
     )
+
+
+# ── El panel del administrador (`CU-EVT-007`, `008`, `009`, `011`) ──
+
+
+@requiere_admin_feria
+def propuestas(peticion, convocatoria_id):
+    """La cola de propuestas, filtrable (`CU-EVT-007` y `CU-EVT-011`).
+
+    Es la portada del módulo para quien administra: a donde apuntan el
+    "Propuestas" de la barra lateral y la tarjeta del catálogo
+    (`ADR-0006`).
+
+    Los filtros van **en la consulta** y no en la plantilla, por lo mismo
+    que en el catálogo de `FER`: lo que no se pide no debe llegar a la
+    respuesta. Y viajan por `GET` para que una vista filtrada se pueda
+    compartir por su dirección y se pueda volver atrás sin reenviar nada.
+
+    Los conteos de los chips y los del resumen salen del **mismo**
+    diccionario (`revision.resumen`): son la misma pregunta hecha con dos
+    agrupaciones, y calcularlos por separado los dejaría discrepando en
+    cuanto alguien tocara uno.
+    """
+    convocatoria = _convocatoria_de_eventos(convocatoria_id)
+
+    estado = peticion.GET.get("estado", "")
+    tipo = peticion.GET.get("tipo", "")
+    categoria = peticion.GET.get("categoria", "")
+    busqueda = (peticion.GET.get("q") or "").strip()
+
+    numeros = revision.resumen(convocatoria)
+    filas = revision.cola(
+        convocatoria,
+        estado=estado,
+        tipo=tipo,
+        categoria=categoria,
+        busqueda=busqueda,
+    )
+    return render(
+        peticion,
+        "eventos/propuestas.html",
+        {
+            "convocatoria": convocatoria,
+            "propuestas": filas,
+            "resumen": numeros,
+            "estado_activo": estado,
+            "tipo_activo": tipo,
+            "categoria_activa": categoria,
+            "busqueda": busqueda,
+            "tipos": catalogo.tipos(),
+            "categorias": Solicitud.Categoria.choices,
+            "chips": chips_de_estado(
+                numeros["conteos"],
+                Solicitud.Estado.choices,
+                estado,
+                busqueda,
+                otros={"tipo": tipo, "categoria": categoria},
+            ),
+            # Su gemelo del otro lado: los mismos dos filtros, escondidos
+            # en el formulario del buscador. Los tres controles de la barra
+            # arrastran lo que los otros dos tengan puesto, que es lo que
+            # hace que se puedan combinar sin JavaScript.
+            "filtros_extra": [
+                {"nombre": "tipo", "valor": tipo},
+                {"nombre": "categoria", "valor": categoria},
+            ],
+            "url_limpia": reverse("eventos:propuestas", args=[convocatoria.pk]),
+            "cuantas": filas.count(),
+            "total": numeros["recibidas"],
+            "hay_filtros": bool(estado or tipo or categoria or busqueda),
+            "zona_admin": True,
+        },
+    )
+
+
+@requiere_admin_feria
+def detalle_propuesta(peticion, solicitud_id):
+    """Revisar una propuesta y dictaminarla (`CU-EVT-008` y `CU-EVT-009`).
+
+    Una sola pantalla para las dos cosas, y no dos: el detalle **es** la
+    antesala del dictamen (`CU-EVT-008` paso 6), y separarlas obligaría a
+    volver a leerlo todo en otra dirección para poder decidir.
+
+    No lleva la convocatoria en la ruta: la propuesta ya sabe de cuál
+    cuelga, y repetirla daría dos fuentes para lo mismo y una URL que
+    puede mentir. Es la misma decisión que en `stands:detalle_solicitud`.
+
+    Cuál de las **cuatro** acciones se ejecuta lo dice el ``name="accion"``
+    del botón pulsado: las tres del dictamen y `corregir`, que es la
+    corrección de redacción de `CU-EVT-008` (`servicios/edicion.py`).
+
+    .. note:: Las dos modales del dictamen se abren desde el servidor
+
+       Pedir cambios y rechazar piden un texto, y ese texto vive en una
+       ventana modal —es lo que pide el prototipo y lo que evita tener un
+       recuadro de motivo permanentemente abierto en un panel donde casi
+       siempre se acepta—. Alpine la abre al pulsar el botón; sin
+       JavaScript, el botón envía el formulario sin motivo, el servicio lo
+       rechaza y **esta vista devuelve la pantalla con la modal abierta**
+       (``modal_abierto``). Las dos rutas acaban en el mismo sitio, y la
+       segunda cuesta una ida y vuelta.
+
+       Lo mismo con el modo de edición: con JavaScript el botón desbloquea
+       los recuadros en el acto, y sin él es un enlace a ``?editar=1``.
+    """
+    propuesta_en_revision = get_object_or_404(
+        Solicitud.objects.select_related(*revision.RELACIONES), pk=solicitud_id
+    )
+    actividad = getattr(propuesta_en_revision, "actividad", None)
+    personas = revision.personas_de(actividad)
+
+    form = None
+    accion = peticion.POST.get("accion", "") if peticion.method == "POST" else ""
+    editando = peticion.GET.get("editar") == "1"
+
+    if accion == "corregir":
+        editando = True
+        if _corregir(peticion, propuesta_en_revision, personas):
+            return redirect(
+                "eventos:detalle_propuesta", solicitud_id=propuesta_en_revision.pk
+            )
+        # Se volvió a leer del POST lo que se estaba escribiendo: la
+        # pantalla tiene que devolver el texto corregido, no el guardado.
+        personas = _personas_con_lo_tecleado(peticion, personas)
+    elif peticion.method == "POST":
+        form = DictamenForm(peticion.POST)
+        if form.is_valid():
+            respuesta = _dictaminar(peticion, propuesta_en_revision, form)
+            if respuesta is not None:
+                return respuesta
+        else:
+            messages.error(
+                peticion,
+                "Elige qué hacer con la propuesta: aceptarla, pedir cambios "
+                "o rechazarla.",
+            )
+
+    if form is None:
+        # La clasificación llega premarcada con lo que declaró quien
+        # propuso: el paso 2 del caso de uso pide **sugerir** una opción,
+        # no dejar el control en blanco para que alguien la teclee de cero.
+        form = DictamenForm(
+            initial={
+                "categoria": propuesta_en_revision.categoria or None,
+                "es_uady_confirmado": propuesta_en_revision.uady_sugerido,
+            }
+        )
+
+    es_publicacion = bool(actividad) and catalogo.es_publicacion(actividad.tipo.nombre)
+    return render(
+        peticion,
+        "eventos/detalle_propuesta.html",
+        {
+            "propuesta": propuesta_en_revision,
+            "convocatoria": propuesta_en_revision.registro.convocatoria,
+            "persona": propuesta_en_revision.persona,
+            "actividad": actividad,
+            # La fila hija, con los campos propios del tipo. La plantilla
+            # no puede resolverla sola: qué atributo la alcanza depende
+            # del `tipo`, y eso lo sabe el modelo.
+            "detalle": actividad.detalle if actividad else None,
+            # Los ocho tipos enseñan a su gente igual y solo cambian los
+            # rótulos, así que la plantilla recibe una lista y no ocho
+            # bloques condicionales.
+            "personas": personas,
+            "es_publicacion": es_publicacion,
+            "documentos": revision.documentos_de(propuesta_en_revision),
+            "form": form,
+            # `A3`: volver sobre un dictamen emitido está reservado al
+            # operador de la plataforma. La pantalla pregunta lo mismo que
+            # el servicio, para no ofrecer un botón que va a rebotar.
+            "puede_redictaminar": permisos.es_operador(peticion),
+            # Corregir la redacción (`CU-EVT-008`). El tope se enseña
+            # junto al recuadro: son 2 000 caracteres, o 4 000 en una
+            # publicación, y descubrirlo al guardar es tarde.
+            "editando": editando,
+            # Cómo se llama la sinopsis en **este** tipo. La columna es la
+            # misma para los ocho, pero en una presentación lo que ahí se
+            # cuenta es el libro y en una charla la actividad: el rótulo
+            # es lo único que lo dice.
+            "etiqueta_sinopsis": (
+                "Sinopsis de la publicación"
+                if es_publicacion
+                else "Sinopsis de la actividad"
+            ),
+            "tope_sinopsis": edicion.tope_de_sinopsis(propuesta_en_revision),
+            "tope_semblanza": MAX_SEMBLANZA,
+            # Cuál de las dos modales del dictamen tiene que salir
+            # abierta. Vacío es "ninguna", que es el caso normal.
+            "modal_abierto": _modal_que_reabrir(peticion, accion),
+            "motivo_tecleado": peticion.POST.get("motivo", ""),
+            "zona_admin": True,
+        },
+    )
+
+
+def _modal_que_reabrir(peticion, accion: str) -> str:
+    """Qué modal del dictamen sigue abierta tras un envío que no cuajó.
+
+    Solo se llega aquí cuando el POST no acabó en redirección, es decir
+    cuando el servicio rechazó la acción —típicamente porque el motivo
+    venía vacío, que es exactamente lo que pasa sin JavaScript—. Dejarla
+    cerrada mandaría el mensaje de error a una pantalla en la que no se ve
+    dónde se escribe la respuesta.
+    """
+    if peticion.method != "POST":
+        return ""
+    return accion if accion in ("cambios", "rechazar") else ""
+
+
+def _corregir(peticion, propuesta_en_revision, personas) -> bool:
+    """Guarda la redacción corregida. Devuelve si se pudo (`CU-EVT-008`).
+
+    Las columnas que se dejan escribir salen de ``personas`` y no del
+    POST: es lo que impide que un formulario fabricado a mano toque una
+    semblanza de otra persona o un campo que esta propuesta no tiene.
+    """
+    try:
+        edicion.corregir(
+            propuesta_en_revision,
+            editor=peticion.user,
+            sinopsis=peticion.POST.get("sinopsis", ""),
+            semblanzas={
+                quien.campo_semblanza: peticion.POST.get(quien.campo_semblanza, "")
+                for quien in personas
+            },
+        )
+    except edicion.CorreccionRechazada as negativa:
+        messages.error(peticion, str(negativa))
+        return False
+    messages.success(
+        peticion,
+        "Guardado. La propuesta queda con el texto corregido; el dictamen "
+        "no cambió.",
+    )
+    return True
+
+
+def _personas_con_lo_tecleado(peticion, personas):
+    """Las mismas personas, con la semblanza que se estaba escribiendo.
+
+    Sin esto, un guardado que rebota vuelve con los textos de la base y
+    quien corregía pierde lo que llevaba escrito — que es la manera más
+    rápida de que nadie vuelva a usar el modo de edición.
+    """
+    return [
+        replace(quien, semblanza=peticion.POST.get(quien.campo_semblanza, ""))
+        for quien in personas
+    ]
+
+
+def _dictaminar(peticion, propuesta_en_revision, form):
+    """Ejecuta la acción elegida. Devuelve a dónde ir, o ``None``.
+
+    ``None`` significa "quédate en la pantalla y enseña el error": es lo
+    que corresponde cuando el servicio rechaza el dictamen, porque lo que
+    se escribió tiene que seguir ahí para poder corregirlo.
+
+    Vive aparte de la vista para que ésta siga siendo lo que dice el
+    contrato de capas —traducir HTTP a una llamada de servicio— y no una
+    escalera de cuatro condicionales con avisos intercalados.
+    """
+    accion = form.cleaned_data["accion"]
+    motivo = form.cleaned_data["motivo"]
+
+    # `A3` paso 3 · la doble verificación. Se pide **antes** de llamar al
+    # servicio porque no es una regla de negocio sino una barrera de la
+    # interfaz: quien llama `dictamen.aceptar` desde `manage.py` ya sabe
+    # lo que hace. Lo que sí es regla —quién puede rehacer un dictamen—
+    # está en el servicio, y esto no lo sustituye.
+    if propuesta_en_revision.esta_dictaminada and not form.cleaned_data["confirmar"]:
+        messages.error(
+            peticion,
+            "Esta propuesta ya tiene dictamen. Marca la casilla de "
+            "confirmación para cambiarlo.",
+        )
+        return None
+
+    try:
+        if accion == "aceptar":
+            dictamen.aceptar(
+                propuesta_en_revision,
+                revisor=peticion.user,
+                categoria=form.cleaned_data["categoria"],
+                es_uady_confirmado=form.cleaned_data["es_uady_confirmado"],
+            )
+            messages.success(
+                peticion,
+                f"Aceptaste «{propuesta_en_revision.titulo_actividad}» como "
+                f"{propuesta_en_revision.categoria_completa}. El resultado sale "
+                "en el próximo lote de notificaciones.",
+            )
+        elif accion == "rechazar":
+            dictamen.rechazar(
+                propuesta_en_revision, revisor=peticion.user, motivo=motivo
+            )
+            messages.success(
+                peticion,
+                "Propuesta rechazada, con su motivo registrado. Se comunica "
+                "en el próximo lote de resultados.",
+            )
+        else:
+            dictamen.solicitar_cambios(
+                propuesta_en_revision, revisor=peticion.user, mensaje=motivo
+            )
+            messages.success(
+                peticion,
+                "Cambios pedidos. Se le mandó tu nota por correo ahora mismo, "
+                "para que le dé tiempo a corregir.",
+            )
+    except dictamen.DictamenRechazado as negativa:
+        messages.error(peticion, str(negativa))
+        return None
+
+    return redirect("eventos:detalle_propuesta", solicitud_id=propuesta_en_revision.pk)
+
+
+@requiere_participante
+def documento(peticion, documento_id):
+    """Entrega un adjunto a quien tiene derecho a verlo (`ADR-0007`).
+
+    Lleva `requiere_participante` y no `requiere_admin_feria` porque los
+    dos públicos pasan por aquí: quien propuso, mirando lo que subió, y
+    quien administra la feria, abriéndolo para dictaminar. Quién puede ver
+    qué lo decide `archivos.puede_ver`.
+
+    **Un 404 y no un 403 cuando no se puede.** Un 403 confirmaría que ese
+    documento existe, que es justo lo que no hay que decirle a alguien que
+    está probando identificadores.
+
+    Y un 404 también cuando el archivo se perdió del almacén
+    (`CU-EVT-008` `E1`): es otra incidencia —queda en el log como tal—
+    pero la misma respuesta, porque la alternativa era un 500 que cortaba
+    la revisión entera en vez de fallar solo ese enlace.
+    """
+    adjunto = get_object_or_404(
+        Documento.objects.select_related("actividad__solicitud__registro"),
+        pk=documento_id,
+    )
+    if not archivos.puede_ver(peticion, adjunto):
+        raise Http404("No hay ningún documento con ese identificador.")
+    try:
+        return archivos.entregar(adjunto)
+    except archivos.ArchivoNoDisponible as exc:
+        raise Http404(str(exc)) from exc

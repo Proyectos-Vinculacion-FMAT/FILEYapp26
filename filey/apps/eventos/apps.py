@@ -25,14 +25,9 @@ class EventosConfig(AppConfig):
         Los imports van dentro y no arriba porque ``ready()`` corre
         cuando el registro de apps ya está poblado; a nivel de módulo,
         importar modelos revienta.
-
-        Sin ``url_panel`` ni secciones: el panel del administrador es
-        `CU-EVT-007` en adelante y todavía no existe. Que falte no es un
-        olvido — un módulo puede existir para el participante antes de
-        tener panel, y el contrato lo admite.
         """
         from apps.convocatorias.models import TipoConvocatoria
-        from apps.convocatorias.modulos import Modulo, registrar
+        from apps.convocatorias.modulos import Modulo, SeccionPanel, registrar
 
         from .servicios import configuracion
 
@@ -41,6 +36,30 @@ class EventosConfig(AppConfig):
                 tipo=TipoConvocatoria.EVT,
                 etiqueta="Actividades del programa",
                 url_aplicar="eventos:propuesta",
+                # El panel **es** la cola de propuestas, y no una portada
+                # aparte con números que enlazan a ella. `STD` sí tiene las
+                # dos cosas porque su panel resume tres colas distintas y
+                # el estado del mapa; aquí solo hay una cola, así que una
+                # portada intermedia sería una pantalla de paso que
+                # obligaría a un clic más para llegar al trabajo. Los
+                # conteos de `CU-EVT-011` van arriba de la propia lista,
+                # que es donde el prototipo los pone.
+                url_panel="eventos:propuestas",
+                # Las cinco del prototipo (`admin-evt-propuestas.html`),
+                # en su orden. Las cuatro sin ruta están en el plan y no
+                # construidas: se pintan apagadas para que el menú enseñe
+                # la forma completa del módulo, que es lo que evita la
+                # pregunta "¿y dónde se mandan los resultados?".
+                secciones_panel=(
+                    SeccionPanel(
+                        "Propuestas", "📄", "eventos:propuestas",
+                        tambien=("eventos:detalle_propuesta",),
+                    ),
+                    SeccionPanel("Notificaciones", "🔔"),
+                    SeccionPanel("Programa", "📅"),
+                    SeccionPanel("Seguimiento", "📊"),
+                    SeccionPanel("Configuración", "⚙️"),
+                ),
                 crear_configuracion=configuracion.crear_por_defecto,
             )
         )

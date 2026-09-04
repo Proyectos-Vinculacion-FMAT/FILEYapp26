@@ -290,13 +290,65 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   **Falta solo la pantalla A9 de CU-STD-033** (corregir un espacio del mapa), que hoy se hace
   desde `/f/<slug>/django-admin/`. Con ella entraría también la décima acción de la bitácora:
   `importar` no recibe hoy quién lo hace, y firmar la entrada como «el sistema» sería mentira.
-- **Construido a medias:** `EVT` (Eventos) — `apps/eventos/` tiene la **captura de una
-  propuesta** (`CU-EVT-002`): los modelos de la etapa 1 completos, el formulario de los ocho
-  tipos, la pantalla y el acuse por correo. Las ocho tablas de tipo cuelgan de una tabla padre
-  con herencia multitabla, no de un `detalle_id` suelto (`ADR-0009`). **Falta todo lo demás**:
-  consultar las propuestas propias (`CU-EVT-003`), editarlas tras una petición de cambios, y el
-  panel del administrador entero —listado, dictamen, notificación en lote—, así que el módulo
-  se inscribe en `ADR-0006` **sin `url_panel`**.
+- **Construido a medias:** `EVT` (Eventos) — `apps/eventos/` tiene dos verticales:
+  - **La captura de una propuesta** (`CU-EVT-002`): los modelos de la etapa 1 completos, el
+    formulario de los ocho tipos, la pantalla y el acuse por correo. Las ocho tablas de tipo
+    cuelgan de una tabla padre con herencia multitabla, no de un `detalle_id` suelto
+    (`ADR-0009`).
+  - **La revisión** (`CU-EVT-007`, `008`, `009`, `011`): la cola filtrable en
+    `/f/<slug>/eventos/<id>/propuestas/` —que es también el `url_panel` del módulo, porque `EVT`
+    no tiene portada aparte de su cola—, el expediente de una propuesta, y el dictamen con sus
+    tres desenlaces. Los adjuntos se entregan por vista con permiso (`ADR-0007`).
+
+    Dos cosas del panel que no se deducen del código:
+
+    > [!note] Los dos desenlaces que piden un texto lo piden en una ventana
+    > Aceptar se resuelve en el panel; **pedir cambios y rechazar abren una modal** con su
+    > propio campo (`parciales/modal_dictamen.html`), que es lo que pide el prototipo y lo que
+    > evita tener a la vista un «por qué se rechaza» en las nueve de cada diez propuestas que
+    > se aceptan. La ventana se abre por **dos** caminos y los dos acaban igual: con Alpine la
+    > descubre `:hidden`, y sin JavaScript el botón envía el dictamen sin motivo, el servicio
+    > lo rechaza por `E3` y la vista la devuelve abierta (`modal_abierto`). Es el patrón de
+    > toda la pantalla: **el servidor decide el estado inicial con el atributo `hidden` y
+    > Alpine lo quita**. `x-show` sin Alpine no esconde nada y `x-cloak` sin Alpine no enseña
+    > nada; por eso ninguno de los dos sirve aquí.
+
+    > [!warning] Quien administra corrige la redacción, y **solo** la redacción
+    > `servicios/edicion.py` deja cambiar la sinopsis y la semblanza de cada persona sin
+    > devolver la propuesta (`CU-EVT-008` `A2`) — la errata que no merece un correo—. Las
+    > columnas que se pueden escribir salen de `revision.personas_de` y **nunca** del POST: la
+    > pantalla manda la ficha entera y un servicio que aceptara lo que le llega convertiría una
+    > corrección de estilo en la reescritura de la propuesta. No entran los nombres, ni el
+    > título, ni `es_uady` — para corregir la autodeclaración ya está `es_uady_confirmado`, que
+    > es del dictamen y deja constancia de quién la revisó—. Y una persona capturada no se
+    > puede quedar sin semblanza: es la misma invariante que `validar_personas` sostiene en el
+    > alta.
+
+  Falta `CU-EVT-003` (consultar las propuestas propias), `CU-EVT-004` (corregir tras una
+  petición de cambios), `CU-EVT-010` (notificar en lote) y `CU-EVT-012` (ejemplar físico).
+
+  > [!warning] Aceptar **no crea ninguna `Actividad`**, aunque `CU-EVT-009` lo diga
+  > `Actividad` en `models.py` es el enrutador polimórfico que nace al **enviar** la propuesta,
+  > uno por cada uno de los ocho tipos. La entidad que el CU describía en su paso 6 no existe:
+  > el modelo de datos §3.1 la descartó porque duplicaría el estado de la solicitud, y «sin
+  > horario» es **derivado** (no hay filas en `ProgramacionActividad`). El CU lleva la
+  > corrección escrita desde el 2026-09-03.
+
+  > [!note] El dictamen son columnas de `Solicitud`, no la tabla `DetallesAdminSolicitud`
+  > El modelo de datos §3.1 la describe como uno a uno **obligatoria y creada al enviar**, que
+  > es la definición de una columna con un `JOIN` de más; y `estado` ya vivía en `Solicitud`
+  > desde `CU-EVT-002`. La desviación está anotada en el propio documento.
+  >
+  > **Un dictamen ya emitido solo lo cambia el superusuario** (`A3`/`E2` de `CU-EVT-009`).
+  > ADR-0004 no define un nivel entre administrar y ser dueño, así que el permiso es el del
+  > operador de la plataforma (`ADR-0005`). La regla vive en `servicios/dictamen.py` y no en la
+  > vista, para que `manage.py` se tope con ella igual que un POST.
+
+  > [!note] Lo que `EVT` le pasó a `comun` al construir su panel
+  > Tres piezas de `STD` subieron de capa en vez de copiarse, porque un vertical no puede
+  > importar de otro: `comun/archivos.py` (la entrega de un adjunto, `ADR-0007`),
+  > `comun/filtros.py::chips_de_estado` y `plantillas/componentes/filtros.html`. Si necesitas
+  > una cola filtrable en otro módulo, se arma con esas tres y no escribiendo una cuarta barra.
 - **Solo documentado:** `TAL`, `VIS`, `PRG`, `SAL` — ver `docs/requisitos/`.
 - **Solo en prototipo:** las pantallas de `REG`, `EVT` y `VIS` bajo `prototipo/`. **`STD` no
   tiene prototipo**: su especificación visual es la Ficha de Registro en papel

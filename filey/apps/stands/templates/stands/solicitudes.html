@@ -21,7 +21,7 @@
    quitaron: la barra lateral del panel ya lleva a las dos, y repetirlos
    aquí ponía navegación dentro de un formulario de filtros — dos trabajos
    distintos en la misma fila. {% endcomment %}
-{% include "stands/parciales/filtros.html" with nombre="solicitud" plural="solicitudes" url_limpia=url_limpia %}
+{% include "componentes/filtros.html" with nombre="solicitud" plural="solicitudes" url_limpia=url_limpia etiqueta_busqueda="Buscar por nombre de la editorial" placeholder="Buscar editorial" %}
 
 {% if solicitudes %}
   <table class="table">

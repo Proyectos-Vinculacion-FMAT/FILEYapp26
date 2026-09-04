@@ -1,5 +1,11 @@
 """
-El acuse de recepción de una propuesta (`CU-EVT-002`, paso 13).
+Los dos correos que `EVT` manda en el momento.
+
+El **acuse** de recepción, al enviar una propuesta (`CU-EVT-002`, paso
+13), y la **solicitud de cambios**, al dictaminarla (`CU-EVT-009` A1).
+Son los dos que no pueden esperar: el primero porque lleva el folio, y el
+segundo porque abre un plazo para corregir. Las aceptaciones y los
+rechazos **no están aquí** — salen en lote (`CU-EVT-010`).
 
 Todo el correo del sistema sale por `django.core.mail`: quién entrega lo
 decide `EMAIL_BACKEND`, y en pruebas Django lo sustituye por `locmem`, así
@@ -56,8 +62,76 @@ def avisar_recepcion(solicitud) -> bool:
         "la sala, el día y el horario los asigna la Coordinación.",
     ]
 
-    texto = "\n\n".join([*parrafos, f"Ver el acuse: {enlace}", _PIE_TEXTO])
-    html = _maquetar(asunto, parrafos, enlace)
+    return _enviar(
+        solicitud,
+        asunto=asunto,
+        parrafos=parrafos,
+        enlace=enlace,
+        texto_enlace="Ver el acuse",
+        que_es="el acuse",
+    )
+
+
+def avisar_cambios_solicitados(solicitud) -> bool:
+    """Le dice qué debe corregir (`CU-EVT-009` A1, paso 5).
+
+    Es el **único** desenlace del dictamen que sale en el momento. Las
+    aceptaciones y los rechazos esperan al lote de `CU-EVT-010` porque son
+    definitivos y conviene comunicarlos todos juntos; esto no lo es: es
+    una petición con plazo, y quien la recibe tiene que poder corregir y
+    reenviar antes de que cierre la convocatoria.
+
+    El cuerpo lleva el mensaje **tal cual lo escribió quien revisa**, sin
+    reformular. Es la razón por la que el servicio lo exige no vacío: si
+    aquí no hay nada, el correo no dice nada.
+    """
+    persona = solicitud.registro.persona
+    convocatoria = solicitud.registro.convocatoria
+    # Lleva al acuse y no a una pantalla de edición porque `CU-EVT-004`
+    # —corregir y reenviar— todavía no está construido. Desde ahí se ve la
+    # propuesta y su folio, que es lo que hace falta para contestar.
+    enlace = url_de_esta_feria("eventos:confirmacion", solicitud_id=solicitud.pk)
+
+    asunto = f"Tu propuesta necesita cambios — folio {solicitud.folio}"
+    parrafos = [
+        f"Hola, {persona.primer_nombre}:",
+        f"Revisamos tu propuesta «{solicitud.titulo_actividad}» "
+        f"({solicitud.folio}) en {convocatoria.nombre} y necesitamos que "
+        "corrijas lo siguiente antes de poder dictaminarla:",
+        solicitud.mensaje_cambios_solicitados,
+        "Cuando la tengas lista, respóndenos por este medio. Tienes hasta "
+        "que cierre la convocatoria.",
+    ]
+    return _enviar(
+        solicitud,
+        asunto=asunto,
+        parrafos=parrafos,
+        enlace=enlace,
+        texto_enlace="Ver mi propuesta",
+        que_es="la solicitud de cambios",
+    )
+
+
+def _enviar(
+    solicitud,
+    *,
+    asunto: str,
+    parrafos: list[str],
+    enlace: str,
+    texto_enlace: str,
+    que_es: str,
+) -> bool:
+    """Arma el sobre y lo entrega. Devuelve si salió.
+
+    **Nunca levanta.** Los dos correos de este módulo se mandan cuando la
+    fila ya está guardada —la propuesta tiene folio, o el dictamen ya está
+    escrito—, así que un buzón que rebota no puede deshacer nada: lo que
+    corresponde es dejar constancia en el log. Quien llama decide si le
+    importa el falso; hoy ninguno de los dos lo mira, y es correcto.
+    """
+    persona = solicitud.registro.persona
+    texto = "\n\n".join([*parrafos, f"{texto_enlace}: {enlace}", _PIE_TEXTO])
+    html = _maquetar(asunto, parrafos, enlace, texto_enlace)
 
     mensaje = EmailMultiAlternatives(subject=asunto, body=texto, to=[persona.correo])
     mensaje.attach_alternative(html, "text/html")
@@ -67,7 +141,8 @@ def avisar_recepcion(solicitud) -> bool:
             raise RuntimeError("el backend de correo no entregó el mensaje")
     except Exception:  # noqa: BLE001 — cualquier fallo del transporte
         logger.exception(
-            "No se pudo entregar el acuse de la propuesta %s a %s",
+            "No se pudo entregar %s de la propuesta %s a %s",
+            que_es,
             solicitud.pk,
             persona.correo,
         )
@@ -81,13 +156,24 @@ _PIE_TEXTO = (
 )
 
 
-def _maquetar(asunto: str, parrafos: list[str], enlace: str) -> str:
-    """El sobre en HTML. Estilos en línea: es lo único que lee un correo."""
+def _maquetar(
+    asunto: str,
+    parrafos: list[str],
+    enlace: str,
+    texto_enlace: str = "Ver el acuse",
+) -> str:
+    """El sobre en HTML. Estilos en línea: es lo único que lee un correo.
+
+    ``texto_enlace`` existe desde que hay dos correos distintos: el acuse
+    lleva a mirar lo enviado y la solicitud de cambios lleva a corregirlo.
+    Un rótulo fijo obligaba a que el segundo dijera «Ver el acuse», que es
+    justo lo que no hay que hacer ahí.
+    """
     return (
         '<div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto;">'
         f'<h2 style="color: #1a1a1a;">{escape(asunto)}</h2>'
         + "".join(f"<p>{escape(p)}</p>" for p in parrafos if p)
-        + f'<p><a href="{escape(enlace)}">Ver el acuse</a></p>'
+        + f'<p><a href="{escape(enlace)}">{escape(texto_enlace)}</a></p>'
         '<hr style="border: none; border-top: 1px solid #eaeaea; margin: 24px 0;" />'
         '<p style="color: #999; font-size: 12px;">'
         "FILEY — Feria Internacional de la Lectura Yucatán<br>"
