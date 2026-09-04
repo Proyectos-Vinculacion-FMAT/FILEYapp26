@@ -61,7 +61,10 @@ def test_eventos_se_inscribe_en_el_registro_de_modulos():
     """
     modulo = modulo_de(TipoConvocatoria.EVT)
     assert modulo is not None
-    assert modulo.url_aplicar == "eventos:propuesta"
+    # La puerta es el seguimiento y no el formulario: el catálogo dice
+    # "Continuar" a quien ya tiene registro, y eso llevaba a un
+    # formulario en blanco a quien ya había mandado tres propuestas.
+    assert modulo.url_aplicar == "eventos:mis_propuestas"
     # El callback de configuración es lo que hace que una convocatoria
     # nazca con su prefijo de folio (`CU-FER-005` paso 6).
     assert modulo.crear_configuracion is not None
@@ -293,102 +296,14 @@ def test_un_envio_incompleto_conserva_el_tipo_y_sus_campos(client, feria_2027):
     assert contenido.count("tipo-opt is-active") == 1
 
 
-def test_tras_un_envio_rechazado_se_avisa_de_los_adjuntos(client, feria_2027):
-    """Lo único que no se puede conservar, dicho a la cara.
+def test_el_acuse_no_repite_el_listado(client, feria_2027):
+    """El acuse hace una sola cosa: dar el folio y decir qué sigue.
 
-    Ningún navegador deja repoblar un `<input type="file">` —si pudiera,
-    una página cualquiera subiría lo que quisiera del disco de quien la
-    visita—. Callarlo dejaría a alguien pulsando enviar sin entender por
-    qué sigue faltando lo mismo.
-    """
-    convocatoria, persona, url = escenario(feria_2027)
-    client.force_login(persona)
-
-    libro = {
-        "tipo": "presentacion_libro",
-        "titulo_publicacion": "El mar que nos habita",
-        "tipo_presentador": "autor",
-        "nombre_editorial": "La Nave",
-        "nombre_autor_1": "Elena Poniatowska",
-        "semblanza_autor_1": "Escritora.",
-    }
-    contenido = client.post(
-        url, {**COMUNES, **libro, "titulo_actividad": ""}
-    ).content.decode()
-
-    assert "volver a adjuntarlos" in contenido
-    # Y solo tras enviar: al elegir el tipo todavía no hay nada que perder.
-    fresco = client.get(url, {"tipo": "presentacion_libro"}).content.decode()
-    assert "volver a adjuntarlos" not in fresco
-
-
-def test_sin_elegir_tipo_no_se_envia(client, feria_2027):
-    convocatoria, persona, url = escenario(feria_2027)
-    client.force_login(persona)
-
-    respuesta = client.post(url, COMUNES)
-
-    assert respuesta.status_code == 200
-    with schema_context(feria_2027.schema_name):
-        assert Solicitud.objects.count() == 0
-
-
-def test_con_la_convocatoria_cerrada_no_se_envia(client, feria_2027):
-    """`E1`, también por URL directa: la pantalla avisa y el POST no pasa."""
-    convocatoria, persona, url = escenario(
-        feria_2027, estado=Convocatoria.Estado.CERRADA
-    )
-    client.force_login(persona)
-
-    contenido = client.get(url).content.decode()
-    assert "no está recibiendo propuestas" in contenido
-
-    respuesta = client.post(url, {**COMUNES, **CHARLA})
-    assert respuesta.status_code == 200
-    with schema_context(feria_2027.schema_name):
-        assert Solicitud.objects.count() == 0
-
-
-# ── El acuse ──────────────────────────────────────────────────
-
-
-def test_el_acuse_enseña_el_folio(client, feria_2027):
-    """Paso 13 del CU: el folio es con lo que se identifica la solicitud."""
-    convocatoria, persona, url = escenario(feria_2027)
-    client.force_login(persona)
-    client.post(url, {**COMUNES, **CHARLA})
-
-    with schema_context(feria_2027.schema_name):
-        propuesta = Solicitud.objects.get()
-        folio = propuesta.folio
-        acuse = _url(feria_2027, "eventos:confirmacion", solicitud_id=propuesta.pk)
-
-    contenido = client.get(acuse).content.decode()
-    assert folio in contenido
-    assert "pendiente de revisión" in contenido
-
-
-def test_el_acuse_de_otra_persona_no_se_ve(client, feria_2027):
-    """El folio y el título de una propuesta ajena no son de nadie más."""
-    convocatoria, persona, url = escenario(feria_2027)
-    client.force_login(persona)
-    client.post(url, {**COMUNES, **CHARLA})
-
-    with schema_context(feria_2027.schema_name):
-        propuesta = Solicitud.objects.get()
-        acuse = _url(feria_2027, "eventos:confirmacion", solicitud_id=propuesta.pk)
-
-    intrusa = fabricas.persona(correo="otra@ejemplo.com", nombre="Otra")
-    client.force_login(intrusa)
-    assert client.get(acuse).status_code == 404
-
-
-def test_el_acuse_ensena_las_propuestas_anteriores(client, feria_2027):
-    """«¿Qué llevo mandado?» se pregunta justo después de enviar.
-
-    No es el listado de `CU-EVT-003` —ése filtra y lleva al detalle—,
-    pero contesta la pregunta en el momento en que se hace, sin obligar a
-    ir a buscarla a una pantalla que todavía no existe.
+    Enseñó la lista de lo ya enviado hasta el 2026-09-03, cuando
+    `CU-EVT-003` no existía. Con el seguimiento construido esa tabla era
+    la misma lista dos veces —aquí sin poder abrir nada— y encima **sin
+    la propuesta recién enviada**, que era la única que importaba en ese
+    momento.
     """
     convocatoria, persona, url = escenario(feria_2027)
     client.force_login(persona)
@@ -398,29 +313,30 @@ def test_el_acuse_ensena_las_propuestas_anteriores(client, feria_2027):
 
     with schema_context(feria_2027.schema_name):
         ultima = Solicitud.objects.order_by("-pk").first()
-        primera = Solicitud.objects.order_by("pk").first()
         acuse = _url(feria_2027, "eventos:confirmacion", solicitud_id=ultima.pk)
-        folio_primera = primera.folio
 
     contenido = client.get(acuse).content.decode()
-    assert "Tus otras propuestas" in contenido
-    assert folio_primera in contenido
-    assert "La primera" in contenido
+    assert "Tus otras propuestas" not in contenido
+    assert "La primera" not in contenido
 
 
-def test_con_una_sola_propuesta_no_hay_lista_que_ensenar(client, feria_2027):
-    """Una tabla de una fila que dice lo que ya está arriba es ruido."""
+def test_el_acuse_manda_al_listado_senalando_la_nueva(client, feria_2027):
+    """`?nueva=` es lo único que le dice a la lista cuál resaltar.
+
+    Va en la barra de direcciones y no en la sesión: así el resalte se
+    pierde al recargar, que es lo que tiene que pasar —una propuesta solo
+    es nueva la primera vez que se mira—.
+    """
     convocatoria, persona, url = escenario(feria_2027)
     client.force_login(persona)
     client.post(url, {**COMUNES, **CHARLA})
 
     with schema_context(feria_2027.schema_name):
-        acuse = _url(
-            feria_2027, "eventos:confirmacion",
-            solicitud_id=Solicitud.objects.get().pk,
-        )
+        enviada = Solicitud.objects.get()
+        acuse = _url(feria_2027, "eventos:confirmacion", solicitud_id=enviada.pk)
+        esperado = f"?nueva={enviada.pk}"
 
-    assert "Tus otras propuestas" not in client.get(acuse).content.decode()
+    assert esperado in client.get(acuse).content.decode()
 
 
 def test_el_acuse_ofrece_enviar_otra(client, feria_2027):

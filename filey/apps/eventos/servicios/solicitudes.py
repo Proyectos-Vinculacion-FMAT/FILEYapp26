@@ -44,19 +44,6 @@ def admite_propuestas(convocatoria: Convocatoria) -> bool:
     return convocatoria.estado == Convocatoria.Estado.ABIERTA
 
 
-def propuestas_de(convocatoria: Convocatoria, persona):
-    """Las que esa persona ya envió a esta convocatoria, de la más nueva.
-
-    Es lo que necesita la pantalla de confirmación para decir "van N" y
-    lo que consultará `CU-EVT-003`.
-    """
-    if persona is None or not getattr(persona, "is_authenticated", False):
-        return Solicitud.objects.none()
-    return Solicitud.objects.filter(
-        registro__convocatoria=convocatoria, registro__persona=persona
-    ).select_related("actividad", "actividad__tipo")
-
-
 @transaction.atomic
 def crear(
     *,
@@ -103,6 +90,10 @@ def crear(
         # es quien sabe por qué dijo que no.
         raise EnvioRechazado(str(motivo)) from motivo
 
+    # Nace en `pendiente` por el valor por omisión de la columna: el
+    # dictamen son campos de esta misma fila y no una tabla aparte, así
+    # que no hay nada más que crear. La pregunta de si debería estar
+    # desacoplado sigue abierta en `ADR-0011`.
     solicitud = Solicitud.objects.create(registro=registro, **comunes)
 
     Modelo = MODELO_POR_TIPO[nombre_tipo]

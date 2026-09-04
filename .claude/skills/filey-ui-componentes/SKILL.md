@@ -179,6 +179,32 @@ Con hijo directo cuando el contenedor tiene controles anidados: `.evt-institucio
    de layout.
 4. Para `mask-image` (patrón del caret): embebe el SVG como data-URI en un token de
    `common/styles-base.css`. Un `url()` a un `.svg` externo falla en `file://`.
+5. **En Django, un icono que deba tomar el color del texto va en línea, no en `<img>`.** Un
+   `<img src="{% static %}">` no puede heredar `currentColor`: el `fill` viaja dentro del
+   archivo, así que habría que elegir el color una vez y para siempre — y sería un hex suelto.
+   El patrón vive en `plantillas/componentes/`, un archivo por icono, y se incluye:
+
+   ```django
+   <span class="ico">{% include "componentes/icono_pdf.html" %}</span>
+   ```
+
+   Va en `componentes/` y no en las plantillas de un dominio en cuanto lo use más de uno — es
+   la misma regla de capas de la sección 3. Un icono con variante visual exclusiva de un
+   dominio sí se queda en el suyo.
+
+   Un icono traído de un banco externo (`C:\dev\mockup assets`, SVG Repo) **hay que
+   recortarlo antes**: vienen con `width`/`height` en píxeles, `fill` con hex y un prólogo XML.
+   Los tres puntos son las reglas 2 y 3 de arriba, y los tres fallan en silencio.
+
+   `aria-hidden="true"` y `focusable="false"` si el icono acompaña a un texto que ya dice lo
+   mismo, que es el caso normal: si no, un lector de pantalla anuncia una imagen sin
+   información.
+
+> [!warning] `check-ui.sh` no ve los SVG en línea de Django
+> E2 recorre los assets de `prototipo/`. Un icono dentro de una plantilla queda fuera de su
+> alcance, así que sus reglas hay que fijarlas con una prueba —
+> `apps/eventos/pruebas/test_seguimiento.py::test_el_icono_del_pdf_cumple_las_reglas_de_svg`
+> es el modelo: renderiza el partial y afirma sobre la salida.
 
 ## 9. Responsive
 

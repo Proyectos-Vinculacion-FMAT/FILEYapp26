@@ -616,7 +616,7 @@ erDiagram
         bigint solicitud_id FK
         string estado
         string categoria
-        boolean is_participante_uady
+        boolean es_participante_uady
         string titulo_final
         boolean es_apta_juvenil
         bigint revisado_por FK
@@ -656,13 +656,19 @@ La fila se crea al enviarse la solicitud, con `estado = pendiente` y el resto de
 nulo; por eso la relación con `Solicitudes_EVT` es uno a uno obligatoria. Crearla desde el
 inicio permite consultar las solicitudes pendientes sin interpretar la ausencia de una fila.
 
+> [!note] El nombre en español es `es_participante_uady`
+> `is_participante_uady` lleva prefijo inglés y la regla 7 de `CLAUDE.md` pide nombres en
+> español, como `es_uady` o `es_apta_juvenil`. Este documento ya lo refleja. **En el código la
+> columna se llama `es_uady_confirmado`**, que dice lo mismo con la palabra que usa la
+> pantalla: quien revisa *confirma* la autodeclaración.
+
 | Atributo | Descripción |
 | --- | --- |
 | id | Identificador único. |
 | solicitud_id | FK → Solicitudes_EVT. |
 | estado | `pendiente`, `cambios_solicitados`, `aceptada`, `rechazada` o `cancelada`. `cancelada` solo aplica después de `aceptada`. |
 | categoria | `literaria` o `academica`. La asigna el administrador durante el dictamen. |
-| is_participante_uady | Indica si el participante pertenece a la UADY. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que se usa junto con `categoria` para el conteo por categoría de `DetallesConvocatoria` (§3.6); el administrador puede confirmarlo o corregirlo. |
+| es_participante_uady | Indica si el participante pertenece a la UADY. En el código, `es_uady_confirmado`. **Lo determina el administrador, no el aplicante**, por lo que vive en esta etapa y no en la solicitud. Parte de `Solicitudes_EVT.es_uady` (§2.4) como autodeclaración, pero es este campo —no aquel— el que se usa junto con `categoria` para el conteo por categoría de `DetallesConvocatoria` (§3.6); el administrador puede confirmarlo o corregirlo. |
 | titulo_final | Título definitivo de la actividad si el administrador lo modifica; nulo significa que vale `Solicitudes_EVT.titulo_actividad`. |
 | organizador_final | Organizador definitivo; nulo significa que vale `Solicitudes_EVT.nombre_organizador_organizacion`. |
 | es_apta_juvenil | Marca la actividad como apta para el catálogo escolar y juvenil de `VIS`. |

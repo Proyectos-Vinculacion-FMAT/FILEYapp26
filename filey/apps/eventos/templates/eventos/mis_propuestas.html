@@ -1,0 +1,122 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   El seguimiento de las propuestas propias (CU-EVT-003, pasos 1 y 2).
+
+   Contexto: `convocatoria`, `propuestas`, `abierta`, `recien_enviada`
+             (el id que trae `?nueva=` desde el acuse, o None).
+
+   Es la puerta del módulo: aquí llega el "Registrarme" y el "Continuar"
+   del catálogo (ADR-0006). Por eso la lista vacía **no es un error** sino
+   el primer paso de quien nunca ha enviado nada, y su acción es el
+   formulario.
+
+   Cuatro columnas y no cinco: el prototipo enseña además la categoría,
+   pero la asigna el administrador al dictaminar (CU-EVT-009) y hoy sale
+   «—» en todas. Una columna que nunca tiene nada dentro no informa: gasta
+   ancho y hace pensar que falta algo por llenar.
+
+   Tampoco está la tarjeta de "Mis constancias" del prototipo: las genera
+   CU-EVT-005, que no existe. Anunciar una fecha de descarga desde una
+   pantalla que no puede cumplirla es peor que no decir nada.
+
+   La fila recién enviada llega resaltada desde el acuse. Dos señales y
+   no una: el destello se apaga en 1.6 s —y no existe para quien pidió no
+   animar— y la pastilla «nueva» se queda. Un color que se desvanece no
+   puede ser la única forma de decir cuál es.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}Mis propuestas — {{ convocatoria.nombre }}{% endblock %}
+
+{% block encabezado_titulo %}Mis propuestas{% endblock %}
+{% block encabezado_texto %}
+  Da seguimiento al estado de todo lo que has enviado a {{ convocatoria.nombre }}.
+{% endblock %}
+
+{% block contenido %}
+
+{% if propuestas %}
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Folio</th>
+          <th>Tipo</th>
+          <th>Título</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for propuesta in propuestas %}
+          <tr{% if propuesta.pk == recien_enviada %} class="row-nueva"{% endif %}>
+            <td>{{ propuesta.folio }}</td>
+            <td>{{ propuesta.actividad.tipo }}</td>
+            <td>
+              {{ propuesta.titulo_actividad }}
+              {% if propuesta.pk == recien_enviada %}
+                <span class="pill-nueva">nueva</span>
+              {% endif %}
+            </td>
+            <td>
+              {% include "eventos/parciales/badge_estado.html" with propuesta=propuesta %}
+            </td>
+            <td>
+              <a class="btn btn-ghost btn-row"
+                 href="{% url 'eventos:detalle' convocatoria_id=convocatoria.pk solicitud_id=propuesta.pk %}">
+                Ver detalle
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% comment %} La acción primaria, al final del flujo de lectura (Fitts).
+     `btn-lg` para que pase de 40 px de alto. {% endcomment %}
+  <div class="form-actions">
+    {% if abierta %}
+      <a class="btn btn-primary btn-lg"
+         href="{% url 'eventos:propuesta' convocatoria_id=convocatoria.pk %}">
+        Enviar otra propuesta
+      </a>
+    {% endif %}
+  </div>
+
+{% else %}
+  {% comment %} E1 · nunca ha enviado nada. Se dice en su voz y con la
+     acción al lado, no con un "sin resultados". {% endcomment %}
+  <div class="card card-pad">
+    <div class="note note-info">
+      <div class="ico">📄</div>
+      <div>
+        <strong>Aún no has enviado propuestas a esta convocatoria.</strong>
+        Cuando envíes una, aquí verás su folio y en qué va su revisión.
+      </div>
+    </div>
+    {% if abierta %}
+      <div class="form-actions">
+        <a class="btn btn-primary btn-lg"
+           href="{% url 'eventos:propuesta' convocatoria_id=convocatoria.pk %}">
+          Enviar mi primera propuesta
+        </a>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% comment %} Cerrada: se dice una sola vez, valga la lista o el vacío. Un
+   botón apagado necesitaría el mismo texto al lado, y aquí no hay nada
+   que quede pendiente de hacer — ya no se puede enviar y punto. {% endcomment %}
+{% if not abierta %}
+  <div class="note note-warn">
+    <div class="ico">🔒</div>
+    <div>
+      <strong>Esta convocatoria ya cerró.</strong>
+      Puedes consultar lo que enviaste, pero ya no se admiten propuestas nuevas.
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

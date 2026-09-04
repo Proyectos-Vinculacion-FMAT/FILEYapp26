@@ -19,7 +19,8 @@ mitad.
 
 from apps.ferias.permisos import administra
 
-from comun.archivos import ArchivoNoDisponible, entregar
+from comun.archivos import ArchivoNoDisponible
+from comun.archivos import entregar as _entregar
 
 from ..models import Documento
 
@@ -57,3 +58,27 @@ def _de_quien_es(documento: Documento):
     De quién es un adjunto lo decide de qué propuesta cuelga.
     """
     return documento.actividad.solicitud.registro.persona_id
+
+
+#: La política con la que salen **los adjuntos de `EVT`**, y solo ellos.
+#:
+#: Un `sandbox` a secas deja el documento en un origen opaco, y el visor
+#: de PDF integrado del navegador trata eso como contenido ajeno: se
+#: niega a pintarlo dentro de un marco, y `CU-EVT-003` lo enseña dentro
+#: de su propia pantalla (`ADR-0010`).
+#:
+#: **`allow-same-origin` no habilita ejecución.** Sigue sin
+#: `allow-scripts` —el token que encendería JavaScript—, sin
+#: `allow-forms`, sin `allow-popups` y sin `allow-top-navigation`. Sin
+#: scripts no hay nada que pueda leer el origen recuperado.
+CSP_DEL_VISOR = "sandbox allow-same-origin; default-src 'none'"
+
+
+def entregar(documento: Documento):
+    """La respuesta que lleva el archivo. **No comprueba permisos.**
+
+    Envuelve la de `comun/archivos.py` para fijar la política de este
+    dominio. `STD` no la comparte: sus constancias fiscales no se
+    incrustan en ninguna pantalla y conservan la cerrada.
+    """
+    return _entregar(documento, csp=CSP_DEL_VISOR)

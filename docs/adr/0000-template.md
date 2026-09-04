@@ -71,6 +71,34 @@ es honesto y pierde el valor de advertir a quien lo lea después.
 - **Negativas / riesgos aceptados:** ...
 - **Qué queda descartado por esta decisión:** ...
 
+## Qué queda desactualizado por esta decisión
+
+**Obligatorio si el ADR cambia o retira una regla escrita en otro sitio.** Lista los archivos
+que dejan de ser ciertos y actualízalos **en el mismo cambio**, no después.
+
+Un ADR aceptado no vuelve a leerse; lo que la gente lee a diario es `CLAUDE.md` y los skills.
+Si la regla vieja se queda ahí, sigue gobernando durante meses aunque esté derogada — y quien
+la siga no estará haciendo nada mal: estará leyendo lo que hay escrito.
+
+Dónde mirar, con la frase de la regla vieja como término de búsqueda:
+
+- `CLAUDE.md` — las reglas de arquitectura y el estado actual.
+- `.claude/skills/*/SKILL.md` — los cuatro.
+- `docs/requisitos/**` — los casos de uso que **justifican una decisión** citando la regla. Un
+  CU que solo describe una pantalla concreta no hace falta tocarlo.
+- Los ADR anteriores que la citen: no se editan, pero conviene saber cuáles quedan colgando.
+
+> [!warning] Reformular, no anotar
+> La regla vieja **se borra**; no se deja con una nota al lado diciendo que ya no vale. Un
+> enunciado que arrastra su propia derogación obliga a leer las dos versiones para saber qué
+> hacer, y la mitad de las veces se lee solo el titular.
+
+| Archivo | Qué decía | Qué dice ahora |
+| --- | --- | --- |
+| ... | ... | ... |
+
+Si esta decisión no toca ninguna regla escrita, borra esta sección.
+
 ## Referencias
 
 > [!note] Opcional

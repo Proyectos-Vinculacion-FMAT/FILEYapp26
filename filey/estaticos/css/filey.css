@@ -622,6 +622,11 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
   margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--gris-200);
 }
 .form-actions .spacer { margin-right: auto; }
+/* En una tarjeta de confirmación los botones van centrados y sin la
+   línea de arriba: ahí no cierran un formulario, son el final de un
+   mensaje. El prototipo lo resolvía con un `style=` en la etiqueta;
+   al portarlo baja a la hoja con nombre propio. */
+.form-actions-centrada { justify-content: center; border-top: none; margin-top: 18px; }
 
 /* .toolbar-row y .btn-row · prototipo/EVT/styles.css */
 .toolbar-row { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; }
@@ -771,6 +776,12 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
   border-style: solid; border-color: var(--ok-600); background: var(--ok-050);
 }
 .file-mock.is-cargado .ico { background: var(--ok-600); color: var(--color-blanco); }
+
+/* Descartar un adjunto ya subido (`CU-EVT-002`). Discreto y debajo, no
+   un botón: quitar no es una de las acciones de la pantalla, es el
+   arrepentimiento de una. Mismo trato que `.evt-persona__quitar`, y por
+   la misma razón — con el mismo truco de Fitts para que el área que
+   responde al clic pase de los 44 px sin agrandar el texto. */
 .file-mock.is-cargado .txt strong { color: var(--ok-600); }
 
 /* ── Un aviso que se puede marcar ──────────────────────────────
@@ -1771,6 +1782,189 @@ label.evt-check {
 .acepta-txt { font-size: 14px; color: var(--gris-700); line-height: 1.55; }
 .acepta-txt strong { color: var(--color-azul-institucional-enfoque); }
 .acepta-txt small { display: block; margin-top: 6px; font-size: 12.5px; color: var(--gris-500); }
+
+/* ===================== Confirmación =====================
+   Copiado de `prototipo/common/styles-base.css` línea 455, tal cual y
+   con los mismos nombres de token. Es de `common` y no de un dominio:
+   `VIS` ya lo usa en su propia confirmación, y `STD` lo usará. */
+.confirm-card { text-align: center; padding: 48px 40px; }
+.confirm-card .check {
+  width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 22px;
+  background: var(--ok-050); color: var(--ok-600); display: grid; place-items: center; font-size: 38px;
+}
+.confirm-card h1 { margin: 0 0 8px; color: var(--color-azul-institucional-enfoque); }
+.confirm-card p { color: var(--gris-500); margin: 0 auto 8px; max-width: 46ch; }
+.folio-box {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  background: var(--oro-050); border: 1.5px dashed var(--color-dorado-encabezado);
+  padding: 16px 34px; border-radius: var(--radio); margin: 18px 0 26px;
+}
+.folio-box small { font-size: 12px; color: var(--color-dorado-700); text-transform: uppercase; letter-spacing: 1px; }
+.folio-box strong { font-size: 26px; color: var(--color-azul-institucional-enfoque); letter-spacing: 1px; }
+
+/* La fila recién enviada, en el listado de CU-EVT-003.
+   Calcado de `prototipo/EVT/aplicantes/mis-propuestas.html`, que lo
+   tenía en un `<style>` embebido: al portarlo baja a la hoja.
+
+   `row-` y no `fila-` **a propósito**, aunque la regla 7 pida español:
+   el nombre es el que ya usa el prototipo, y dos nombres para la misma
+   clase es exactamente lo que vuelve irreconciliables las dos hojas.
+   `.btn-row` ya está aquí por lo mismo. El día que se renombre, se
+   renombra en los dos a la vez.
+
+   El destello dura 1.6 s y termina en transparente, así que quien llega
+   por su cuenta a la lista —sin venir del acuse— no ve nada raro. La
+   pastilla «nueva» sí se queda: es lo que sigue diciendo cuál es
+   después de que el color se apague, y el color solo nunca comunica un
+   estado (`filey-identidad` §4). */
+tr.row-nueva td { animation: filaEntra 1.6s ease; }
+@keyframes filaEntra {
+  0%   { background: var(--oro-050); }
+  100% { background: transparent; }
+}
+/* Quien haya pedido no animar, no ve el destello: la pastilla ya dice
+   lo mismo sin moverse. */
+@media (prefers-reduced-motion: reduce) {
+  tr.row-nueva td { animation: none; }
+}
+.pill-nueva {
+  display: inline-block; margin-left: 8px; font-size: 10.5px; font-weight: 700;
+  color: var(--color-azul-institucional); background: var(--oro-050);
+  border: 1px solid var(--oro-200); border-radius: 999px; padding: 1px 8px; vertical-align: middle;
+}
+
+/* ===================== Adjuntos, en galería =====================
+   NUEVO, sin contraparte en el prototipo: ahí la pantalla del aplicante
+   no enseñaba los archivos.
+
+   La rejilla fluye sola —`auto-fill` con un mínimo— en vez de fijar un
+   número de columnas: son uno, dos o tres adjuntos según el tipo, y con
+   `repeat(3, 1fr)` un adjunto solo salía en un tercio de ancho. */
+.adjuntos { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+
+/* El marco existe **siempre y con altura propia**, tenga o no imagen
+   dentro. Es lo que evita que la página dé un salto cuando una imagen
+   diferida termina de cargar, y lo que da un sitio reconocible al PDF y
+   al archivo que no se pudo cargar. */
+.adjunto__marco {
+  display: grid; place-items: center; height: 150px; overflow: hidden;
+  border: 1px solid var(--gris-200); border-radius: var(--radio-sm);
+  background: var(--gris-050); text-decoration: none; position: relative;
+}
+.adjunto__marco:hover { border-color: var(--azul-600); }
+.adjunto__marco img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+/* El aviso de "no se pudo cargar" y el del PDF viven dentro del marco y
+   solo se ven cuando toca. */
+.adjunto__aviso {
+  /* El eje que manda el tamaño del icono. Vive aquí y no en `:root`
+     porque solo lo usan las dos reglas de abajo: un token global para un
+     valor de un componente es ruido en la paleta. */
+  --adjunto-ico: 34px;
+  display: grid; place-items: center; gap: 6px; text-align: center;
+  padding: 12px; font-size: 12.5px; color: var(--gris-500); line-height: 1.4;
+}
+/* El `.ico` sigue sirviendo para un emoji —el clip del archivo que no se
+   puede pintar— y para un SVG en línea. Los dos toman el mismo alto. */
+.adjunto__aviso .ico { font-size: var(--adjunto-ico); line-height: 1; }
+/* Aquí caben dos iconos —el del PDF (`viewBox` 24×24) y el clip
+   (512×512)—, y los dos son cuadrados, así que el ancho es el alto. El
+   `calc()` se escribe aunque dé 1: documenta el ratio y avisa el día que
+   entre uno que no lo sea (`filey-ui-componentes` §8). */
+.adjunto__aviso .ico-svg {
+  display: block;
+  height: var(--adjunto-ico);
+  width: calc(var(--adjunto-ico) * 24 / 24);
+}
+/* Al apuntar al marco, el icono acompaña al borde. Es la única señal de
+   que la tarjeta entera es pulsable: el texto no cambia. */
+.adjunto__marco:hover .adjunto__aviso { color: var(--azul-600); }
+.adjunto__marco.es-rota img { display: none; }
+.adjunto__pie {
+  margin: 8px 0 0; font-size: 12.5px; color: var(--gris-500); line-height: 1.45;
+}
+.adjunto__pie strong { display: block; color: var(--gris-700); font-weight: 600; }
+
+/* ── El visor ──────────────────────────────────────────────────
+   Un `<dialog>` y no un velo propio: `showModal()` ya trae el foco
+   atrapado dentro, Escape, el `::backdrop` y el resto de la página
+   marcada como inerte. Lo que hay que deshacer son sus estilos de
+   fábrica —borde, relleno y un ancho que no es el de la imagen—. */
+.visor {
+  border: none; padding: 0; background: none; overflow: visible;
+  max-width: none; max-height: none;
+  /* `<dialog>` se centra con `margin: auto` sobre los cuatro lados, que
+     es lo que hace el `inset: 0` de aquí abajo posible. */
+  inset: 0; margin: auto;
+}
+.visor::backdrop { background: rgba(16,26,48,.78); }
+.visor__img {
+  display: block; max-width: min(1100px, 92vw); max-height: 86vh;
+  border-radius: var(--radio); box-shadow: var(--sombra-lg);
+  background: var(--color-blanco);
+}
+
+/* El PDF, con el visor del propio navegador dentro.
+   Medidas **fijas** y no `max-`: un `<object>` sin altura colapsa a 150
+   px y el visor sale como una rendija. Con una altura de verdad, el
+   scroll vertical de un documento largo lo lleva el visor por dentro,
+   que además trae su zoom y su buscador. */
+.visor__doc {
+  display: block; width: min(900px, 92vw); height: 86vh;
+  border-radius: var(--radio); box-shadow: var(--sombra-lg);
+  background: var(--color-blanco); border: none;
+}
+/* El atributo `hidden` tiene que ganarle al `display: block` de las dos
+   reglas de arriba, que si no lo pisan y se ven las dos a la vez. */
+.visor__img[hidden], .visor__doc[hidden] { display: none; }
+
+/* Lo que enseña el `<object>` cuando el navegador no sabe pintar el PDF.
+   No hace falta detectarlo desde JavaScript: son los hijos del propio
+   `<object>`, y el HTML los muestra solo en ese caso. */
+.visor__respaldo {
+  margin: 0; padding: 40px 32px; text-align: center;
+  color: var(--gris-700); font-size: 14px; line-height: 1.6;
+}
+.visor__respaldo-enlace { color: var(--azul-600); font-weight: 600; }
+.visor__pie {
+  position: fixed; left: 0; right: 0; bottom: 18px; text-align: center;
+  color: var(--color-blanco); font-size: 13px; padding: 0 24px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.6);
+}
+.visor__cerrar {
+  position: fixed; top: 16px; right: 20px; background: none; border: none;
+  color: var(--color-blanco); font-size: 30px; line-height: 1; cursor: pointer;
+  /* Ley de Fitts: el aspa mide 30 px, y el área que responde al clic se
+     estira con el padding hasta pasar de 44. */
+  padding: 8px 14px;
+}
+
+/* ── La miniatura que crece hasta el centro ────────────────────
+   `filey.js` pone `view-transition-name: adjunto-en-vuelo` en la
+   miniatura pulsada y se lo pasa a la imagen grande dentro del cambio;
+   el navegador interpola posición y tamaño solo. Aquí solo se ajusta el
+   ritmo: 300 ms con salida rápida y frenado suave —la misma curva que
+   recomienda el artículo—, que es lo que hace que se lea como un objeto
+   moviéndose y no como una animación.
+
+   `object-fit` distinto entre las dos —la miniatura recorta, la grande
+   entra completa— hace que el navegador funda una en otra durante el
+   vuelo. Es exactamente lo que se quiere: se ve cómo se descubre el
+   resto de la imagen. */
+::view-transition-group(adjunto-en-vuelo) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+/* Quien pidió no animar no ve nada cruzar la pantalla: el diálogo se
+   abre y se cierra y ya. `filey.js` además ni siquiera arranca la
+   transición, así que esto es el cinturón del tirante. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+}
 
 
 /* =========================================================

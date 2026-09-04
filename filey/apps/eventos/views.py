@@ -35,6 +35,7 @@ from dataclasses import replace
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.urls import reverse
 
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
@@ -44,9 +45,18 @@ from apps.registros.permisos import requiere_participante
 from comun.filtros import chips_de_estado
 from comun.htmx import es_htmx
 
+from . import detalle as composicion
 from .formularios import FORMULARIO_POR_TIPO, DictamenForm, SolicitudForm
 from .models import MAX_SEMBLANZA, Documento, Solicitud
-from .servicios import archivos, catalogo, dictamen, edicion, revision, solicitudes
+from .servicios import (
+    archivos,
+    catalogo,
+    dictamen,
+    edicion,
+    revision,
+    seguimiento,
+    solicitudes,
+)
 
 
 def _convocatoria_de_eventos(convocatoria_id: int) -> Convocatoria:
@@ -173,40 +183,121 @@ def _campos_de_archivo(form_tipo):
 
 @requiere_participante
 def confirmacion(peticion, solicitud_id):
-    """El acuse con el folio (paso 13 y 14 del CU).
+    """El acuse con el folio (pasos 13 y 14 del CU).
+
+    Hace una sola cosa: dar el folio y decir qué sigue. Enseñaba además
+    la lista de lo ya enviado, y dejó de hacerlo cuando existió
+    `CU-EVT-003` — era la misma lista dos veces, y aquí sin la propuesta
+    recién enviada, que era la que importaba en ese momento.
 
     Solo la ve quien la envió: el folio y el título de una propuesta ajena
     no son de nadie más. Se comprueba por el registro, que es lo único
     que ata una propuesta a una persona.
     """
     propuesta_enviada = get_object_or_404(
-        Solicitud.objects.select_related(
-            "registro", "registro__convocatoria", "actividad", "actividad__tipo"
-        ),
+        Solicitud.objects.select_related("registro", "registro__convocatoria"),
         pk=solicitud_id,
     )
     if propuesta_enviada.registro.persona_id != peticion.user.pk:
         raise Http404("Esa propuesta no es tuya.")
 
-    convocatoria = propuesta_enviada.registro.convocatoria
-    # Las otras que ya envió, para poder verlas desde aquí. No es el
-    # listado de `CU-EVT-003` —ése filtra y lleva al detalle— sino la
-    # respuesta a «¿qué llevo mandado?» en el momento en que se pregunta:
-    # justo después de enviar.
-    anteriores = [
-        otra
-        for otra in solicitudes.propuestas_de(convocatoria, peticion.user)
-        if otra.pk != propuesta_enviada.pk
-    ]
     return render(
         peticion,
         "eventos/confirmacion.html",
         {
             "propuesta": propuesta_enviada,
-            "convocatoria": convocatoria,
-            "anteriores": anteriores,
+            "convocatoria": propuesta_enviada.registro.convocatoria,
         },
     )
+
+
+@requiere_participante
+def mis_propuestas(peticion, convocatoria_id):
+    """El listado de seguimiento (`CU-EVT-003`, pasos 1 y 2).
+
+    Es la puerta del módulo: el "Registrarme" y el "Continuar" del
+    catálogo llegan aquí (`ADR-0006`). Sin propuestas no es un error ni
+    una pantalla distinta —es `E1`—, y la plantilla ofrece el formulario.
+
+    No filtra ni ordena: el CU pide todas las de la edición y el orden lo
+    fija el modelo. Un filtro aquí sería inventar trabajo para una lista
+    que en la práctica tiene tres renglones.
+
+    ``?nueva=<id>`` lo pone el acuse, y sirve para resaltar la fila de la
+    propuesta que se acaba de enviar. Va en la barra de direcciones y no
+    en la sesión a propósito: así el resalte se pierde al recargar, que
+    es lo que tiene que pasar —una propuesta solo es nueva la primera vez
+    que se mira—. Un valor inventado no resalta nada y no es un error:
+    aquí solo decide qué fila lleva una clase.
+    """
+    convocatoria = _convocatoria_de_eventos(convocatoria_id)
+    return render(
+        peticion,
+        "eventos/mis_propuestas.html",
+        {
+            "convocatoria": convocatoria,
+            "propuestas": seguimiento.propuestas_de(convocatoria, peticion.user),
+            "recien_enviada": _entero_o_nada(peticion.GET.get("nueva")),
+            # Para no ofrecer "Enviar otra propuesta" cuando el envío va a
+            # rechazarla: es la misma pregunta que se hace U1 (`E1` de
+            # `CU-EVT-002`), y quien la contesta es el mismo servicio.
+            "abierta": solicitudes.admite_propuestas(convocatoria),
+        },
+    )
+
+
+def _entero_o_nada(crudo):
+    """El id de la barra de direcciones, o ``None`` si no es un número.
+
+    Nadie escribe esto a mano: lo pone el enlace del acuse. Si llega otra
+    cosa es que alguien está tecleando en la URL, y la respuesta correcta
+    a eso es no resaltar nada — no una página de error por un adorno.
+    """
+    try:
+        return int(crudo)
+    except (TypeError, ValueError):
+        return None
+
+
+@requiere_participante
+def detalle(peticion, convocatoria_id, solicitud_id):
+    """Una propuesta enviada, entera (`CU-EVT-003`, pasos 3 y 4).
+
+    Solo lectura. Editar es `CU-EVT-004` y todavía no existe; mientras
+    tanto, la pantalla dice qué hay que corregir pero no deja corregirlo,
+    y lo dice con esas palabras en vez de enseñar un botón que no lleva a
+    ninguna parte.
+
+    Un 404 cubre las tres formas de no tener nada que enseñar —no existe,
+    es de otra persona, o es de otra convocatoria—: distinguirlas
+    confirmaría a un curioso que ese folio existe.
+    """
+    convocatoria = _convocatoria_de_eventos(convocatoria_id)
+    propuesta_enviada = seguimiento.propuesta_de(
+        convocatoria, peticion.user, solicitud_id
+    )
+    if propuesta_enviada is None:
+        raise Http404("Esa propuesta no es tuya o no existe.")
+
+    actividad = propuesta_enviada.actividad
+    # `mi_propuesta.html` y no `detalle_propuesta.html`: ése es **A2**, el
+    # expediente de quien administra (`CU-EVT-008`). Son dos pantallas de
+    # la misma propuesta vistas desde los dos lados, y el nombre las
+    # empareja con quien las abre — como `mis_propuestas.html`.
+    return render(
+        peticion,
+        "eventos/mi_propuesta.html",
+        {
+            "convocatoria": convocatoria,
+            "propuesta": propuesta_enviada,
+            "actividad": actividad,
+            # Lo propio del tipo, ya en bloques: la plantilla recorre y
+            # pinta, y no sabe que existen ocho tipos distintos.
+            "bloques": composicion.bloques_del_tipo(actividad),
+            "documentos": actividad.documentos.all(),
+        },
+    )
+
 
 
 # ── El panel del administrador (`CU-EVT-007`, `008`, `009`, `011`) ──
@@ -525,6 +616,7 @@ def _dictaminar(peticion, propuesta_en_revision, form):
 
 
 @requiere_participante
+@xframe_options_sameorigin
 def documento(peticion, documento_id):
     """Entrega un adjunto a quien tiene derecho a verlo (`ADR-0007`).
 

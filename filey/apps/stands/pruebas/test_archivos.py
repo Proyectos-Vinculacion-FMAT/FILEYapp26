@@ -141,8 +141,24 @@ def test_el_archivo_no_se_deja_interpretar_por_el_navegador(client, adjunto):
     respuesta = client.get(_url(feria, doc))
 
     assert respuesta["X-Content-Type-Options"] == "nosniff"
-    assert "sandbox" in respuesta["Content-Security-Policy"]
     assert "no-store" in respuesta["Cache-Control"]
+
+    # La cabecera **completa y exacta**, no un `in`. El 2026-09-03 `EVT`
+    # necesitó relajar el `sandbox` para enseñar un PDF dentro de su
+    # pantalla, y como la entrega se había compartido, se lo relajó de
+    # paso a estas constancias fiscales — que no lo pidieron ni lo
+    # necesitan. Un `assert "sandbox" in ...` lo cumplen las dos
+    # políticas, así que no se enteró nadie.
+    #
+    # Ahora cada dominio decide la suya (`comun/entrega.py`), y `STD`
+    # conserva la cerrada: sus documentos no se incrustan en ninguna
+    # parte.
+    assert respuesta["Content-Security-Policy"] == "sandbox; default-src 'none'"
+    assert "allow-same-origin" not in respuesta["Content-Security-Policy"]
+
+    # Y sigue sin poder embeberse en ningún sitio: `SAMEORIGIN` es de la
+    # vista de `EVT`, que sí lo necesita.
+    assert respuesta.get("X-Frame-Options", "DENY") == "DENY"
 
 
 def test_con_almacen_de_objetos_el_archivo_no_pasa_por_django(

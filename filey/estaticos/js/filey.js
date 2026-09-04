@@ -787,6 +787,7 @@ function marcarObligatorio(campo, obligatorio) {
     if (!seccion || seccion.id !== 'campos-tipo' || seccion.hidden) return;
     seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+
 })();
 
 
@@ -895,4 +896,237 @@ function marcarObligatorio(campo, obligatorio) {
   });
   document.addEventListener('DOMContentLoaded', refrescarTodo);
   document.body.addEventListener('htmx:afterSwap', refrescarTodo);
+})();
+
+
+/* ══ El visor de una imagen adjunta ════════════════════════════
+   `CU-EVT-003`: una miniatura de 150 px no deja comprobar si se subió la
+   portada que era. Al pulsarla, la imagen **crece desde su sitio hasta el
+   centro** y se ve completa.
+
+   ── Por qué crece en vez de aparecer ─────────────────────────
+
+   Una imagen que aparece de golpe en el centro obliga a reconstruir de
+   dónde salió: hay tres o cuatro adjuntos y todos se abren en el mismo
+   sitio. Viéndola crecer desde su marco, el vínculo entre lo que se
+   pulsó y lo que se está mirando no hay que deducirlo.
+
+   Lo hace la View Transitions API, y **el navegador interpola la
+   posición y el tamaño solo**: basta con que el mismo
+   `view-transition-name` esté en la miniatura antes del cambio y en la
+   imagen grande después. Animarlo a mano —medir el marco, calcular la
+   escala, un `transform` con `requestAnimationFrame`— es el mismo efecto
+   con cien líneas y un desfase en cuanto la página tenga scroll.
+
+   ── Las tres formas de que esto no funcione, y qué pasa ──────
+
+     1. **Sin JavaScript.** El marco es un `<a>` al archivo: el navegador
+        lo abre en otra pestaña. El visor evita el salto de pestaña, no
+        habilita el acceso.
+     2. **Sin `startViewTransition`** (Firefox viejo, Safari < 18). El
+        diálogo se abre igual, sin el crecimiento. Es lo que hace
+        `conTransicion`.
+     3. **Con `prefers-reduced-motion`.** Se salta la transición a
+        propósito: un elemento que cruza la pantalla es justo lo que esa
+        preferencia pide evitar.
+
+   Se usa un `<dialog>` y no un `div` con velo propio porque `showModal()`
+   ya trae lo que habría que reescribir: el foco atrapado dentro, Escape
+   que cierra, el `::backdrop`, y el resto de la página marcada como
+   inerte para un lector de pantalla. */
+(function () {
+  "use strict";
+
+  /* Un solo nombre para toda la página: la miniatura pulsada lo cede a
+     la imagen grande y lo recupera al cerrar. `view-transition-name`
+     tiene que ser único en el documento en cada momento — con dos
+     elementos llevándolo a la vez, el navegador no anima ninguno. */
+  var NOMBRE = "adjunto-en-vuelo";
+
+  var dialogo = null;
+  var grande = null;   /* el `<img>` de una imagen */
+  var documento = null; /* el `<object>` de un PDF */
+  var enlaceRespaldo = null;
+  var pie = null;
+  var origen = null; /* el elemento del que salió, para volver a él */
+
+  function construir() {
+    if (dialogo) return;
+    dialogo = document.createElement("dialog");
+    dialogo.className = "visor";
+
+    var cerrar = document.createElement("button");
+    cerrar.type = "button";
+    cerrar.className = "visor__cerrar";
+    cerrar.setAttribute("aria-label", "Cerrar");
+    cerrar.textContent = "✕";
+    cerrar.addEventListener("click", function () {
+      cerrarVisor();
+    });
+
+    grande = document.createElement("img");
+    grande.className = "visor__img";
+
+    /* El PDF va en un `<object>` y no en un `<iframe>`: si el navegador
+       no sabe pintarlo, enseña sus hijos —el enlace de abajo— en vez de
+       dejar un rectángulo blanco sin explicación. Es un mecanismo del
+       propio HTML, no algo que haya que detectar desde JavaScript. */
+    documento = document.createElement("object");
+    documento.className = "visor__doc";
+    documento.type = "application/pdf";
+
+    var respaldo = document.createElement("p");
+    respaldo.className = "visor__respaldo";
+    respaldo.innerHTML =
+      "Tu navegador no puede enseñar este documento aquí. " +
+      '<a class="visor__respaldo-enlace" target="_blank" rel="noopener">Ábrelo en otra pestaña</a>.';
+    enlaceRespaldo = respaldo.querySelector("a");
+    documento.appendChild(respaldo);
+
+    pie = document.createElement("p");
+    pie.className = "visor__pie";
+
+    dialogo.appendChild(cerrar);
+    dialogo.appendChild(grande);
+    dialogo.appendChild(documento);
+    dialogo.appendChild(pie);
+
+    /* Un clic en el `::backdrop` llega al propio `<dialog>`: el diálogo
+       ocupa solo la caja de la imagen, así que todo lo de fuera es
+       fondo. Comparando el destino con el diálogo no se cierra al pulsar
+       la imagen. */
+    dialogo.addEventListener("click", function (evento) {
+      if (evento.target === dialogo) cerrarVisor();
+    });
+    /* `cancel` es Escape. Se intercepta para que el cierre también pase
+       por la transición de vuelta en vez de desaparecer de golpe. */
+    dialogo.addEventListener("cancel", function (evento) {
+      evento.preventDefault();
+      cerrarVisor();
+    });
+
+    document.body.appendChild(dialogo);
+  }
+
+  /* Envuelve un cambio del DOM en una transición **si se puede**. Sin
+     soporte o con movimiento reducido, ejecuta el cambio a secas: el
+     resultado es el mismo, solo que instantáneo. */
+  function conTransicion(cambio) {
+    var quietud = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!document.startViewTransition || quietud.matches) {
+      cambio();
+      return;
+    }
+    document.startViewTransition(cambio);
+  }
+
+  /* `desde` es el elemento que crece: la miniatura en una imagen, el
+     marco entero en un PDF —ahí no hay imagen, lo que se ve crecer es la
+     tarjeta—. `llenar` deja el diálogo listo con el contenido que toca.
+
+     El nombre se pone **antes** de arrancar: la transición fotografía el
+     estado de partida en cuanto se la llama, y un nombre puesto dentro
+     del callback llegaría tarde. */
+  function abrir(desde, llenar) {
+    construir();
+    origen = desde;
+    desde.style.viewTransitionName = NOMBRE;
+
+    conTransicion(function () {
+      desde.style.viewTransitionName = "";
+      llenar();
+      dialogo.showModal();
+    });
+  }
+
+  function abrirImagen(miniatura, titulo) {
+    abrir(miniatura, function () {
+      dialogo.classList.remove("es-documento");
+      grande.hidden = false;
+      documento.hidden = true;
+      /* Se limpia el `data` para que el navegador suelte el PDF que
+         estuviera cargado: un `<object>` escondido sigue ocupándolo. */
+      documento.removeAttribute("data");
+      grande.style.viewTransitionName = NOMBRE;
+      grande.src = miniatura.currentSrc || miniatura.src;
+      grande.alt = miniatura.alt || "";
+      pie.textContent = titulo || "";
+    });
+  }
+
+  function abrirDocumento(marco, titulo) {
+    abrir(marco, function () {
+      dialogo.classList.add("es-documento");
+      grande.hidden = true;
+      grande.removeAttribute("src");
+      documento.hidden = false;
+      documento.style.viewTransitionName = NOMBRE;
+      documento.data = marco.href;
+      enlaceRespaldo.href = marco.href;
+      pie.textContent = titulo || "";
+    });
+  }
+
+  function cerrarVisor() {
+    if (!dialogo || !dialogo.open) return;
+
+    /* La miniatura se guarda en una variable **local**. El callback de
+       `startViewTransition` no corre en el acto: el navegador fotografía
+       primero el estado de partida y lo llama después. Leyendo `origen`
+       ahí dentro se leería el `null` que se escribe abajo, la miniatura
+       nunca recuperaría el nombre y la imagen se desvanecería en el
+       centro en vez de volver a su sitio. */
+    var vuelve = origen;
+    origen = null;
+
+    conTransicion(function () {
+      dialogo.close();
+      grande.style.viewTransitionName = "";
+      documento.style.viewTransitionName = "";
+      /* El PDF se suelta al cerrar: un `<object>` con `data` puesto
+         mantiene el visor del navegador vivo y su memoria ocupada
+         aunque el diálogo esté cerrado. */
+      documento.removeAttribute("data");
+      if (vuelve) vuelve.style.viewTransitionName = NOMBRE;
+    });
+
+    /* Y se le quita en cuanto la animación termina: dejarlo puesto haría
+       que la siguiente apertura encontrara el nombre ocupado por una
+       miniatura que ya no es la que se pulsó, y entonces el navegador no
+       anima ninguna de las dos. Se espera un poco más que los 300 ms de
+       la transición. */
+    if (vuelve) setTimeout(function () {
+      vuelve.style.viewTransitionName = "";
+    }, 450);
+
+    /* El foco no hay que devolverlo a mano: `<dialog>` lo regresa solo al
+       elemento que lo tenía al abrirse, que es el enlace de la
+       miniatura. Quien navega con el teclado sigue en su fila. */
+  }
+
+  document.addEventListener("click", function (evento) {
+    var marco = evento.target.closest && evento.target.closest("[data-visor]");
+    if (!marco) return;
+    /* Con Ctrl, Cmd o Shift se respeta lo que pidió la persona: abrir en
+       otra pestaña o ventana. Interceptarlo también ahí sería quitarle al
+       enlace lo único que lo hace un enlace. */
+    if (evento.metaKey || evento.ctrlKey || evento.shiftKey) return;
+    evento.preventDefault();
+    var miniatura = marco.querySelector("img");
+    if (miniatura) return abrirImagen(miniatura, marco.dataset.visor);
+    abrirDocumento(marco, marco.dataset.visor);
+  });
+
+  /* Una imagen que no llega —el almacén la perdió, la red se cayó— deja
+     el marco con su aviso, en vez del icono roto del navegador, que no
+     dice qué hacer. El enlace sigue debajo y sigue abriendo el archivo. */
+  document.addEventListener(
+    "error",
+    function (evento) {
+      var img = evento.target;
+      if (!img.matches || !img.matches(".adjunto__marco img")) return;
+      img.closest(".adjunto__marco").classList.add("es-rota");
+    },
+    true /* en captura: el `error` de una imagen no burbujea */
+  );
 })();

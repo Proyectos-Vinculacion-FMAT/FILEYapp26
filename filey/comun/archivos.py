@@ -44,12 +44,34 @@ class ArchivoNoDisponible(Exception):
     """
 
 
-def entregar(documento):
+#: El `Content-Security-Policy` por omisión, y el más cerrado que hay.
+#: Un `sandbox` sin tokens deja el documento en un **origen opaco**: sin
+#: scripts, sin formularios, sin ventanas emergentes y sin poder navegar
+#: al nivel de arriba.
+CSP_ESTRICTA = "sandbox; default-src 'none'"
+
+
+def entregar(documento, *, csp: str = CSP_ESTRICTA):
     """La respuesta que lleva el archivo. **No comprueba permisos.**
 
     Eso lo hace el ``puede_ver`` de cada dominio, y están separadas a
     propósito: una función que decide y entrega a la vez es una que
     alguien puede llamar saltándose la mitad sin que se note.
+
+    :param csp: qué `Content-Security-Policy` lleva la respuesta. Por
+        omisión, la más cerrada.
+
+    .. warning:: La política de seguridad **la decide cada dominio**
+
+       Compartir el transporte —cómo salen los bytes— es correcto: eso no
+       es de nadie. Compartir la política no lo es. `EVT` necesita
+       `allow-same-origin` para enseñar un PDF dentro de su propia
+       pantalla (`ADR-0010`); las constancias fiscales de `STD` no se
+       incrustan en ninguna parte y conservan la cerrada.
+
+       Por eso el valor entra por parámetro y el de fábrica es el más
+       restrictivo: relajarlo tiene que ser un acto explícito de quien
+       sabe por qué lo necesita, no una herencia por compartir función.
 
     Recibe cualquier fila que tenga ``archivo`` (un `FileField`) y
     ``nombre_original``; no importa de qué app sea. Es lo que permite que
@@ -101,7 +123,7 @@ def entregar(documento):
     # extensión inocente y contenido de otra cosa, el navegador no debe
     # adivinar el tipo ni ejecutar nada de lo que venga dentro.
     respuesta["X-Content-Type-Options"] = "nosniff"
-    respuesta["Content-Security-Policy"] = "sandbox; default-src 'none'"
+    respuesta["Content-Security-Policy"] = csp
     # Es un documento de una persona concreta: no lo cachea ningún
     # intermediario.
     respuesta["Cache-Control"] = "private, no-store"
