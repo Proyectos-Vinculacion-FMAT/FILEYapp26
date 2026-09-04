@@ -20,11 +20,38 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
+
+def _del_entorno(clave: str, por_defecto):
+    """Como ``os.getenv``, pero **una variable vacía es una que no está**.
+
+    `os.getenv("X", defecto)` solo cae al defecto cuando la clave no
+    existe. Una línea ``X=`` en el `.env` —que es como se deja una
+    variable "en blanco"— devuelve la cadena vacía, y el defecto no llega
+    a usarse nunca.
+
+    En Render pasa lo mismo y es peor: una variable **declarada y sin
+    valor** llega vacía, así que el despliegue no se parece al que se
+    probó y nada protesta.
+
+    Se estrenó arreglando `MEDIA_ROOT` (2026-09-03). Con ``MEDIA_ROOT=``
+    en el `.env`, `Path("")` es `Path(".")` y los archivos subidos se
+    escribían y se buscaban **relativos al directorio de trabajo** en vez
+    de en `medios/`. El síntoma fue un 404 al abrir un adjunto ya subido;
+    en producción habría sido dejarlos en el disco efímero del
+    contenedor, que se borra en cada despliegue, sin un solo error.
+
+    No se usa donde la cadena vacía **significa algo**: `REDIS_URL`,
+    `RESEND_API_KEY` y `CSRF_TRUSTED_ORIGINS` usan "" como "no hay", y
+    ahí distinguir ausente de vacío no aporta nada.
+    """
+    valor = os.getenv(clave)
+    return por_defecto if valor is None or valor.strip() == "" else valor
+
 # Seguro por defecto: si DJANGO_DEBUG no se declara, se asume
 # producción (DEBUG=False). Un despliegue que olvide la variable
 # NO queda con DEBUG=True filtrando trazas y datos. En desarrollo,
 # el .env local trae DJANGO_DEBUG=true explícito.
-DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
+DEBUG = _del_entorno("DJANGO_DEBUG", "false").lower() == "true"
 
 _SECRET_INSEGURO = "django-insecure-solo-para-desarrollo-cambiar-en-produccion"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", _SECRET_INSEGURO)
@@ -38,7 +65,9 @@ if not DEBUG and SECRET_KEY in (_SECRET_INSEGURO, "dev-filey-registro-2027", "")
         "Genera una y ponla en el entorno antes de desplegar con DEBUG=False."
     )
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = _del_entorno(
+    "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1"
+).split(",")
 
 
 # ── Aplicaciones ──────────────────────────────────────────────
@@ -266,11 +295,12 @@ MEDIA_URL = "medios/"
 # Dónde caen los archivos con el almacenamiento local. Se saca del
 # entorno para que en Render apunte al disco montado y no al sistema de
 # archivos del contenedor, que se borra en cada despliegue.
-MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "medios"))
+MEDIA_ROOT = Path(_del_entorno("MEDIA_ROOT", BASE_DIR / "medios"))
+
 
 # `local` (por omisión) o `s3`. Cambiar de uno a otro es cambiar esta
 # variable y las cuatro de abajo: no se toca código. Ver `ADR-0007`.
-ALMACENAMIENTO = os.getenv("ALMACENAMIENTO", "local").lower()
+ALMACENAMIENTO = _del_entorno("ALMACENAMIENTO", "local").lower()
 
 if ALMACENAMIENTO == "s3":
     # Sirve para cualquier almacén compatible con S3 —Supabase Storage,
@@ -347,7 +377,7 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # de alta administrativa). En producción, el dominio real: si se queda
 # en localhost, los enlaces no le sirven a nadie.
 
-URL_BASE = os.getenv("URL_BASE", "http://localhost:8000").rstrip("/")
+URL_BASE = _del_entorno("URL_BASE", "http://localhost:8000").rstrip("/")
 
 
 # ── El pie de página, fuera de toda feria ─────────────────────
@@ -384,7 +414,9 @@ EMAIL_BACKEND = os.getenv(
 )
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "FILEY <noreply@filey.org>")
+DEFAULT_FROM_EMAIL = _del_entorno(
+    "DEFAULT_FROM_EMAIL", "FILEY <noreply@filey.org>"
+)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # El aviso es sobre Resend, así que solo aplica si Resend es quien
