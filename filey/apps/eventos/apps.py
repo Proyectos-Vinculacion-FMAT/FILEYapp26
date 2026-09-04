@@ -25,6 +25,17 @@ class EventosConfig(AppConfig):
         Los imports van dentro y no arriba porque ``ready()`` corre
         cuando el registro de apps ya está poblado; a nivel de módulo,
         importar modelos revienta.
+
+        ``url_aplicar`` apunta al **seguimiento** y no al formulario. El
+        catálogo dice "Continuar" a quien ya tiene registro (`CU-FER-006`)
+        y eso llevaba a un formulario en blanco a quien ya había mandado
+        tres propuestas. La puerta de un módulo es el sitio desde el que
+        se ve en qué va el trámite —lo mismo que `stands:inicio` en
+        `STD`—, y quien no ha mandado ninguna cae en `E1` de
+        `CU-EVT-003`, que es un botón para empezar.
+
+        No confundir con ``url_panel``, que es la puerta de quien
+        administra: ésa sí lleva a la cola de propuestas.
         """
         from apps.convocatorias.models import TipoConvocatoria
         from apps.convocatorias.modulos import Modulo, SeccionPanel, registrar
@@ -35,7 +46,7 @@ class EventosConfig(AppConfig):
             Modulo(
                 tipo=TipoConvocatoria.EVT,
                 etiqueta="Actividades del programa",
-                url_aplicar="eventos:propuesta",
+                url_aplicar="eventos:mis_propuestas",
                 # El panel **es** la cola de propuestas, y no una portada
                 # aparte con números que enlazan a ella. `STD` sí tiene las
                 # dos cosas porque su panel resume tres colas distintas y

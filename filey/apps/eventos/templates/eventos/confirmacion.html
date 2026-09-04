@@ -3,81 +3,79 @@
 {% comment %} ===========================================================
    El acuse de la propuesta enviada (CU-EVT-002, pasos 13 y 14).
 
-   Contexto: `propuesta`, `convocatoria`, `anteriores`.
+   Contexto: `propuesta`, `convocatoria`.
 
-   Las dos acciones del paso 14 —"crear una nueva solicitud" y "cerrar"—
-   están las dos, y la primera es la primaria: en EVT se proponen varias
-   actividades, y quien acaba de enviar una suele traer otra.
+   ── Por qué ya no lleva la lista de lo enviado ──────────────
 
-   Lo que ya se envió se enseña **aquí mismo**, con su folio y su estado.
-   No es el listado de CU-EVT-003 —ése filtra, ordena y lleva al detalle
-   de cada una— sino la respuesta a «¿qué llevo mandado?» en el único
-   momento en que alguien se lo pregunta: justo después de enviar.
+   La llevó hasta el 2026-09-03, cuando `CU-EVT-003` no existía y esta
+   pantalla era el único sitio donde se podía ver qué llevaba mandado
+   uno. Con el seguimiento construido, esa tabla era la misma lista dos
+   veces —aquí sin poder abrir nada, y un clic después con el detalle—,
+   y encima sin la propuesta que se acababa de enviar: la más importante
+   en ese momento era justo la que faltaba.
+
+   Ahora hace una sola cosa, que es lo que pide el paso 14 y lo que
+   dibuja `prototipo/EVT/aplicantes/confirmacion.html`: dar el folio en
+   grande y decir qué sigue. La lista está a un clic, y allí la nueva
+   llega resaltada.
+
+   El folio en grande no es decoración. Es el único dato de esta pantalla
+   que hay que retener, y la ley peak-end dice que el final de un trámite
+   es lo que se recuerda de él: si algo tiene que quedarse, es eso.
    =========================================================== {% endcomment %}
 
 {% block titulo %}{{ convocatoria.nombre }} — Propuesta enviada{% endblock %}
 
 {% block clases_pagina %}page-narrow{% endblock %}
 
-{% block encabezado_titulo %}Tu propuesta quedó registrada{% endblock %}
-{% block encabezado_texto %}
-  Te enviamos el acuse a <strong>{{ user.correo }}</strong> con este mismo folio.
-{% endblock %}
+{% comment %} Sin encabezado de página: el título vive dentro de la
+   tarjeta, centrado con el resto. Dos encabezados seguidos —uno alineado
+   a la izquierda y otro al centro— se leen como dos pantallas pegadas.
+   {% endcomment %}
+{% block encabezado %}{% endblock %}
 
 {% block contenido %}
 
-<div class="card card-pad">
-  <div class="note note-ok">
-    <div class="ico">✅</div>
-    <div>
-      <strong>Folio {{ propuesta.folio }}</strong> — «{{ propuesta.titulo_actividad }}»,
-      {{ propuesta.actividad.tipo }}. Queda <strong>pendiente de revisión</strong>:
-      el comité dictamina cada solicitud y te avisaremos del resultado.
-    </div>
+<div class="card confirm-card">
+  <div class="check">✓</div>
+  <h1>¡Propuesta enviada!</h1>
+  <p>
+    Tu propuesta quedó registrada en estado <strong>pendiente</strong> y entró
+    a la cola de revisión de la Coordinación General de Contenidos.
+  </p>
+
+  <div class="folio-box">
+    <small>Tu folio</small>
+    <strong>{{ propuesta.folio }}</strong>
   </div>
 
-  <div class="note note-info">
-    <div class="ico">ℹ️</div>
-    <div>Enviar una propuesta <strong>no garantiza su aceptación</strong>, y la
-      sala, el día y el horario los asigna la Coordinación. Guarda tu folio: es
-      con lo que se identifica tu solicitud en cualquier trámite.</div>
-  </div>
-</div>
+  <p>
+    Te enviamos el acuse a <strong>{{ user.correo }}</strong>. Recibirás una
+    notificación cuando haya resultado.
+  </p>
+  {% comment %} Lo que el CU manda decir y no se puede dar por sabido:
+     enviar no es que te acepten, y el horario no lo eliges tú. Va aquí y
+     no en un aviso aparte para no romper la tarjeta en dos. {% endcomment %}
+  <p>
+    Enviar una propuesta <strong>no garantiza su aceptación</strong>, y la sala,
+    el día y el horario los asigna la Coordinación.
+  </p>
 
-{% if anteriores %}
-  <div class="card section-card">
-    <div class="section-head">
-      <div>
-        <h3>Tus otras propuestas en esta convocatoria</h3>
-        <p>{{ anteriores|length }} además de la que acabas de enviar</p>
-      </div>
-    </div>
-    <div class="section-body">
-      <table class="table">
-        <thead>
-          <tr><th>Folio</th><th>Tipo</th><th>Título</th><th>Estado</th></tr>
-        </thead>
-        <tbody>
-          {% for otra in anteriores %}
-            <tr>
-              <td>{{ otra.folio }}</td>
-              <td>{{ otra.actividad.tipo }}</td>
-              <td>{{ otra.titulo_actividad }}</td>
-              <td>{{ otra.get_estado_display }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-{% endif %}
-
-<div class="card card-pad">
-  <div class="form-actions">
-    <a class="btn btn-ghost" href="{% url 'convocatorias:catalogo' %}">Cerrar</a>
-    <a class="btn btn-primary btn-lg"
+  {% comment %} Las dos acciones del paso 14. «Ver mis propuestas» es la
+     primaria: quien acaba de enviar quiere comprobar que su propuesta
+     está en la lista, y desde ahí puede volver a enviar otra. {% endcomment %}
+  <div class="form-actions form-actions-centrada">
+    <a class="btn btn-ghost"
        href="{% url 'eventos:propuesta' convocatoria_id=convocatoria.pk %}">
       Enviar otra propuesta
+    </a>
+    {% comment %} `?nueva=` es lo que hace que la lista sepa cuál resaltar.
+       Va en la barra de direcciones y no en la sesión: así el resalte se
+       pierde al recargar, que es exactamente lo que tiene que pasar —una
+       propuesta solo es nueva la primera vez que se mira. {% endcomment %}
+    <a class="btn btn-primary btn-lg"
+       href="{% url 'eventos:mis_propuestas' convocatoria_id=convocatoria.pk %}?nueva={{ propuesta.pk }}">
+      Ver mis propuestas
     </a>
   </div>
 </div>

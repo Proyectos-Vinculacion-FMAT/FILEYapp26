@@ -34,6 +34,8 @@ actividad es una clave foránea normal en vez de un entero polimórfico.
    enumera sus columnas.
 """
 
+from pathlib import PurePosixPath
+
 from django.conf import settings
 from django.db import models
 
@@ -599,6 +601,17 @@ MODELO_POR_TIPO = {
 
 #: Los dos tipos que además piden archivos y ejemplar físico (`A1` del
 #: CU-EVT-002). Se nombran una vez, aquí.
+#: Lo que un `<img>` puede pintar. `.webp` está aunque el formulario no
+#: lo ofrezca: la lista blanca de `comun/almacenamiento.py` sí lo admite,
+#: y un archivo que entró por ahí tiene que poder verse. Dejarlo fuera lo
+#: enseñaría como «documento» y nadie sabría por qué.
+EXTENSIONES_DE_IMAGEN = frozenset({".jpg", ".jpeg", ".png", ".webp"})
+
+#: Lo que el visor de la propia pantalla puede incrustar. Los `.doc` y
+#: `.odt` de la lista blanca no: ningún navegador los pinta, y para ésos
+#: el enlace se abre —o se descarga— como siempre.
+EXTENSIONES_INCRUSTABLES = frozenset({".pdf"})
+
 TIPOS_DE_PUBLICACION = (
     CatalogoActividades.Nombre.PRESENTACION_LIBRO,
     CatalogoActividades.Nombre.PRESENTACION_REVISTA,
@@ -647,3 +660,47 @@ class Documento(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_documento_display()} de {self.actividad}"
+
+    @property
+    def es_imagen(self) -> bool:
+        """Si el navegador lo puede pintar en un ``<img>``.
+
+        Los tres adjuntos de `EVT` son portadas y retratos, y **casi
+        siempre** son imágenes; la portada además admite PDF, que no se
+        puede pintar así. La pantalla del aplicante enseña la imagen y
+        deja el PDF como archivo, así que alguien tiene que saber cuál es
+        cuál.
+
+        Se mira la extensión de lo guardado y no `nombre_original`: la
+        primera la fija `CarpetaDeLaFeria` a partir del nombre subido y
+        siempre está en minúsculas, mientras que el nombre original puede
+        venir sin extensión o con una escrita a mano.
+
+        No es una comprobación de seguridad —eso lo hace la lista blanca
+        de `comun/almacenamiento.py` al subir—: aquí solo se decide qué
+        etiqueta HTML usar. Ver también `es_incrustable`, que responde lo
+        mismo para lo que no es imagen pero sí se puede enseñar dentro de
+        la pantalla.
+        """
+        return self._extension in EXTENSIONES_DE_IMAGEN
+
+    @property
+    def es_incrustable(self) -> bool:
+        """Si el visor de la pantalla lo puede enseñar sin salir de ella.
+
+        Hoy son los PDF y nada más. Un `.docx` de la lista blanca no lo
+        pinta ningún navegador, así que su marco sigue siendo un enlace:
+        prometer un visor que se abriría en blanco es peor que mandar a
+        otra pestaña.
+        """
+        return self._extension in EXTENSIONES_INCRUSTABLES
+
+    @property
+    def _extension(self) -> str:
+        """La del archivo guardado, siempre en minúsculas.
+
+        Se mira ésta y no la de `nombre_original`: la fija
+        `CarpetaDeLaFeria` al subir, mientras que el nombre original
+        puede venir sin extensión o escrito a mano.
+        """
+        return PurePosixPath(self.archivo.name or "").suffix.lower()

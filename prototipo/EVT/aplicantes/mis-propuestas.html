@@ -35,6 +35,36 @@
   &nbsp;·&nbsp; <a href="../../REG/aplicantes/convocatorias.html">Convocatorias ↗</a>
 </div></div>
 
+<!-- ===========================================================
+     DIVERGE DE LO CONSTRUIDO (2026-09-02) — CU-EVT-003
+
+     Django sirve esta pantalla en `filey/apps/eventos/templates/eventos/`,
+     y se aparta de este archivo en tres puntos, a propósito:
+
+       1. El detalle es una PÁGINA, no el modal de abajo. El paso 4 del CU
+          pide «todos los datos enviados», y una presentación de libro son
+          más de treinta campos: no caben en un modal sin darle scroll
+          propio dentro de una página que ya hace scroll.
+       2. NO está la columna «Categoría»: la asigna el administrador al
+          dictaminar (CU-EVT-009) y hoy saldría «—» en todas las filas.
+       3. NO está la tarjeta de «Mis constancias»: es CU-EVT-005, que no
+          existe, y anuncia una fecha de descarga que nadie puede cumplir.
+
+     Lo que SÍ se portó tal cual, con los mismos nombres: `row-nueva`,
+     `pill-nueva` y el keyframe `filaEntra` de la fila recién enviada.
+     Bajaron del bloque de estilos embebido de abajo a
+     `filey/estaticos/css/filey.css`, así que si se tocan hay que tocarlos
+     en los dos sitios.
+
+     (Y no, aquí no se escribe la etiqueta de estilos con sus signos: el
+     contador W4 de `check-ui.sh` la busca con `awk` y tomaría este
+     comentario como el principio de un bloque de CSS embebido.)
+
+     Los motivos completos están en el propio caso de uso, en
+     `docs/requisitos/EVT/A - Convocatoria/CU-EVT-003 …md`. Este archivo se
+     queda como está hasta que se revise el prototipo de EVT entero: es el
+     entregable que ve el cliente y se publica en cada push a `main`.
+     =========================================================== -->
 <main class="page">
   <div class="page-head">
     <h1>Mis propuestas</h1>

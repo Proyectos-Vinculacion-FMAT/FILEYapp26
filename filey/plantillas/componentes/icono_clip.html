@@ -1,0 +1,20 @@
+{% comment %} ===========================================================
+   El clip de "adjuntar un archivo". Sin contexto: se incluye y ya.
+
+       {% include "componentes/icono_clip.html" %}
+
+   Sustituye al emoji 📎 que llevaba `.file-mock`. Un emoji lo dibuja la
+   fuente del sistema: cambia de forma y de color entre Windows, macOS y
+   Android, no toma el color del texto y no se puede alinear con
+   precisión. Aquí los tres iconos del bloque —clip, PDF y papelera—
+   tienen que verse de la misma familia, y con emojis no se puede.
+
+   Recortado del banco (`C:\dev\mockup assets`, SVG Repo) según
+   `filey-ui-componentes` §8: sin `width`/`height` —traía `800px`—, sin
+   el `fill="#000000"` que impedía heredar el color, y sin los dos `<g>`
+   vacíos que solo envolvían al `<path>`.
+   =========================================================== {% endcomment %}
+<svg class="ico-svg" viewBox="0 0 512 512" fill="currentColor"
+     aria-hidden="true" focusable="false">
+  <path d="M346.927,149.639l-21.234-21.235L149.157,304.935c-21.844,21.843-21.844,57.385,0,79.23 c10.569,10.571,24.638,16.391,39.616,16.391c14.978,0,29.047-5.821,39.617-16.391l237.089-237.094 c33.599-33.602,33.599-88.272,0-121.872c-33.6-33.6-88.271-33.6-121.871,0L55.34,313.467c-45.357,45.357-45.357,119.158,0,164.516 C78.019,500.661,107.809,512,137.599,512s59.58-11.338,82.257-34.017l227.708-227.708L426.33,229.04L198.622,456.748 c-33.649,33.647-88.4,33.647-122.047,0c-33.648-33.649-33.648-88.399,0-122.047L364.841,46.435 c21.891-21.89,57.512-21.89,79.403,0c21.891,21.891,21.89,57.511,0,79.403L207.153,362.932 c-4.898,4.898-11.426,7.596-18.381,7.596s-13.484-2.698-18.38-7.596c-10.135-10.136-10.135-26.628,0-36.763L346.927,149.639z"/>
+</svg>

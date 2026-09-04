@@ -52,9 +52,18 @@ def convocatoria(
 
 
 def registro(de_persona, a_convocatoria):
-    return RegistroConvocatoria.objects.create(
+    """La inscripción de esa persona a esa convocatoria.
+
+    `get_or_create` y no `create`: una persona tiene **un** registro por
+    convocatoria —lo sostiene `un_registro_por_persona_y_convocatoria`—
+    y de él cuelgan todas sus propuestas. Con `create`, montar dos
+    propuestas de la misma persona reventaba con un `IntegrityError` que
+    no tenía nada que ver con lo que la prueba estaba mirando.
+    """
+    creado, _ = RegistroConvocatoria.objects.get_or_create(
         persona=de_persona, convocatoria=a_convocatoria
     )
+    return creado
 
 
 def tipo(nombre):
@@ -62,5 +71,21 @@ def tipo(nombre):
     return CatalogoActividades.objects.get(nombre=nombre)
 
 
-def solicitud(en_registro, **cambios):
-    return Solicitud.objects.create(registro=en_registro, **{**PROPUESTA, **cambios})
+def solicitud(en_registro, *, estado=None, mensaje="", motivo="", **cambios):
+    """Una solicitud con su dictamen, que son columnas de la misma fila.
+
+    :param estado: por omisión, `pendiente`.
+    :param mensaje: lo que pide corregir quien revisa.
+    :param motivo: por qué se rechazó.
+
+    Los tres se pasan por separado y no en `**cambios` porque son lo que
+    más se varía en una prueba: el dictamen es justo lo que distingue un
+    escenario de otro.
+    """
+    return Solicitud.objects.create(
+        registro=en_registro,
+        estado=estado or Solicitud.Estado.PENDIENTE,
+        mensaje_cambios_solicitados=mensaje,
+        motivo_rechazo=motivo,
+        **{**PROPUESTA, **cambios},
+    )

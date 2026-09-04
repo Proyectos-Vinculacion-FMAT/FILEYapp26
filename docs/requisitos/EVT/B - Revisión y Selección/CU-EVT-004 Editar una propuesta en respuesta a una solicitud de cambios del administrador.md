@@ -48,7 +48,7 @@ El aplicante recibe un correo notificando que el administrador solicitó cambios
 
 ## Flujo principal
 
-1. El aplicante ingresa a "Mis propuestas" y selecciona la propuesta en estado `cambios_solicitados`.
+1. El aplicante ingresa a "Mis propuestas" y selecciona la propuesta en estado `cambios_solicitados`. **Esa pantalla ya existe** desde el 2026-09-03 (`CU-EVT-003`): el detalle enseña el `mensaje_cambios_solicitados` y, en su lugar, un texto que dice que la corrección se hace fuera del sistema. Cuando este CU se construya, ese párrafo es el botón que falta — está señalado en `CU-EVT-003` como desviación abierta.
 2. El sistema muestra el detalle de la propuesta junto con el `mensaje_cambios_solicitados` registrado por el administrador.
 3. El aplicante edita los campos señalados y, si aplica, reemplaza los adjuntos indicados.
 4. El aplicante reenvía la propuesta.

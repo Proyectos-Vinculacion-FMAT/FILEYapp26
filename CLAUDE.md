@@ -68,6 +68,10 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    > La otra mitad de esta regla —"toda pantalla funciona sin JavaScript"— **se retiró** en
    > ADR-0008: el mapa es un canvas de WASM y no puede cumplirla. Las pantallas que hoy
    > funcionan sin JavaScript siguen haciéndolo y conviene que sigan, pero ya no bloquea.
+   >
+   > Lo que la sustituye es una pregunta: *si esto no corre, ¿se pierde una función o solo una
+   > comodidad?* El visor de adjuntos de `CU-EVT-003` intercepta un `<a>` que sin JavaScript
+   > abre el archivo en otra pestaña — evita el salto de pestaña, no habilita el acceso.
 7. Nombres en español, consistentes, tanto en código como en rutas de archivo. Sin eñes en
    identificadores ni nombres de columna (`es_dueno`, `contrasena`): la eñe arrastra
    fricción de codificación en cada herramienta que toque la base.
@@ -80,11 +84,29 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
    que sostiene el invariante de tipo, porque la base no puede.
 9. **Los archivos que sube la gente no tienen URL** (ADR-0007). `MEDIA_URL` no está montada en
    ningún urlconf, a propósito: son constancias fiscales y comprobantes de personas
-   identificadas. Se alcanzan por una vista que primero decide y luego entrega
-   (`apps/stands/servicios/archivos.py` es el patrón). Dónde viven lo decide `ALMACENAMIENTO`
-   —`local` en disco, `s3` cuando haya bucket— y quien llama no cambia. Todo lo que se suba
-   pasa por la lista blanca de `comun/almacenamiento.py`: se sirven desde nuestro propio
-   origen, así que un `.html` admitido sería XSS con nuestras cookies detrás.
+   identificadas. Se alcanzan por una vista que primero decide y luego entrega, y **las dos
+   mitades viven separadas**: **quién** puede ver qué es de cada dominio y está en su
+   `servicios/archivos.py` —el de `stands` es el patrón—; **cómo salen los bytes** no es de
+   ninguno y está en `comun/archivos.py`. Separarlas es lo que evita que un vertical tenga que
+   importar de otro para servir un archivo. Dónde viven lo decide `ALMACENAMIENTO` —`local` en
+   disco, `s3` cuando haya bucket— y quien llama no cambia. Todo lo que se suba pasa por la
+   lista blanca de `comun/almacenamiento.py`: se sirven desde nuestro propio origen, así que un
+   `.html` admitido sería XSS con nuestras cookies detrás.
+
+   **Un archivo propio sí se puede ver dentro de la pantalla que lo pide** (ADR-0010), pero
+   **solo en el dominio que lo necesita**. `EVT` entrega sus adjuntos con
+   `X-Frame-Options: SAMEORIGIN` —por decorador, no en `settings.py`, que sigue en `DENY` para
+   todo lo demás— y con `Content-Security-Policy: sandbox allow-same-origin`. No habilita
+   ejecución: sin `allow-scripts` no hay nada que pueda leer el origen recuperado.
+
+   > [!warning] La política de seguridad la declara cada dominio, no `comun/archivos.py`
+   > Compartir el **transporte** es correcto —cómo salen los bytes no es de nadie—; compartir
+   > la **política** no. El 2026-09-03 se relajó la cabecera en el módulo compartido y con eso
+   > cambió también la de las constancias fiscales de `STD`, que no lo había pedido: su prueba
+   > decía `"sandbox" in cabecera` y eso lo cumplen las dos. Ahora `entregar_archivo` la recibe
+   > por parámetro, la de fábrica es la cerrada, y cada dominio fija la suya con un `==` en su
+   > prueba. **Las necesidades de un dominio no se le presumen a otro por compartir una
+   > función.**
 
 ## Estado actual
 
@@ -110,6 +132,16 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   el catálogo con cada vertical (ADR-0006). Falta la pantalla de convocatorias del panel del
   dueño (CU-FER-005 a CU-FER-009 con su propia UI), la transferencia de propiedad y
   `BitacoraFER`.
+
+  > [!note] `FER` no sirve ni una línea de JavaScript propia
+  > Sus ocho plantillas —el catálogo, elegir feria, mis ferias, los accesos, retirar acceso y
+  > los dos correos— no tienen un solo `hx-`, `x-data` ni `<script>`. Todo es HTML servido, y
+  > por eso sus casos de uso pueden apoyarse en que la pantalla funciona sin JavaScript aunque
+  > la regla general ya no lo exija (regla 6, `ADR-0008`): en `FER` sigue siendo cierto de
+  > hecho.
+  >
+  > La barra superior y el pie sí vienen del chasis compartido, que carga htmx y Alpine para
+  > toda la aplicación; lo que no usa `FER` es ninguno de los dos.
 - **Construido a medias:** `STD` (Stands) — `apps/stands/` tiene dos verticales completas:
   - **La solicitud de expositor** (CU-STD-001 a 008): la ficha oficial en U1, la cola de
     revisión y el detalle en A1 y A2, el dictamen con su aviso por correo, los adjuntos con
@@ -324,8 +356,21 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
     > puede quedar sin semblanza: es la misma invariante que `validar_personas` sostiene en el
     > alta.
 
-  Falta `CU-EVT-003` (consultar las propuestas propias), `CU-EVT-004` (corregir tras una
-  petición de cambios), `CU-EVT-010` (notificar en lote) y `CU-EVT-012` (ejemplar físico).
+  - **El seguimiento de lo enviado** (`CU-EVT-003`): el listado, el detalle en solo lectura y
+    la entrega de los adjuntos a quien los subió. Es la **puerta del módulo** —`url_aplicar`
+    apunta ahí— porque el catálogo dice «Continuar» a quien ya tiene registro y eso llevaba a
+    un formulario en blanco. Quien no ha enviado nada cae en `E1`, que ofrece el formulario.
+
+    > [!note] Los adjuntos sobreviven a un envío rechazado
+    > Un `<input type="file">` no se puede repoblar, así que lo guarda el servidor:
+    > `servicios/en_espera.py` es una cola **de la sesión** —`EVT` no guarda borradores— con
+    > tope por persona y convocatoria. Se vacía al enviar, al salir del formulario, al cerrar
+    > sesión, al volver con otra sesión y al cambiar a un tipo que no pida ese adjunto; lo que
+    > queda sin sesión lo recoge `manage.py barrida_espera`. **No cuenta días**: eso es de
+    > `STD`, donde los plazos son del negocio.
+
+  Falta `CU-EVT-004` (corregir tras una petición de cambios), `CU-EVT-010` (notificar en lote)
+  y `CU-EVT-012` (ejemplar físico).
 
   > [!warning] Aceptar **no crea ninguna `Actividad`**, aunque `CU-EVT-009` lo diga
   > `Actividad` en `models.py` es el enrutador polimórfico que nace al **enviar** la propuesta,
@@ -338,6 +383,11 @@ Vienen de los ADR y no se contradicen sin escribir uno nuevo (ver `docs/adr/READ
   > El modelo de datos §3.1 la describe como uno a uno **obligatoria y creada al enviar**, que
   > es la definición de una columna con un `JOIN` de más; y `estado` ya vivía en `Solicitud`
   > desde `CU-EVT-002`. La desviación está anotada en el propio documento.
+  >
+  > **La pregunta sigue abierta** en `ADR-0011`: si `TAL` acaba siendo una convocatoria
+  > `EVT` con otros criterios de revisión, cada convocatoria necesitará su forma de
+  > revisar y esto tendrá que desacoplarse. Se decide cuando el modelo de datos de
+  > `TAL` conteste esa pregunta, no antes.
   >
   > **Un dictamen ya emitido solo lo cambia el superusuario** (`A3`/`E2` de `CU-EVT-009`).
   > ADR-0004 no define un nivel entre administrar y ser dueño, así que el permiso es el del

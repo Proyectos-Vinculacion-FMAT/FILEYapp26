@@ -30,7 +30,7 @@ from ..models import (
     Documento,
     Solicitud,
 )
-from ..servicios import catalogo, configuracion, solicitudes
+from ..servicios import catalogo, configuracion, seguimiento, solicitudes
 from . import fabricas
 
 pytestmark = pytest.mark.django_db
@@ -61,6 +61,7 @@ def test_la_propuesta_trae_consigo_su_registro(feria_2027):
 
         assert RegistroConvocatoria.objects.count() == 1
         assert propuesta.registro.persona == persona
+        # Nace en `pendiente` por el valor por omisión de la columna.
         assert propuesta.estado == Solicitud.Estado.PENDIENTE
         assert propuesta.actividad.tipo.nombre == "conversatorio"
         assert propuesta.actividad.detalle.nombre_participante_1 == "Elena Poniatowska"
@@ -89,7 +90,7 @@ def test_varias_propuestas_cuelgan_del_mismo_registro(feria_2027):
 
         assert primera.registro == segunda.registro
         assert RegistroConvocatoria.objects.count() == 1
-        assert solicitudes.propuestas_de(convocatoria, persona).count() == 2
+        assert seguimiento.propuestas_de(convocatoria, persona).count() == 2
 
 
 def test_los_adjuntos_quedan_colgados_de_la_actividad(feria_2027, tmp_path):

@@ -51,7 +51,7 @@ en `filey/manage.py`. Los nombres son en español, de forma consistente.
 ```
 filey/
   config/            settings, DOS urlconfs (públicas + de feria), wsgi/asgi
-  comun/             transversal, de ningún dominio (htmx.py, limites.py, urls.py)
+  comun/             transversal, de ningún dominio (htmx.py, limites.py, urls.py, archivos.py)
   plantillas/        base.html + layouts/ + componentes/  ← esqueleto compartido
   estaticos/         css/ js/ img/  (htmx.min.js y alpine.min.js versionados aquí)
   apps/<dominio>/
@@ -111,9 +111,10 @@ En Django **no**: las plantillas del dominio son planas y el rol se resuelve con
   `apps/registros/permisos.py` para lo de fuera de una feria, `@requiere_admin_feria` /
   `@requiere_dueno_feria` de `apps/ferias/permisos.py` para lo de dentro (ADR-0004).
 
-**Ya no existe** un permiso por módulo (`requiere_modulo`, `NivelPermiso`, `RolPermiso`): se
-derogó el 2026-08-21 y se retiró del código el mismo mes. El acceso administrativo se otorga
-por feria completa, no por módulo — ver la nota de `apps/registros/permisos.py`.
+**El acceso administrativo se otorga por feria completa, nunca por módulo.** Quien administra
+una feria administra todos sus módulos. Si un plan o un caso de uso antiguo menciona
+`requiere_modulo`, `NivelPermiso` o `RolPermiso`, esos nombres **no existen en el código**: la
+nota de `apps/registros/permisos.py` explica por qué.
 
 Ningún módulo implementa su propia autenticación: la importa de `registros` (identidad, fuera
 de toda feria) o de `ferias` (permiso dentro de una feria), nunca la suya propia.
@@ -122,10 +123,30 @@ de toda feria) o de `ferias` (permiso dentro de una feria), nunca la suya propia
 
 ## 3. Las dos reglas de frontend del monolito
 
-1. **Toda pantalla funciona sin JavaScript.** La vista responde página completa o fragmento
-   según `HX-Request`. htmx mejora la experiencia; no es requisito para usar el sistema.
-2. **Nada se carga de un CDN.** htmx y Alpine viven en `estaticos/js/`. El sistema tiene que
-   levantar sin salida a internet, y nadie puede cambiar por su cuenta el JS que servimos.
+1. **Nada se carga de un CDN.** htmx y Alpine viven en `estaticos/js/`, y los 39 MB del build
+   de Godot del showfloor también. El sistema tiene que levantar sin salida a internet, y nadie
+   puede cambiar por su cuenta el JS que servimos.
+
+2. **JavaScript puede faltar sin que se pierda una función.** JavaScript es un requisito del
+   sistema (`ADR-0008`) y hay pantallas que sin él no existen —el mapa es un canvas de WASM—.
+   Lo que no puede pasar es que una **capacidad** dependa solo del navegador.
+
+   La pregunta que decide: *si esto no corre, ¿se pierde una función o solo una comodidad?*
+
+   | Se pierde | Hay que resolverlo |
+   | --- | --- |
+   | Poder abrir un adjunto | Sí — el marco del visor es un `<a>` al archivo, y sin JavaScript el navegador lo abre en otra pestaña |
+   | Poder descartar un adjunto ya subido | Sí — el botón es un `submit` de verdad, no un `type="button"` con `hx-post` |
+   | Que la imagen crezca desde su miniatura | No — sin `startViewTransition` el visor se abre sin animar |
+   | Que la sección cambie sin recargar | No — la misma vista responde página completa o fragmento según `HX-Request`, con un solo markup |
+
+   Dos consecuencias prácticas al escribir:
+
+   - **Un enlace es un enlace y un envío es un envío.** Interceptarlos con htmx o con Alpine
+     mejora el viaje; no es lo que da el acceso.
+   - **Lo que el navegador no sepa hacer, que se note poco.** `prefers-reduced-motion` no anima
+     a propósito, y un `<object>` que no puede pintar un PDF enseña su contenido de respaldo
+     sin que haya que detectarlo.
 
 ## 4. htmx: los ayudantes ya existen
 
@@ -165,8 +186,11 @@ reusan sin ver la vista. `{# … #}` es de **una sola línea**; multilínea se i
 
 `filey/estaticos/css/filey.css` nació como **copia a mano** de `prototipo/common/styles-base.css`
 + `prototipo/REG/styles.css`, con los mismos nombres de token. Ya no es solo eso: con `STD`
-portado va por 1576 líneas contra las 571 de esas dos hojas, así que la mayor parte de su
-contenido ya no tiene original en el prototipo. Sigue siendo una segunda fuente, y esto es lo
+portado va por **2309 líneas** (2026-09-04) contra las 571 de esas dos hojas, así que la mayor
+parte de su contenido ya no tiene original en el prototipo. Las últimas en entrar son de
+`CU-EVT-003`: la tarjeta de confirmación y el resalte de fila **sí** vienen del prototipo y
+conservan sus nombres (`.confirm-card`, `.folio-box`, `.row-nueva`, `.pill-nueva`); la galería
+de adjuntos y el visor no tienen original allí. Sigue siendo una segunda fuente, y esto es lo
 que no coincide (recalculado 2026-09-01, con `STD` ya dentro):
 
 - **9 tokens de `common` no están en `filey.css`.** Solo **5** son deuda —`--color-magenta-oscuro`,
@@ -298,7 +322,7 @@ cd filey && pytest                 # las pruebas viven en apps/<dom>/pruebas/
 - [ ] La vista es delgada; la regla de negocio está en `services/`
 - [ ] El acceso está protegido por decorador (`registros.permisos` fuera de una feria,
       `ferias.permisos` dentro), no por la carpeta ni por un permiso por módulo
-- [ ] La pantalla funciona con JavaScript desactivado
+- [ ] Ninguna **función** depende solo de JavaScript; las comodidades sí pueden (§3)
 - [ ] Ningún `<script src="https://…">`
 - [ ] Los tokens usados existen con el mismo nombre en el prototipo
 - [ ] Comentarios multilínea con `{% comment %}`

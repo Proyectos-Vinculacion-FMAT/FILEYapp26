@@ -73,9 +73,15 @@ convención de equipo normal, no aquí.
 2. Llena **Contexto** (el problema, sin todavía decir la solución), **Opciones consideradas**
    (con pros/contras reales, no de relleno) y, cuando ya esté decidido, **Decisión** y
    **Consecuencias**.
-3. Mientras se discute, el estado es `Propuesto`. Cuando el equipo lo cierra, pasa a
+3. Si la decisión **cambia o retira una regla escrita en otro sitio**, llena
+   *Qué queda desactualizado por esta decisión* y actualiza esos archivos **en el mismo
+   cambio**. Es el paso que más se olvida y el más caro: `ADR-0008` retiró «toda pantalla
+   funciona sin JavaScript» el 2026-08-29 y `filey-render` siguió enunciándola como regla 1
+   hasta el 2026-09-03. Durante esos días, quien leyera el skill —una persona o un agente—
+   estaría siguiendo una regla derogada sin hacer nada mal.
+4. Mientras se discute, el estado es `Propuesto`. Cuando el equipo lo cierra, pasa a
    `Aceptado` — y a partir de ahí **el archivo ya no se edita para cambiar la decisión**.
-4. Agrégalo a la tabla de abajo.
+5. Agrégalo a la tabla de abajo.
 
 > [!warning] Un ADR aceptado es inmutable
 > Si la decisión cambia después, **no edites el ADR viejo**. Escribe uno nuevo, márcalo como
@@ -105,6 +111,8 @@ convención de equipo normal, no aquí.
 | [0007](<0007-los-archivos-empiezan-en-disco.md>) | Los archivos que sube la gente empiezan en disco, con la puerta de salida puesta | Aceptado | 2026-08-27 |
 | [0008](<0008-el-mapa-corre-en-el-navegador.md>) | El showfloor lo dibuja Godot en el navegador, y con eso se retira la regla del «sin JavaScript» | Aceptado | 2026-08-29 |
 | [0009](<0009-las-ocho-actividades-de-evt.md>) | Las ocho actividades de `EVT` se representan con herencia multitabla, y se capturan con el tipo en la URL | Aceptado | 2026-09-01 |
+| [0010](<0010-un-archivo-propio-se-ve-dentro-de-la-pantalla.md>) | Un archivo propio se puede ver dentro de la pantalla que lo pide | Aceptado | 2026-09-03 |
+| [0011](<0011-la-revision-desacoplada-de-la-solicitud.md>) | Dónde vive la revisión de una propuesta: columnas de `Solicitud` o entidad propia | Propuesto | 2026-09-04 |
 
 
 ## Estructura de la carpeta
@@ -121,6 +129,9 @@ adr/
 ├── 0006-la-liga-entre-convocatoria-y-modulo.md
 ├── 0007-los-archivos-empiezan-en-disco.md
 ├── 0008-el-mapa-corre-en-el-navegador.md
+├── 0009-las-ocho-actividades-de-evt.md
+├── 0010-un-archivo-propio-se-ve-dentro-de-la-pantalla.md
+├── 0011-la-revision-desacoplada-de-la-solicitud.md
 └── 000N-....md
 ```
 

@@ -1,6 +1,7 @@
 ---
 estado: propuesta
-version: 0.1
+version: 0.2
+fecha_actualizacion: 2026-09-03
 tags:
   - tipo/caso-de-uso
   - dom/evt
@@ -10,6 +11,25 @@ dominio: EVT
 reglas_de_negocio: []
 ---
 # CU-EVT-009 Dictaminar una propuesta
+
+> [!note] Construido el 2026-09-03 — `filey/apps/eventos/servicios/dictamen.py`
+> El flujo de este documento se implementó tal cual, con dos precisiones que se descubrieron al
+> construirlo y que su redacción daba por otra cosa:
+>
+> - **El dictamen son columnas de `Solicitud`, no una tabla aparte.** El modelo de datos §3.1
+>   describe `DetallesAdminSolicitud` como una relación uno a uno **obligatoria y creada al
+>   enviarse la solicitud**, que es la definición de una columna con un `JOIN` de más. La
+>   desviación está argumentada en el propio documento. Si `TAL` acaba siendo una convocatoria
+>   `EVT` con otros criterios de revisión, esto tendrá que desacoplarse: la pregunta está
+>   abierta en `ADR-0011`.
+> - **Aceptar no crea ninguna `Actividad`.** Ya existe desde el envío: es la tabla padre de las
+>   ocho de tipo, con herencia multitabla (`ADR-0009`). Lo que el paso 6 llama «crear una
+>   `Actividad` en estado `sin_horario`» corresponde a `SolicitudesAprobadas` (§3.2), que sí
+>   nace al aceptar, y a la ausencia de filas en `ProgramacionActividad` (§3.3) — «sin horario»
+>   es un estado **derivado**, no una columna.
+>
+> Los dos textos del dictamen se leen desde el otro lado: `CU-EVT-003` paso 4 los enseña a
+> quien propuso.
 
 ## Objetivo
 

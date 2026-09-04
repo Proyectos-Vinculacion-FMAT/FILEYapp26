@@ -1,0 +1,295 @@
+{% extends "layouts/panel.html" %}
+
+{% comment %} ===========================================================
+   El detalle de una propuesta enviada (CU-EVT-003, pasos 3 y 4).
+
+   Contexto: `convocatoria`, `propuesta`, `actividad`,
+             `bloques` (los datos del tipo, ya compuestos por `detalle.py`),
+             `documentos`.
+
+   Solo lectura. El paso 4 pide **todos los datos enviados**, y en una
+   presentación de libro son más de treinta campos: por eso es una página
+   y no el modal que dibuja el prototipo. Un modal con scroll propio
+   dentro de una página que también hace scroll son dos alfombras
+   superpuestas, y la de abajo se mueve cuando uno cree estar moviendo la
+   de arriba.
+
+   Las secciones **no van numeradas**, al revés que en la captura: un
+   número dice cuánto falta, y aquí no falta nada — está todo hecho.
+
+   El orden es el de la captura, y no por estética: quien abre esto
+   normalmente viene a comprobar algo que recuerda haber escrito, y lo
+   busca donde lo escribió.
+   =========================================================== {% endcomment %}
+
+{% block titulo %}{{ propuesta.folio }} — {{ propuesta.titulo_actividad }}{% endblock %}
+
+{% block encabezado_titulo %}{{ propuesta.titulo_actividad }}{% endblock %}
+{% comment %} El folio en el subtítulo: es lo que la persona dice por
+   teléfono cuando llama a preguntar. {% endcomment %}
+{% block encabezado_texto %}
+  {{ actividad.tipo }} · Folio {{ propuesta.folio }} ·
+  Enviada el {{ propuesta.fecha_de_solicitud|date:"j N Y" }}
+{% endblock %}
+
+{% block contenido %}
+
+{% comment %} ── El desenlace, arriba del todo ──────────────────────────
+   Es lo primero que alguien viene a mirar cuando vuelve. Cada estado con
+   su color **y con su texto**: pintarlos todos igual obliga a leer para
+   saber si hay que hacer algo. {% endcomment %}
+{% if propuesta.estado == "pendiente" %}
+  <div class="note note-info">
+    <div class="ico">⏳</div>
+    <div>
+      <strong>Tu propuesta está en revisión.</strong>
+      El comité dictamina cada solicitud y te avisaremos por correo del
+      resultado. No hace falta que hagas nada.
+    </div>
+  </div>
+{% elif propuesta.estado == "aceptada" %}
+  <div class="note note-ok">
+    <div class="ico">✅</div>
+    <div>
+      <strong>Tu propuesta fue aceptada.</strong>
+      La sala, el día y el horario los asigna la Coordinación: te llegarán
+      en una notificación posterior.
+    </div>
+  </div>
+{% elif propuesta.estado == "cambios_solicitados" %}
+  <div class="note note-warn">
+    <div class="ico">✏️</div>
+    <div>
+      <strong>El comité pide algunos cambios.</strong>
+      {{ propuesta.mensaje_cambios_solicitados }}
+      {% comment %} Editar es CU-EVT-004 y todavía no existe. Se dice con
+         estas palabras en vez de enseñar un botón que no lleva a ninguna
+         parte: un control bloqueado y callado se lee como una avería
+         (`filey-ux` §3), y uno que no está y no se explica, también.
+         Cuando exista esa pantalla, este párrafo es el botón. {% endcomment %}
+      <br>
+      Escríbenos para hacer llegar la corrección; menciona tu folio
+      <strong>{{ propuesta.folio }}</strong>.
+    </div>
+  </div>
+{% elif propuesta.estado == "rechazada" %}
+  <div class="note note-err">
+    <div class="ico">✕</div>
+    <div>
+      <strong>Tu propuesta no fue aceptada.</strong>
+      {{ propuesta.motivo_rechazo }}
+    </div>
+  </div>
+{% else %}
+  <div class="note note-warn">
+    <div class="ico">🚫</div>
+    <div>
+      <strong>Esta actividad quedó cancelada.</strong>
+      Se aceptó en su momento y después se retiró del programa.
+    </div>
+  </div>
+{% endif %}
+
+{% comment %} ── Quién propone ───────────────────────────────────────── {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <h3>Quién propone</h3>
+    <p>Tal como se envió.</p>
+  </div>
+  <div class="section-body">
+    <div class="grid-2">
+      <div class="field"><label>Nombre</label>{{ propuesta.persona.nombre_completo }}</div>
+      <div class="field"><label>Correo</label>{{ propuesta.persona.correo }}</div>
+      <div class="field"><label>Dependencia o institución</label>{{ propuesta.institucion }}</div>
+      <div class="field"><label>Cargo</label>{{ propuesta.cargo|default:"—" }}</div>
+    </div>
+    <div class="field">
+      <label>Pertenencia a la UADY</label>
+      {% if propuesta.es_uady %}Se declara parte de la UADY{% else %}No forma parte de la UADY{% endif %}
+    </div>
+  </div>
+</div>
+
+{% comment %} ── La actividad, en lo común a los ocho tipos ──────────── {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <h3>La actividad</h3>
+  </div>
+  <div class="section-body">
+    <div class="grid-2">
+      <div class="field"><label>Tipo</label>{{ actividad.tipo }}</div>
+      <div class="field"><label>Título de la actividad</label>{{ propuesta.titulo_actividad }}</div>
+      <div class="field"><label>Organiza</label>{{ propuesta.nombre_organizador_organizacion }}</div>
+      <div class="field"><label>Moderador/a</label>{{ propuesta.nombre_moderador|default:"—" }}</div>
+    </div>
+    <div class="field">
+      <label>Público al que va dirigido</label>
+      {{ propuesta.publicos_legibles|join:" · " }}
+    </div>
+    <div class="field">
+      <label>Constancia de participación</label>
+      {% if propuesta.requiere_constancia %}Sí la necesita{% else %}No la necesita{% endif %}
+    </div>
+  </div>
+</div>
+
+{% comment %} ── Lo propio del tipo ────────────────────────────────────
+   Esta plantilla no sabe que existen ocho tipos: recorre lo que le da
+   `detalle.py`, que lo compone en el mismo orden en que se capturó. {% endcomment %}
+<div class="section-card card">
+  <div class="section-head">
+    <h3>Detalles de la actividad — {{ actividad.tipo }}</h3>
+  </div>
+  <div class="section-body">
+    {% for bloque in bloques %}
+      {% if bloque.clase == "campo" %}
+        <div class="field">
+          <label>{{ bloque.etiqueta|capfirst }}</label>
+          {{ bloque.valor }}
+        </div>
+      {% else %}
+        <div class="field">
+          <label>{{ bloque.titulo }}</label>
+        </div>
+        {% for quien in bloque.filas %}
+          <div class="evt-persona">
+            <div class="evt-persona__head">
+              <span class="evt-persona__n">{{ quien.etiqueta }}</span>
+              {% comment %} `participa` es `None` en los seis tipos que no
+                 preguntan si alguien asiste, y entonces no se pinta nada.
+                 `False` sí se pinta: que un autor no vaya a estar es un
+                 dato de la propuesta, no la ausencia de uno. {% endcomment %}
+              {% if quien.participa is not None %}
+                {% if quien.participa %}
+                  <span class="badge badge-accepted">Participará</span>
+                {% else %}
+                  <span class="badge badge-closed">No participará</span>
+                {% endif %}
+              {% endif %}
+            </div>
+            <div class="field"><label>Nombre</label>{{ quien.nombre }}</div>
+            <div class="field"><label>Semblanza</label>{{ quien.semblanza|linebreaksbr }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+
+    {% comment %} La sinopsis va aquí y no arriba, igual que en la captura:
+       después de saber quién participa y antes de los adjuntos. {% endcomment %}
+    <div class="field">
+      <label>Sinopsis</label>
+      {{ propuesta.sinopsis|linebreaksbr }}
+    </div>
+
+    {% if propuesta.comentarios %}
+      <div class="field">
+        <label>Comentarios u observaciones</label>
+        {{ propuesta.comentarios|linebreaksbr }}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% comment %} ── Los adjuntos ─────────────────────────────────────────
+   La sección solo si el tipo pidió alguno: los seis que no son
+   publicación no adjuntan nada, y una sección vacía haría pensar que
+   faltó subir algo.
+
+   **Se ven, no se leen.** Enseñar «portada.jpg» no contesta la pregunta
+   que trae quien abre esto: si subió la portada que era. Un nombre de
+   archivo no distingue dos versiones de la misma imagen y el que puso la
+   cámara —`IMG_4471.jpg`— no distingue nada.
+
+   Tres detalles que no se ven en el markup:
+
+     · `loading="lazy"` deja que el navegador difiera lo que está fuera
+       de pantalla. Es la respuesta nativa a "cárgala si se puede": no
+       hace falta un botón de "cargar imagen" que habría que pulsar
+       siempre, incluso donde sobra.
+     · El marco tiene altura propia en CSS, así que la página **no da un
+       salto** cuando una imagen diferida termina de llegar.
+     · El `<a>` es el camino sin JavaScript: abre el archivo en otra
+       pestaña. `filey.js` lo intercepta para que la imagen **crezca
+       desde su marco hasta el centro** de la misma página —View
+       Transitions, dentro de un `<dialog>`— y respeta Ctrl/Cmd para no
+       romper "abrir en otra pestaña". Un PDF no se intercepta: no hay
+       `<img>` dentro de su marco y el enlace hace lo suyo.
+
+   Los enlaces pasan por `eventos:documento`, que comprueba y después
+   entrega — estos archivos no tienen URL propia (ADR-0007). {% endcomment %}
+{% if documentos %}
+  <div class="section-card card">
+    <div class="section-head">
+      <h3>Archivos adjuntos</h3>
+      <p>Los que subiste con la propuesta. Pulsa una imagen para verla completa.</p>
+    </div>
+    <div class="section-body">
+      <div class="adjuntos">
+        {% for doc in documentos %}
+          {% comment %} `as` y no un atributo del modelo: la dirección la
+             sabe el urlconf, y una propiedad `url_entrega` sería un
+             segundo sitio donde se escribe la misma ruta. {% endcomment %}
+          {% url 'eventos:documento' documento_id=doc.pk as url_doc %}
+          {% with etiqueta=doc.get_tipo_documento_display %}
+            <figure class="adjunto">
+              {% if doc.es_imagen %}
+                <a class="adjunto__marco" href="{{ url_doc }}"
+                   target="_blank" rel="noopener"
+                   data-visor="{{ etiqueta }} — {{ doc.nombre_original|default:'archivo' }}">
+                  <img src="{{ url_doc }}" alt="{{ etiqueta }}" loading="lazy">
+                  {% comment %} Solo se ve si la imagen no llega: lo revela
+                     `filey.js` poniendo `.es-rota` en el marco. {% endcomment %}
+                  <span class="adjunto__aviso">
+                    <span class="ico">🖼️</span>
+                    No se pudo cargar. Pulsa para abrir el archivo.
+                  </span>
+                </a>
+              {% elif doc.es_incrustable %}
+                {% comment %} Un PDF no se pinta en un `<img>`, pero sí se
+                   puede enseñar dentro de la pantalla: el marco crece
+                   igual que una imagen y dentro va el visor del propio
+                   navegador, con su scroll. `data-visor-doc` es lo que
+                   distingue las dos ramas en `filey.js`. {% endcomment %}
+                <a class="adjunto__marco" href="{{ url_doc }}"
+                   target="_blank" rel="noopener"
+                   data-visor="{{ etiqueta }} — {{ doc.nombre_original|default:'archivo' }}"
+                   data-visor-doc>
+                  <span class="adjunto__aviso">
+                    <span class="ico">{% include "componentes/icono_pdf.html" %}</span>
+                    Ver el documento
+                  </span>
+                </a>
+              {% else %}
+                {% comment %} Un `.docx` o un `.odt`: ningún navegador los
+                   pinta. Sin `data-visor`, así que el enlace hace lo suyo
+                   —abrir o descargar, lo que decida el navegador—.
+                   Prometer un visor que saldría en blanco es peor que
+                   mandar a otra pestaña. {% endcomment %}
+                <a class="adjunto__marco" href="{{ url_doc }}"
+                   target="_blank" rel="noopener">
+                  <span class="adjunto__aviso">
+                    <span class="ico">{% include "componentes/icono_clip.html" %}</span>
+                    Abrir el archivo
+                  </span>
+                </a>
+              {% endif %}
+              <figcaption class="adjunto__pie">
+                <strong>{{ etiqueta }}</strong>
+                {{ doc.nombre_original|default:"archivo" }}
+              </figcaption>
+            </figure>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="form-actions">
+  <a class="btn btn-ghost"
+     href="{% url 'eventos:mis_propuestas' convocatoria_id=convocatoria.pk %}">
+    Volver a mis propuestas
+  </a>
+</div>
+
+{% endblock %}

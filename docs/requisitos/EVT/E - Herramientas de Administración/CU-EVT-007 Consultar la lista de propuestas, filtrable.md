@@ -50,7 +50,7 @@ El administrador abre la sección de Propuestas del panel del módulo EVE.
 ## Flujo principal
 
 1. El administrador abre la sección de Propuestas.
-2. El sistema muestra las propuestas de la edición activa con: folio, nombre de la actividad, proponente, tipo de actividad, categoría, estado (`pendiente` / `cambios_solicitados` / `aceptada` / `rechazada`) y fecha de registro.
+2. El sistema muestra las propuestas de la edición activa con: folio, nombre de la actividad, proponente, tipo de actividad, categoría, estado (`pendiente` / `cambios_solicitados` / `aceptada` / `rechazada` / `cancelada`) y fecha de registro. **El quinto se añadió el 2026-09-03** con el dictamen, que trajo los cinco estados que enumera el modelo de datos (§3.1); `cancelada` solo aplica después de `aceptada` y hoy no lo escribe nadie.
 3. El administrador aplica filtros por tipo de actividad, estado y/o categoría, o busca por texto (folio, proponente o título).
 4. El sistema actualiza la lista conforme a los filtros.
 5. El administrador selecciona una propuesta para ver su detalle (CU-EVT-008).
