@@ -15,6 +15,7 @@ from django.shortcuts import render
 
 from apps.ferias.permisos import tiene_alcance_de_dueno, ve_como_admin
 
+from . import senales
 from .servicios import catalogo
 
 
@@ -43,6 +44,14 @@ def catalogo_de_la_feria(peticion):
     # y entonces esta pantalla es su escaparate, no su panel.
     es_administrador = ve_como_admin(peticion)
     feria = peticion.tenant
+
+    # Abrir el catálogo es salir de lo que se estuviera haciendo. Esta app
+    # no sabe qué significa eso para cada módulo —ni puede saberlo, ver
+    # `senales.py`—: lo anuncia y cada vertical decide. Hoy solo `EVT`
+    # escucha, para descartar los adjuntos a medio subir.
+    senales.se_abrio_el_catalogo.send(
+        sender=None, peticion=peticion, persona=getattr(peticion, "user", None)
+    )
 
     return render(
         peticion,

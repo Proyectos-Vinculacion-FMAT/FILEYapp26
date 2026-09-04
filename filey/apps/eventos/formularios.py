@@ -281,9 +281,24 @@ class ActividadForm(forms.ModelForm):
     #: Cada subclase lo declara con `Campo` y `Personas`.
     orden = ()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, en_espera=None, **kwargs):
+        """
+        :param en_espera: ``{tipo_documento: ArchivoEnEspera}`` con lo que
+            esa persona ya subió y no llegó a enviarse
+            (`servicios/en_espera.py`). Lo que hace aquí es **quitar el
+            obligatorio** a los adjuntos que ya tienen algo guardado.
+
+            Sin esto, el archivo se conservaría pero el formulario lo
+            seguiría pidiendo, y el segundo intento fallaría por el mismo
+            campo que el primero — que es exactamente el problema que
+            esto viene a resolver.
+        """
         super().__init__(*args, **kwargs)
         acortar_areas(self)
+        self.en_espera = en_espera or {}
+        for nombre, tipo_documento in self.TIPO_POR_ADJUNTO.items():
+            if tipo_documento in self.en_espera and nombre in self.fields:
+                self.fields[nombre].required = False
 
     #: Los adjuntos que pide, por nombre de campo. Van al final de la
     #: pantalla, después de la sinopsis, no en el sitio que les tocaría
@@ -310,13 +325,29 @@ class ActividadForm(forms.ModelForm):
             )
         return datos
 
-    def documentos(self):
-        """Los adjuntos que este tipo pide, como ``(tipo, archivo)``.
+    #: Qué `Documento.Tipo` corresponde a cada campo de archivo. Los seis
+    #: tipos que no piden adjuntos lo dejan vacío. Se declara aquí y no
+    #: se deduce del nombre del campo porque el nombre es de la pantalla
+    #: y el tipo es del modelo: `portada_libro` y `portada_revista` son
+    #: dos campos y dos tipos, pero `retrato_autor` es el mismo nombre
+    #: para los dos.
+    TIPO_POR_ADJUNTO: dict = {}
 
-        Vacío en los seis tipos que no llevan ninguno. Lo consume
-        `servicios/solicitudes.crear`.
+    def documentos(self):
+        """Los adjuntos de este envío, como ``(tipo, archivo)``.
+
+        Devuelve **lo que llegó ahora**, no lo que hay en espera. Quien
+        decide cuál de los dos usa es `views.py`, que es donde se sabe si
+        el envío salió bien: al fallar, esto es lo que se mete en la cola;
+        al ir bien, esto es lo que se completa con lo guardado.
+
+        Vacío en los seis tipos que no llevan ninguno.
         """
-        return ()
+        return tuple(
+            (tipo_documento, self.cleaned_data.get(nombre))
+            for nombre, tipo_documento in self.TIPO_POR_ADJUNTO.items()
+        )
+
 
     # ── Cómo se agrupa esto en pantalla ──────────────────────
     #
@@ -364,8 +395,23 @@ class ActividadForm(forms.ModelForm):
         }
 
     def campos_adjuntos(self):
-        """Los archivos que pide el tipo, para pintarlos al final."""
-        return [self[nombre] for nombre in self.adjuntos]
+        """Los archivos que pide el tipo, cada uno con lo que ya se guardó.
+
+        Devuelve ``[{"campo": BoundField, "guardado": ArchivoEnEspera|None}]``
+        y no solo los campos, para que la plantilla no tenga que buscar
+        en un diccionario por una clave variable — que en el lenguaje de
+        plantillas de Django no se puede sin un filtro propio.
+
+        Es el mismo trato que `bloques`: quien sabe cómo se agrupa esto
+        es el formulario; la plantilla recorre y pinta.
+        """
+        return [
+            {
+                "campo": self[nombre],
+                "guardado": self.en_espera.get(self.TIPO_POR_ADJUNTO.get(nombre)),
+            }
+            for nombre in self.adjuntos
+        ]
 
 
 class ConversatorioForm(ActividadForm):
@@ -434,6 +480,10 @@ class PresentacionLibroForm(ActividadForm):
         Campo("nombre_editorial"),
     )
     adjuntos = ("retrato_autor", "portada_libro")
+    TIPO_POR_ADJUNTO = {
+        "retrato_autor": Documento.Tipo.RETRATO_AUTOR,
+        "portada_libro": Documento.Tipo.PORTADA_LIBRO,
+    }
 
     retrato_autor = forms.FileField(
         label="Fotografía del autor/a en alta resolución",
@@ -462,11 +512,7 @@ class PresentacionLibroForm(ActividadForm):
         exigir_presentador(self, prefijo="autor", maximo=5, quienes="los autores")
         return datos
 
-    def documentos(self):
-        return (
-            (Documento.Tipo.RETRATO_AUTOR, self.cleaned_data.get("retrato_autor")),
-            (Documento.Tipo.PORTADA_LIBRO, self.cleaned_data.get("portada_libro")),
-        )
+
 
 
 class PresentacionRevistaForm(ActividadForm):
@@ -481,6 +527,7 @@ class PresentacionRevistaForm(ActividadForm):
         Campo("nombre_editorial"),
     )
     adjuntos = ("portada_revista",)
+    TIPO_POR_ADJUNTO = {"portada_revista": Documento.Tipo.PORTADA_REVISTA}
 
     portada_revista = forms.FileField(
         label="Portada de la revista en alta resolución",
@@ -500,10 +547,7 @@ class PresentacionRevistaForm(ActividadForm):
         exigir_presentador(self, prefijo="editor", maximo=2, quienes="los editores")
         return datos
 
-    def documentos(self):
-        return (
-            (Documento.Tipo.PORTADA_REVISTA, self.cleaned_data.get("portada_revista")),
-        )
+
 
 
 #: Qué formulario corresponde a cada tipo del catálogo. Es el gemelo de

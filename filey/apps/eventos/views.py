@@ -1,12 +1,18 @@
 """
 Las pantallas de `EVT`, las dos caras.
 
-**U1**, lo que ve quien propone: capturar y enviar (`CU-EVT-002`) y su
-acuse. **A1 y A2**, lo que ve quien administra: la cola de propuestas con
-sus filtros y sus conteos (`CU-EVT-007`, `CU-EVT-011`) y el detalle desde
-donde se dictamina (`CU-EVT-008`, `CU-EVT-009`). Entre las dos está la
-entrega de adjuntos, que sirve a los dos públicos y por eso no es de
-ninguno (`ADR-0007`).
+**U1 y U2**, lo que ve quien propone: capturar y enviar (`CU-EVT-002`) con
+su acuse, el listado de seguimiento y el detalle de lo enviado
+(`CU-EVT-003`). El listado es además la **puerta del módulo**: es a donde
+apunta el catálogo (`ADR-0006`), y sin ninguna propuesta enseña `E1`, que
+lleva al formulario.
+
+**A1 y A2**, lo que ve quien administra: la cola de propuestas con sus
+filtros y sus conteos (`CU-EVT-007`, `CU-EVT-011`) y el detalle desde
+donde se dictamina (`CU-EVT-008`, `CU-EVT-009`).
+
+Entre las dos está la entrega de adjuntos, que sirve a los dos públicos y
+por eso no es de ninguno (`ADR-0007`).
 
 No son dos módulos ni dos carpetas de plantillas: el rol lo resuelve el
 decorador, no la ubicación del archivo.
@@ -35,8 +41,8 @@ from dataclasses import replace
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.urls import reverse
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from apps.convocatorias.models import Convocatoria, TipoConvocatoria
 from apps.ferias import permisos
@@ -53,6 +59,7 @@ from .servicios import (
     catalogo,
     dictamen,
     edicion,
+    en_espera,
     revision,
     seguimiento,
     solicitudes,
@@ -94,30 +101,82 @@ def propuesta(peticion, convocatoria_id):
     es_publicacion = bool(nombre_tipo) and catalogo.es_publicacion(nombre_tipo)
 
     FormularioDelTipo = FORMULARIO_POR_TIPO.get(nombre_tipo)
-    enviando = peticion.method == "POST"
+
+    # La sesión sella cada adjunto en espera, así que tiene que existir
+    # antes de tocarlos. Quien acaba de entrar puede no tener clave aún.
+    if not peticion.session.session_key:
+        peticion.session.save()
+    sesion = peticion.session.session_key
+
+    # Descartar un adjunto es un `POST` que **no es un envío**: escribe
+    # —borra una fila y su archivo— y vuelve a pintar la pantalla. Se
+    # atiende antes que nada y con lo demás sin validar, porque nadie ha
+    # intentado enviar todavía: marcar en rojo lo que aún se está
+    # llenando es lo que la ley de Postel desaconseja.
+    descartado = _atender_descarte(peticion, convocatoria, FormularioDelTipo, sesion)
+    enviando = peticion.method == "POST" and not descartado
+
+    # Cambiar de tipo se lleva los adjuntos que el nuevo no pide. Quien
+    # subió la portada de un libro y pasa a «charla» no tiene ya dónde
+    # enseñarla ni campo al que volver.
+    #
+    # Solo cuando hay un tipo elegido y válido: sin tipo no hay con qué
+    # comparar, y barrer ahí sería borrar por no saber. Los seis tipos
+    # que no piden adjuntos declaran `TIPO_POR_ADJUNTO` vacío, así que
+    # este mismo paso los deja sin nada — que es lo correcto.
+    #
+    # Va **después** del descarte —que pudo guardar archivos de esta
+    # misma petición— y **antes** de leer lo vigente, o el formulario se
+    # construiría contando adjuntos que se acaban de ir.
+    if tipo is not None:
+        en_espera.descartar_los_que_ya_no_caben(
+            convocatoria,
+            peticion.user,
+            sesion,
+            FormularioDelTipo.TIPO_POR_ADJUNTO.values() if FormularioDelTipo else (),
+        )
+
+    # Lo que esa persona subió **en esta sesión** y no llegó a enviarse.
+    # Se consulta al final, cuando ya no queda nada que lo cambie, y antes
+    # de construir el formulario, que es quien decide con esto si los
+    # adjuntos siguen siendo obligatorios.
+    #
+    # Por sesión y no por persona: `EVT` no guarda borradores, así que
+    # volver mañana empieza de cero.
+    guardados = en_espera.vigentes(convocatoria, peticion.user, sesion)
 
     if enviando:
         form_solicitud = SolicitudForm(peticion.POST, es_publicacion=es_publicacion)
         form_tipo = (
-            FormularioDelTipo(peticion.POST, peticion.FILES)
+            FormularioDelTipo(peticion.POST, peticion.FILES, en_espera=guardados)
             if FormularioDelTipo
             else None
         )
     else:
-        # `GET` con datos es elegir el tipo: se repuebla con lo que ya
+        # `GET` con datos es elegir el tipo, y un `POST` que llega aquí
+        # es un descarte: en los dos casos se repuebla con lo que ya
         # estaba escrito, pero sin marcar errores —nadie ha enviado nada
         # todavía y señalar en rojo lo que aún se está llenando es
         # exactamente lo que la ley de Postel desaconseja—.
-        datos = peticion.GET or None
+        datos = peticion.POST or peticion.GET or None
         form_solicitud = SolicitudForm(datos, es_publicacion=es_publicacion)
-        form_tipo = FormularioDelTipo(datos) if FormularioDelTipo else None
+        form_tipo = (
+            FormularioDelTipo(datos, en_espera=guardados) if FormularioDelTipo else None
+        )
         if datos is not None:
             form_solicitud.errors.clear()
             if form_tipo is not None:
                 form_tipo.errors.clear()
 
     if enviando and abierta and form_tipo is not None:
-        if form_solicitud.is_valid() and form_tipo.is_valid():
+        # Los dos se validan **siempre**, y en dos líneas y no en un
+        # `and`: el `and` cortocircuita, así que con lo común inválido
+        # `form_tipo` nunca llegaba a validarse y se quedaba sin
+        # `cleaned_data`. Eso reventaba justo al guardar los adjuntos,
+        # que es lo único que pasa cuando el envío falla.
+        comun_valido = form_solicitud.is_valid()
+        tipo_valido = form_tipo.is_valid()
+        if comun_valido and tipo_valido:
             try:
                 creada = solicitudes.crear(
                     convocatoria=convocatoria,
@@ -125,7 +184,7 @@ def propuesta(peticion, convocatoria_id):
                     comunes=form_solicitud.cleaned_data,
                     nombre_tipo=nombre_tipo,
                     detalle=_detalle_de(form_tipo),
-                    documentos=form_tipo.documentos(),
+                    documentos=_adjuntos_del_envio(form_tipo, guardados),
                 )
             except solicitudes.EnvioRechazado as motivo:
                 # `E1`: la convocatoria pudo cerrar entre que se pintó el
@@ -133,7 +192,19 @@ def propuesta(peticion, convocatoria_id):
                 # con lo capturado, que es lo que el CU pide.
                 form_solicitud.add_error(None, str(motivo))
             else:
+                # Ya son `Documento` de la propuesta: aquí no queda nada
+                # que recuperar, y dejarlo duplicaría cada adjunto.
+                en_espera.limpiar(convocatoria, peticion.user)
                 return redirect("eventos:confirmacion", solicitud_id=creada.pk)
+
+        # El envío no pasó. Lo que sí llegó se guarda para el siguiente
+        # intento: es lo único que el navegador no puede repoblar solo.
+        if peticion.FILES:
+            en_espera.guardar(
+                convocatoria, peticion.user, _adjuntos_validos(form_tipo), sesion
+            )
+            guardados = en_espera.vigentes(convocatoria, peticion.user, sesion)
+            form_tipo.en_espera = guardados
 
     contexto = {
         "convocatoria": convocatoria,
@@ -169,6 +240,100 @@ def _detalle_de(form_tipo) -> dict:
         for campo, valor in form_tipo.cleaned_data.items()
         if campo not in archivos
     }
+
+
+def _atender_descarte(peticion, convocatoria, FormularioDelTipo, sesion) -> bool:
+    """Quita un adjunto, si la petición viene de ese botón.
+
+    :returns: si esto era un descarte. La vista lo usa para saber que
+        este `POST` no era un envío.
+
+    El botón manda el **nombre del campo** —`portada_libro`— y no el
+    `tipo_documento`, porque el nombre es lo que la plantilla tiene a
+    mano. La traducción la hace el formulario del tipo, que es quien
+    conoce la tabla; así un nombre inventado en un `POST` a mano no
+    encuentra tipo y no borra nada.
+
+    .. warning:: Primero se guarda lo que llega, y **después** se borra
+
+       Descartar repinta el formulario, y un `<input type="file">` no se
+       puede repoblar: un archivo que la persona hubiera elegido en el
+       navegador y no hubiera enviado todavía desaparecía al repintar.
+
+       El síntoma era desconcertante —descartar **un** adjunto se llevaba
+       los **dos**— y solo salía en un orden concreto: enviar y que lo
+       rechacen, descartar uno, volver a adjuntar ése, descartar el otro.
+       Descartando dos veces el mismo no pasaba, porque el segundo clic
+       ya no llegaba al servidor.
+
+       Los dos pasos van juntos y en este orden. Guardar primero recoge
+       lo que venía en la misma petición; borrar después se lleva el que
+       se pidió **incluido lo que se acabe de guardar de ese campo**, que
+       es lo correcto: quien pulsa «descartar» no quiere ninguno ahí, ni
+       el viejo ni el que acaba de elegir.
+
+       Para que los archivos lleguen hace falta además
+       `hx-encoding="multipart/form-data"` en el botón: htmx manda
+       `x-www-form-urlencoded` por omisión, y eso no sabe llevar
+       archivos. Sin JavaScript no hace falta nada — el formulario ya es
+       multiparte.
+    """
+    campo = (peticion.POST.get("descartar") or "").strip()
+    if not campo or FormularioDelTipo is None:
+        return False
+    tipo_documento = FormularioDelTipo.TIPO_POR_ADJUNTO.get(campo)
+    if tipo_documento is None:
+        return False
+
+    if peticion.FILES:
+        # Una instancia de usar y tirar, solo para que los archivos pasen
+        # por la misma validación que en un envío: la lista blanca de
+        # extensiones vive en el campo del formulario, no aquí. Sus
+        # errores no se miran — el formulario que se pinta es otro.
+        sonda = FormularioDelTipo(peticion.POST, peticion.FILES)
+        sonda.is_valid()
+        en_espera.guardar(convocatoria, peticion.user, _adjuntos_validos(sonda), sesion)
+
+    en_espera.descartar(convocatoria, peticion.user, tipo_documento)
+    # `True` aunque no hubiera nada que borrar: lo que la vista necesita
+    # saber es que **esto no era un envío**, no cuántas filas se fueron.
+    # Con `> 0`, un segundo clic sobre una cola ya vacía se trataba como
+    # un envío y devolvía el formulario en rojo.
+    return True
+
+
+def _adjuntos_del_envio(form_tipo, guardados):
+    """Los adjuntos con los que se crea la propuesta.
+
+    El que llegó ahora manda; si no llegó ninguno para ese campo, se usa
+    el que estaba en espera. Ese orden es el que hace que "volver a
+    subirlo" signifique "sustituirlo" y no "añadir otro".
+    """
+    del_envio = []
+    for tipo_documento, archivo in form_tipo.documentos():
+        if archivo:
+            del_envio.append((tipo_documento, archivo))
+        elif tipo_documento in guardados:
+            del_envio.append(
+                (tipo_documento, en_espera.adoptar(guardados[tipo_documento]))
+            )
+    return tuple(del_envio)
+
+
+def _adjuntos_validos(form_tipo):
+    """Lo que llegó y **pasó su propia validación**, para meterlo en la cola.
+
+    Un archivo con la extensión equivocada no se guarda: el formulario lo
+    va a rechazar igual en el siguiente intento, y guardarlo llenaría la
+    cola de basura que ocupa sitio y desaloja a los buenos.
+
+    `cleaned_data` solo trae los campos que validaron, así que preguntarle
+    a él es exactamente esa comprobación.
+    """
+    return tuple(
+        (tipo_documento, form_tipo.cleaned_data.get(nombre))
+        for nombre, tipo_documento in form_tipo.TIPO_POR_ADJUNTO.items()
+    )
 
 
 def _campos_de_archivo(form_tipo):
@@ -231,6 +396,10 @@ def mis_propuestas(peticion, convocatoria_id):
     aquí solo decide qué fila lleva una clase.
     """
     convocatoria = _convocatoria_de_eventos(convocatoria_id)
+    # Llegar aquí es haber salido del formulario: lo que quedara a medio
+    # subir se descarta (política del 2026-09-03). Es idempotente, así
+    # que no hace falta saber si había algo.
+    en_espera.limpiar(convocatoria, peticion.user)
     return render(
         peticion,
         "eventos/mis_propuestas.html",
@@ -244,60 +413,6 @@ def mis_propuestas(peticion, convocatoria_id):
             "abierta": solicitudes.admite_propuestas(convocatoria),
         },
     )
-
-
-def _entero_o_nada(crudo):
-    """El id de la barra de direcciones, o ``None`` si no es un número.
-
-    Nadie escribe esto a mano: lo pone el enlace del acuse. Si llega otra
-    cosa es que alguien está tecleando en la URL, y la respuesta correcta
-    a eso es no resaltar nada — no una página de error por un adorno.
-    """
-    try:
-        return int(crudo)
-    except (TypeError, ValueError):
-        return None
-
-
-@requiere_participante
-def detalle(peticion, convocatoria_id, solicitud_id):
-    """Una propuesta enviada, entera (`CU-EVT-003`, pasos 3 y 4).
-
-    Solo lectura. Editar es `CU-EVT-004` y todavía no existe; mientras
-    tanto, la pantalla dice qué hay que corregir pero no deja corregirlo,
-    y lo dice con esas palabras en vez de enseñar un botón que no lleva a
-    ninguna parte.
-
-    Un 404 cubre las tres formas de no tener nada que enseñar —no existe,
-    es de otra persona, o es de otra convocatoria—: distinguirlas
-    confirmaría a un curioso que ese folio existe.
-    """
-    convocatoria = _convocatoria_de_eventos(convocatoria_id)
-    propuesta_enviada = seguimiento.propuesta_de(
-        convocatoria, peticion.user, solicitud_id
-    )
-    if propuesta_enviada is None:
-        raise Http404("Esa propuesta no es tuya o no existe.")
-
-    actividad = propuesta_enviada.actividad
-    # `mi_propuesta.html` y no `detalle_propuesta.html`: ése es **A2**, el
-    # expediente de quien administra (`CU-EVT-008`). Son dos pantallas de
-    # la misma propuesta vistas desde los dos lados, y el nombre las
-    # empareja con quien las abre — como `mis_propuestas.html`.
-    return render(
-        peticion,
-        "eventos/mi_propuesta.html",
-        {
-            "convocatoria": convocatoria,
-            "propuesta": propuesta_enviada,
-            "actividad": actividad,
-            # Lo propio del tipo, ya en bloques: la plantilla recorre y
-            # pinta, y no sabe que existen ocho tipos distintos.
-            "bloques": composicion.bloques_del_tipo(actividad),
-            "documentos": actividad.documentos.all(),
-        },
-    )
-
 
 
 # ── El panel del administrador (`CU-EVT-007`, `008`, `009`, `011`) ──
@@ -369,6 +484,59 @@ def propuestas(peticion, convocatoria_id):
             "total": numeros["recibidas"],
             "hay_filtros": bool(estado or tipo or categoria or busqueda),
             "zona_admin": True,
+        },
+    )
+
+
+def _entero_o_nada(crudo):
+    """El id de la barra de direcciones, o ``None`` si no es un número.
+
+    Nadie escribe esto a mano: lo pone el enlace del acuse. Si llega otra
+    cosa es que alguien está tecleando en la URL, y la respuesta correcta
+    a eso es no resaltar nada — no una página de error por un adorno.
+    """
+    try:
+        return int(crudo)
+    except (TypeError, ValueError):
+        return None
+
+
+@requiere_participante
+def detalle(peticion, convocatoria_id, solicitud_id):
+    """Una propuesta enviada, entera (`CU-EVT-003`, pasos 3 y 4).
+
+    Solo lectura. Editar es `CU-EVT-004` y todavía no existe; mientras
+    tanto, la pantalla dice qué hay que corregir pero no deja corregirlo,
+    y lo dice con esas palabras en vez de enseñar un botón que no lleva a
+    ninguna parte.
+
+    Un 404 cubre las tres formas de no tener nada que enseñar —no existe,
+    es de otra persona, o es de otra convocatoria—: distinguirlas
+    confirmaría a un curioso que ese folio existe.
+    """
+    convocatoria = _convocatoria_de_eventos(convocatoria_id)
+    propuesta_enviada = seguimiento.propuesta_de(
+        convocatoria, peticion.user, solicitud_id
+    )
+    if propuesta_enviada is None:
+        raise Http404("Esa propuesta no es tuya o no existe.")
+
+    actividad = propuesta_enviada.actividad
+    # `mi_propuesta.html` y no `detalle_propuesta.html`: ése es **A2**, el
+    # expediente de quien administra (`CU-EVT-008`). Son dos pantallas de
+    # la misma propuesta vistas desde los dos lados, y el nombre las
+    # empareja con quien las abre — como `mis_propuestas.html`.
+    return render(
+        peticion,
+        "eventos/mi_propuesta.html",
+        {
+            "convocatoria": convocatoria,
+            "propuesta": propuesta_enviada,
+            "actividad": actividad,
+            # Lo propio del tipo, ya en bloques: la plantilla recorre y
+            # pinta, y no sabe que existen ocho tipos distintos.
+            "bloques": composicion.bloques_del_tipo(actividad),
+            "documentos": actividad.documentos.all(),
         },
     )
 

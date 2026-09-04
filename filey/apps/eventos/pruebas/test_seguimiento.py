@@ -624,6 +624,7 @@ def test_un_pdf_no_se_intenta_pintar(client, feria_2027, tmp_path, settings):
     [
         ("componentes/icono_pdf.html", "0 0 24 24"),
         ("componentes/icono_clip.html", "0 0 512 512"),
+        ("componentes/icono_papelera.html", "0 0 24 24"),
     ],
 )
 def test_los_iconos_en_linea_cumplen_las_reglas_de_svg(partial, viewbox):

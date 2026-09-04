@@ -296,6 +296,105 @@ def test_un_envio_incompleto_conserva_el_tipo_y_sus_campos(client, feria_2027):
     assert contenido.count("tipo-opt is-active") == 1
 
 
+def test_un_envio_rechazado_ya_no_pide_volver_a_adjuntar(client, feria_2027):
+    """Esta prueba custodiaba la deuda; ahora custodia que esté saldada.
+
+    Hasta el 2026-09-03 afirmaba lo contrario: que la pantalla avisara de
+    que **había** que volver a adjuntar los archivos. Era lo honesto
+    entonces —ningún navegador deja repoblar un `<input type="file">`— y
+    dejó de serlo en cuanto el servidor empezó a guardarlos
+    (`servicios/en_espera.py`).
+
+    Se conserva el caso en vez de borrarlo porque la frase vieja es
+    justamente lo que no puede volver: si alguien la reintroduce, algo se
+    rompió en la cola y este renglón lo dice antes que nadie.
+
+    Lo que se conserva de verdad y cómo se ve lo cubre
+    `test_en_espera.py`; aquí solo vive el epitafio del aviso.
+    """
+    convocatoria, persona, url = escenario(feria_2027)
+    client.force_login(persona)
+
+    libro = {
+        "tipo": "presentacion_libro",
+        "titulo_publicacion": "El mar que nos habita",
+        "tipo_presentador": "autor",
+        "nombre_editorial": "La Nave",
+        "nombre_autor_1": "Elena Poniatowska",
+        "semblanza_autor_1": "Escritora.",
+    }
+    contenido = client.post(
+        url, {**COMUNES, **libro, "titulo_actividad": ""}
+    ).content.decode()
+
+    assert "volver a adjuntarlos" not in contenido
+
+
+def test_sin_elegir_tipo_no_se_envia(client, feria_2027):
+    convocatoria, persona, url = escenario(feria_2027)
+    client.force_login(persona)
+
+    respuesta = client.post(url, COMUNES)
+
+    assert respuesta.status_code == 200
+    with schema_context(feria_2027.schema_name):
+        assert Solicitud.objects.count() == 0
+
+
+def test_con_la_convocatoria_cerrada_no_se_envia(client, feria_2027):
+    """`E1`, también por URL directa: la pantalla avisa y el POST no pasa."""
+    convocatoria, persona, url = escenario(
+        feria_2027, estado=Convocatoria.Estado.CERRADA
+    )
+    client.force_login(persona)
+
+    contenido = client.get(url).content.decode()
+    assert "no está recibiendo propuestas" in contenido
+
+    respuesta = client.post(url, {**COMUNES, **CHARLA})
+    assert respuesta.status_code == 200
+    with schema_context(feria_2027.schema_name):
+        assert Solicitud.objects.count() == 0
+
+
+# ── El acuse ──────────────────────────────────────────────────
+
+
+def test_el_acuse_enseña_el_folio(client, feria_2027):
+    """Paso 13 del CU: el folio es con lo que se identifica la solicitud."""
+    convocatoria, persona, url = escenario(feria_2027)
+    client.force_login(persona)
+    client.post(url, {**COMUNES, **CHARLA})
+
+    with schema_context(feria_2027.schema_name):
+        propuesta = Solicitud.objects.get()
+        folio = propuesta.folio
+        acuse = _url(feria_2027, "eventos:confirmacion", solicitud_id=propuesta.pk)
+
+    contenido = client.get(acuse).content.decode()
+    assert folio in contenido
+    # El estado, en las palabras del acuse nuevo. Antes decía «pendiente
+    # de revisión» de corrido; ahora el estado va suelto y la cola se
+    # nombra en la frase siguiente.
+    assert "pendiente" in contenido
+    assert "cola de revisión" in contenido
+
+
+def test_el_acuse_de_otra_persona_no_se_ve(client, feria_2027):
+    """El folio y el título de una propuesta ajena no son de nadie más."""
+    convocatoria, persona, url = escenario(feria_2027)
+    client.force_login(persona)
+    client.post(url, {**COMUNES, **CHARLA})
+
+    with schema_context(feria_2027.schema_name):
+        propuesta = Solicitud.objects.get()
+        acuse = _url(feria_2027, "eventos:confirmacion", solicitud_id=propuesta.pk)
+
+    intrusa = fabricas.persona(correo="otra@ejemplo.com", nombre="Otra")
+    client.force_login(intrusa)
+    assert client.get(acuse).status_code == 404
+
+
 def test_el_acuse_no_repite_el_listado(client, feria_2027):
     """El acuse hace una sola cosa: dar el folio y decir qué sigue.
 

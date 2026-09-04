@@ -7,6 +7,8 @@
      form           el formulario de lo común a los ocho tipos
      form_tipo      el formulario de ese tipo, o None
      es_publicacion si es libro o revista (A1 del CU-EVT-002)
+                    Cada adjunto trae consigo lo que ya se subió, en
+                    `form_tipo.campos_adjuntos`; no hace falta contexto aparte.
 
    Existe **una sola vez** y sirve para la página completa y para el swap
    de htmx: elegir un tipo cambia solo esto. Ese es el contrato entre lo
@@ -164,35 +166,134 @@
       {% comment %} Un `<input type="file">` **no se puede repoblar**: ningún
          navegador deja que una página le ponga un archivo, y con razón —si
          pudiera, una página cualquiera subiría lo que quisiera de tu disco—.
-         Así que tras un envío rechazado los adjuntos se pierden aunque todo
-         lo demás se conserve, y callarlo dejaría a alguien pulsando enviar
-         sin entender por qué sigue faltando lo mismo. {% endcomment %}
-      {% if enviado and form_tipo.campos_adjuntos %}
-        <div class="note note-warn">
-          <div class="ico">📎</div>
-          <div>Los archivos hay que <strong>volver a adjuntarlos</strong>: por
-            seguridad, el navegador no permite que una página los recuerde
-            entre un envío y el siguiente. Lo demás que escribiste sigue ahí.</div>
-        </div>
-      {% endif %}
 
-      {% for adjunto in form_tipo.campos_adjuntos %}
-        <div class="field">
-          <label for="{{ adjunto.id_for_label }}">
-            {{ adjunto.label }}
-            {% if adjunto.field.required %}<span class="req">*</span>
-            {% else %}<span class="opt">(opcional)</span>{% endif %}
-          </label>
-          <label class="file-mock" data-adjunto>
-            {{ adjunto }}
-            <div class="ico">📎</div>
-            <div class="txt">
-              <strong data-adjunto-nombre>Adjuntar archivo</strong>
-              <small>{{ adjunto.help_text }}</small>
+         Lo que el navegador no puede hacer lo hace el servidor: desde el
+         2026-09-03 lo que llegó se guarda en una cola
+         (`servicios/en_espera.py`) y el campo deja de ser obligatorio
+         mientras haya algo guardado. Por eso aquí ya no hay un aviso de
+         "vuelve a adjuntarlo": cada campo dice lo suyo, en su sitio.
+
+         Cada adjunto llega emparejado con lo que ya se guardó, en
+         `form_tipo.campos_adjuntos`: el lenguaje de plantillas de Django
+         no sabe buscar en un diccionario por una clave variable, así que
+         quien empareja es el formulario. {% endcomment %}
+      {% for bloque in form_tipo.campos_adjuntos %}
+        {% with adjunto=bloque.campo guardado=bloque.guardado %}
+          <div class="field">
+            <label for="{{ adjunto.id_for_label }}">
+              {{ adjunto.label }}
+              {% comment %} Con algo guardado el campo deja de ser obligatorio
+                 de verdad —lo hace `ActividadForm.__init__`—, así que el
+                 asterisco desaparece solo. No se fuerza aquí: un asterisco
+                 que no corresponde a lo que el servidor exige es peor que
+                 ninguno. {% endcomment %}
+              {% if adjunto.field.required %}<span class="req">*</span>
+              {% elif not guardado %}<span class="opt">(opcional)</span>{% endif %}
+            </label>
+
+            {% comment %} Un archivo ya subido se ve **dentro del propio
+               componente**, exactamente como si se acabara de elegir: es
+               lo que `filey.js` hace al seleccionar uno, y aquí lo hace el
+               servidor. Que venga de un intento anterior no es asunto de
+               quien lo subió — para esa persona hay un archivo adjunto y
+               ya está.
+
+               Llevaba un aviso verde encima explicando que "se conserva".
+               Se quitó el 2026-09-03: contaba cómo funciona el sistema por
+               dentro, que es justo lo que una pantalla no tiene que
+               contar, y dejaba el mismo archivo nombrado dos veces.
+
+               Lo que sí hace falta es poder **descartarlo**, o el único
+               camino para cambiar de idea sería subir otro encima. {% endcomment %}
+            {% comment %} El componente de subir y el de descartar comparten
+               fila: son la misma decisión —qué archivo va aquí— y en dos
+               renglones se leían como dos cosas. {% endcomment %}
+            <div class="adjunto-fila" id="adjunto-{{ adjunto.name }}">
+              <label class="file-mock{% if guardado %} is-cargado{% endif %}" data-adjunto>
+                {{ adjunto }}
+                {% comment %} Un clip de verdad y no el emoji 📎: un emoji lo
+                   dibuja la fuente del sistema —cambia de forma y de color
+                   entre Windows, macOS y Android—, no hereda el color del
+                   texto y no se alinea con precisión. Los tres iconos de
+                   este bloque tienen que verse de la misma familia.
+                   {% endcomment %}
+                <div class="ico">{% include "componentes/icono_clip.html" %}</div>
+                <div class="txt">
+                  <strong data-adjunto-nombre>
+                    {% if guardado %}{{ guardado.nombre_original|default:"Archivo adjunto" }}
+                    {% else %}Adjuntar archivo{% endif %}
+                  </strong>
+                  <small>{{ adjunto.help_text }}</small>
+                </div>
+              </label>
+
+              {% comment %} ── Descartar ────────────────────────────────────
+                 Sale **en cuanto hay un archivo**, no solo tras un envío
+                 rechazado. Y "hay un archivo" son dos cosas distintas, así
+                 que el botón también:
+
+                 · **Ya guardado en el servidor** (`guardado`): descartarlo
+                   escribe, y lo que escribe no puede ir por `GET`. Es un
+                   `submit` dentro del formulario grande —no se pueden
+                   anidar formularios— que la vista distingue por su
+                   `name`. **Funciona sin JavaScript.**
+                 · **Recién elegido en el navegador**: todavía no ha salido
+                   de la máquina de nadie. Vaciar el `<input>` basta, y
+                   pedirle eso al servidor sería un viaje para nada. Nace
+                   `hidden` y lo revela `filey.js` al elegir el archivo.
+
+                 Sin rótulo, con `aria-label`: al lado ya está el nombre
+                 del archivo, y "Descartar el archivo" repetía en palabras
+                 lo que la papelera dice en un icono. Un botón sin texto
+                 **necesita** ese `aria-label` — si no, un lector de
+                 pantalla anuncia "botón" y nada más. {% endcomment %}
+              {% if guardado %}
+                {% comment %} Con htmx cambia solo esta sección y no se
+                   recarga nada, que es lo que evita perder el sitio en un
+                   formulario de treinta campos.
+
+                   Sin JavaScript es un envío normal, y entonces el
+                   `formaction` con ancla es lo que impide que la página
+                   vuelva a empezar por arriba: el navegador aplica el
+                   fragmento a la respuesta del `POST` y aterriza en este
+                   mismo adjunto. `scroll-margin-top` le reserva el hueco
+                   de la barra superior, que es fija.
+
+                   `hx-vals` y no confiar en el `value` del botón: htmx
+                   incluye los campos del formulario, y qué hace con el
+                   del propio disparador depende de la versión. Decirlo
+                   explícito cuesta un atributo. {% endcomment %}
+                <button type="submit" name="descartar" value="{{ adjunto.name }}"
+                        class="btn btn-danger btn-row evt-descartar" formnovalidate
+                        formaction="#adjunto-{{ adjunto.name }}"
+                        hx-post="{{ request.get_full_path }}"
+                        hx-vals='{"descartar": "{{ adjunto.name|escapejs }}"}'
+                        hx-target="#campos-tipo"
+                        hx-swap="outerHTML"
+                        hx-include="closest form"
+                        {% comment %} Sin esto htmx manda el formulario como
+                           `x-www-form-urlencoded`, que **no sabe llevar
+                           archivos**: un adjunto recien elegido en el
+                           navegador no llegaba, no se guardaba, y al
+                           repintar la seccion desaparecia. Descartar uno se
+                           llevaba por delante el otro. {% endcomment %}
+                        hx-encoding="multipart/form-data"
+                        title="Descartar el archivo"
+                        aria-label="Descartar {{ guardado.nombre_original|default:'el archivo' }}">
+                  {% include "componentes/icono_papelera.html" %}
+                </button>
+              {% else %}
+                <button type="button" data-descartar hidden
+                        class="btn btn-danger btn-row evt-descartar"
+                        title="Descartar el archivo"
+                        aria-label="Descartar el archivo">
+                  {% include "componentes/icono_papelera.html" %}
+                </button>
+              {% endif %}
             </div>
-          </label>
-          {% for error in adjunto.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
-        </div>
+            {% for error in adjunto.errors %}<p class="msg-error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endwith %}
       {% endfor %}
 
       {% comment %} 9 · el ejemplar físico, después de los adjuntos. {% endcomment %}

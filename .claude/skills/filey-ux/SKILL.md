@@ -71,10 +71,21 @@ pulsarse. Tres reglas, y las tres salen de haberlas incumplido:
 
 Conviene saberlo antes de prometerlo en una pantalla:
 
-- **Un `<input type="file">` no se puede repoblar.** Si se pudiera, cualquier página subiría
-  archivos del disco de quien la visita. Tras un envío rechazado hay que volver a adjuntar,
-  **también desplegado** — no es cosa del entorno. Lo que sí se puede es decirlo en pantalla, y
-  hay que decirlo.
+- **Un `<input type="file">` no se puede repoblar, así que lo guarda el servidor.** Si se
+  pudiera repoblar, cualquier página subiría archivos del disco de quien la visita; no es cosa
+  del entorno, pasa igual desplegado. Lo que el navegador no puede hacer lo hace el servidor:
+  un envío rechazado guarda los adjuntos que sí llegaron, y el campo deja de pedirlos
+  (`apps/eventos/servicios/en_espera.py`).
+
+  **Y la pantalla no cuenta que existe ese guardado.** El archivo se ve dentro del mismo
+  componente que cualquier otro recién adjuntado, con la opción de descartarlo. Que venga de un
+  intento anterior es funcionamiento interno, no información para quien lo subió.
+
+  > [!important] Antes de escribir un texto que explica una limitación, pregúntate si la
+  > limitación se puede quitar
+  > Un cartel que avisa de algo molesto es honesto y no arregla nada. Suele ser más barato de
+  > lo que parece quitar lo molesto, y entonces el cartel sobra — y si aun así hay que
+  > explicarlo, el texto ya es otro.
 - **Volver a pintar una sección vacía sus campos de archivo.** Por eso una regla que dependa de
   algo dentro de esa sección se resuelve en el navegador aunque quede duplicada, en vez de
   pedirle al servidor que repinte (`ADR-0009`).

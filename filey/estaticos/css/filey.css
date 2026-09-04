@@ -760,9 +760,20 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
 .file-mock:hover { border-color: var(--azul-600); background: var(--azul-050); }
 .file-mock:focus-within { border-color: var(--azul-600); background: var(--azul-050); }
 .file-mock .ico {
+  /* El eje del icono de dentro. La caja mide 34 y el dibujo 18: el hueco
+     es lo que lo hace verse como un icono en una pastilla y no como una
+     pastilla con un dibujo apretado. */
+  --file-mock-ico: 18px;
   width: 34px; height: 34px; border-radius: 8px; flex: 0 0 34px;
   background: var(--azul-100); color: var(--azul-600);
-  display: grid; place-items: center; font-size: 17px;
+  display: grid; place-items: center;
+}
+/* `viewBox="0 0 512 512"`, cuadrado. El `calc()` se escribe aunque dé 1:
+   documenta el ratio (`filey-ui-componentes` §8). */
+.file-mock .ico .ico-svg {
+  display: block;
+  height: var(--file-mock-ico);
+  width: calc(var(--file-mock-ico) * 512 / 512);
 }
 .file-mock .txt strong { display: block; font-size: 13.5px; color: var(--gris-700); word-break: break-all; }
 .file-mock .txt small { color: var(--gris-500); font-size: 12px; }
@@ -782,6 +793,72 @@ input[readonly] { background: var(--gris-100); color: var(--gris-500); cursor: n
    arrepentimiento de una. Mismo trato que `.evt-persona__quitar`, y por
    la misma razón — con el mismo truco de Fitts para que el área que
    responde al clic pase de los 44 px sin agrandar el texto. */
+/* El componente de subir y el de descartar, en la misma fila: son la
+   misma decisión —qué archivo va aquí— y en dos renglones se leían como
+   dos cosas distintas.
+
+   `align-items: stretch` para que el botón mida lo que mida la caja sin
+   tener que fijarle una altura: la caja crece con su ayuda de dos
+   renglones, y una altura escrita a mano se quedaría corta el día que
+   cambie ese texto. */
+.adjunto-fila {
+  /* Sin `gap`: la separación la pone el `margin-left` del botón de
+     descartar, que **se anima con él**. Un `gap` no se puede interpolar
+     por elemento, así que con él el botón plegado seguiría dejando diez
+     píxeles de aire por los que no pasa nada. */
+  display: flex; align-items: stretch;
+  /* La barra superior es fija, así que un ancla deja su destino
+     **debajo** de ella y no se ve (`filey-ux` §5). Hace falta al
+     descartar un adjunto sin JavaScript: el `formaction` con fragmento
+     aterriza justo aquí. */
+  scroll-margin-top: calc(var(--alto-topbar) + 16px);
+}
+.adjunto-fila .file-mock { flex: 1; min-width: 0; }
+
+/* Descartar un adjunto (`CU-EVT-002`). El botón entero son `.btn
+   .btn-danger .btn-row`, que ya existían: aquí solo va el tamaño del
+   icono y el ancho. Repetir los colores habría metido dos hex sueltos
+   (E3) y una segunda definición del rojo de peligro.
+
+   Sin rótulo: al lado está el nombre del archivo, y «Descartar el
+   archivo» repetía en palabras lo que la papelera dice en un icono. El
+   nombre accesible va en `aria-label`, en la plantilla — un botón sin
+   texto sin él se anuncia como «botón» y nada más.
+
+   El ancho fijo es la ley de Fitts: 17 px de icono son un objetivo
+   minúsculo, y sin esto el botón mediría lo que mide su relleno. */
+.evt-descartar {
+  --evt-descartar-ico: 17px;
+  --evt-descartar-ancho: 46px;
+  --evt-descartar-aire: 10px;
+  flex: 0 0 var(--evt-descartar-ancho); padding: 0; justify-content: center;
+  margin-left: var(--evt-descartar-aire);
+  /* El icono no se deforma mientras el botón se estrecha: se recorta. */
+  overflow: hidden;
+  transition: flex-basis .18s ease, margin-left .18s ease, opacity .14s ease;
+}
+/* Plegado. **Ocupa cero de verdad** —ni ancho, ni aire— para que el
+   botón de adjuntar llegue al borde exactamente igual que cuando no
+   había nada que descartar: las dos medidas finales no cambian, lo que
+   cambia es que ahora se llega a ellas deslizando.
+
+   `visibility: hidden` además de `opacity` lo saca del recorrido del
+   tabulador; sin eso quedaría un objetivo invisible de ancho cero. */
+.evt-descartar.esta-plegado {
+  flex-basis: 0; margin-left: 0; opacity: 0;
+  visibility: hidden; pointer-events: none;
+}
+/* Quien pidió no animar ve el cambio de golpe, que es lo que había
+   antes de esto y funciona igual de bien. */
+@media (prefers-reduced-motion: reduce) {
+  .evt-descartar { transition: none; }
+}
+/* `viewBox="0 0 24 24"`, cuadrado. */
+.evt-descartar .ico-svg {
+  display: block;
+  height: var(--evt-descartar-ico);
+  width: calc(var(--evt-descartar-ico) * 24 / 24);
+}
 .file-mock.is-cargado .txt strong { color: var(--ok-600); }
 
 /* ── Un aviso que se puede marcar ──────────────────────────────
