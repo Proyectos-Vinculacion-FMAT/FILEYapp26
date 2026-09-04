@@ -856,8 +856,22 @@ function marcarObligatorio(campo, obligatorio) {
     var primera = listas.presentadores.querySelector('[data-persona]');
     if (!primera) return;
 
-    marcarObligatorio(primera.querySelector('input[type="text"]'), hacenFalta);
-    marcarObligatorio(primera.querySelector('textarea'), hacenFalta);
+    var nombre = primera.querySelector('input[type="text"]');
+    var semblanza = primera.querySelector('textarea');
+
+    marcarObligatorio(nombre, hacenFalta);
+    /* La semblanza obedece a **dos** reglas, y hay que componerlas:
+       hace falta si el presentador es obligatorio (`hacenFalta`) **o**
+       si alguien ya escribió su nombre —media persona no se manda a un
+       comité, que es lo que exige `validar_personas` en el servidor—.
+
+       Escribir aquí `hacenFalta` a secas era un fallo real: este bloque
+       corre después de la cascada, así que le pisaba su decisión. Con un
+       autor marcado como que asiste, `hacenFalta` es falso y la
+       semblanza del presentador se quedaba sin asterisco por mucho
+       nombre que se escribiera — y el servidor la rechazaba igual, sin
+       que la pantalla lo hubiera avisado. */
+    marcarObligatorio(semblanza, hacenFalta || conTexto(nombre));
 
     var aviso = listas.presentadores.querySelector('[data-aviso-personas]');
     if (aviso) {
