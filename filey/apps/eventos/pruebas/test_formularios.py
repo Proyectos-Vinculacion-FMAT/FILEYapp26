@@ -11,7 +11,12 @@ como los mandaría un POST a mano, sin pasar por la pantalla.
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from ..formularios import FORMULARIO_POR_TIPO, PresentacionLibroForm, SolicitudForm
+from ..formularios import (
+    FORMULARIO_POR_TIPO,
+    ConversatorioForm,
+    PresentacionLibroForm,
+    SolicitudForm,
+)
 from ..models import MAX_SINOPSIS, MAX_SINOPSIS_PUBLICACION, MODELO_POR_TIPO
 
 COMUNES = {
@@ -367,3 +372,60 @@ def test_los_tipos_sin_adjuntos_no_devuelven_ninguno():
     )
     assert formulario.is_valid(), formulario.errors
     assert list(formulario.documentos()) == []
+
+
+# ── Una semblanza sin nombre no se guarda ─────────────────────
+
+
+def test_una_semblanza_sin_su_nombre_no_pasa():
+    """Lo que la pantalla enseña apagado, el servidor lo rechaza.
+
+    `filey.js` deshabilita la semblanza al vaciar el nombre y **conserva
+    lo escrito**, a propósito: borrar el texto de alguien porque se
+    corrigió un nombre es peor que dejarlo apagado. Pero un campo
+    deshabilitado tampoco viaja en el `POST`, así que la pantalla por sí
+    sola nunca manda una semblanza huérfana.
+
+    Esta prueba mira el otro camino: el `POST` fabricado a mano, o el
+    navegador sin JavaScript, donde nada está deshabilitado. Media
+    persona no se puede imprimir en un programa ni mandar a un comité.
+    """
+    form = ConversatorioForm(
+        {
+            "nombre_participante_1": "Elena Poniatowska",
+            "semblanza_participante_1": "Escritora y periodista.",
+            # Sin nombre, pero con semblanza: es el caso.
+            "nombre_participante_2": "",
+            "semblanza_participante_2": "Alguien de quien no sabemos el nombre.",
+        }
+    )
+
+    assert not form.is_valid()
+    assert "nombre_participante_2" in form.errors
+    # Y no queda en `cleaned_data`, así que no hay forma de que el
+    # servicio la escriba aunque quisiera.
+    assert "semblanza_participante_2" not in form.errors
+
+
+def test_una_semblanza_sin_nombre_tampoco_en_los_presentadores():
+    """El grupo opcional se valida igual: opcional es el grupo, no la mitad.
+
+    Los presentadores de un libro pueden no existir —si algún autor
+    asiste—, pero **el que exista tiene que estar entero**. Es la trampa
+    de un grupo opcional: se lee como «aquí no se valida nada».
+    """
+    form = PresentacionLibroForm(
+        {
+            "titulo_publicacion": "El mar que nos habita",
+            "tipo_presentador": "autor",
+            "nombre_editorial": "La Nave",
+            "nombre_autor_1": "Elena Poniatowska",
+            "semblanza_autor_1": "Escritora y periodista.",
+            "autor_1_participa": "on",
+            "nombre_participante_1": "",
+            "semblanza_participante_1": "Un presentador sin nombre.",
+        }
+    )
+
+    assert not form.is_valid()
+    assert "nombre_participante_1" in form.errors
