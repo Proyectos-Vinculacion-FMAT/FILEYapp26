@@ -38,6 +38,8 @@ from pathlib import PurePosixPath
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 from apps.convocatorias.models import Convocatoria, RegistroConvocatoria
 from comun.almacenamiento import CarpetaDeLaFeria, DocumentoAdmisible
@@ -704,3 +706,115 @@ class Documento(models.Model):
         puede venir sin extensión o escrito a mano.
         """
         return PurePosixPath(self.archivo.name or "").suffix.lower()
+
+
+class ArchivoEnEspera(models.Model):
+    """Un adjunto subido que **todavía no tiene propuesta** (`CU-EVT-002`).
+
+    Existe por una limitación del navegador que no se puede sortear: un
+    ``<input type="file">`` **no se puede repoblar**. Si se pudiera,
+    cualquier página subiría archivos del disco de quien la visita. Así
+    que un envío rechazado por un campo de texto se llevaba por delante
+    los adjuntos, y quien lo sufría tenía que volver a buscarlos en su
+    disco sin entender por qué solo se habían perdido ésos.
+
+    .. note:: No cuelga de `RegistroConvocatoria`, y no puede
+
+       El registro nace **con la propuesta**, dentro de su transacción, y
+       no al abrir el formulario: si naciera antes, cada visita curiosa
+       dejaría una inscripción vacía y los conteos de la convocatoria
+       contarían gente que nunca propuso (`ADR-0006`). Cuando estos
+       archivos se suben todavía no hay registro, así que la fila se ata
+       a la pareja persona–convocatoria directamente.
+
+    .. note:: Es una cola, no un baúl
+
+       El tope es ``settings.EVT_MAX_ARCHIVOS_EN_ESPERA`` por persona y
+       convocatoria, y al llegar el séptimo se va el más viejo. El tope
+       existe porque cada archivo pesa hasta 10 MB
+       (`comun/almacenamiento.py`) y nadie los mira nunca: son un apaño
+       para no perder trabajo entre dos intentos, no un archivo
+       histórico.
+
+    .. warning:: Es de la **sesión**, no de la persona
+
+       `EVT` no guarda borradores de solicitud: o se envía, o no hay
+       nada. Un adjunto suelto solo significa algo mientras dure el rato
+       en que alguien está llenando el formulario, así que la fila se ata
+       a la sesión y no sobrevive a ella. Volver mañana no ofrece los
+       archivos de ayer — ofrecerlos sería un borrador a medias, que es
+       justo lo que este dominio no tiene.
+
+    Se vacía en cuanto deja de hacer falta, y son cuatro momentos, todos
+    en ``servicios/en_espera.py``: al enviarse la propuesta —los archivos
+    pasan a ser `Documento`—, al salir del formulario hacia otra
+    pantalla, al cerrar sesión, y al aparecer esa persona con una sesión
+    distinta. Lo que ninguno de los cuatro alcanza —cerrar la pestaña y
+    no volver— lo recoge `manage.py barrida_espera`, que borra las filas
+    cuya sesión ya no existe. **Ninguno de los cinco cuenta días.**
+    """
+
+    convocatoria = models.ForeignKey(
+        Convocatoria, on_delete=models.CASCADE, related_name="archivos_en_espera"
+    )
+    persona = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="archivos_en_espera_eventos",
+    )
+    #: Para qué campo del formulario es. Son los mismos valores que
+    #: `Documento.Tipo` porque es exactamente lo que va a acabar siendo:
+    #: un segundo conjunto de nombres se separaría del primero en cuanto
+    #: alguien añadiera un adjunto a un tipo de actividad.
+    tipo_documento = models.CharField(max_length=20, choices=Documento.Tipo.choices)
+    archivo = models.FileField(
+        # Carpeta propia dentro de la feria: lo que está aquí es
+        # provisional, y mezclarlo con los adjuntos de verdad haría
+        # imposible mirar el disco y saber qué se puede borrar.
+        upload_to=CarpetaDeLaFeria("eventos/en-espera"),
+        validators=[DocumentoAdmisible()],
+    )
+    nombre_original = models.CharField(max_length=255, blank=True)
+    #: La sesión desde la que se subió. **Es lo que le pone fecha de
+    #: caducidad a esta fila**, y por eso `EVT` no tiene una política de
+    #: días propia: no se guardan borradores de solicitud, así que un
+    #: adjunto solo tiene sentido mientras dure el rato en que se está
+    #: llenando el formulario. Otra sesión no los ve y los borra al
+    #: pasar; una sesión que caducó los deja sin dueño, y de ésos se
+    #: encarga `manage.py barrida_espera`.
+    session_key = models.CharField(max_length=40, blank=True, default="", db_index=True)
+    subido_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "archivo en espera"
+        verbose_name_plural = "archivos en espera"
+        # De la más nueva a la más vieja: lo que llena el formulario es
+        # siempre la última de su tipo.
+        ordering = ["-subido_en", "-pk"]
+        indexes = [
+            models.Index(
+                fields=["convocatoria", "persona", "tipo_documento"],
+                name="evt_en_espera_de_quien",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.nombre_original or self.archivo.name} (en espera)"
+
+
+@receiver(post_delete, sender=ArchivoEnEspera)
+def _borrar_el_archivo_en_espera(sender, instance, **kwargs):
+    """Al borrar la fila, se borra también el archivo.
+
+    Django no lo hace desde la 1.3. Aquí importa más que en `Documento`:
+    estas filas se borran **en lote y a menudo** —al enviar, al salir del
+    formulario, al desalojar el más viejo de la cola—, así que sin esto
+    el disco crecería con cada intento fallido de cada persona y nada lo
+    volvería a tocar nunca.
+
+    Va como señal y no en un ``delete()`` del modelo porque el borrado es
+    casi siempre de un queryset, y ésos **no** llaman al método del
+    modelo. Las señales sí las emite.
+    """
+    if instance.archivo:
+        instance.archivo.delete(save=False)

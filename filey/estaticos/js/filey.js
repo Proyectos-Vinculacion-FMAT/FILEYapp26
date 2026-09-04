@@ -549,6 +549,20 @@ document.addEventListener('alpine:init', () => {
          falle: en un formulario de treinta campos, el que falla puede
          estar a dos pantallas de distancia del botón. */
       formulario.addEventListener("submit", function (evento) {
+        /* `formnovalidate` en el botón significa «este envío no valida»,
+           y hasta el 2026-09-04 esto lo ignoraba: la comprobación es a
+           mano —`checkValidity()` campo por campo— y el atributo solo se
+           lo salta el navegador, no nosotros.
+        
+           Lo destapó el botón de descartar un adjunto, que lo lleva: al
+           pulsarlo, este bloque recorría el formulario entero, encontraba
+           campos vacíos que nadie había intentado enviar y saltaba al
+           primero. Descartar un archivo movía la página a otro sitio
+           por un envío que no era tal. */
+        if (evento.submitter && evento.submitter.hasAttribute("formnovalidate")) {
+          return;
+        }
+
         var malos = [];
         Array.prototype.forEach.call(
           formulario.querySelectorAll("input, select, textarea"),
@@ -745,16 +759,91 @@ function marcarObligatorio(campo, obligatorio) {
 (function () {
   'use strict';
 
+  /* Deja la caja diciendo qué hay dentro, y enseña o esconde el botón
+     de descartar con ella. Los dos estados en una sola función para que
+     no puedan discrepar: una caja en verde sin botón al lado, o al
+     revés, se lee como que algo se quedó a medias. */
+  function reflejar(caja, nombre) {
+    var rotulo = caja.querySelector('[data-adjunto-nombre]');
+    if (rotulo) rotulo.textContent = nombre || 'Adjuntar archivo';
+    caja.classList.toggle('is-cargado', !!nombre);
+
+    /* El botón es hermano de la caja, no hijo: dentro del `<label>`
+       cualquier clic abriría el diálogo de archivos. Se busca desde la
+       fila que los envuelve a los dos. */
+    var fila = caja.closest('.adjunto-fila');
+    var quitar = fila && fila.querySelector('[data-descartar]');
+    /* `.esta-plegado` y no el atributo `hidden`: un elemento en
+       `display: none` no puede animar nada, y lo que se quiere es que el
+       botón de adjuntar se acorte para **dejar ver** el de descartar, no
+       que aparezca de golpe. Plegado ocupa cero y no recibe clics; el
+       ancho lo interpola el CSS. */
+    if (quitar) quitar.classList.toggle('esta-plegado', !nombre);
+  }
+
+  /* JavaScript toma posesión de los botones de descartar.
+
+     Vienen del servidor con `hidden`, que es la única forma de que **sin
+     JavaScript** no salga un botón que no haría nada. Pero `hidden` vale
+     `display: none`, y desde ahí no hay transición posible: se pasa a
+     `.esta-plegado`, que ocupa cero y sí se puede animar.
+
+     El que llega ya visible —el de un adjunto guardado en el servidor—
+     no se toca: ése no se plegó nunca. */
+  function adoptarLosBotones(raiz) {
+    var donde = raiz && raiz.querySelectorAll ? raiz : document;
+    Array.prototype.forEach.call(
+      donde.querySelectorAll('[data-descartar][hidden]'),
+      function (boton) {
+        boton.hidden = false;
+        boton.classList.add('esta-plegado');
+      }
+    );
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    adoptarLosBotones(document);
+  });
+  document.body.addEventListener('htmx:afterSwap', function (evento) {
+    adoptarLosBotones(evento.target);
+  });
+
   document.addEventListener('change', function (evento) {
     var campo = evento.target;
     if (campo.type !== 'file') return;
     var caja = campo.closest('[data-adjunto]');
     if (!caja) return;
 
-    var rotulo = caja.querySelector('[data-adjunto-nombre]');
     var archivo = campo.files && campo.files[0];
-    caja.classList.toggle('is-cargado', !!archivo);
-    if (rotulo) rotulo.textContent = archivo ? archivo.name : 'Adjuntar archivo';
+    reflejar(caja, archivo ? archivo.name : '');
+  });
+
+  /* Descartar un archivo **que todavía no ha salido del navegador**.
+     Vaciar el `<input>` es todo lo que hay que hacer; pedírselo al
+     servidor sería un viaje para nada, y encima recargaría la pantalla.
+
+     El de un archivo ya guardado es otro botón —un `submit` con
+     `name="descartar"`— y no pasa por aquí: ése sí tiene algo que
+     borrar al otro lado. */
+  document.addEventListener('click', function (evento) {
+    var boton = evento.target.closest && evento.target.closest('[data-descartar]');
+    if (!boton) return;
+    evento.preventDefault();
+
+    var fila = boton.closest('.adjunto-fila');
+    var caja = fila && fila.querySelector('[data-adjunto]');
+    var campo = caja && caja.querySelector('input[type="file"]');
+    if (!campo) return;
+
+    /* `value = ''` es la única forma que dan los navegadores de vaciar
+       un campo de archivo: no se puede poner uno, pero sí quitarlo. */
+    campo.value = '';
+    reflejar(caja, '');
+    /* El foco va **al campo** y no al `<label>`, que no es enfocable: el
+       botón acaba de desaparecer y quien navega con el teclado se
+       quedaría en la nada. El campo está escondido a la vista pero sigue
+       recibiendo foco, y `.file-mock:focus-within` lo hace visible. */
+    campo.focus();
   });
 })();
 
@@ -782,12 +871,110 @@ function marcarObligatorio(campo, obligatorio) {
     });
   });
 
+  /* Bajar a los campos que acaban de aparecer, **solo al cambiar de
+     tipo**.
+
+     La condición del verbo no es un detalle: distingue las dos razones
+     por las que esta sección se reemplaza.
+
+       · `GET` — se eligió otro tipo de actividad. Lo que hay dentro es
+         nuevo y está debajo del selector, así que hay que llevar a la
+         persona hasta ahí o no vería que apareció nada.
+       · `POST` — algo cambió **en su sitio**: hoy, descartar un
+         adjunto. Quien lo pulsó está a la mitad del formulario mirando
+         ese adjunto, y moverlo al principio de la sección le quita el
+         sitio sin haberlo pedido.
+
+     Sin esta condición era lo segundo lo que fallaba, y se leía como si
+     la página se hubiera recargado. No era una recarga: era este
+     `scrollIntoView`, escrito cuando el único motivo de un intercambio
+     era elegir el tipo. */
+  function esLaSeccion(elemento) {
+    return !!elemento && elemento.id === 'campos-tipo';
+  }
+
+  function verboDe(evento) {
+    var peticion = evento.detail && evento.detail.requestConfig;
+    return peticion ? String(peticion.verb || '').toLowerCase() : '';
+  }
+
+  /* ── Por qué hay que guardar el scroll ────────────────────────
+
+     El servidor manda **todas** las filas de persona visibles: cinco
+     autores y dos presentadores en una presentacion de libro. Tienen que
+     venir asi porque sin JavaScript hay que poder escribir en ellas.
+     Quien las colapsa a una es `refrescar`, que corre despues del
+     intercambio.
+
+     Asi que un swap de esta seccion la deja un instante ~1000 px mas
+     alta y enseguida la encoge. El navegador conserva su `scrollTop`, y
+     al acortarse el documento lo recorta al nuevo maximo: **el fondo**.
+     Ese era el "me manda hasta abajo" — no lo movia nadie, se quedaba
+     donde ya no habia pagina.
+
+     Elegir tipo lo tapaba porque ahi si se baja a proposito. Descartar
+     un adjunto no, y por eso solo se veia en ese camino.
+
+     La raiz seria que el servidor mandara escondidas las filas que
+     sobran. No se hace porque duplicaria en Python la regla de cuantas
+     se ven, que hoy vive en un solo sitio; guardar el scroll cuesta diez
+     lineas y no reparte esa decision entre dos lenguajes. */
+  var scrollAntes = null;
+
+  document.body.addEventListener('htmx:beforeSwap', function (evento) {
+    if (!esLaSeccion(evento.target)) return;
+    scrollAntes = window.scrollY;
+  });
+
   document.body.addEventListener('htmx:afterSwap', function (evento) {
     var seccion = evento.target;
-    if (!seccion || seccion.id !== 'campos-tipo' || seccion.hidden) return;
+    if (!esLaSeccion(seccion) || seccion.hidden) return;
+
+    /* Elegir tipo es un `GET`: lo de dentro es nuevo y esta debajo del
+       selector, asi que hay que llevar a la persona hasta ahi. Descartar
+       es un `POST`: algo cambio en su sitio y ya lo estaba mirando.
+
+       Si htmx dejara de exponer `requestConfig`, no se baja: quedarse
+       quieto es el fallo inofensivo de los dos. */
+    if (verboDe(evento) !== 'get') return;
+
+    scrollAntes = null;
     seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
+  /* ── Devolver el scroll **antes de que se pinte nada** ────────
+
+     Este bloque corre antes que el colapso de las filas —que cuelga del
+     mismo `htmx:afterSwap`, más abajo en el archivo—, así que aquí
+     todavía no se puede leer la altura final. Y las dos formas obvias de
+     esperar llegan **tarde**:
+
+       · `htmx:afterSettle` se emite tras la espera de asentamiento de
+         htmx (20 ms por omisión). Para entonces el navegador ya pintó.
+       · `requestAnimationFrame` es, por definición, el fotograma
+         siguiente. También pintó.
+
+     Las dos devolvían el scroll, pero después de haber enseñado la
+     página en el fondo: el parpadeo que se veía.
+
+     Un **microtask** no. Se ejecuta cuando la pila de JavaScript se
+     vacía —después de todos los oyentes síncronos de este evento,
+     incluido el colapso— y siempre **antes** del siguiente pintado. Así
+     el navegador no llega a dibujar la posición intermedia.
+
+     Y no depende del orden en que estén escritos los bloques de este
+     archivo, que sería una dependencia invisible y frágil. */
+  document.body.addEventListener('htmx:afterSwap', function (evento) {
+    if (!esLaSeccion(evento.target) || scrollAntes === null) return;
+    var volverA = scrollAntes;
+    scrollAntes = null;
+    queueMicrotask(function () {
+      /* Los dos argumentos y no el objeto con `behavior: 'instant'`:
+         ese valor es reciente y aquí no aporta nada — esta forma es
+         instantánea en todos los navegadores. */
+      window.scrollTo(0, volverA);
+    });
+  });
 })();
 
 

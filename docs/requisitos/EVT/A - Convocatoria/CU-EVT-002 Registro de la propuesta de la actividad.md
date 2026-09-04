@@ -29,6 +29,21 @@ reglas_de_negocio: []
 > sus ocho tablas de tipo, `Documento` (era `PropuestaAdjunto`) y `ConfiguracionConvocatoria`
 > (era `ParametrosConvocatoria`). Ver `ADR-0009`.
 
+<!-- -->
+
+> [!note] El acuse cambió el 2026-09-03, al construirse `CU-EVT-003`
+> Enseñaba también una tabla con las otras propuestas de esa persona. Dejó de hacerlo en cuanto
+> existió el listado de seguimiento: era la misma lista dos veces —aquí sin poder abrir nada— y
+> encima **sin la propuesta que se acababa de enviar**, que era la única que importaba en ese
+> momento.
+>
+> Ahora hace una sola cosa, que es lo que dibuja `prototipo/EVT/aplicantes/confirmacion.html`:
+> folio en grande y qué sigue. Su botón primario lleva al listado señalando la recién enviada,
+> y el que decía "Cerrar" —que iba al catálogo— es ahora ese mismo.
+>
+> El acuse también dejó de listar lo ya enviado: era la misma lista dos veces y sin la
+> propuesta recién mandada, que era la única que importaba en ese momento.
+
 > Este caso de uso cubre tanto el **llenado** del formulario (captura y validación de los
 > datos) como el **envío** —la acción de mandar la propuesta a revisión—, en un solo flujo
 > (homologado, 2026-06-29; el envío ya no es un sub-caso aparte).
@@ -61,7 +76,7 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 ### En éxito
 
 - El formulario queda con todos los campos obligatorios completos y los adjuntos requeridos cargados, validados.
-- Al enviar, se crea una `Solicitud` en estado `pendiente`, con folio, vinculada a quien propone por su `RegistroConvocatoria` (`ADR-0006`), y su `Actividad` en la tabla del tipo elegido.
+- Al enviar, se crea una `Solicitud` con folio y en estado `pendiente`, vinculada a quien propone por su `RegistroConvocatoria` (`ADR-0006`), y su `Actividad` en la tabla del tipo elegido. Los campos del dictamen son columnas de la propia solicitud y nacen vacíos; el modelo de datos §3.1 los describe como entidad aparte y explica ahí por qué en Django son columnas.
 - Queda guardada la autodeclaración `es_uady`. **No se deriva ninguna categoría**: la asigna el comité al dictaminar (`CU-EVT-009`), y el administrador puede corregir la autodeclaración.
 - Los archivos que el tipo pida quedan almacenados como registros `Documento`, colgando de la actividad.
 - El aplicante recibe por correo la confirmación de envío con su número de folio.
@@ -83,11 +98,11 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 7. La pantalla acompaña la captura: la semblanza de una persona se abre cuando su nombre tiene algo escrito y pasa a obligatoria, no se puede añadir a la siguiente hasta completar la anterior, y el adjunto cargado se marca con su nombre.
 8. El aplicante envía la propuesta.
 9. El sistema valida en el servidor: campos obligatorios, adjuntos, que ninguna persona quede a medias ni con hueco, y que la actividad no se quede sin nadie delante (ver `RN-EVT-01`).
-10. El sistema registra la `Solicitud` en estado `pendiente` con su fecha de envío, crea su `Actividad` en la tabla del tipo y, si es la primera vez, su `RegistroConvocatoria`. Todo en una transacción: o queda entero, o no queda nada.
+10. El sistema registra la `Solicitud` en estado `pendiente` con su fecha de envío, su `Actividad` en la tabla del tipo y, si es la primera vez, su `RegistroConvocatoria`. Todo en una transacción: o queda entero, o no queda nada.
 11. El sistema almacena cada archivo como un `Documento` colgado de la actividad.
 12. El sistema envía al aplicante un correo con el folio y la confirmación de recepción. **Que ese correo falle no deshace la propuesta**, que ya tiene folio.
-13. El sistema lleva al acuse, que enseña el folio, el estado y las otras propuestas que esa persona ya envió a la convocatoria.
-14. El acuse ofrece "Enviar otra propuesta" (vuelve al paso 1) y "Cerrar".
+13. El sistema lleva al acuse, que enseña el folio en grande, el estado y qué sigue. **No lleva la lista de lo ya enviado**: ver la nota de abajo.
+14. El acuse ofrece "Enviar otra propuesta" (vuelve al paso 1) y "Ver mis propuestas" (`CU-EVT-003`), que es la acción primaria.
 
 ## Flujos alternos
 
@@ -115,11 +130,43 @@ El aplicante decide participar en el programa de FILEY y abre el formulario de r
 2. El sistema devuelve al aplicante al formulario **conservando lo capturado y el tipo elegido**, y resalta cada campo con su mensaje.
 3. El envío no procede hasta que corrija y reintente.
 
-> [!warning] Los adjuntos son la excepción a «se conserva lo capturado»
-> Ningún navegador permite repoblar un `<input type="file">`: si lo permitiera, cualquier página
-> podría subir archivos del disco de quien la visita. Así que tras un envío rechazado hay que
-> volver a adjuntarlos, y la pantalla lo dice. No es cosa del entorno: pasa igual desplegado.
-> Ver `ADR-0009`.
+> [!note] Los adjuntos también se conservan, desde el 2026-09-03
+> **Antes eran la excepción.** Ningún navegador permite repoblar un `<input type="file">` —si
+> lo permitiera, cualquier página podría subir archivos del disco de quien la visita—, así que
+> tras un envío rechazado había que volver a adjuntarlos y la pantalla lo decía. Era honesto y
+> era la forma más rápida de que alguien abandonara un formulario de treinta campos.
+>
+> Lo que el navegador no puede hacer lo hace el servidor: lo que llegó se guarda en una cola
+> (`servicios/en_espera.py`) y el campo deja de ser obligatorio mientras haya algo guardado. En
+> pantalla se ve como cualquier archivo recién adjuntado, con la opción de descartarlo — **no**
+> se explica que hay un caché detrás, porque eso es funcionamiento interno.
+>
+> La política, decidida el 2026-09-03:
+>
+> | | |
+> | --- | --- |
+> | Cuánto se guarda | `settings.EVT_MAX_ARCHIVOS_EN_ESPERA`, hoy 6 por persona y convocatoria. Es margen para un formulario de hasta cuatro adjuntos, no un número de intentos |
+> | Qué se desaloja | El más viejo, **nunca el último de cada tipo**. Sin esa salvedad el tope no cumple lo que promete: la séptima subida tiraría el adjunto que nadie ha vuelto a subir |
+> | Cuándo se vacía | Cinco momentos: al enviarse la propuesta —ya son `Documento`—, al salir del formulario hacia el listado o el catálogo, al cerrar sesión, al aparecer esa persona con otra sesión, y **al cambiar a un tipo de actividad que no pida ese adjunto** |
+> | Quién recoge lo demás | `manage.py barrida_espera`, que borra las filas **cuya sesión ya no existe**. Cerrar la pestaña no pasa por ninguna de las cuatro salidas |
+>
+> **`EVT` no tiene política de días, y no debe tenerla.** Aquí no se guardan borradores de
+> solicitud: o se envía, o no hay nada. Un adjunto suelto no significa nada fuera del rato en
+> que alguien está llenando el formulario, así que lo que le pone caducidad es la sesión que lo
+> subió —12 h deslizantes, `SESSION_COOKIE_AGE`— y no un plazo propio. Contar días es de `STD`,
+> donde los plazos son del negocio y los decide quien coordina la feria.
+>
+> La salida por el catálogo va por una señal y no por una llamada: `apps/convocatorias` no
+> nombra a ningún vertical (`ADR-0006`).
+>
+> Y el barrido por cambio de tipo **no compara con el tipo anterior**: cada petición trae solo
+> el tipo actual, y la pregunta correcta no es «¿cambió?» sino «¿cabe este archivo en lo que hay
+> elegido?». Guardar el tipo previo en la sesión para compararlo sería un estado más que
+> mantener y otra forma de que se desincronice. Sin tipo elegido no se barre nada: no hay con
+> qué comparar, y borrar por no saber es peor que conservar de más.
+
+> [!note] La pantalla del tipo sigue siendo la de `ADR-0009`
+> Los ocho juegos de campos no se pintan a la vez; el tipo viaja en la URL.
 
 ### E3. Nadie de la publicación estará presente y no hay presentador
 

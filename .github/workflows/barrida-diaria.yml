@@ -75,3 +75,16 @@ jobs:
           URL_BASE: ${{ secrets.URL_BASE }}
         run: |
           python manage.py barrida_diaria --todas ${{ inputs.seco && '--seco' || '' }}
+          # `EVT`: los adjuntos en espera cuya sesión ya no existe
+          # (`CU-EVT-002`). **No cuenta días** —eso es de `STD`, donde los
+          # plazos son del negocio—: aquí no hay borradores de solicitud,
+          # así que un adjunto suelto no vive más que su sesión.
+          #
+          # Va detrás y en la misma tanda porque comparte
+          # todo lo de arriba —entorno, secretos, recorrido de schemas— y
+          # porque no manda correos: si fallara, no deja a nadie a medias.
+          #
+          # Sin `&&`: que una barrida falle no debe impedir la otra. Son
+          # dos limpiezas sin relación entre sí, y el paso falla igual si
+          # cualquiera de las dos devuelve error.
+          python manage.py barrida_espera --todas ${{ inputs.seco && '--seco' || '' }}

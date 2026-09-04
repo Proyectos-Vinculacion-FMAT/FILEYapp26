@@ -26,6 +26,12 @@ class EventosConfig(AppConfig):
         cuando el registro de apps ya está poblado; a nivel de módulo,
         importar modelos revienta.
 
+        El import de ``senales`` no se usa: está por su efecto. Es como
+        se conecta el receptor que descarta los adjuntos a medio subir
+        cuando alguien vuelve al catálogo (`CU-EVT-002`), y va aquí por
+        lo mismo que el registro de módulos — `convocatorias` anuncia y
+        no sabe quién escucha.
+
         ``url_aplicar`` apunta al **seguimiento** y no al formulario. El
         catálogo dice "Continuar" a quien ya tiene registro (`CU-FER-006`)
         y eso llevaba a un formulario en blanco a quien ya había mandado
@@ -40,6 +46,7 @@ class EventosConfig(AppConfig):
         from apps.convocatorias.models import TipoConvocatoria
         from apps.convocatorias.modulos import Modulo, SeccionPanel, registrar
 
+        from . import senales  # noqa: F401  — conecta al importarse
         from .servicios import configuracion
 
         registrar(

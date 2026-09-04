@@ -297,6 +297,23 @@ MEDIA_URL = "medios/"
 # archivos del contenedor, que se borra en cada despliegue.
 MEDIA_ROOT = Path(_del_entorno("MEDIA_ROOT", BASE_DIR / "medios"))
 
+# Cuántos adjuntos se le guardan a una persona mientras llena un
+# formulario, por convocatoria (`CU-EVT-002`). Un `<input type="file">`
+# **no se puede repoblar** —ningún navegador deja que una página le ponga
+# un archivo, y con razón—, así que sin esto un envío rechazado por un
+# campo de texto obliga a volver a subirlo todo.
+#
+# Seis es **margen sobre el formulario más grande**, no un número de
+# intentos: hoy el que más pide son dos adjuntos, y el tope está puesto
+# para uno de cuatro sin que nadie se quede sin sus archivos precargados.
+# El desalojo nunca tira el último de cada tipo, así que seis significa
+# "los cuatro que hagan falta, más dos de sobra".
+#
+# Es un tope de ocupación por persona, no una regla de negocio, y por eso
+# vive aquí y no en `ConfiguracionConvocatoria`: lo ajusta quien opera la
+# plataforma mirando el disco, no quien coordina la feria.
+EVT_MAX_ARCHIVOS_EN_ESPERA = int(_del_entorno("EVT_MAX_ARCHIVOS_EN_ESPERA", "6"))
+
 
 # `local` (por omisión) o `s3`. Cambiar de uno a otro es cambiar esta
 # variable y las cuatro de abajo: no se toca código. Ver `ADR-0007`.
